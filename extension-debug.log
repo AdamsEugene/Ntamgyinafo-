@@ -1,0 +1,30 @@
+=== Extension Activation Log ===
+2025-12-20T23:19:18.750Z
+
+[2025-12-20T23:19:18.750Z] === ACTIVATION START ===
+[2025-12-20T23:19:18.751Z] Workspace root: /Users/theone/Documents/Projects/my future/ntamgyinafoɔ
+[2025-12-20T23:19:18.751Z] Initializing services...
+[2025-12-20T23:19:18.751Z] Creating StateService...
+[2025-12-20T23:19:18.751Z] ✅ StateService created
+[2025-12-20T23:19:18.751Z] Creating TaskDetailService...
+[2025-12-20T23:19:18.752Z] ✅ TaskDetailService created
+[2025-12-20T23:19:18.752Z] Creating PromptGeneratorService...
+[2025-12-20T23:19:18.752Z] ✅ PromptGeneratorService created
+[2025-12-20T23:19:18.752Z] Creating KeyboardService...
+[2025-12-20T23:19:18.752Z] ✅ KeyboardService created
+[2025-12-20T23:19:18.752Z] Registering keybindings...
+[2025-12-20T23:19:18.752Z] ✅ Keybindings registered
+[2025-12-20T23:19:18.752Z] Registering panel commands...
+[2025-12-20T23:19:18.752Z] ❌ ERROR: 💥💥💥 ACTIVATION FAILED 💥💥💥
+Error: Error: command 'sdlc.showPanel' already exists
+Stack: Error: command 'sdlc.showPanel' already exists
+    at MCe.registerCommand (file:///Applications/Cursor.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:136:48944)
+    at Object.registerCommand (file:///Applications/Cursor.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:199:141910)
+    at activate (/Users/theone/.cursor/extensions/your-publisher-name.vscode-extension-jumpstart-0.0.1/out/extension.js:109:52)
+    at cPe._callActivateOptional (file:///Applications/Cursor.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:140:20061)
+    at cPe._callActivate (file:///Applications/Cursor.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:140:19729)
+    at file:///Applications/Cursor.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:140:17429
+    at NCe._activate (file:///Applications/Cursor.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:136:17183)
+    at NCe._waitForDepsThenActivate (file:///Applications/Cursor.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:136:17078)
+    at NCe._initialize (file:///Applications/Cursor.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:136:16440)
+

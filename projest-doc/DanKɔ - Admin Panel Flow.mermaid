@@ -1,0 +1,253 @@
+flowchart TB
+    subgraph LOGIN["🔐 ADMIN LOGIN"]
+        A[Admin Login Page] --> B[Enter Credentials]
+        B --> C{Valid?}
+        C -->|No| D[Error: Invalid]
+        D --> B
+        C -->|Yes| E{2FA Enabled?}
+        E -->|Yes| F[Enter 2FA Code]
+        F --> G{Code Valid?}
+        G -->|No| F
+        G -->|Yes| H[Admin Dashboard]
+        E -->|No| H
+    end
+
+    subgraph DASH["📊 ADMIN DASHBOARD"]
+        H --> I[Overview Panel]
+        I --> I1[Total Users]
+        I --> I2[Active Listings]
+        I --> I3[Pending Approvals]
+        I --> I4[Today's Revenue]
+        I --> I5[New Signups Today]
+        
+        H --> J{Navigation Menu}
+        J -->|Users| K[User Management]
+        J -->|Properties| L[Property Moderation]
+        J -->|Subscriptions| M[Subscription Plans]
+        J -->|Payments| N[Payment Reports]
+        J -->|Analytics| O[Platform Analytics]
+        J -->|Settings| P[System Settings]
+        J -->|Support| Q[User Reports]
+    end
+
+    subgraph USERS["👥 USER MANAGEMENT"]
+        K --> K1[User List Table]
+        K1 --> K2[Search Users]
+        K2 --> K2a[By Phone]
+        K2 --> K2b[By Name]
+        K2 --> K2c[By Role]
+        
+        K1 --> K3[Filter Users]
+        K3 --> K3a[All Users]
+        K3 --> K3b[Owners Only]
+        K3 --> K3c[Buyers Only]
+        K3 --> K3d[Pending Verification]
+        K3 --> K3e[Suspended]
+        
+        K1 --> K4[Select User]
+        K4 --> K5[User Details Modal]
+        K5 --> K6{Actions}
+        K6 -->|View| K7[Full Profile]
+        K6 -->|Verify ID| K8[ID Verification]
+        K6 -->|Suspend| K9[Suspend Account]
+        K6 -->|Activate| K10[Reactivate]
+        K6 -->|Delete| K11[Delete Account]
+        
+        K8 --> K8a[View Submitted ID]
+        K8a --> K8b[View Selfie]
+        K8b --> K8c{ID Valid?}
+        K8c -->|Yes| K8d[✅ Approve - Mark Verified]
+        K8c -->|No| K8e[❌ Reject - Request Resubmit]
+        K8d --> K8f[Send Notification to User]
+        K8e --> K8f
+        
+        K9 --> K9a[Select Reason]
+        K9a --> K9b[Fake Listings]
+        K9a --> K9c[Fraud]
+        K9a --> K9d[Terms Violation]
+        K9a --> K9e[User Reports]
+        K9b --> K9f[Confirm Suspension]
+        K9c --> K9f
+        K9d --> K9f
+        K9e --> K9f
+        K9f --> K9g[User Notified]
+    end
+
+    subgraph PROPERTIES["🏠 PROPERTY MODERATION"]
+        L --> L1[Property Queue]
+        L1 --> L2[Pending Approval Tab]
+        L1 --> L3[Reported Properties Tab]
+        L1 --> L4[All Properties Tab]
+        
+        L2 --> L5[Pending List]
+        L5 --> L6[Select Property]
+        L6 --> L7[Review Modal]
+        
+        L7 --> L7a[View All Photos]
+        L7 --> L7b[Watch Videos]
+        L7 --> L7c[View 360°]
+        L7 --> L7d[Check Location on Map]
+        L7 --> L7e[Read Description]
+        L7 --> L7f[View Owner Profile]
+        
+        L7 --> L8{Decision}
+        L8 -->|Approve| L9[✅ Publish Listing]
+        L8 -->|Reject| L10[Select Rejection Reason]
+        L8 -->|Flag| L11[Request More Info]
+        
+        L10 --> L10a[Inappropriate Content]
+        L10 --> L10b[Fake/Misleading]
+        L10 --> L10c[Poor Quality Media]
+        L10 --> L10d[Incomplete Info]
+        L10 --> L10e[Duplicate Listing]
+        L10a --> L12[Send Rejection Notice]
+        L10b --> L12
+        L10c --> L12
+        L10d --> L12
+        L10e --> L12
+        
+        L9 --> L13[Owner Notified ✓]
+        L12 --> L13
+        
+        L3 --> L14[Reported List]
+        L14 --> L15[View Report Details]
+        L15 --> L16{Action}
+        L16 -->|Dismiss| L17[Mark Report Invalid]
+        L16 -->|Remove| L18[Take Down Listing]
+        L16 -->|Warn| L19[Send Warning to Owner]
+    end
+
+    subgraph SUBS["💳 SUBSCRIPTION MANAGEMENT"]
+        M --> M1[Subscription Plans]
+        M1 --> M2[Owner Plans Table]
+        M1 --> M3[Buyer Plans Table]
+        
+        M2 --> M4[Edit Plan]
+        M4 --> M4a[Change Price]
+        M4 --> M4b[Change Duration]
+        M4 --> M4c[Change Limits]
+        M4 --> M4d[Enable/Disable]
+        
+        M --> M5[Create New Plan]
+        M5 --> M5a[Plan Name]
+        M5a --> M5b[User Type]
+        M5b --> M5c[Price GHS]
+        M5c --> M5d[Duration Days]
+        M5d --> M5e[Property/Contact Limit]
+        M5e --> M5f[Features List]
+        M5f --> M5g[Save Plan]
+        
+        M --> M6[Active Subscriptions]
+        M6 --> M7[Search by User]
+        M6 --> M8[Filter by Plan]
+        M6 --> M9[Filter by Status]
+    end
+
+    subgraph PAYMENTS["💰 PAYMENT REPORTS"]
+        N --> N1[Payment Dashboard]
+        N1 --> N1a[Today's Revenue]
+        N1 --> N1b[This Week]
+        N1 --> N1c[This Month]
+        N1 --> N1d[Total All Time]
+        
+        N --> N2[Transaction List]
+        N2 --> N3[Filter by Date]
+        N2 --> N4[Filter by Status]
+        N4 --> N4a[Completed]
+        N4 --> N4b[Pending]
+        N4 --> N4c[Failed]
+        N4 --> N4d[Refunded]
+        
+        N2 --> N5[Select Transaction]
+        N5 --> N6[Transaction Details]
+        N6 --> N7{Action}
+        N7 -->|Refund| N8[Process Refund]
+        N8 --> N8a[Full Refund]
+        N8 --> N8b[Partial Refund]
+        N8a --> N9[Confirm Refund]
+        N8b --> N9
+        N9 --> N10[User Notified]
+        
+        N --> N11[Export Reports]
+        N11 --> N11a[CSV Export]
+        N11 --> N11b[PDF Report]
+        N11 --> N11c[Date Range Selection]
+    end
+
+    subgraph ANALYTICS["📈 PLATFORM ANALYTICS"]
+        O --> O1[User Analytics]
+        O1 --> O1a[Signups Over Time]
+        O1 --> O1b[Active Users DAU/MAU]
+        O1 --> O1c[User Retention]
+        O1 --> O1d[Churn Rate]
+        
+        O --> O2[Property Analytics]
+        O2 --> O2a[Listings Over Time]
+        O2 --> O2b[Popular Locations]
+        O2 --> O2c[Price Distribution]
+        O2 --> O2d[Property Types]
+        
+        O --> O3[Revenue Analytics]
+        O3 --> O3a[Revenue Over Time]
+        O3 --> O3b[Revenue by Plan]
+        O3 --> O3c[Conversion Rate]
+        O3 --> O3d[ARPU]
+        
+        O --> O4[Engagement]
+        O4 --> O4a[Search Queries]
+        O4 --> O4b[Most Viewed Properties]
+        O4 --> O4c[Contact Rates]
+    end
+
+    subgraph SETTINGS["⚙️ SYSTEM SETTINGS"]
+        P --> P1[General Settings]
+        P1 --> P1a[App Name]
+        P1 --> P1b[Support Email]
+        P1 --> P1c[Support Phone]
+        
+        P --> P2[Payment Settings]
+        P2 --> P2a[Paystack Keys]
+        P2 --> P2b[Enable/Disable Methods]
+        
+        P --> P3[Notification Settings]
+        P3 --> P3a[Email Templates]
+        P3 --> P3b[SMS Templates]
+        P3 --> P3c[Push Settings]
+        
+        P --> P4[Content Settings]
+        P4 --> P4a[Amenities List]
+        P4 --> P4b[Property Types]
+        P4 --> P4c[Regions/Cities]
+        
+        P --> P5[Admin Users]
+        P5 --> P5a[Add Admin]
+        P5 --> P5b[Remove Admin]
+        P5 --> P5c[Change Permissions]
+    end
+
+    subgraph SUPPORT["🆘 USER REPORTS"]
+        Q --> Q1[Report Queue]
+        Q1 --> Q2[User Reports]
+        Q1 --> Q3[Property Reports]
+        Q1 --> Q4[Bug Reports]
+        
+        Q2 --> Q5[View Report]
+        Q5 --> Q6[Reporter Info]
+        Q5 --> Q7[Reported User Info]
+        Q5 --> Q8[Report Reason]
+        Q5 --> Q9{Action}
+        Q9 -->|Dismiss| Q10[Close Report]
+        Q9 -->|Warn| Q11[Send Warning]
+        Q9 -->|Suspend| K9
+        Q9 -->|Contact| Q12[Message User]
+    end
+
+    style LOGIN fill:#e3f2fd
+    style DASH fill:#fff3e0
+    style USERS fill:#e8f5e9
+    style PROPERTIES fill:#fce4ec
+    style SUBS fill:#f3e5f5
+    style PAYMENTS fill:#fff8e1
+    style ANALYTICS fill:#e0f2f1
+    style SETTINGS fill:#fbe9e7
+    style SUPPORT fill:#ffebee

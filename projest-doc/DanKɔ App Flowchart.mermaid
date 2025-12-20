@@ -1,0 +1,186 @@
+flowchart TB
+    subgraph ENTRY["🚀 APP ENTRY"]
+        A[App Launch] --> B{First Time?}
+        B -->|Yes| C[Onboarding Slides]
+        B -->|No| D{Logged In?}
+        C --> E[Welcome Screen]
+        D -->|Yes| F{User Role?}
+        D -->|No| E
+    end
+
+    subgraph AUTH["🔐 AUTHENTICATION"]
+        E --> G{Action?}
+        G -->|Login| H[Enter Phone + Password]
+        G -->|Register| I[Enter Phone Number]
+        H --> J{Valid?}
+        J -->|No| H
+        J -->|Yes| F
+        I --> K[Enter OTP]
+        K --> L{OTP Valid?}
+        L -->|No| K
+        L -->|Yes| M[Create Profile]
+        M --> N[Select Role]
+        N -->|Owner| O[Upload ID Document]
+        N -->|Buyer| P[Set Preferences]
+        O --> Q{ID Verified?}
+        Q -->|Pending| R[Await Verification]
+        Q -->|Approved| S[Owner Dashboard]
+        P --> T[Buyer Home]
+        R --> S
+    end
+
+    subgraph BUYER["👤 BUYER JOURNEY"]
+        F -->|Buyer| T
+        T --> U{Action?}
+        U -->|Search| V[Search Properties]
+        U -->|Map| W[Map View]
+        U -->|Saved| X[Saved Properties]
+        U -->|Messages| Y[Chat List]
+        U -->|Profile| Z[My Profile]
+        
+        V --> AA[Apply Filters]
+        AA --> AB[View Results]
+        W --> AB
+        AB --> AC[Select Property]
+        AC --> AD[Property Details]
+        
+        AD --> AE{Subscribed?}
+        AE -->|No| AF[Limited View]
+        AF --> AG[Subscribe Prompt]
+        AG --> AH[Select Plan]
+        AH --> AI[Payment]
+        AI --> AJ{Payment Success?}
+        AJ -->|Yes| AK[Full Access]
+        AJ -->|No| AI
+        
+        AE -->|Yes| AK
+        AK --> AL{Action?}
+        AL -->|View Media| AM[Photos/Video/360°]
+        AL -->|Get Directions| AN[Open Maps]
+        AL -->|Contact Owner| AO{Contacts Left?}
+        AO -->|No| AG
+        AO -->|Yes| AP[Start Chat]
+        AP --> AQ[Message Owner]
+        AQ --> AR[Schedule Visit]
+        AR --> AS[Visit Property]
+        AS --> AT[Negotiate Offline]
+        AM --> AL
+    end
+
+    subgraph OWNER["🏠 OWNER JOURNEY"]
+        F -->|Owner| S
+        S --> BA{Action?}
+        BA -->|New Listing| BB{Subscribed?}
+        BA -->|My Listings| BC[View Listings]
+        BA -->|Inquiries| BD[View Inquiries]
+        BA -->|Messages| BE[Chat List]
+        BA -->|Stats| BF[Analytics]
+        BA -->|Profile| BG[My Profile]
+        
+        BB -->|No| BH[Select Plan]
+        BH --> BI[Payment]
+        BI --> BJ{Payment Success?}
+        BJ -->|No| BI
+        BJ -->|Yes| BK{Listings Left?}
+        
+        BB -->|Yes| BK
+        BK -->|No| BH
+        BK -->|Yes| BL[Create Listing]
+        
+        BL --> BM[Select Property Type]
+        BM --> BN[Enter Details]
+        BN --> BO[Set Price]
+        BO --> BP[Upload Photos]
+        BP --> BQ{Min 5 Photos?}
+        BQ -->|No| BP
+        BQ -->|Yes| BR[Upload Video?]
+        BR --> BS[Upload 360°?]
+        BS --> BT[Set Location]
+        BT --> BU{Use GPS?}
+        BU -->|Yes| BV[Capture Coordinates]
+        BU -->|No| BW[Pin on Map]
+        BV --> BX[Adjust Pin]
+        BW --> BX
+        BX --> BY[Preview Listing]
+        BY --> BZ{Confirm?}
+        BZ -->|No| BN
+        BZ -->|Yes| CA[Submit for Review]
+        CA --> CB[Pending Approval]
+        
+        BC --> CC[Select Listing]
+        CC --> CD{Action?}
+        CD -->|Edit| BN
+        CD -->|Stats| CE[View Performance]
+        CD -->|Status| CF[Change Status]
+        CF --> CG{New Status?}
+        CG -->|Sold| CH[Mark Sold]
+        CG -->|Rented| CI[Mark Rented]
+        CG -->|Available| CJ[Mark Available]
+        
+        BD --> CK[Select Inquiry]
+        CK --> CL[View Buyer Profile]
+        CL --> CM[Reply in Chat]
+    end
+
+    subgraph ADMIN["⚙️ ADMIN PANEL"]
+        F -->|Admin| DA[Admin Dashboard]
+        DA --> DB{Section?}
+        DB -->|Users| DC[User Management]
+        DB -->|Properties| DD[Property Queue]
+        DB -->|Payments| DE[Payment Reports]
+        DB -->|Analytics| DF[Platform Stats]
+        DB -->|Settings| DG[System Config]
+        
+        DC --> DH[View User]
+        DH --> DI{Action?}
+        DI -->|Verify| DJ[Approve ID]
+        DI -->|Suspend| DK[Suspend User]
+        DI -->|Delete| DL[Remove User]
+        
+        DD --> DM[Review Listing]
+        DM --> DN{Decision?}
+        DN -->|Approve| DO[Publish Listing]
+        DN -->|Reject| DP[Send Rejection]
+        DO --> DQ[Notify Owner]
+        DP --> DQ
+        
+        CB -.->|Pending| DD
+        DQ -.->|Approved| BC
+    end
+
+    subgraph PAYMENT["💳 PAYMENT FLOW"]
+        AI --> PA[Select Method]
+        BI --> PA
+        PA --> PB{Method?}
+        PB -->|MoMo| PC[Enter MoMo Number]
+        PB -->|Card| PD[Enter Card Details]
+        PC --> PE[Confirm Payment]
+        PD --> PE
+        PE --> PF[Process via Paystack]
+        PF --> PG{Success?}
+        PG -->|Yes| PH[Generate Receipt]
+        PG -->|No| PI[Show Error]
+        PI --> PA
+        PH --> PJ[Activate Subscription]
+    end
+
+    subgraph CHAT["💬 COMMUNICATION"]
+        AP --> QA[Chat Screen]
+        CM --> QA
+        QA --> QB{Action?}
+        QB -->|Text| QC[Send Message]
+        QB -->|Image| QD[Share Photo]
+        QB -->|Call| QE[VoIP Call]
+        QC --> QF[Delivered]
+        QD --> QF
+        QE --> QG[Call Connected]
+        QF --> QH[Push Notification]
+    end
+
+    style ENTRY fill:#e1f5fe
+    style AUTH fill:#fff3e0
+    style BUYER fill:#e8f5e9
+    style OWNER fill:#fce4ec
+    style ADMIN fill:#f3e5f5
+    style PAYMENT fill:#fff8e1
+    style CHAT fill:#e0f2f1

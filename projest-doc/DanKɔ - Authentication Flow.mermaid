@@ -1,0 +1,102 @@
+flowchart TB
+    subgraph SPLASH["APP LAUNCH"]
+        A[🚀 Launch App] --> B{Check Local Storage}
+        B --> C{Token Exists?}
+        C -->|No| D{First Install?}
+        C -->|Yes| E[Validate Token]
+        D -->|Yes| F[Show Onboarding]
+        D -->|No| G[Show Login]
+        E --> H{Token Valid?}
+        H -->|Yes| I[Auto Login]
+        H -->|No| G
+        F --> F1[Slide 1: Find Properties]
+        F1 --> F2[Slide 2: Visual Tours]
+        F2 --> F3[Slide 3: Direct Contact]
+        F3 --> F4[Slide 4: Get Started]
+        F4 --> G
+    end
+
+    subgraph LOGIN["LOGIN FLOW"]
+        G[Welcome Screen] --> J{User Action}
+        J -->|Login| K[Login Screen]
+        J -->|Register| L[Register Screen]
+        
+        K --> K1[Enter Phone Number]
+        K1 --> K2[Enter Password]
+        K2 --> K3[Tap Login]
+        K3 --> K4{Credentials Valid?}
+        K4 -->|No| K5[Show Error]
+        K5 --> K1
+        K4 -->|Yes| K6{Account Active?}
+        K6 -->|No| K7[Account Suspended]
+        K6 -->|Yes| I
+    end
+
+    subgraph REGISTER["REGISTRATION FLOW"]
+        L --> L1[Enter Phone Number]
+        L1 --> L2[Enter Full Name]
+        L2 --> L3[Create Password]
+        L3 --> L4[Confirm Password]
+        L4 --> L5{Passwords Match?}
+        L5 -->|No| L3
+        L5 -->|Yes| L6[Send OTP]
+        L6 --> L7[Enter 6-Digit OTP]
+        L7 --> L8{OTP Valid?}
+        L8 -->|No| L9{Retry?}
+        L9 -->|Yes| L6
+        L9 -->|No| L1
+        L8 -->|Yes| L10[Phone Verified ✓]
+    end
+
+    subgraph ROLE["ROLE SELECTION"]
+        L10 --> M[Select Your Role]
+        M --> M1{Role?}
+        M1 -->|Buyer/Tenant| N1[Buyer Profile Setup]
+        M1 -->|Owner/Landlord| N2[Owner Profile Setup]
+        
+        N1 --> N1a[Preferred Locations?]
+        N1a --> N1b[Budget Range?]
+        N1b --> N1c[Property Type Interest?]
+        N1c --> N1d[Profile Photo?]
+        N1d --> N1e[✅ Buyer Account Created]
+        
+        N2 --> N2a[Upload Ghana Card/Voter ID]
+        N2a --> N2b[Take Selfie for Verification]
+        N2b --> N2c[Profile Photo?]
+        N2c --> N2d{ID Verification}
+        N2d -->|Auto-Approved| N2e[✅ Owner Account Created]
+        N2d -->|Manual Review| N2f[⏳ Pending Verification]
+        N2f --> N2g[Admin Reviews]
+        N2g -->|Approved| N2e
+        N2g -->|Rejected| N2h[❌ Resubmit ID]
+        N2h --> N2a
+    end
+
+    subgraph DESTINATION["DESTINATION"]
+        I --> O{User Role?}
+        N1e --> O
+        N2e --> O
+        O -->|Buyer| P[🏠 Buyer Home]
+        O -->|Owner| Q[📊 Owner Dashboard]
+        O -->|Admin| R[⚙️ Admin Panel]
+    end
+
+    subgraph RECOVERY["PASSWORD RECOVERY"]
+        K --> K8[Forgot Password?]
+        K8 --> R1[Enter Phone Number]
+        R1 --> R2[Send Reset OTP]
+        R2 --> R3[Enter OTP]
+        R3 --> R4{Valid?}
+        R4 -->|No| R2
+        R4 -->|Yes| R5[Enter New Password]
+        R5 --> R6[Confirm Password]
+        R6 --> R7[Password Reset ✓]
+        R7 --> K
+    end
+
+    style SPLASH fill:#e3f2fd
+    style LOGIN fill:#fff3e0
+    style REGISTER fill:#e8f5e9
+    style ROLE fill:#fce4ec
+    style DESTINATION fill:#f3e5f5
+    style RECOVERY fill:#fff8e1
