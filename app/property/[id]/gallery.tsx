@@ -104,15 +104,23 @@ export default function PropertyGalleryScreen() {
         savedScale.value = scale.value;
       })
       .onUpdate((event) => {
-        scale.value = Math.max(1, Math.min(savedScale.value * event.scale, 4));
+        // Allow zoom from 0.1x (very small) to 5x (very large)
+        scale.value = Math.max(
+          0.1,
+          Math.min(savedScale.value * event.scale, 5)
+        );
       })
       .onEnd(() => {
-        if (scale.value < 1) {
-          scale.value = withSpring(1);
+        // Snap to bounds if too extreme
+        if (scale.value < 0.1) {
+          scale.value = withSpring(0.1);
+        } else if (scale.value > 5) {
+          scale.value = withSpring(5);
+        }
+        // Reset translation when zoomed out to original or smaller
+        if (scale.value <= 1) {
           translateX.value = withSpring(0);
           translateY.value = withSpring(0);
-        } else if (scale.value > 4) {
-          scale.value = withSpring(4);
         }
         savedScale.value = scale.value;
       });
@@ -123,8 +131,9 @@ export default function PropertyGalleryScreen() {
         savedTranslateY.value = translateY.value;
       })
       .onUpdate((event) => {
-        if (scale.value > 1) {
-          const maxTranslate = ((scale.value - 1) * SCREEN_WIDTH) / 2;
+        // Allow panning when zoomed in (scale > 1) or zoomed out (scale < 1)
+        if (scale.value !== 1) {
+          const maxTranslate = (Math.abs(scale.value - 1) * SCREEN_WIDTH) / 2;
           translateX.value = Math.max(
             -maxTranslate,
             Math.min(maxTranslate, savedTranslateX.value + event.translationX)
@@ -136,7 +145,8 @@ export default function PropertyGalleryScreen() {
         }
       })
       .onEnd(() => {
-        if (scale.value <= 1) {
+        // Reset translation when at original size
+        if (scale.value === 1) {
           translateX.value = withSpring(0);
           translateY.value = withSpring(0);
         }
@@ -148,7 +158,17 @@ export default function PropertyGalleryScreen() {
     const doubleTapGesture = Gesture.Tap()
       .numberOfTaps(2)
       .onEnd(() => {
-        if (scale.value > 1) {
+        // Cycle through: zoomed in -> original -> zoomed out -> original
+        if (scale.value > 1.1) {
+          // If zoomed in, go to original
+          scale.value = withSpring(1);
+          translateX.value = withSpring(0);
+          translateY.value = withSpring(0);
+          savedScale.value = 1;
+          savedTranslateX.value = 0;
+          savedTranslateY.value = 0;
+        } else if (scale.value < 0.9) {
+          // If zoomed out, go to original
           scale.value = withSpring(1);
           translateX.value = withSpring(0);
           translateY.value = withSpring(0);
@@ -156,6 +176,7 @@ export default function PropertyGalleryScreen() {
           savedTranslateX.value = 0;
           savedTranslateY.value = 0;
         } else {
+          // If at original, zoom in to 2x
           scale.value = withSpring(2);
           savedScale.value = 2;
         }
