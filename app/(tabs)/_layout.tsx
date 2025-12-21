@@ -1,76 +1,93 @@
 import { Tabs } from "expo-router";
 import React from "react";
-import { Ionicons } from "@expo/vector-icons";
-import { Colors } from "@/constants/design";
+import { BottomNavigation, type TabItem } from "@/components/BottomNavigation";
+
+const TABS: TabItem[] = [
+  {
+    id: "index",
+    label: "Home",
+    icon: "home-outline",
+    activeIcon: "home",
+  },
+  {
+    id: "search",
+    label: "Search",
+    icon: "search-outline",
+    activeIcon: "search",
+  },
+  {
+    id: "map",
+    label: "Map",
+    icon: "map-outline",
+    activeIcon: "map",
+  },
+  {
+    id: "messages",
+    label: "Messages",
+    icon: "chatbubbles-outline",
+    activeIcon: "chatbubbles",
+  },
+  {
+    id: "profile",
+    label: "Profile",
+    icon: "person-outline",
+    activeIcon: "person",
+  },
+];
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.primaryGreen,
-        tabBarInactiveTintColor: Colors.textSecondary,
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: Colors.surface,
-          borderTopWidth: 1,
-          borderTopColor: Colors.divider,
-          paddingBottom: 8,
-          paddingTop: 8,
-          height: 60,
+          display: "none", // Hide default tab bar
         },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: "600",
-        },
+      }}
+      tabBar={(props) => {
+        const currentRouteName = props.state.routes[props.state.index].name;
+        return (
+          <BottomNavigation
+            tabs={TABS}
+            activeTab={currentRouteName}
+            onTabPress={(tabId) => {
+              const route = props.state.routes.find((r) => r.name === tabId);
+              if (route) {
+                props.navigation.navigate(route.name as never);
+              }
+            }}
+          />
+        );
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size || 24} color={color} />
-          ),
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
           title: "Search",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="search" size={size || 24} color={color} />
-          ),
         }}
       />
       <Tabs.Screen
         name="map"
         options={{
           title: "Map",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="map-outline" size={size || 24} color={color} />
-          ),
         }}
       />
       <Tabs.Screen
         name="messages"
         options={{
           title: "Messages",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name="chatbubbles-outline"
-              size={size || 24}
-              color={color}
-            />
-          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size || 24} color={color} />
-          ),
         }}
       />
     </Tabs>
