@@ -12,12 +12,13 @@ import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import MapView, {
+import RNMapView, {
   Marker,
   PROVIDER_GOOGLE,
   Region,
   MapPressEvent,
 } from "react-native-maps";
+import MapView from "react-native-map-clustering";
 import * as Location from "expo-location";
 import {
   BottomSheetModal,
@@ -81,7 +82,7 @@ const BOTTOM_NAV_TABS: TabItem[] = [
 export default function MapScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<RNMapView>(null);
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const filterSheetRef = useRef<BottomSheetModal>(null);
 
@@ -346,6 +347,41 @@ export default function MapScreen() {
           showsBuildings={true}
           showsTraffic={false}
           onPress={handleMapPress}
+          // Clustering configuration
+          clusterColor={Colors.primaryGreen}
+          clusterTextColor={Colors.surface}
+          clusterFontFamily={Platform.OS === "ios" ? "System" : "Roboto"}
+          radius={50}
+          extent={512}
+          minZoom={1}
+          maxZoom={20}
+          minPoints={2}
+          preserveClusterPressBehavior={true}
+          animationEnabled={true}
+          spiralEnabled={true}
+          superClusterRef={{ current: null }}
+          renderCluster={(cluster) => {
+            const { id, geometry, onPress, properties } = cluster;
+            const points = properties.point_count;
+            return (
+              <Marker
+                key={`cluster-${id}`}
+                coordinate={{
+                  longitude: geometry.coordinates[0],
+                  latitude: geometry.coordinates[1],
+                }}
+                onPress={onPress}
+                tracksViewChanges={false}
+              >
+                <View style={styles.clusterContainer}>
+                  <View style={styles.clusterCircle}>
+                    <Text style={styles.clusterText}>{points}</Text>
+                  </View>
+                  <Text style={styles.clusterLabel}>properties</Text>
+                </View>
+              </Marker>
+            );
+          }}
           onMapReady={() => {
             // Fit map to show all markers
             if (filteredProperties.length > 0) {
@@ -743,6 +779,50 @@ const styles = StyleSheet.create({
   },
   mapTypeButton: {
     marginLeft: Spacing.xs,
+  },
+  // Cluster Styles
+  clusterContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  clusterCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: Colors.primaryGreen,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 3,
+    borderColor: Colors.surface,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  clusterText: {
+    ...Typography.titleMedium,
+    color: Colors.surface,
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  clusterLabel: {
+    ...Typography.caption,
+    color: Colors.primaryGreen,
+    fontWeight: "600",
+    fontSize: 9,
+    marginTop: 2,
+    backgroundColor: Colors.surface,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    overflow: "hidden",
   },
   markerContainer: {
     alignItems: "center",
