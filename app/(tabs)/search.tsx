@@ -407,16 +407,16 @@ export default function SearchScreen() {
         )}
       </View>
       <View style={styles.gridContent}>
-        <Text style={styles.gridTitle} numberOfLines={2}>
+        <Text style={styles.gridTitle} numberOfLines={1}>
           {property.title}
         </Text>
-        <View style={styles.gridLocation}>
+        <View style={styles.locationRow}>
           <Ionicons
             name="location-outline"
             size={12}
             color={Colors.textSecondary}
           />
-          <Text style={styles.gridLocationText} numberOfLines={1}>
+          <Text style={styles.gridLocation} numberOfLines={1}>
             {property.location}
           </Text>
         </View>
@@ -450,7 +450,7 @@ export default function SearchScreen() {
             <View style={styles.backButtonCircle}>
               <Ionicons
                 name="arrow-back"
-                size={20}
+                size={22}
                 color={Colors.textPrimary}
               />
             </View>
@@ -847,13 +847,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   actionButtonBackground: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: Colors.surface,
     justifyContent: "center",
     alignItems: "center",
-    position: "relative",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -1202,34 +1201,31 @@ const styles = StyleSheet.create({
   },
   gridContent: {
     padding: Spacing.md,
-    paddingTop: Spacing.sm,
   },
   gridTitle: {
     ...Typography.titleMedium,
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "700",
     color: Colors.textPrimary,
     marginBottom: Spacing.xs / 2,
-    minHeight: 36,
-    lineHeight: 18,
   },
   gridLocation: {
+    ...Typography.bodyMedium,
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.xs,
+  },
+  gridPrice: {
+    ...Typography.titleMedium,
+    fontSize: 16,
+    fontWeight: "800",
+    color: Colors.primaryGreen,
+  },
+  locationRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.xs / 2,
-    marginBottom: Spacing.sm,
-  },
-  gridLocationText: {
-    ...Typography.bodyMedium,
-    fontSize: 11,
-    color: Colors.textSecondary,
-    flex: 1,
-  },
-  gridPrice: {
-    ...Typography.headlineMedium,
-    fontSize: 16,
-    fontWeight: "700",
-    color: Colors.primaryGreen,
+    marginBottom: Spacing.xs,
   },
   emptyState: {
     alignItems: "center",
