@@ -93,6 +93,9 @@ const GALLERY_TABS: TabItem[] = [
   },
 ];
 
+const THUMBNAIL_SIZE = 60;
+const THUMBNAIL_SPACING = 8;
+
 export default function PropertyGalleryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -104,11 +107,33 @@ export default function PropertyGalleryScreen() {
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [currentImageIndex, setCurrentImageIndex] = useState(initialIndex);
   const flatListRef = useRef<FlatList>(null);
+  const thumbnailListRef = useRef<FlatList>(null);
 
   const handleImageScroll = (event: any) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
     const index = Math.round(contentOffsetX / SCREEN_WIDTH);
+    if (index !== currentImageIndex) {
+      setCurrentImageIndex(index);
+      // Scroll thumbnail to center the active one
+      thumbnailListRef.current?.scrollToIndex({
+        index,
+        animated: true,
+        viewPosition: 0.5,
+      });
+    }
+  };
+
+  const jumpToImage = (index: number) => {
+    flatListRef.current?.scrollToIndex({
+      index,
+      animated: true,
+    });
     setCurrentImageIndex(index);
+    thumbnailListRef.current?.scrollToIndex({
+      index,
+      animated: true,
+      viewPosition: 0.5,
+    });
   };
 
   const goToPreviousImage = () => {
@@ -290,6 +315,32 @@ export default function PropertyGalleryScreen() {
     );
   };
 
+  const renderThumbnail = ({
+    item,
+    index,
+  }: {
+    item: string;
+    index: number;
+  }) => {
+    const isActive = index === currentImageIndex;
+    return (
+      <TouchableOpacity
+        onPress={() => jumpToImage(index)}
+        activeOpacity={0.8}
+        style={[
+          styles.thumbnailWrapper,
+          isActive && styles.thumbnailWrapperActive,
+        ]}
+      >
+        <Image
+          source={{ uri: item }}
+          style={[styles.thumbnail, isActive && styles.thumbnailActive]}
+        />
+        {isActive && <View style={styles.thumbnailActiveOverlay} />}
+      </TouchableOpacity>
+    );
+  };
+
   const renderPhotos = () => (
     <GestureHandlerRootView style={styles.tabContent}>
       <FlatList
@@ -312,11 +363,33 @@ export default function PropertyGalleryScreen() {
         )}
         scrollEnabled={true}
       />
+
+      {/* Counter Badge */}
       <View style={styles.counterContainer}>
         <Text style={styles.counterText}>
           {currentImageIndex + 1}/{MOCK_IMAGES.length}
         </Text>
       </View>
+
+      {/* Thumbnail Strip */}
+      <View style={styles.thumbnailContainer}>
+        <FlatList
+          ref={thumbnailListRef}
+          data={MOCK_IMAGES}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.thumbnailList}
+          keyExtractor={(item, index) => `thumb-${index}`}
+          renderItem={renderThumbnail}
+          initialScrollIndex={currentImageIndex > 2 ? currentImageIndex - 2 : 0}
+          getItemLayout={(_, index) => ({
+            length: THUMBNAIL_SIZE + THUMBNAIL_SPACING,
+            offset: (THUMBNAIL_SIZE + THUMBNAIL_SPACING) * index,
+            index,
+          })}
+        />
+      </View>
+
       {/* Navigation Buttons */}
       {currentImageIndex > 0 && (
         <TouchableOpacity
@@ -610,7 +683,7 @@ const styles = StyleSheet.create({
   },
   counterContainer: {
     position: "absolute",
-    bottom: 100,
+    bottom: 180,
     left: 0,
     right: 0,
     alignItems: "center",
@@ -624,6 +697,55 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: 20,
+  },
+  thumbnailContainer: {
+    position: "absolute",
+    bottom: 100,
+    left: 0,
+    right: 0,
+    height: THUMBNAIL_SIZE + 16,
+    justifyContent: "center",
+  },
+  thumbnailList: {
+    paddingHorizontal: Spacing.lg,
+    gap: THUMBNAIL_SPACING,
+  },
+  thumbnailWrapper: {
+    width: THUMBNAIL_SIZE,
+    height: THUMBNAIL_SIZE,
+    borderRadius: 10,
+    overflow: "hidden",
+    borderWidth: 2,
+    borderColor: "transparent",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  thumbnailWrapperActive: {
+    borderColor: Colors.primaryGreen,
+    borderWidth: 3,
+    transform: [{ scale: 1.1 }],
+  },
+  thumbnail: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+  thumbnailActive: {
+    opacity: 1,
+  },
+  thumbnailActiveOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(34, 197, 94, 0.15)",
+    borderRadius: 8,
   },
   videoContainer: {
     paddingBottom: Spacing["2xl"],
