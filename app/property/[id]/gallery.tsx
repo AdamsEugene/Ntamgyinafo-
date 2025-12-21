@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -9,18 +9,21 @@ import {
   TouchableOpacity,
   FlatList,
   ScrollView,
-  Animated,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import {
-  PinchGestureHandler,
-  PanGestureHandler,
-  TapGestureHandler,
-  State,
+  GestureHandlerRootView,
+  Gesture,
+  GestureDetector,
 } from "react-native-gesture-handler";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 import { Colors, Typography, Spacing } from "@/constants/design";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -66,193 +69,140 @@ export default function PropertyGalleryScreen() {
 
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [currentImageIndex, setCurrentImageIndex] = useState(initialIndex);
-  const [imageScales, setImageScales] = useState<{
-    [key: number]: Animated.ValueXY;
-  }>({});
-  const [imageRotations, setImageRotations] = useState<{
-    [key: number]: Animated.Value;
-  }>({});
-  const [imageTranslations, setImageTranslations] = useState<{
-    [key: number]: Animated.ValueXY;
-  }>({});
-  const doubleTapRefs = useRef<{ [key: number]: any }>({});
-  const pinchRefs = useRef<{ [key: number]: any }>({});
-  const panRefs = useRef<{ [key: number]: any }>({});
 
   const handleImageScroll = (event: any) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
     const index = Math.round(contentOffsetX / SCREEN_WIDTH);
     setCurrentImageIndex(index);
-    // Reset zoom/rotation when changing images
-    resetImageTransform(index);
   };
 
-  const getImageScale = (index: number) => {
-    if (!imageScales[index]) {
-      imageScales[index] = new Animated.ValueXY({ x: 1, y: 1 });
-      setImageScales({ ...imageScales });
-    }
-    return imageScales[index];
-  };
+  const ZoomableImage = ({ item, index }: { item: string; index: number }) => {
+    const scale = useSharedValue(1);
+    const translateX = useSharedValue(0);
+    const translateY = useSharedValue(0);
+    const rotation = useSharedValue(0);
+    const savedScale = useSharedValue(1);
+    const savedTranslateX = useSharedValue(0);
+    const savedTranslateY = useSharedValue(0);
 
-  const getImageRotation = (index: number) => {
-    if (!imageRotations[index]) {
-      imageRotations[index] = new Animated.Value(0);
-      setImageRotations({ ...imageRotations });
-    }
-    return imageRotations[index];
-  };
+    const resetTransform = () => {
+      scale.value = withSpring(1);
+      translateX.value = withSpring(0);
+      translateY.value = withSpring(0);
+      rotation.value = withSpring(0);
+      savedScale.value = 1;
+      savedTranslateX.value = 0;
+      savedTranslateY.value = 0;
+    };
 
-  const resetImageTransform = (index: number) => {
-    if (imageScales[index]) {
-      Animated.parallel([
-        Animated.spring(imageScales[index], {
-          toValue: { x: 1, y: 1 },
-          useNativeDriver: true,
-        }),
-        Animated.spring(imageRotations[index] || new Animated.Value(0), {
-          toValue: 0,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  };
+    const handleRotate = () => {
+      rotation.value = withSpring(rotation.value + 90);
+    };
 
-  const handleDoubleTap = (index: number) => {
-    const scale = getImageScale(index);
-    const currentScale = (scale.x as any)._value || 1;
-
-    Animated.spring(scale, {
-      toValue: currentScale > 1 ? { x: 1, y: 1 } : { x: 2, y: 2 },
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePinch = (index: number, event: any) => {
-    const scale = getImageScale(index);
-    const newScale = event.nativeEvent.scale;
-
-    scale.setValue({
-      x: Math.max(1, Math.min(newScale, 4)),
-      y: Math.max(1, Math.min(newScale, 4)),
-    });
-  };
-
-  const handlePan = (index: number, event: any) => {
-    const scale = getImageScale(index);
-    const currentScale = (scale.x as any)._value || 1;
-
-    // Pan is handled automatically by the gesture handler
-    // Scale is maintained during pan
-    if (currentScale > 1) {
-      scale.setValue({
-        x: currentScale,
-        y: currentScale,
+    const pinchGesture = Gesture.Pinch()
+      .onStart(() => {
+        savedScale.value = scale.value;
+      })
+      .onUpdate((event) => {
+        scale.value = Math.max(1, Math.min(savedScale.value * event.scale, 4));
+      })
+      .onEnd(() => {
+        if (scale.value < 1) {
+          scale.value = withSpring(1);
+          translateX.value = withSpring(0);
+          translateY.value = withSpring(0);
+        } else if (scale.value > 4) {
+          scale.value = withSpring(4);
+        }
+        savedScale.value = scale.value;
       });
-    }
-  };
 
-  const handleRotate = (index: number) => {
-    const rotation = getImageRotation(index);
-    const currentRotation = (rotation as any)._value || 0;
+    const panGesture = Gesture.Pan()
+      .onStart(() => {
+        savedTranslateX.value = translateX.value;
+        savedTranslateY.value = translateY.value;
+      })
+      .onUpdate((event) => {
+        if (scale.value > 1) {
+          const maxTranslate = ((scale.value - 1) * SCREEN_WIDTH) / 2;
+          translateX.value = Math.max(
+            -maxTranslate,
+            Math.min(maxTranslate, savedTranslateX.value + event.translationX)
+          );
+          translateY.value = Math.max(
+            -maxTranslate,
+            Math.min(maxTranslate, savedTranslateY.value + event.translationY)
+          );
+        }
+      })
+      .onEnd(() => {
+        if (scale.value <= 1) {
+          translateX.value = withSpring(0);
+          translateY.value = withSpring(0);
+        }
+        savedTranslateX.value = translateX.value;
+        savedTranslateY.value = translateY.value;
+      })
+      .simultaneousWithExternalGesture(pinchGesture);
 
-    Animated.spring(rotation, {
-      toValue: currentRotation + 90,
-      useNativeDriver: true,
-    }).start();
-  };
+    const doubleTapGesture = Gesture.Tap()
+      .numberOfTaps(2)
+      .onEnd(() => {
+        if (scale.value > 1) {
+          scale.value = withSpring(1);
+          translateX.value = withSpring(0);
+          translateY.value = withSpring(0);
+          savedScale.value = 1;
+          savedTranslateX.value = 0;
+          savedTranslateY.value = 0;
+        } else {
+          scale.value = withSpring(2);
+          savedScale.value = 2;
+        }
+      });
 
-  const renderZoomableImage = (item: string, index: number) => {
-    const scale = getImageScale(index);
-    const rotation = getImageRotation(index);
+    const composedGesture = Gesture.Simultaneous(
+      doubleTapGesture,
+      Gesture.Simultaneous(pinchGesture, panGesture)
+    );
 
-    const rotateInterpolate = rotation.interpolate({
-      inputRange: [0, 360],
-      outputRange: ["0deg", "360deg"],
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        transform: [
+          { translateX: translateX.value },
+          { translateY: translateY.value },
+          { scale: scale.value },
+          { rotate: `${rotation.value}deg` },
+        ],
+      };
     });
-
-    // Initialize refs if they don't exist
-    if (!doubleTapRefs.current[index]) {
-      doubleTapRefs.current[index] = React.createRef();
-    }
-    if (!pinchRefs.current[index]) {
-      pinchRefs.current[index] = React.createRef();
-    }
-    if (!panRefs.current[index]) {
-      panRefs.current[index] = React.createRef();
-    }
 
     return (
-      <View style={styles.imageContainer} key={`photo-${index}`}>
-        <TapGestureHandler
-          ref={doubleTapRefs.current[index]}
-          numberOfTaps={2}
-          onActivated={() => handleDoubleTap(index)}
-        >
+      <View style={styles.imageContainer}>
+        <GestureDetector gesture={composedGesture}>
           <Animated.View style={styles.imageWrapper}>
-            <PinchGestureHandler
-              ref={pinchRefs.current[index]}
-              onGestureEvent={(event) => handlePinch(index, event)}
-              onHandlerStateChange={(event) => {
-                if (event.nativeEvent.oldState === State.ACTIVE) {
-                  const currentScale = (scale.x as any)._value || 1;
-                  if (currentScale < 1) {
-                    Animated.spring(scale, {
-                      toValue: { x: 1, y: 1 },
-                      useNativeDriver: true,
-                    }).start();
-                  } else if (currentScale > 4) {
-                    Animated.spring(scale, {
-                      toValue: { x: 4, y: 4 },
-                      useNativeDriver: true,
-                    }).start();
-                  }
-                }
-              }}
-              simultaneousHandlers={[panRefs.current[index]]}
-            >
-              <Animated.View style={styles.gestureContainer}>
-                <PanGestureHandler
-                  ref={panRefs.current[index]}
-                  onGestureEvent={(event) => handlePan(index, event)}
-                  minPointers={1}
-                  maxPointers={1}
-                  simultaneousHandlers={[pinchRefs.current[index]]}
-                >
-                  <Animated.View style={styles.gestureContainer}>
-                    <Animated.Image
-                      source={{ uri: item }}
-                      style={[
-                        styles.fullImage,
-                        {
-                          transform: [
-                            { scaleX: scale.x },
-                            { scaleY: scale.y },
-                            { rotate: rotateInterpolate },
-                          ],
-                        },
-                      ]}
-                      resizeMode="cover"
-                    />
-                  </Animated.View>
-                </PanGestureHandler>
-              </Animated.View>
-            </PinchGestureHandler>
+            <Animated.View style={styles.gestureContainer}>
+              <Animated.Image
+                source={{ uri: item }}
+                style={[styles.fullImage, animatedStyle]}
+                resizeMode="cover"
+              />
+            </Animated.View>
           </Animated.View>
-        </TapGestureHandler>
+        </GestureDetector>
 
         {/* Image Controls */}
         <View style={styles.imageControls}>
           <TouchableOpacity
             style={styles.controlButton}
-            onPress={() => resetImageTransform(index)}
+            onPress={resetTransform}
             activeOpacity={0.7}
           >
             <Ionicons name="refresh-outline" size={20} color="#FFFFFF" />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.controlButton}
-            onPress={() => handleRotate(index)}
+            onPress={handleRotate}
             activeOpacity={0.7}
           >
             <Ionicons name="sync-outline" size={20} color="#FFFFFF" />
@@ -263,7 +213,7 @@ export default function PropertyGalleryScreen() {
   };
 
   const renderPhotos = () => (
-    <View style={styles.tabContent}>
+    <GestureHandlerRootView style={styles.tabContent}>
       <FlatList
         data={MOCK_IMAGES}
         horizontal
@@ -278,7 +228,9 @@ export default function PropertyGalleryScreen() {
           index,
         })}
         keyExtractor={(item, index) => `photo-${index}`}
-        renderItem={({ item, index }) => renderZoomableImage(item, index)}
+        renderItem={({ item, index }) => (
+          <ZoomableImage item={item} index={index} />
+        )}
         scrollEnabled={true}
       />
       <View style={styles.counterContainer}>
@@ -286,7 +238,7 @@ export default function PropertyGalleryScreen() {
           {currentImageIndex + 1}/{MOCK_IMAGES.length}
         </Text>
       </View>
-    </View>
+    </GestureHandlerRootView>
   );
 
   const renderVideos = () => (
