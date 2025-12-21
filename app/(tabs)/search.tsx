@@ -752,6 +752,15 @@ export default function SearchScreen() {
           onClose={() => setShowFilterSheet(false)}
           onApply={(newFilters: FilterOptions) => {
             setFilters(newFilters as Filter);
+            setShowFilterSheet(false);
+            // Navigate to Search Results Screen
+            router.push({
+              pathname: "/search-results",
+              params: {
+                filters: JSON.stringify(newFilters),
+                location: "Accra", // You can get this from location selector
+              },
+            });
           }}
           initialFilters={filters as FilterOptions}
           resultsCount={filteredProperties.length}

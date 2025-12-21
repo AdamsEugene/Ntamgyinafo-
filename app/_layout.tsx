@@ -62,6 +62,13 @@ export default function RootLayout() {
                 }}
               />
               <Stack.Screen
+                name="search-results"
+                options={{
+                  headerShown: false,
+                  presentation: "card",
+                }}
+              />
+              <Stack.Screen
                 name="modal"
                 options={{ presentation: "modal", title: "Modal" }}
               />
