@@ -69,6 +69,13 @@ export default function RootLayout() {
                 }}
               />
               <Stack.Screen
+                name="saved-properties"
+                options={{
+                  headerShown: false,
+                  presentation: "card",
+                }}
+              />
+              <Stack.Screen
                 name="modal"
                 options={{ presentation: "modal", title: "Modal" }}
               />

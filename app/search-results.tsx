@@ -632,9 +632,7 @@ export default function SearchResultsScreen() {
             } else if (tabId === "map") {
               router.replace("/(tabs)/map");
             } else if (tabId === "saved") {
-              // TODO: Navigate to Saved Properties screen when implemented
-              // For now, navigate to profile where saved properties might be
-              router.replace("/(tabs)/profile");
+              router.push("/saved-properties");
             }
           }}
         />

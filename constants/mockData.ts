@@ -808,3 +808,19 @@ export const getPropertyById = (id: string): Property | null => {
 export const getMapPropertyById = (id: string): MapProperty | null => {
   return MAP_PROPERTIES.find((p) => p.id === id) || null;
 };
+
+// Get saved properties (properties with isSaved: true)
+export const getSavedProperties = (): Property[] => {
+  return ALL_PROPERTIES.filter((p) => p.isSaved === true);
+};
+
+// Get saved property IDs as a Set
+export const getSavedPropertyIds = (): Set<string> => {
+  const savedIds = new Set<string>();
+  ALL_PROPERTIES.forEach((p) => {
+    if (p.isSaved) {
+      savedIds.add(p.id);
+    }
+  });
+  return savedIds;
+};
