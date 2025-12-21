@@ -11,7 +11,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   Platform,
   RefreshControl,
 } from "react-native";
@@ -33,16 +32,13 @@ import {
   BottomSheetBackdrop,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
+import {
+  PropertyListCard,
+  PropertyGridCard,
+  type Property,
+} from "@/components/PropertyCard";
 
-interface Property {
-  id: string;
-  title: string;
-  location: string;
-  price: number;
-  image: string;
-  bedrooms?: number;
-  bathrooms?: number;
-  isSaved?: boolean;
+interface PropertyWithTypes extends Property {
   propertyType?: "house" | "apartment" | "land" | "commercial";
   transactionType?: "buy" | "rent";
 }
@@ -65,7 +61,7 @@ type SortOption =
   | "bedrooms";
 
 // Mock data - replace with actual API data
-const ALL_PROPERTIES: Property[] = [
+const ALL_PROPERTIES: PropertyWithTypes[] = [
   {
     id: "1",
     title: "4 Bedroom House in East Legon",
@@ -191,7 +187,7 @@ export default function SearchResultsScreen() {
   );
   const [filters, setFilters] = useState<Filter>((params.filters as any) || {});
   const [filteredProperties, setFilteredProperties] =
-    useState<Property[]>(ALL_PROPERTIES);
+    useState<PropertyWithTypes[]>(ALL_PROPERTIES);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [showMenuSheet, setShowMenuSheet] = useState(false);
   const [showSortSheet, setShowSortSheet] = useState(false);
@@ -327,144 +323,6 @@ export default function SearchResultsScreen() {
       }
     }, 1000);
   }, [loadingMore, hasMore, page]);
-
-  const renderPropertyList = (property: Property) => (
-    <TouchableOpacity
-      style={styles.listCard}
-      onPress={() => {
-        router.push(`/property/${property.id}`);
-      }}
-      activeOpacity={0.8}
-    >
-      <Image source={{ uri: property.image }} style={styles.listImage} />
-      <View style={styles.listContent}>
-        <View style={styles.listHeader}>
-          <Text style={styles.listTitle} numberOfLines={1}>
-            {property.title}
-          </Text>
-          <TouchableOpacity
-            onPress={(e) => {
-              e.stopPropagation();
-              toggleSave(property.id);
-            }}
-            style={styles.saveButton}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name={
-                savedProperties.has(property.id) ? "heart" : "heart-outline"
-              }
-              size={20}
-              color={
-                savedProperties.has(property.id)
-                  ? "#FF3B30"
-                  : Colors.textSecondary
-              }
-            />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.locationRow}>
-          <Ionicons
-            name="location-outline"
-            size={14}
-            color={Colors.textSecondary}
-          />
-          <Text style={styles.listLocation} numberOfLines={1}>
-            {property.location}
-          </Text>
-        </View>
-        <Text style={styles.listPrice}>{formatPrice(property.price)}</Text>
-        {property.bedrooms && property.bathrooms && (
-          <View style={styles.statsRow}>
-            <View style={styles.statChip}>
-              <Ionicons
-                name="bed-outline"
-                size={14}
-                color={Colors.primaryGreen}
-              />
-              <Text style={styles.statText}>{property.bedrooms}</Text>
-            </View>
-            <View style={styles.statChip}>
-              <Ionicons
-                name="water-outline"
-                size={14}
-                color={Colors.primaryGreen}
-              />
-              <Text style={styles.statText}>{property.bathrooms}</Text>
-            </View>
-          </View>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
-
-  const renderPropertyGrid = (property: Property) => (
-    <TouchableOpacity
-      style={styles.gridCard}
-      onPress={() => {
-        router.push(`/property/${property.id}`);
-      }}
-      activeOpacity={0.8}
-    >
-      <View style={styles.gridImageContainer}>
-        <Image
-          source={{ uri: property.image }}
-          style={styles.gridImage}
-          resizeMode="cover"
-        />
-        <TouchableOpacity
-          style={styles.gridSaveButton}
-          onPress={(e) => {
-            e.stopPropagation();
-            toggleSave(property.id);
-          }}
-          activeOpacity={0.7}
-        >
-          <View style={styles.gridSaveButtonBackground}>
-            <Ionicons
-              name={
-                savedProperties.has(property.id) ? "heart" : "heart-outline"
-              }
-              size={20}
-              color={
-                savedProperties.has(property.id)
-                  ? "#FF3B30"
-                  : Colors.textPrimary
-              }
-            />
-          </View>
-        </TouchableOpacity>
-        {property.bedrooms && property.bathrooms && (
-          <View style={styles.gridBadge}>
-            <Ionicons name="bed-outline" size={12} color={Colors.textPrimary} />
-            <Text style={styles.gridBadgeText}>{property.bedrooms}</Text>
-            <Ionicons
-              name="water-outline"
-              size={12}
-              color={Colors.textPrimary}
-            />
-            <Text style={styles.gridBadgeText}>{property.bathrooms}</Text>
-          </View>
-        )}
-      </View>
-      <View style={styles.gridContent}>
-        <Text style={styles.gridTitle} numberOfLines={1}>
-          {property.title}
-        </Text>
-        <View style={styles.locationRow}>
-          <Ionicons
-            name="location-outline"
-            size={12}
-            color={Colors.textSecondary}
-          />
-          <Text style={styles.gridLocation} numberOfLines={1}>
-            {property.location}
-          </Text>
-        </View>
-        <Text style={styles.gridPrice}>{formatPrice(property.price)}</Text>
-      </View>
-    </TouchableOpacity>
-  );
 
   const getActiveFiltersCount = () => {
     let count = 0;
@@ -613,14 +471,25 @@ export default function SearchResultsScreen() {
           {viewMode === "list" ? (
             <View style={styles.listContainer}>
               {filteredProperties.map((property) => (
-                <View key={property.id}>{renderPropertyList(property)}</View>
+                <PropertyListCard
+                  key={property.id}
+                  property={property}
+                  savedProperties={savedProperties}
+                  onToggleSave={toggleSave}
+                  formatPrice={formatPrice}
+                />
               ))}
             </View>
           ) : (
             <View style={styles.gridContainer}>
               {filteredProperties.map((property) => (
                 <View key={property.id} style={styles.gridItem}>
-                  {renderPropertyGrid(property)}
+                  <PropertyGridCard
+                    property={property}
+                    savedProperties={savedProperties}
+                    onToggleSave={toggleSave}
+                    formatPrice={formatPrice}
+                  />
                 </View>
               ))}
             </View>
@@ -898,86 +767,6 @@ const styles = StyleSheet.create({
   listContainer: {
     gap: Spacing.md,
   },
-  listCard: {
-    flexDirection: "row",
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    overflow: "hidden",
-    marginBottom: Spacing.md,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
-  },
-  listImage: {
-    width: 120,
-    height: 120,
-    backgroundColor: Colors.divider,
-  },
-  listContent: {
-    flex: 1,
-    padding: Spacing.md,
-    justifyContent: "space-between",
-  },
-  listHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    marginBottom: Spacing.xs,
-  },
-  listTitle: {
-    ...Typography.titleMedium,
-    fontSize: 16,
-    fontWeight: "700",
-    color: Colors.textPrimary,
-    flex: 1,
-    marginRight: Spacing.xs,
-  },
-  saveButton: {
-    padding: Spacing.xs / 2,
-  },
-  locationRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs / 2,
-    marginBottom: Spacing.xs,
-  },
-  listLocation: {
-    ...Typography.bodyMedium,
-    fontSize: 13,
-    color: Colors.textSecondary,
-    flex: 1,
-  },
-  listPrice: {
-    ...Typography.titleLarge,
-    fontSize: 18,
-    fontWeight: "800",
-    color: Colors.primaryGreen,
-    marginBottom: Spacing.xs,
-  },
-  statsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.md,
-  },
-  statChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs / 2,
-  },
-  statText: {
-    ...Typography.caption,
-    fontSize: 12,
-    fontWeight: "600",
-    color: Colors.textPrimary,
-  },
   gridContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -986,97 +775,6 @@ const styles = StyleSheet.create({
   },
   gridItem: {
     width: "48%",
-  },
-  gridCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    overflow: "hidden",
-    marginBottom: Spacing.md,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
-  },
-  gridImageContainer: {
-    width: "100%",
-    height: 180,
-    position: "relative",
-    backgroundColor: Colors.divider,
-  },
-  gridImage: {
-    width: "100%",
-    height: "100%",
-  },
-  gridSaveButton: {
-    position: "absolute",
-    top: Spacing.sm,
-    right: Spacing.sm,
-  },
-  gridSaveButtonBackground: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    justifyContent: "center",
-    alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
-  },
-  gridBadge: {
-    position: "absolute",
-    bottom: Spacing.sm,
-    left: Spacing.sm,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs / 2,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs / 2,
-    borderRadius: 12,
-  },
-  gridBadgeText: {
-    ...Typography.caption,
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-  gridContent: {
-    padding: Spacing.md,
-  },
-  gridTitle: {
-    ...Typography.titleMedium,
-    fontSize: 15,
-    fontWeight: "700",
-    color: Colors.textPrimary,
-    marginBottom: Spacing.xs / 2,
-  },
-  gridLocation: {
-    ...Typography.bodyMedium,
-    fontSize: 12,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.xs,
-  },
-  gridPrice: {
-    ...Typography.titleMedium,
-    fontSize: 16,
-    fontWeight: "800",
-    color: Colors.primaryGreen,
   },
   loadMoreButton: {
     paddingVertical: Spacing.lg,
