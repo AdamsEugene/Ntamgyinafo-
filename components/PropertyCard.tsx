@@ -229,6 +229,7 @@ export const PropertyCardStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.divider,
     overflow: "hidden",
+    marginBottom: Spacing.md,
     ...Platform.select({
       ios: {
         shadowColor: "#000",

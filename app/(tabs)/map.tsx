@@ -23,7 +23,6 @@ import {
   BottomSheetModal,
   BottomSheetBackdrop,
   BottomSheetScrollView,
-  BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import {
@@ -88,7 +87,7 @@ export default function MapScreen() {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const filterSheetRef = useRef<BottomSheetModal>(null);
 
-  const [mapType, setMapType] = useState<"standard" | "satellite">("standard");
+  const [mapType, setMapType] = useState<"standard" | "satellite">("satellite");
   const [selectedProperty, setSelectedProperty] = useState<MapProperty | null>(
     null
   );
@@ -104,8 +103,12 @@ export default function MapScreen() {
     new Set(["2", "5"])
   );
 
-  // Snap points for bottom sheet
-  const snapPoints = useMemo(() => ["25%", "50%", "90%"], []);
+  // Snap points for bottom sheet - max height is 50% of screen
+  // Using absolute values to ensure it never exceeds 50% of screen height
+  const snapPoints = useMemo(() => {
+    const screenHeight = Dimensions.get("window").height;
+    return [screenHeight * 0.25, screenHeight * 0.5];
+  }, []);
 
   // Request location permission and get user location
   React.useEffect(() => {
@@ -539,20 +542,25 @@ export default function MapScreen() {
           index={0}
           snapPoints={snapPoints}
           enablePanDownToClose
+          enableOverDrag={false}
           backdropComponent={renderBackdrop}
           backgroundStyle={styles.bottomSheetBackground}
           handleIndicatorStyle={styles.handleIndicator}
         >
-          <BottomSheetView style={styles.bottomSheetHeader}>
-            <Text style={styles.bottomSheetTitle}>Nearby Properties</Text>
-            <Text style={styles.bottomSheetSubtitle}>
-              {filteredProperties.length} properties found
-            </Text>
-          </BottomSheetView>
           <BottomSheetScrollView
             style={styles.bottomSheetContent}
             contentContainerStyle={styles.bottomSheetContentContainer}
+            showsVerticalScrollIndicator={true}
+            stickyHeaderIndices={[0]}
           >
+            {/* Sticky Header */}
+            <View style={styles.bottomSheetHeader}>
+              <Text style={styles.bottomSheetTitle}>Nearby Properties</Text>
+              <Text style={styles.bottomSheetSubtitle}>
+                {filteredProperties.length} properties found
+              </Text>
+            </View>
+            {/* Property List */}
             {filteredProperties.map((property) => (
               <PropertyListCard
                 key={property.id}
@@ -874,11 +882,13 @@ const styles = StyleSheet.create({
     width: 40,
   },
   bottomSheetHeader: {
+    backgroundColor: Colors.surface,
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.sm,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Colors.divider,
+    marginBottom: Spacing.md,
   },
   bottomSheetTitle: {
     ...Typography.headlineMedium,
@@ -894,7 +904,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bottomSheetContentContainer: {
-    padding: Spacing.lg,
-    paddingBottom: 100,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.xl,
   },
 });
