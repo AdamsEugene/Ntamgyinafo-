@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Dimensions,
   Platform,
   ActivityIndicator,
 } from "react-native";
@@ -14,8 +13,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Video, ResizeMode, AVPlaybackStatus } from "expo-av";
 import { Colors, Typography, Spacing } from "@/constants/design";
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 // Sample video URLs - replace with actual video URLs from your API
 const VIDEO_URLS: { [key: string]: string } = {
@@ -288,15 +285,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000000",
+    width: "100%",
   },
   videoContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    width: "100%",
   },
   video: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
+    width: "100%",
+    height: "100%",
   },
   controlsOverlay: {
     ...StyleSheet.absoluteFillObject,
