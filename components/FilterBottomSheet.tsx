@@ -16,7 +16,6 @@ import {
   BottomSheetModal,
   BottomSheetBackdrop,
   BottomSheetScrollView,
-  BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import { Button } from "@/components/ui/Button";
@@ -159,7 +158,7 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
       handleIndicatorStyle={styles.handleIndicator}
     >
       <BottomSheetScrollView
-        style={styles.bottomSheetContent}
+        style={styles.scrollView}
         contentContainerStyle={styles.scrollContentContainer}
         showsVerticalScrollIndicator={false}
       >
@@ -355,8 +354,8 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
           </View>
         </View>
 
-        {/* Footer */}
-        <View style={styles.footer}>
+        {/* Apply Button */}
+        <View style={styles.buttonContainer}>
           <Button
             title={
               resultsCount !== undefined
@@ -395,7 +394,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
   },
-  bottomSheetContent: {
+  scrollView: {
     flex: 1,
   },
   scrollContentContainer: {
@@ -539,11 +538,11 @@ const styles = StyleSheet.create({
   amenitiesContainer: {
     gap: Spacing.md,
   },
-  footer: {
+  buttonContainer: {
     paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: Colors.divider,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.lg,
+    marginTop: Spacing.lg,
   },
   applyButton: {
     width: "100%",
