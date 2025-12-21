@@ -16,17 +16,14 @@ import { Colors, Typography, Spacing } from "@/constants/design";
 import { Button } from "@/components/ui/Button";
 import { TextInput } from "@/components/ui/TextInput";
 
-export default function LoginScreen() {
+export default function ForgotPasswordScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [phone, setPhone] = useState("+233 24 123 4567");
-  const [password, setPassword] = useState("password123");
+  const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const validatePhone = (phoneNumber: string): boolean => {
-    // Ghana phone format: +233 XX XXX XXXX or 0XX XXX XXXX
     const ghanaPhoneRegex = /^(\+233|0)[2-9]\d{8}$/;
     const cleaned = phoneNumber.replace(/\s+/g, "");
 
@@ -44,48 +41,8 @@ export default function LoginScreen() {
     return true;
   };
 
-  const validatePassword = (pwd: string): boolean => {
-    if (!pwd) {
-      setPasswordError("Password is required");
-      return false;
-    }
-
-    if (pwd.length < 6) {
-      setPasswordError("Password must be at least 6 characters");
-      return false;
-    }
-
-    setPasswordError("");
-    return true;
-  };
-
-  const handleLogin = async () => {
-    const isPhoneValid = validatePhone(phone);
-    const isPasswordValid = validatePassword(password);
-
-    if (!isPhoneValid || !isPasswordValid) {
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      // TODO: Implement login logic
-      const formattedPhone = phone.replace(/\s+/g, "");
-      console.log("Login:", { phone: formattedPhone, password });
-      // Navigate to home after successful login
-      router.replace("/(tabs)");
-    } catch (error) {
-      console.error("Login error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const formatPhoneNumber = (text: string) => {
-    // Remove all non-digits
     const cleaned = text.replace(/\D/g, "");
-
-    // Format as +233 XX XXX XXXX
     let formatted = cleaned;
     if (cleaned.startsWith("233")) {
       formatted = "+" + cleaned;
@@ -95,7 +52,6 @@ export default function LoginScreen() {
       formatted = "+233" + cleaned;
     }
 
-    // Add spacing: +233 XX XXX XXXX
     if (formatted.length > 4) {
       formatted = formatted.substring(0, 4) + " " + formatted.substring(4);
     }
@@ -109,6 +65,27 @@ export default function LoginScreen() {
     setPhone(formatted);
     if (phoneError) {
       validatePhone(formatted);
+    }
+  };
+
+  const handleSendResetCode = async () => {
+    if (!validatePhone(phone)) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // TODO: Send reset code to phone
+      console.log("Sending reset code to:", phone);
+      router.push({
+        pathname: "/(auth)/reset-otp",
+        params: { phone: phone.replace(/\s+/g, "") },
+      });
+    } catch (error) {
+      console.error("Error sending reset code:", error);
+      setPhoneError("Failed to send reset code. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -151,15 +128,20 @@ export default function LoginScreen() {
             {/* Logo/Branding */}
             <View style={styles.logoContainer}>
               <View style={styles.logoCircle}>
-                <Ionicons name="home" size={32} color={Colors.primaryGreen} />
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={32}
+                  color={Colors.primaryGreen}
+                />
               </View>
             </View>
 
             {/* Title Section */}
             <View style={styles.titleSection}>
-              <Text style={styles.title}>Welcome Back</Text>
+              <Text style={styles.title}>Reset Password</Text>
               <Text style={styles.subtitle}>
-                Sign in to continue your journey
+                Enter your phone number and we&apos;ll send you a code to reset
+                your password
               </Text>
             </View>
 
@@ -171,59 +153,34 @@ export default function LoginScreen() {
                 value={phone}
                 onChangeText={formatPhoneNumber}
                 keyboardType="phone-pad"
-                autoCapitalize="none"
                 error={phoneError}
-                maxLength={17} // +233 XX XXX XXXX
                 leftIcon="call-outline"
+                autoFocus
               />
 
-              <TextInput
-                label="Password"
-                placeholder="Enter your password"
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  if (passwordError) {
-                    validatePassword(text);
-                  }
-                }}
-                secureTextEntry
-                showPasswordToggle
-                error={passwordError}
-                autoCapitalize="none"
-                leftIcon="lock-closed-outline"
-              />
-
-              {/* Forgot Password */}
-              <TouchableOpacity
-                onPress={() => router.push("/(auth)/forgot-password")}
-                style={styles.forgotPasswordContainer}
-              >
-                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-              </TouchableOpacity>
-
-              {/* Sign In Button */}
               <Button
-                title="Sign In"
-                onPress={handleLogin}
+                title="Send Reset Code"
+                onPress={handleSendResetCode}
                 variant="primary"
+                disabled={isLoading || !phone.trim()}
                 loading={isLoading}
-                style={styles.signInButton}
+                style={styles.submitButton}
               />
             </View>
 
             {/* Footer */}
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>
-                Don&apos;t have an account?{" "}
-              </Text>
-              <TouchableOpacity
-                onPress={() => router.push("/(auth)/register")}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.registerLink}>Register</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              onPress={() => router.push("/(auth)/login")}
+              style={styles.backToLoginButton}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="arrow-back"
+                size={16}
+                color={Colors.primaryGreen}
+              />
+              <Text style={styles.backToLoginText}>Back to Login</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -265,13 +222,15 @@ const styles = StyleSheet.create({
     opacity: 0.05,
   },
   header: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
     flexDirection: "row",
     alignItems: "center",
-    zIndex: 10,
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.md,
+    zIndex: 1,
   },
   backButton: {
+    width: 40,
+    height: 40,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -290,7 +249,7 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
       },
       android: {
-        elevation: 3,
+        elevation: 2,
       },
     }),
   },
@@ -304,11 +263,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     minHeight: 500,
-    paddingTop: Spacing["2xl"],
   },
   logoContainer: {
     alignItems: "center",
-    marginBottom: Spacing["2xl"],
+    marginBottom: Spacing.xl,
   },
   logoCircle: {
     width: 80,
@@ -332,7 +290,7 @@ const styles = StyleSheet.create({
     }),
   },
   titleSection: {
-    marginBottom: Spacing["3xl"],
+    marginBottom: Spacing["2xl"],
     alignItems: "center",
   },
   title: {
@@ -368,37 +326,22 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  forgotPasswordContainer: {
-    alignItems: "flex-end",
-    marginBottom: Spacing.xl,
-    marginTop: Spacing.sm,
-  },
-  forgotPasswordText: {
-    ...Typography.labelMedium,
-    fontSize: 14,
-    color: Colors.primaryGreen,
-    fontWeight: "600",
-  },
-  signInButton: {
+  submitButton: {
     width: "100%",
     marginTop: Spacing.md,
   },
-  footer: {
+  backToLoginButton: {
     flexDirection: "row",
-    justifyContent: "center",
     alignItems: "center",
+    justifyContent: "center",
     marginTop: Spacing["2xl"],
     paddingTop: Spacing.xl,
+    gap: Spacing.sm,
   },
-  footerText: {
-    ...Typography.bodyMedium,
+  backToLoginText: {
+    ...Typography.labelLarge,
     fontSize: 15,
-    color: Colors.textSecondary,
-  },
-  registerLink: {
-    ...Typography.bodyMedium,
-    fontSize: 15,
+    fontWeight: "600",
     color: Colors.primaryGreen,
-    fontWeight: "700",
   },
 });

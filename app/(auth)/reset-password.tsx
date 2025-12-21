@@ -16,99 +16,86 @@ import { Colors, Typography, Spacing } from "@/constants/design";
 import { Button } from "@/components/ui/Button";
 import { TextInput } from "@/components/ui/TextInput";
 
-export default function LoginScreen() {
+export default function ResetPasswordScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [phone, setPhone] = useState("+233 24 123 4567");
-  const [password, setPassword] = useState("password123");
-  const [phoneError, setPhoneError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [newPasswordError, setNewPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const validatePhone = (phoneNumber: string): boolean => {
-    // Ghana phone format: +233 XX XXX XXXX or 0XX XXX XXXX
-    const ghanaPhoneRegex = /^(\+233|0)[2-9]\d{8}$/;
-    const cleaned = phoneNumber.replace(/\s+/g, "");
-
-    if (!cleaned) {
-      setPhoneError("Phone number is required");
+  const validatePassword = (password: string): boolean => {
+    if (!password) {
+      setNewPasswordError("Password is required");
       return false;
     }
 
-    if (!ghanaPhoneRegex.test(cleaned)) {
-      setPhoneError("Please enter a valid Ghana phone number");
+    if (password.length < 6) {
+      setNewPasswordError("Password must be at least 6 characters");
       return false;
     }
 
-    setPhoneError("");
+    setNewPasswordError("");
     return true;
   };
 
-  const validatePassword = (pwd: string): boolean => {
-    if (!pwd) {
-      setPasswordError("Password is required");
+  const validateConfirmPassword = (
+    confirm: string,
+    password: string
+  ): boolean => {
+    if (!confirm) {
+      setConfirmPasswordError("Please confirm your password");
       return false;
     }
 
-    if (pwd.length < 6) {
-      setPasswordError("Password must be at least 6 characters");
+    if (confirm !== password) {
+      setConfirmPasswordError("Passwords do not match");
       return false;
     }
 
-    setPasswordError("");
+    setConfirmPasswordError("");
     return true;
   };
 
-  const handleLogin = async () => {
-    const isPhoneValid = validatePhone(phone);
-    const isPasswordValid = validatePassword(password);
+  const handleNewPasswordChange = (text: string) => {
+    setNewPassword(text);
+    if (newPasswordError) {
+      setNewPasswordError("");
+    }
+    if (confirmPassword && confirmPasswordError) {
+      validateConfirmPassword(confirmPassword, text);
+    }
+  };
 
-    if (!isPhoneValid || !isPasswordValid) {
+  const handleConfirmPasswordChange = (text: string) => {
+    setConfirmPassword(text);
+    if (confirmPasswordError) {
+      setConfirmPasswordError("");
+    }
+  };
+
+  const handleResetPassword = async () => {
+    const isNewPasswordValid = validatePassword(newPassword);
+    const isConfirmPasswordValid = validateConfirmPassword(
+      confirmPassword,
+      newPassword
+    );
+
+    if (!isNewPasswordValid || !isConfirmPasswordValid) {
       return;
     }
 
     setIsLoading(true);
     try {
-      // TODO: Implement login logic
-      const formattedPhone = phone.replace(/\s+/g, "");
-      console.log("Login:", { phone: formattedPhone, password });
-      // Navigate to home after successful login
-      router.replace("/(tabs)");
+      // TODO: Reset password with backend
+      console.log("Resetting password:", { newPassword, confirmPassword });
+      router.replace("/(auth)/login");
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("Error resetting password:", error);
+      setConfirmPasswordError("Failed to reset password. Please try again.");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const formatPhoneNumber = (text: string) => {
-    // Remove all non-digits
-    const cleaned = text.replace(/\D/g, "");
-
-    // Format as +233 XX XXX XXXX
-    let formatted = cleaned;
-    if (cleaned.startsWith("233")) {
-      formatted = "+" + cleaned;
-    } else if (cleaned.startsWith("0")) {
-      formatted = "+233" + cleaned.substring(1);
-    } else if (cleaned.length > 0 && !cleaned.startsWith("+")) {
-      formatted = "+233" + cleaned;
-    }
-
-    // Add spacing: +233 XX XXX XXXX
-    if (formatted.length > 4) {
-      formatted = formatted.substring(0, 4) + " " + formatted.substring(4);
-    }
-    if (formatted.length > 8) {
-      formatted = formatted.substring(0, 8) + " " + formatted.substring(8);
-    }
-    if (formatted.length > 12) {
-      formatted = formatted.substring(0, 12) + " " + formatted.substring(12);
-    }
-
-    setPhone(formatted);
-    if (phoneError) {
-      validatePhone(formatted);
     }
   };
 
@@ -151,78 +138,61 @@ export default function LoginScreen() {
             {/* Logo/Branding */}
             <View style={styles.logoContainer}>
               <View style={styles.logoCircle}>
-                <Ionicons name="home" size={32} color={Colors.primaryGreen} />
+                <Ionicons
+                  name="key-outline"
+                  size={32}
+                  color={Colors.primaryGreen}
+                />
               </View>
             </View>
 
             {/* Title Section */}
             <View style={styles.titleSection}>
-              <Text style={styles.title}>Welcome Back</Text>
+              <Text style={styles.title}>New Password</Text>
               <Text style={styles.subtitle}>
-                Sign in to continue your journey
+                Create a new password for your account
               </Text>
             </View>
 
             {/* Form Card */}
             <View style={styles.formCard}>
               <TextInput
-                label="Phone Number"
-                placeholder="+233 XX XXX XXXX"
-                value={phone}
-                onChangeText={formatPhoneNumber}
-                keyboardType="phone-pad"
-                autoCapitalize="none"
-                error={phoneError}
-                maxLength={17} // +233 XX XXX XXXX
-                leftIcon="call-outline"
+                label="New Password"
+                placeholder="Enter new password (min 6 characters)"
+                value={newPassword}
+                onChangeText={handleNewPasswordChange}
+                secureTextEntry={true}
+                showPasswordToggle={true}
+                error={newPasswordError}
+                leftIcon="lock-closed-outline"
+                autoFocus
               />
 
               <TextInput
-                label="Password"
-                placeholder="Enter your password"
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  if (passwordError) {
-                    validatePassword(text);
-                  }
-                }}
-                secureTextEntry
-                showPasswordToggle
-                error={passwordError}
-                autoCapitalize="none"
+                label="Confirm Password"
+                placeholder="Re-enter new password"
+                value={confirmPassword}
+                onChangeText={handleConfirmPasswordChange}
+                secureTextEntry={true}
+                showPasswordToggle={true}
+                error={confirmPasswordError}
                 leftIcon="lock-closed-outline"
               />
 
-              {/* Forgot Password */}
-              <TouchableOpacity
-                onPress={() => router.push("/(auth)/forgot-password")}
-                style={styles.forgotPasswordContainer}
-              >
-                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-              </TouchableOpacity>
-
-              {/* Sign In Button */}
               <Button
-                title="Sign In"
-                onPress={handleLogin}
+                title="Reset Password"
+                onPress={handleResetPassword}
                 variant="primary"
+                disabled={
+                  isLoading ||
+                  !newPassword.trim() ||
+                  !confirmPassword.trim() ||
+                  !!newPasswordError ||
+                  !!confirmPasswordError
+                }
                 loading={isLoading}
-                style={styles.signInButton}
+                style={styles.submitButton}
               />
-            </View>
-
-            {/* Footer */}
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>
-                Don&apos;t have an account?{" "}
-              </Text>
-              <TouchableOpacity
-                onPress={() => router.push("/(auth)/register")}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.registerLink}>Register</Text>
-              </TouchableOpacity>
             </View>
           </View>
         </ScrollView>
@@ -265,13 +235,15 @@ const styles = StyleSheet.create({
     opacity: 0.05,
   },
   header: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
     flexDirection: "row",
     alignItems: "center",
-    zIndex: 10,
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.md,
+    zIndex: 1,
   },
   backButton: {
+    width: 40,
+    height: 40,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -290,7 +262,7 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
       },
       android: {
-        elevation: 3,
+        elevation: 2,
       },
     }),
   },
@@ -304,11 +276,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     minHeight: 500,
-    paddingTop: Spacing["2xl"],
   },
   logoContainer: {
     alignItems: "center",
-    marginBottom: Spacing["2xl"],
+    marginBottom: Spacing.xl,
   },
   logoCircle: {
     width: 80,
@@ -332,7 +303,7 @@ const styles = StyleSheet.create({
     }),
   },
   titleSection: {
-    marginBottom: Spacing["3xl"],
+    marginBottom: Spacing["2xl"],
     alignItems: "center",
   },
   title: {
@@ -368,37 +339,8 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  forgotPasswordContainer: {
-    alignItems: "flex-end",
-    marginBottom: Spacing.xl,
-    marginTop: Spacing.sm,
-  },
-  forgotPasswordText: {
-    ...Typography.labelMedium,
-    fontSize: 14,
-    color: Colors.primaryGreen,
-    fontWeight: "600",
-  },
-  signInButton: {
+  submitButton: {
     width: "100%",
     marginTop: Spacing.md,
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: Spacing["2xl"],
-    paddingTop: Spacing.xl,
-  },
-  footerText: {
-    ...Typography.bodyMedium,
-    fontSize: 15,
-    color: Colors.textSecondary,
-  },
-  registerLink: {
-    ...Typography.bodyMedium,
-    fontSize: 15,
-    color: Colors.primaryGreen,
-    fontWeight: "700",
   },
 });

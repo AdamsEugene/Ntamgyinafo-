@@ -153,14 +153,16 @@ export default function RegisterScreen() {
       return;
     }
 
-    // TODO: Navigate to OTP verification screen when created
-    // For now, navigate to welcome screen
-    console.log("Register data:", {
-      phone: phone.replace(/\s+/g, ""),
-      fullName: fullName.trim(),
-      role: role!,
+    // Navigate to OTP verification
+    router.push({
+      pathname: "/(auth)/otp-verification",
+      params: {
+        phone: phone.replace(/\s+/g, ""),
+        fullName: fullName.trim(),
+        role: role!,
+        password: password,
+      },
     });
-    router.replace("/(auth)/welcome");
   };
 
   const isFormValid = () => {
