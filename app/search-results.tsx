@@ -751,37 +751,39 @@ export default function SearchResultsScreen() {
               </TouchableOpacity>
             </View>
             <View style={styles.sortOptions}>
-              {SORT_OPTIONS.map((option) => (
-                <TouchableOpacity
-                  key={option.value}
-                  style={[
-                    styles.sortOption,
-                    sortOption === option.value && styles.sortOptionActive,
-                  ]}
-                  onPress={() => {
-                    setSortOption(option.value);
-                    setShowSortSheet(false);
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <Text
+              {SORT_OPTIONS.map((option) => {
+                const isSelected = sortOption === option.value;
+                return (
+                  <TouchableOpacity
+                    key={option.value}
                     style={[
-                      styles.sortOptionText,
-                      sortOption === option.value &&
-                        styles.sortOptionTextActive,
+                      styles.sortOption,
+                      isSelected && styles.sortOptionSelected,
                     ]}
+                    onPress={() => {
+                      setSortOption(option.value);
+                      setShowSortSheet(false);
+                    }}
+                    activeOpacity={0.7}
                   >
-                    {option.label}
-                  </Text>
-                  {sortOption === option.value && (
-                    <Ionicons
-                      name="checkmark"
-                      size={20}
-                      color={Colors.primaryGreen}
-                    />
-                  )}
-                </TouchableOpacity>
-              ))}
+                    <Text
+                      style={[
+                        styles.sortOptionText,
+                        isSelected && styles.sortOptionTextSelected,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                    {isSelected && (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={24}
+                        color="#FFFFFF"
+                      />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </BottomSheetView>
         </BottomSheetModal>
@@ -1131,43 +1133,61 @@ const styles = StyleSheet.create({
   },
   sortSheetContent: {
     paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.lg,
     paddingBottom: Spacing.xl,
   },
   sortSheetHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    paddingBottom: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
     marginBottom: Spacing.lg,
   },
   sortSheetTitle: {
-    ...Typography.titleLarge,
-    fontSize: 20,
+    ...Typography.headlineMedium,
+    fontSize: 22,
     fontWeight: "700",
     color: Colors.textPrimary,
   },
   sortOptions: {
-    gap: Spacing.xs,
+    gap: Spacing.md,
   },
   sortOption: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
-    borderRadius: 12,
-    backgroundColor: Colors.background,
+    borderRadius: 16,
+    backgroundColor: Colors.surface,
+    borderWidth: 1.5,
+    borderColor: Colors.divider,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
   },
-  sortOptionActive: {
-    backgroundColor: Colors.primaryLight,
+  sortOptionSelected: {
+    backgroundColor: Colors.primaryGreen,
+    borderColor: Colors.primaryGreen,
   },
   sortOptionText: {
-    ...Typography.bodyLarge,
+    ...Typography.labelMedium,
     fontSize: 16,
-    fontWeight: "500",
+    fontWeight: "600",
     color: Colors.textPrimary,
   },
-  sortOptionTextActive: {
+  sortOptionTextSelected: {
+    color: "#FFFFFF",
     fontWeight: "700",
-    color: Colors.primaryGreen,
   },
 });
