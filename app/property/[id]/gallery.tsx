@@ -25,6 +25,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { BottomNavigation, type TabItem } from "@/components/BottomNavigation";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -70,6 +71,27 @@ const MOCK_VIDEOS = [
 ];
 
 type TabType = "photos" | "videos" | "360";
+
+const GALLERY_TABS: TabItem[] = [
+  {
+    id: "photos",
+    label: "Photos",
+    icon: "camera-outline",
+    activeIcon: "camera",
+  },
+  {
+    id: "videos",
+    label: "Videos",
+    icon: "videocam-outline",
+    activeIcon: "videocam",
+  },
+  {
+    id: "360",
+    label: "360°",
+    icon: "cube-outline",
+    activeIcon: "cube",
+  },
+];
 
 export default function PropertyGalleryScreen() {
   const router = useRouter();
@@ -476,78 +498,12 @@ export default function PropertyGalleryScreen() {
         {activeTab === "videos" && renderVideos()}
         {activeTab === "360" && render360()}
 
-        {/* Tabs */}
-        <View
-          style={[styles.tabs, { paddingBottom: insets.bottom + Spacing.md }]}
-        >
-          <TouchableOpacity
-            style={[styles.tab, activeTab === "photos" && styles.tabActive]}
-            onPress={() => setActiveTab("photos")}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="camera"
-              size={20}
-              color={
-                activeTab === "photos"
-                  ? Colors.primaryGreen
-                  : Colors.textSecondary
-              }
-            />
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "photos" && styles.tabTextActive,
-              ]}
-            >
-              Photos
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === "videos" && styles.tabActive]}
-            onPress={() => setActiveTab("videos")}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="videocam"
-              size={20}
-              color={
-                activeTab === "videos"
-                  ? Colors.primaryGreen
-                  : Colors.textSecondary
-              }
-            />
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "videos" && styles.tabTextActive,
-              ]}
-            >
-              Videos
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === "360" && styles.tabActive]}
-            onPress={() => setActiveTab("360")}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="cube"
-              size={20}
-              color={
-                activeTab === "360" ? Colors.primaryGreen : Colors.textSecondary
-              }
-            />
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "360" && styles.tabTextActive,
-              ]}
-            >
-              360°
-            </Text>
-          </TouchableOpacity>
-        </View>
+        {/* Bottom Navigation */}
+        <BottomNavigation
+          tabs={GALLERY_TABS}
+          activeTab={activeTab}
+          onTabPress={(tabId) => setActiveTab(tabId as TabType)}
+        />
       </View>
     </>
   );
@@ -898,40 +854,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: "#FFFFFF",
-  },
-  tabs: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    backgroundColor: "rgba(0, 0, 0, 0.9)",
-    paddingTop: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.1)",
-  },
-  tab: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: Spacing.xs,
-    paddingVertical: Spacing.md,
-    borderRadius: 12,
-  },
-  tabActive: {
-    backgroundColor: "rgba(34, 197, 94, 0.1)",
-  },
-  tabText: {
-    ...Typography.labelMedium,
-    fontSize: 14,
-    fontWeight: "600",
-    color: Colors.textSecondary,
-  },
-  tabTextActive: {
-    color: Colors.primaryGreen,
-    fontWeight: "700",
   },
   navButtonLeft: {
     position: "absolute",

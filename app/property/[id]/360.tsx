@@ -10,9 +10,31 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { WebView } from "react-native-webview";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { BottomNavigation, type TabItem } from "@/components/BottomNavigation";
+
+const GALLERY_TABS: TabItem[] = [
+  {
+    id: "photos",
+    label: "Photos",
+    icon: "camera-outline",
+    activeIcon: "camera",
+  },
+  {
+    id: "videos",
+    label: "Videos",
+    icon: "videocam-outline",
+    activeIcon: "videocam",
+  },
+  {
+    id: "360",
+    label: "360°",
+    icon: "cube-outline",
+    activeIcon: "cube",
+  },
+];
 
 // Sample 360° panorama images - replace with actual URLs from your API
 const PANORAMA_IMAGES: { [key: string]: string } = {
@@ -111,12 +133,24 @@ const getPanoramaHTML = (imageUrl: string, autoRotate: boolean) => `
 
 export default function Property360ViewerScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const propertyId = params.id as string;
   const insets = useSafeAreaInsets();
   const webViewRef = useRef<WebView>(null);
   const [autoRotate, setAutoRotate] = useState(false);
   const [currentRoom, setCurrentRoom] = useState("Living Room");
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+
+  const handleTabPress = (tabId: string) => {
+    if (tabId === "photos") {
+      router.replace(`/property/${propertyId}/gallery?tab=photos`);
+    } else if (tabId === "videos") {
+      router.replace(`/property/${propertyId}/gallery?tab=videos`);
+    } else if (tabId === "360") {
+      // Already on 360
+    }
+  };
 
   const rooms = [
     "Living Room",
@@ -303,18 +337,20 @@ export default function Property360ViewerScreen() {
         </View>
 
         {/* Navigation Hint */}
-        <View
-          style={[
-            styles.navigationHint,
-            { paddingBottom: insets.bottom + Spacing.md },
-          ]}
-        >
+        <View style={styles.navigationHint}>
           <Text style={styles.hintText}>
             {autoRotate
               ? "🔄 Auto-rotating"
               : "👆 Drag to look around • ← → Change room"}
           </Text>
         </View>
+
+        {/* Bottom Navigation */}
+        <BottomNavigation
+          tabs={GALLERY_TABS}
+          activeTab="360"
+          onTabPress={handleTabPress}
+        />
       </View>
     </>
   );

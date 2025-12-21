@@ -13,6 +13,28 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Video, ResizeMode, AVPlaybackStatus } from "expo-av";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { BottomNavigation, type TabItem } from "@/components/BottomNavigation";
+
+const GALLERY_TABS: TabItem[] = [
+  {
+    id: "photos",
+    label: "Photos",
+    icon: "camera-outline",
+    activeIcon: "camera",
+  },
+  {
+    id: "videos",
+    label: "Videos",
+    icon: "videocam-outline",
+    activeIcon: "videocam",
+  },
+  {
+    id: "360",
+    label: "360°",
+    icon: "cube-outline",
+    activeIcon: "cube",
+  },
+];
 
 // Sample video URLs - replace with actual video URLs from your API
 const VIDEO_URLS: { [key: string]: string } = {
@@ -40,8 +62,19 @@ export default function VideoPlayerScreen() {
   const [hasError, setHasError] = useState(false);
 
   const videoId = (params.id as string) || "1";
+  const propertyId = params.id as string;
   const videoUri = VIDEO_URLS[videoId] || VIDEO_URLS["1"];
   const videoTitle = VIDEO_TITLES[videoId] || "Property Video";
+
+  const handleTabPress = (tabId: string) => {
+    if (tabId === "photos") {
+      router.replace(`/property/${propertyId}/gallery?tab=photos`);
+    } else if (tabId === "videos") {
+      // Already on videos
+    } else if (tabId === "360") {
+      router.replace(`/property/${propertyId}/360`);
+    }
+  };
 
   useEffect(() => {
     // Reset states when video changes
@@ -276,6 +309,13 @@ export default function VideoPlayerScreen() {
             </View>
           )}
         </TouchableOpacity>
+
+        {/* Bottom Navigation */}
+        <BottomNavigation
+          tabs={GALLERY_TABS}
+          activeTab="videos"
+          onTabPress={handleTabPress}
+        />
       </View>
     </>
   );
