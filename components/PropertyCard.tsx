@@ -74,23 +74,30 @@ export const PropertyListCard: React.FC<PropertyCardProps> = ({
             />
           </View>
         </TouchableOpacity>
-        {property.bedrooms && property.bathrooms && (
-          <View style={PropertyCardStyles.propertyBadge}>
-            <Ionicons name="bed-outline" size={12} color={Colors.textPrimary} />
-            <Text style={PropertyCardStyles.propertyBadgeText}>
-              {property.bedrooms}
-            </Text>
-            <Ionicons
-              name="water-outline"
-              size={12}
-              color={Colors.textPrimary}
-              style={{ marginLeft: Spacing.xs }}
-            />
-            <Text style={PropertyCardStyles.propertyBadgeText}>
-              {property.bathrooms}
-            </Text>
-          </View>
-        )}
+        {property.bedrooms !== undefined &&
+          property.bedrooms !== null &&
+          property.bathrooms !== undefined &&
+          property.bathrooms !== null && (
+            <View style={PropertyCardStyles.propertyBadge}>
+              <Ionicons
+                name="bed-outline"
+                size={12}
+                color={Colors.textPrimary}
+              />
+              <Text style={PropertyCardStyles.propertyBadgeText}>
+                {property.bedrooms}
+              </Text>
+              <Ionicons
+                name="water-outline"
+                size={12}
+                color={Colors.textPrimary}
+                style={{ marginLeft: Spacing.xs }}
+              />
+              <Text style={PropertyCardStyles.propertyBadgeText}>
+                {property.bathrooms}
+              </Text>
+            </View>
+          )}
       </View>
       <View style={PropertyCardStyles.propertyContent}>
         <Text style={PropertyCardStyles.propertyTitle} numberOfLines={2}>
@@ -165,23 +172,30 @@ export const PropertyGridCard: React.FC<PropertyCardProps> = ({
             />
           </View>
         </TouchableOpacity>
-        {property.bedrooms && property.bathrooms && (
-          <View style={PropertyCardStyles.gridBadge}>
-            <Ionicons name="bed-outline" size={12} color={Colors.textPrimary} />
-            <Text style={PropertyCardStyles.gridBadgeText}>
-              {property.bedrooms}
-            </Text>
-            <Ionicons
-              name="water-outline"
-              size={12}
-              color={Colors.textPrimary}
-              style={{ marginLeft: Spacing.xs }}
-            />
-            <Text style={PropertyCardStyles.gridBadgeText}>
-              {property.bathrooms}
-            </Text>
-          </View>
-        )}
+        {property.bedrooms !== undefined &&
+          property.bedrooms !== null &&
+          property.bathrooms !== undefined &&
+          property.bathrooms !== null && (
+            <View style={PropertyCardStyles.gridBadge}>
+              <Ionicons
+                name="bed-outline"
+                size={12}
+                color={Colors.textPrimary}
+              />
+              <Text style={PropertyCardStyles.gridBadgeText}>
+                {property.bedrooms}
+              </Text>
+              <Ionicons
+                name="water-outline"
+                size={12}
+                color={Colors.textPrimary}
+                style={{ marginLeft: Spacing.xs }}
+              />
+              <Text style={PropertyCardStyles.gridBadgeText}>
+                {property.bathrooms}
+              </Text>
+            </View>
+          )}
       </View>
       <View style={PropertyCardStyles.gridContent}>
         <Text style={PropertyCardStyles.gridTitle} numberOfLines={1}>

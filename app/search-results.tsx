@@ -38,6 +38,7 @@ import {
   type Property,
 } from "@/components/PropertyCard";
 import { BottomNavigation, type TabItem } from "@/components/BottomNavigation";
+import { ALL_PROPERTIES as MOCK_PROPERTIES } from "@/constants/mockData";
 
 interface PropertyWithTypes extends Property {
   propertyType?: "house" | "apartment" | "land" | "commercial";
@@ -61,113 +62,35 @@ type SortOption =
   | "oldest"
   | "bedrooms";
 
-// Mock data - replace with actual API data
-const ALL_PROPERTIES: PropertyWithTypes[] = [
-  {
-    id: "1",
-    title: "4 Bedroom House in East Legon",
-    location: "East Legon, Accra",
-    price: 850000,
-    image:
-      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=500&fit=crop",
-    bedrooms: 4,
-    bathrooms: 3,
-    isSaved: false,
-    propertyType: "house",
-    transactionType: "buy",
-  },
-  {
-    id: "2",
-    title: "Modern 3 Bedroom Apartment",
-    location: "Airport Residential, Accra",
-    price: 650000,
-    image:
-      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&h=500&fit=crop",
-    bedrooms: 3,
-    bathrooms: 2,
-    isSaved: true,
-    propertyType: "apartment",
-    transactionType: "buy",
-  },
-  {
-    id: "3",
-    title: "Luxury Villa with Pool",
-    location: "Labone, Accra",
-    price: 1200000,
-    image:
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=500&fit=crop",
-    bedrooms: 5,
-    bathrooms: 4,
-    isSaved: false,
-    propertyType: "house",
-    transactionType: "buy",
-  },
-  {
-    id: "4",
-    title: "2 Bedroom House for Rent",
-    location: "Cantonments, Accra",
-    price: 3500,
-    image:
-      "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=300&h=300&fit=crop",
-    bedrooms: 2,
-    bathrooms: 1,
-    isSaved: false,
-    propertyType: "house",
-    transactionType: "rent",
-  },
-  {
-    id: "5",
-    title: "Spacious 3 Bedroom Apartment",
-    location: "Osu, Accra",
-    price: 4500,
-    image:
-      "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=300&h=300&fit=crop",
-    bedrooms: 3,
-    bathrooms: 2,
-    isSaved: true,
-    propertyType: "apartment",
-    transactionType: "rent",
-  },
-  {
-    id: "6",
-    title: "Commercial Space for Rent",
-    location: "Adabraka, Accra",
-    price: 8000,
-    image:
-      "https://images.unsplash.com/photo-1497366216548-37526070297c?w=300&h=300&fit=crop",
-    bedrooms: undefined,
-    bathrooms: undefined,
-    isSaved: false,
-    propertyType: "commercial",
-    transactionType: "rent",
-  },
-  {
-    id: "7",
-    title: "Land for Sale",
-    location: "Kasoa, Accra",
-    price: 250000,
-    image:
-      "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=300&h=300&fit=crop",
-    bedrooms: undefined,
-    bathrooms: undefined,
-    isSaved: false,
-    propertyType: "land",
-    transactionType: "buy",
-  },
-  {
-    id: "8",
-    title: "5 Bedroom Mansion",
-    location: "Spintex, Accra",
-    price: 1500000,
-    image:
-      "https://images.unsplash.com/photo-1600585154084-4c5f0ea33f38?w=300&h=300&fit=crop",
-    bedrooms: 5,
-    bathrooms: 4,
-    isSaved: false,
-    propertyType: "house",
-    transactionType: "buy",
-  },
-];
+// Helper function to determine property type from title
+function getPropertyTypeFromTitle(
+  title: string
+): "house" | "apartment" | "land" | "commercial" {
+  const lowerTitle = title.toLowerCase();
+  if (
+    lowerTitle.includes("apartment") ||
+    lowerTitle.includes("flat") ||
+    lowerTitle.includes("studio")
+  ) {
+    return "apartment";
+  }
+  if (lowerTitle.includes("commercial") || lowerTitle.includes("space")) {
+    return "commercial";
+  }
+  if (lowerTitle.includes("land")) {
+    return "land";
+  }
+  return "house";
+}
+
+// Convert ALL_PROPERTIES to PropertyWithTypes format
+const ALL_PROPERTIES: PropertyWithTypes[] = MOCK_PROPERTIES.map(
+  (prop: Property) => ({
+    ...prop,
+    propertyType: getPropertyTypeFromTitle(prop.title),
+    transactionType: prop.price > 10000 ? "buy" : "rent",
+  })
+);
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "relevance", label: "Relevance" },

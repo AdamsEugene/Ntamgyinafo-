@@ -29,6 +29,7 @@ import {
   PropertyGridCard,
   type Property,
 } from "@/components/PropertyCard";
+import { ALL_PROPERTIES } from "@/constants/mockData";
 
 interface Filter {
   propertyTypes?: string[];
@@ -38,98 +39,6 @@ interface Filter {
   bedrooms?: number | null;
   amenities?: string[];
 }
-
-// Mock data - replace with actual API data
-const ALL_PROPERTIES: Property[] = [
-  {
-    id: "1",
-    title: "4 Bedroom House in East Legon",
-    location: "East Legon, Accra",
-    price: 850000,
-    image:
-      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=500&fit=crop",
-    bedrooms: 4,
-    bathrooms: 3,
-    isSaved: false,
-  },
-  {
-    id: "2",
-    title: "Modern 3 Bedroom Apartment",
-    location: "Airport Residential, Accra",
-    price: 650000,
-    image:
-      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&h=500&fit=crop",
-    bedrooms: 3,
-    bathrooms: 2,
-    isSaved: true,
-  },
-  {
-    id: "3",
-    title: "Luxury Villa with Pool",
-    location: "Labone, Accra",
-    price: 1200000,
-    image:
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=500&fit=crop",
-    bedrooms: 5,
-    bathrooms: 4,
-    isSaved: false,
-  },
-  {
-    id: "4",
-    title: "2 Bedroom House for Rent",
-    location: "Cantonments, Accra",
-    price: 3500,
-    image:
-      "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=300&h=300&fit=crop",
-    bedrooms: 2,
-    bathrooms: 1,
-    isSaved: false,
-  },
-  {
-    id: "5",
-    title: "Spacious 3 Bedroom Apartment",
-    location: "Osu, Accra",
-    price: 4500,
-    image:
-      "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=300&h=300&fit=crop",
-    bedrooms: 3,
-    bathrooms: 2,
-    isSaved: true,
-  },
-  {
-    id: "6",
-    title: "Cozy 1 Bedroom Studio",
-    location: "Adabraka, Accra",
-    price: 2000,
-    image:
-      "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=300&h=300&fit=crop",
-    bedrooms: 1,
-    bathrooms: 1,
-    isSaved: false,
-  },
-  {
-    id: "7",
-    title: "Modern 2 Bedroom Apartment",
-    location: "Teshie, Accra",
-    price: 2800,
-    image:
-      "https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=300&h=300&fit=crop",
-    bedrooms: 2,
-    bathrooms: 2,
-    isSaved: false,
-  },
-  {
-    id: "8",
-    title: "Luxury 4 Bedroom Duplex",
-    location: "Spintex, Accra",
-    price: 1200000,
-    image:
-      "https://images.unsplash.com/photo-1600585154084-4c5f0ea33f38?w=300&h=300&fit=crop",
-    bedrooms: 4,
-    bathrooms: 3,
-    isSaved: false,
-  },
-];
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 

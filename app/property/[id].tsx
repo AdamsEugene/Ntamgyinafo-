@@ -15,7 +15,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import {
   BottomSheetModal,
@@ -23,6 +23,7 @@ import {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { getDetailedProperty } from "@/constants/mockData";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -67,58 +68,11 @@ interface Property {
   };
 }
 
-// Mock data - replace with actual API call
-const MOCK_PROPERTY: Property = {
-  id: "1",
-  title: "4 Bedroom House in East Legon",
-  location: "East Legon, Accra",
-  price: 850000,
-  images: [
-    "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&h=600&fit=crop",
-  ],
-  bedrooms: 4,
-  bathrooms: 3,
-  plotSize: 2,
-  description:
-    "Beautiful modern 4-bedroom house located in the prestigious East Legon area. This stunning property features spacious rooms, modern finishes, and a well-maintained garden. Perfect for families looking for comfort and style in a prime location. The house boasts a contemporary design with large windows that allow natural light to flood the interior spaces. The open-plan living area seamlessly connects to a modern kitchen equipped with high-end appliances. Each bedroom is generously sized with built-in wardrobes and en-suite bathrooms. The master bedroom features a walk-in closet and a luxurious bathroom with a bathtub and separate shower. The property also includes a private garden, perfect for outdoor entertaining and relaxation.",
-  amenities: ["Water", "Electricity", "Security", "Parking", "Internet"],
-  latitude: 5.6037,
-  longitude: -0.187,
-  address: "123 Main Street, East Legon, Accra",
-  negotiable: true,
-  owner: {
-    id: "owner1",
-    name: "Kofi Mensah",
-    avatar: "https://i.pravatar.cc/150?img=12",
-    verified: true,
-    memberSince: "2023",
-    phone: "+233123456789",
-  },
-  transactionType: "buy",
-  propertyType: "house",
-  yearBuilt: 2020,
-  propertySize: 350,
-  listedDate: "2024-01-15",
-  propertyId: "PR-2024-001234",
-  features: {
-    furnished: true,
-    airConditioning: true,
-    heating: false,
-    balcony: true,
-    garden: true,
-    garage: true,
-    elevator: false,
-    swimmingPool: true,
-  },
-};
-
 export default function PropertyDetailScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ id: string }>();
+  const id = params.id;
   const insets = useSafeAreaInsets();
-  // const params = useLocalSearchParams(); // Will be used to fetch property by ID
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSaved, setIsSaved] = useState(false);
@@ -126,8 +80,61 @@ export default function PropertyDetailScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const chatBottomSheetRef = useRef<BottomSheetModal>(null);
 
-  // In a real app, fetch property by ID
-  const property = MOCK_PROPERTY;
+  // Get property from mock data or use default
+  const detailedProperty = getDetailedProperty(id || "1");
+  const property: Property = detailedProperty
+    ? {
+        id: detailedProperty.id,
+        title: detailedProperty.title,
+        location: detailedProperty.location,
+        price: detailedProperty.price,
+        images: detailedProperty.images,
+        bedrooms: detailedProperty.bedrooms,
+        bathrooms: detailedProperty.bathrooms,
+        plotSize: detailedProperty.plotSize,
+        description: detailedProperty.description,
+        amenities: detailedProperty.amenities,
+        latitude: detailedProperty.latitude,
+        longitude: detailedProperty.longitude,
+        address: detailedProperty.address,
+        negotiable: detailedProperty.negotiable,
+        owner: detailedProperty.owner,
+        transactionType: detailedProperty.transactionType,
+        propertyType: detailedProperty.propertyType,
+        yearBuilt: detailedProperty.yearBuilt,
+        propertySize: detailedProperty.propertySize,
+        listedDate: detailedProperty.listedDate,
+        propertyId: detailedProperty.propertyId,
+        features: detailedProperty.features,
+      }
+    : {
+        id: "1",
+        title: "4 Bedroom House in East Legon",
+        location: "East Legon, Accra",
+        price: 850000,
+        images: [
+          "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=600&fit=crop",
+        ],
+        bedrooms: 4,
+        bathrooms: 3,
+        plotSize: 2,
+        description: "Beautiful modern 4-bedroom house.",
+        amenities: ["Water", "Electricity", "Security"],
+        latitude: 5.6037,
+        longitude: -0.187,
+        address: "123 Main Street, East Legon, Accra",
+        negotiable: true,
+        owner: {
+          id: "owner1",
+          name: "Kofi Mensah",
+          avatar: "https://i.pravatar.cc/150?img=12",
+          verified: true,
+          memberSince: "2023",
+          phone: "+233123456789",
+        },
+        transactionType: "buy",
+        propertyType: "house",
+      };
 
   const formatPrice = (price: number): string => {
     if (price >= 1000000) {
