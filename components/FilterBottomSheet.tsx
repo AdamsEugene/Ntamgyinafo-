@@ -10,12 +10,12 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
   Platform,
 } from "react-native";
 import {
   BottomSheetModal,
   BottomSheetBackdrop,
+  BottomSheetScrollView,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
@@ -158,7 +158,11 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
       backgroundStyle={styles.bottomSheet}
       handleIndicatorStyle={styles.handleIndicator}
     >
-      <BottomSheetView style={styles.bottomSheetContent}>
+      <BottomSheetScrollView
+        style={styles.bottomSheetContent}
+        contentContainerStyle={styles.scrollContentContainer}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Filters</Text>
@@ -168,11 +172,7 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
         </View>
 
         {/* Content */}
-        <ScrollView
-          style={styles.content}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.contentContainer}
-        >
+        <View style={styles.content}>
           {/* Property Type */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Property Type</Text>
@@ -353,7 +353,7 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
               })}
             </View>
           </View>
-        </ScrollView>
+        </View>
 
         {/* Footer */}
         <View style={styles.footer}>
@@ -368,7 +368,7 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
             style={styles.applyButton}
           />
         </View>
-      </BottomSheetView>
+      </BottomSheetScrollView>
     </BottomSheetModal>
   );
 };
@@ -398,6 +398,9 @@ const styles = StyleSheet.create({
   bottomSheetContent: {
     flex: 1,
   },
+  scrollContentContainer: {
+    paddingBottom: Spacing["2xl"],
+  },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -418,11 +421,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   content: {
-    flex: 1,
-  },
-  contentContainer: {
     paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.xl,
   },
   section: {
     marginBottom: Spacing["2xl"],
