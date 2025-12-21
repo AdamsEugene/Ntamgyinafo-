@@ -206,7 +206,7 @@ export default function PropertyGalleryScreen() {
               <Animated.Image
                 source={{ uri: item }}
                 style={[styles.fullImage, animatedStyle]}
-                resizeMode="cover"
+                resizeMode="contain"
               />
             </Animated.View>
           </Animated.View>
@@ -451,20 +451,20 @@ const styles = StyleSheet.create({
   },
   imageWrapper: {
     width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
   gestureContainer: {
     width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
   fullImage: {
     width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
-    resizeMode: "cover",
+    height: "100%",
+    resizeMode: "contain",
   },
   imageControls: {
     position: "absolute",
