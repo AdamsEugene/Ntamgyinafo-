@@ -41,19 +41,25 @@ const MOCK_VIDEOS = [
     id: "1",
     thumbnail:
       "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=600&fit=crop",
-    title: "Property Tour",
+    title: "Full Property Tour",
+    duration: "5:32",
+    views: "1.2K",
   },
   {
     id: "2",
     thumbnail:
       "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&h=600&fit=crop",
-    title: "Living Room",
+    title: "Living Room Walkthrough",
+    duration: "2:15",
+    views: "856",
   },
   {
     id: "3",
     thumbnail:
       "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=600&fit=crop",
-    title: "Kitchen",
+    title: "Kitchen & Dining Area",
+    duration: "3:48",
+    views: "642",
   },
 ];
 
@@ -311,29 +317,106 @@ export default function PropertyGalleryScreen() {
 
   const renderVideos = () => (
     <ScrollView
-      style={styles.tabContent}
+      style={[styles.tabContent, { backgroundColor: "#000000" }]}
       contentContainerStyle={styles.videoContainer}
+      showsVerticalScrollIndicator={false}
     >
+      {/* Header Section */}
+      <View
+        style={[styles.videoHeader, { paddingTop: insets.top + Spacing.xl }]}
+      >
+        <View style={styles.videoHeaderContent}>
+          <Ionicons name="videocam" size={28} color={Colors.primaryGreen} />
+          <View style={styles.videoHeaderText}>
+            <Text style={styles.videoHeaderTitle}>Property Videos</Text>
+            <Text style={styles.videoHeaderSubtitle}>
+              {MOCK_VIDEOS.length} videos available
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Video Cards */}
       {MOCK_VIDEOS.map((video, index) => (
         <TouchableOpacity
           key={video.id}
           style={styles.videoCard}
-          activeOpacity={0.8}
+          activeOpacity={0.9}
           onPress={() => {
             // TODO: Open video player
             console.log("Play video:", video.id);
           }}
         >
-          <Image
-            source={{ uri: video.thumbnail }}
-            style={styles.videoThumbnail}
-          />
-          <View style={styles.videoOverlay}>
-            <View style={styles.playButton}>
-              <Ionicons name="play" size={40} color="#FFFFFF" />
+          <View style={styles.videoThumbnailContainer}>
+            <Image
+              source={{ uri: video.thumbnail }}
+              style={styles.videoThumbnail}
+            />
+            {/* Gradient Overlay */}
+            <View style={styles.videoGradientOverlay} />
+
+            {/* Duration Badge */}
+            <View style={styles.durationBadge}>
+              <Ionicons name="time-outline" size={12} color="#FFFFFF" />
+              <Text style={styles.durationText}>{video.duration}</Text>
+            </View>
+
+            {/* Play Button */}
+            <View style={styles.videoPlayButtonContainer}>
+              <View style={styles.playButton}>
+                <View style={styles.playButtonInner}>
+                  <Ionicons name="play" size={32} color="#FFFFFF" />
+                </View>
+              </View>
             </View>
           </View>
-          <Text style={styles.videoTitle}>{video.title}</Text>
+
+          {/* Video Info */}
+          <View style={styles.videoInfo}>
+            <View style={styles.videoInfoTop}>
+              <Text style={styles.videoTitle}>{video.title}</Text>
+              <View style={styles.videoMeta}>
+                <Ionicons
+                  name="eye-outline"
+                  size={14}
+                  color={Colors.textSecondary}
+                />
+                <Text style={styles.videoViews}>{video.views} views</Text>
+              </View>
+            </View>
+            <View style={styles.videoActionRow}>
+              <TouchableOpacity
+                style={styles.videoActionButton}
+                activeOpacity={0.7}
+                onPress={() => {
+                  // TODO: Share video
+                  console.log("Share video:", video.id);
+                }}
+              >
+                <Ionicons
+                  name="share-outline"
+                  size={18}
+                  color={Colors.primaryGreen}
+                />
+                <Text style={styles.videoActionText}>Share</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.videoActionButton}
+                activeOpacity={0.7}
+                onPress={() => {
+                  // TODO: Save video
+                  console.log("Save video:", video.id);
+                }}
+              >
+                <Ionicons
+                  name="bookmark-outline"
+                  size={18}
+                  color={Colors.primaryGreen}
+                />
+                <Text style={styles.videoActionText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </TouchableOpacity>
       ))}
     </ScrollView>
@@ -576,14 +659,43 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   videoContainer: {
-    padding: Spacing.lg,
-    gap: Spacing.lg,
+    paddingBottom: Spacing["2xl"],
+    backgroundColor: "#000000",
+  },
+  videoHeader: {
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.lg,
+    backgroundColor: "#000000",
+    zIndex: 1,
+  },
+  videoHeaderContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+  },
+  videoHeaderText: {
+    flex: 1,
+  },
+  videoHeaderTitle: {
+    ...Typography.headlineMedium,
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    marginBottom: Spacing.xs / 2,
+    letterSpacing: -0.5,
+  },
+  videoHeaderSubtitle: {
+    ...Typography.bodyMedium,
+    fontSize: 15,
+    color: "rgba(255, 255, 255, 0.8)",
+    fontWeight: "500",
   },
   videoCard: {
-    width: "100%",
+    marginHorizontal: Spacing.xl,
+    marginBottom: Spacing.xl,
     borderRadius: 20,
     overflow: "hidden",
-    backgroundColor: Colors.surface,
+    backgroundColor: "#FFFFFF",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -596,43 +708,150 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  videoThumbnailContainer: {
+    width: "100%",
+    height: 240,
+    position: "relative",
+    backgroundColor: "#000000",
+  },
   videoThumbnail: {
     width: "100%",
-    height: 220,
+    height: "100%",
     resizeMode: "cover",
   },
-  videoOverlay: {
+  videoGradientOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+  },
+  durationBadge: {
+    position: "absolute",
+    top: Spacing.md,
+    right: Spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs / 2,
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: 16,
+    backdropFilter: "blur(10px)",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  durationText: {
+    ...Typography.caption,
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    letterSpacing: 0.3,
+  },
+  videoPlayButtonContainer: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
   },
   playButton: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: Colors.primaryGreen,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 4,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.primaryGreen,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.5,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 12,
+      },
+    }),
+  },
+  playButtonInner: {
     width: 80,
     height: 80,
     borderRadius: 40,
     backgroundColor: Colors.primaryGreen,
     justifyContent: "center",
     alignItems: "center",
+    marginLeft: 3, // Slight offset for play icon
+  },
+  videoInfo: {
+    padding: Spacing.lg,
+    backgroundColor: "#FFFFFF",
+  },
+  videoInfoTop: {
+    marginBottom: Spacing.md,
+  },
+  videoTitle: {
+    ...Typography.titleLarge,
+    fontSize: 19,
+    fontWeight: "800",
+    color: "#000000",
+    marginBottom: Spacing.xs,
+    letterSpacing: -0.3,
+    lineHeight: 26,
+  },
+  videoMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs / 2,
+  },
+  videoViews: {
+    ...Typography.caption,
+    fontSize: 14,
+    color: "#666666",
+    fontWeight: "600",
+  },
+  videoActionRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E5E5",
+  },
+  videoActionButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.xs,
+    paddingVertical: Spacing.md,
+    borderRadius: 12,
+    backgroundColor: "#F0F9F4",
+    borderWidth: 1.5,
+    borderColor: "rgba(34, 197, 94, 0.3)",
     ...Platform.select({
       ios: {
         shadowColor: Colors.primaryGreen,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4,
-        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.08,
+        shadowRadius: 2,
       },
       android: {
-        elevation: 8,
+        elevation: 1,
       },
     }),
   },
-  videoTitle: {
-    ...Typography.titleMedium,
-    fontSize: 17,
+  videoActionText: {
+    ...Typography.labelMedium,
+    fontSize: 14,
     fontWeight: "700",
-    color: Colors.textPrimary,
-    padding: Spacing.lg,
-    letterSpacing: -0.2,
+    color: Colors.primaryGreen,
+    letterSpacing: 0.2,
   },
   placeholder360: {
     flex: 1,
