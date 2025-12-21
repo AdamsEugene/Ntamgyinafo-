@@ -25,6 +25,7 @@ export default function OTPVerificationScreen() {
   const [resendCooldown, setResendCooldown] = useState(30);
   const [canResend, setCanResend] = useState(false);
   const cooldownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hasNavigatedRef = useRef(false); // Prevent multiple navigations
 
   const phoneNumber = params.phone || "";
 
@@ -66,32 +67,42 @@ export default function OTPVerificationScreen() {
   };
 
   const handleOTPComplete = async (code: string) => {
-    if (code.length === 4) {
-      setIsLoading(true);
-      setError("");
-      try {
-        // TODO: Verify OTP with backend
-        console.log("Verifying OTP:", code);
-        // Navigate to role selection after verification
-        router.push({
-          pathname: "/(auth)/role-selection",
-          params: { ...params },
-        });
-      } catch {
-        setError("Invalid verification code. Please try again.");
-        setOtp("");
-      } finally {
-        setIsLoading(false);
-      }
+    // Prevent multiple navigations
+    if (hasNavigatedRef.current || isLoading || code.length !== 4) {
+      return;
+    }
+
+    hasNavigatedRef.current = true;
+    setIsLoading(true);
+    setError("");
+    try {
+      // TODO: Verify OTP with backend
+      console.log("Verifying OTP:", code);
+      // Navigate to role selection after verification
+      router.push({
+        pathname: "/(auth)/role-selection",
+        params: { ...params },
+      });
+    } catch {
+      hasNavigatedRef.current = false;
+      setError("Invalid verification code. Please try again.");
+      setOtp("");
+      setIsLoading(false);
     }
   };
 
   const handleVerify = async () => {
+    // Prevent multiple navigations
+    if (hasNavigatedRef.current || isLoading) {
+      return;
+    }
+
     if (otp.length !== 4) {
       setError("Please enter the complete verification code");
       return;
     }
 
+    hasNavigatedRef.current = true;
     setIsLoading(true);
     setError("");
     try {
@@ -102,9 +113,9 @@ export default function OTPVerificationScreen() {
         params: { ...params },
       });
     } catch {
+      hasNavigatedRef.current = false;
       setError("Invalid verification code. Please try again.");
       setOtp("");
-    } finally {
       setIsLoading(false);
     }
   };

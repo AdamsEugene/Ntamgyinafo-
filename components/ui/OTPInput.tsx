@@ -27,6 +27,7 @@ export const OTPInput: React.FC<OTPInputProps> = ({
   error = false,
 }) => {
   const inputRefs = useRef<(TextInput | null)[]>([]);
+  const completedValueRef = useRef<string>(""); // Track which value we've already completed
 
   useEffect(() => {
     // Focus first input on mount
@@ -34,8 +35,13 @@ export const OTPInput: React.FC<OTPInputProps> = ({
   }, []);
 
   useEffect(() => {
-    // Auto-submit when all digits are entered
-    if (value.length === length && onComplete) {
+    // Auto-submit when all digits are entered (only once per value)
+    if (
+      value.length === length &&
+      onComplete &&
+      completedValueRef.current !== value
+    ) {
+      completedValueRef.current = value;
       onComplete(value);
     }
   }, [value, length, onComplete]);
