@@ -21,6 +21,10 @@ import {
   FilterBottomSheet,
   type FilterOptions,
 } from "@/components/FilterBottomSheet";
+import {
+  FloatingHeaderStyles,
+  HEADER_ICON_SIZE,
+} from "@/components/FloatingHeader.styles";
 
 interface Property {
   id: string;
@@ -438,40 +442,40 @@ export default function SearchScreen() {
         {/* Floating Sticky Header */}
         <View
           style={[
-            styles.floatingHeader,
+            FloatingHeaderStyles.floatingHeader,
             { paddingTop: insets.top + Spacing.md },
           ]}
         >
           <TouchableOpacity
             onPress={() => router.back()}
-            style={styles.backButton}
+            style={FloatingHeaderStyles.backButton}
             activeOpacity={0.7}
           >
-            <View style={styles.backButtonCircle}>
+            <View style={FloatingHeaderStyles.backButtonCircle}>
               <Ionicons
                 name="arrow-back"
-                size={22}
+                size={HEADER_ICON_SIZE}
                 color={Colors.textPrimary}
               />
             </View>
           </TouchableOpacity>
 
           {/* Filter and View Mode Toggle Buttons */}
-          <View style={styles.headerActions}>
+          <View style={FloatingHeaderStyles.headerActions}>
             <TouchableOpacity
-              style={styles.actionButton}
+              style={FloatingHeaderStyles.actionButton}
               onPress={() => setShowFilterSheet(true)}
               activeOpacity={0.7}
             >
-              <View style={styles.actionButtonBackground}>
+              <View style={FloatingHeaderStyles.actionButtonBackground}>
                 <Ionicons
                   name="options-outline"
-                  size={22}
+                  size={HEADER_ICON_SIZE}
                   color={Colors.textPrimary}
                 />
                 {hasActiveFilters && (
-                  <View style={styles.filterBadge}>
-                    <Text style={styles.filterBadgeText}>
+                  <View style={FloatingHeaderStyles.filterBadge}>
+                    <Text style={FloatingHeaderStyles.filterBadgeText}>
                       {activeFiltersCount}
                     </Text>
                   </View>
@@ -480,16 +484,16 @@ export default function SearchScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.actionButton}
+              style={FloatingHeaderStyles.actionButton}
               onPress={() =>
                 setViewMode((prev) => (prev === "list" ? "grid" : "list"))
               }
               activeOpacity={0.7}
             >
-              <View style={styles.actionButtonBackground}>
+              <View style={FloatingHeaderStyles.actionButtonBackground}>
                 <Ionicons
                   name={viewMode === "list" ? "grid-outline" : "list-outline"}
-                  size={22}
+                  size={HEADER_ICON_SIZE}
                   color={Colors.textPrimary}
                 />
               </View>
@@ -804,88 +808,6 @@ const styles = StyleSheet.create({
     borderRadius: 200,
     backgroundColor: Colors.primaryGreen,
     opacity: 0.05,
-  },
-  floatingHeader: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.md,
-    zIndex: 100,
-  },
-  backButton: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  backButtonCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.surface,
-    justifyContent: "center",
-    alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
-  },
-  headerActions: {
-    flexDirection: "row",
-    gap: Spacing.sm,
-  },
-  actionButton: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  actionButtonBackground: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.surface,
-    justifyContent: "center",
-    alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
-  },
-  filterBadge: {
-    position: "absolute",
-    top: -2,
-    right: -2,
-    backgroundColor: Colors.primaryGreen,
-    borderRadius: 10,
-    minWidth: 18,
-    height: 18,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 4,
-    borderWidth: 2,
-    borderColor: Colors.surface,
-  },
-  filterBadgeText: {
-    ...Typography.caption,
-    fontSize: 10,
-    fontWeight: "700",
-    color: "#FFFFFF",
   },
   floatingSearchContainer: {
     position: "absolute",

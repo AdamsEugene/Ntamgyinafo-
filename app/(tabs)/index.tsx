@@ -15,6 +15,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import {
+  FloatingHeaderStyles,
+  HEADER_ICON_SIZE,
+} from "@/components/FloatingHeader.styles";
 
 interface Property {
   id: string;
@@ -242,7 +246,7 @@ export default function BuyerHomeScreen() {
         {/* Floating Sticky Header */}
         <View
           style={[
-            styles.floatingHeader,
+            FloatingHeaderStyles.floatingHeader,
             { paddingTop: insets.top + Spacing.md },
           ]}
         >
@@ -269,13 +273,13 @@ export default function BuyerHomeScreen() {
           <View style={styles.actionButtonsContainer}>
             <TouchableOpacity
               onPress={() => router.push("/(tabs)/search")}
-              style={styles.searchButton}
+              style={FloatingHeaderStyles.actionButton}
               activeOpacity={0.7}
             >
-              <View style={styles.searchIconContainer}>
+              <View style={FloatingHeaderStyles.actionButtonBackground}>
                 <Ionicons
                   name="search-outline"
-                  size={22}
+                  size={HEADER_ICON_SIZE}
                   color={Colors.textPrimary}
                 />
               </View>
@@ -286,13 +290,13 @@ export default function BuyerHomeScreen() {
                 // TODO: Navigate to notifications
                 console.log("Notifications");
               }}
-              style={styles.notificationButton}
+              style={FloatingHeaderStyles.actionButton}
               activeOpacity={0.7}
             >
-              <View style={styles.notificationIconContainer}>
+              <View style={FloatingHeaderStyles.actionButtonBackground}>
                 <Ionicons
                   name="notifications-outline"
-                  size={22}
+                  size={HEADER_ICON_SIZE}
                   color={Colors.textPrimary}
                 />
                 <View style={styles.notificationBadge}>
@@ -735,18 +739,6 @@ const styles = StyleSheet.create({
     paddingTop: 100,
     paddingBottom: Spacing["2xl"],
   },
-  floatingHeader: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.md,
-    zIndex: 100,
-  },
   actionButtonsContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -786,30 +778,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: Colors.textPrimary,
   },
-  notificationButton: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  notificationIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.surface,
-    justifyContent: "center",
-    alignItems: "center",
-    position: "relative",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
-  },
   notificationBadge: {
     position: "absolute",
     top: 4,
@@ -829,29 +797,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "700",
     color: "#FFFFFF",
-  },
-  searchButton: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  searchIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.surface,
-    justifyContent: "center",
-    alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
   },
   section: {
     marginBottom: Spacing["2xl"],

@@ -19,6 +19,10 @@ import {
   FilterBottomSheet,
   type FilterOptions,
 } from "@/components/FilterBottomSheet";
+import {
+  FloatingHeaderStyles,
+  HEADER_ICON_SIZE,
+} from "@/components/FloatingHeader.styles";
 
 interface Property {
   id: string;
@@ -466,69 +470,87 @@ export default function SearchResultsScreen() {
     <>
       <StatusBar style="dark" />
       <View style={styles.container}>
-        {/* Header */}
+        {/* Floating Sticky Header */}
         <View
           style={[
-            styles.header,
-            {
-              paddingTop: insets.top + Spacing.md,
-              paddingBottom: Spacing.md,
-            },
+            FloatingHeaderStyles.floatingHeader,
+            { paddingTop: insets.top + Spacing.md },
           ]}
         >
           <TouchableOpacity
             onPress={() => router.back()}
-            style={styles.backButton}
+            style={FloatingHeaderStyles.backButton}
             activeOpacity={0.7}
           >
-            <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
+            <View style={FloatingHeaderStyles.backButtonCircle}>
+              <Ionicons
+                name="arrow-back"
+                size={HEADER_ICON_SIZE}
+                color={Colors.textPrimary}
+              />
+            </View>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Search Results</Text>
-          <View style={styles.headerActions}>
+
+          <Text
+            style={[FloatingHeaderStyles.headerTitle, styles.headerTitleText]}
+          >
+            Search Results
+          </Text>
+
+          {/* Filter and View Mode Toggle Buttons */}
+          <View style={FloatingHeaderStyles.headerActions}>
             <TouchableOpacity
-              style={styles.headerActionButton}
+              style={FloatingHeaderStyles.actionButton}
               onPress={() => setShowFilterSheet(true)}
               activeOpacity={0.7}
             >
-              <Ionicons
-                name="options-outline"
-                size={22}
-                color={Colors.textPrimary}
-              />
-              {hasActiveFilters && (
-                <View style={styles.filterBadge}>
-                  <Text style={styles.filterBadgeText}>
-                    {getActiveFiltersCount()}
-                  </Text>
-                </View>
-              )}
+              <View style={FloatingHeaderStyles.actionButtonBackground}>
+                <Ionicons
+                  name="options-outline"
+                  size={HEADER_ICON_SIZE}
+                  color={Colors.textPrimary}
+                />
+                {hasActiveFilters && (
+                  <View style={FloatingHeaderStyles.filterBadge}>
+                    <Text style={FloatingHeaderStyles.filterBadgeText}>
+                      {getActiveFiltersCount()}
+                    </Text>
+                  </View>
+                )}
+              </View>
             </TouchableOpacity>
+
             <TouchableOpacity
-              style={styles.headerActionButton}
+              style={FloatingHeaderStyles.actionButton}
               onPress={() =>
                 setViewMode((prev) => (prev === "list" ? "grid" : "list"))
               }
               activeOpacity={0.7}
             >
-              <Ionicons
-                name={viewMode === "list" ? "grid-outline" : "list-outline"}
-                size={22}
-                color={Colors.textPrimary}
-              />
+              <View style={FloatingHeaderStyles.actionButtonBackground}>
+                <Ionicons
+                  name={viewMode === "list" ? "grid-outline" : "list-outline"}
+                  size={HEADER_ICON_SIZE}
+                  color={Colors.textPrimary}
+                />
+              </View>
             </TouchableOpacity>
+
             <TouchableOpacity
-              style={styles.headerActionButton}
+              style={FloatingHeaderStyles.actionButton}
               onPress={() => {
                 // TODO: Show menu options
                 console.log("Menu pressed");
               }}
               activeOpacity={0.7}
             >
-              <Ionicons
-                name="ellipsis-vertical"
-                size={22}
-                color={Colors.textPrimary}
-              />
+              <View style={FloatingHeaderStyles.actionButtonBackground}>
+                <Ionicons
+                  name="ellipsis-vertical"
+                  size={HEADER_ICON_SIZE}
+                  color={Colors.textPrimary}
+                />
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -537,7 +559,10 @@ export default function SearchResultsScreen() {
           style={styles.scrollView}
           contentContainerStyle={[
             styles.content,
-            { paddingBottom: insets.bottom + 100 },
+            {
+              paddingTop: 80 + insets.top,
+              paddingBottom: insets.bottom + 100,
+            },
           ]}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -559,7 +584,7 @@ export default function SearchResultsScreen() {
           {/* Action Bar */}
           <View style={styles.actionBar}>
             <TouchableOpacity
-              style={styles.actionButton}
+              style={styles.actionBarButton}
               onPress={() => setShowFilterSheet(true)}
               activeOpacity={0.7}
             >
@@ -568,7 +593,7 @@ export default function SearchResultsScreen() {
                 size={18}
                 color={Colors.primaryGreen}
               />
-              <Text style={styles.actionButtonText}>Filter</Text>
+              <Text style={styles.actionBarButtonText}>Filter</Text>
               {hasActiveFilters && (
                 <View style={styles.actionBadge}>
                   <Text style={styles.actionBadgeText}>
@@ -579,11 +604,11 @@ export default function SearchResultsScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.actionButton}
+              style={styles.actionBarButton}
               onPress={() => setShowSortModal(true)}
               activeOpacity={0.7}
             >
-              <Text style={styles.actionButtonText}>Sort</Text>
+              <Text style={styles.actionBarButtonText}>Sort</Text>
               <Ionicons
                 name="chevron-down"
                 size={16}
@@ -592,7 +617,7 @@ export default function SearchResultsScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.actionButton}
+              style={styles.actionBarButton}
               onPress={() => {
                 router.push("/(tabs)/map");
               }}
@@ -603,7 +628,7 @@ export default function SearchResultsScreen() {
                 size={18}
                 color={Colors.primaryGreen}
               />
-              <Text style={styles.actionButtonText}>Map</Text>
+              <Text style={styles.actionBarButtonText}>Map</Text>
             </TouchableOpacity>
           </View>
 
@@ -720,66 +745,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.lg,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
-  },
-  backButton: {
-    padding: Spacing.xs,
-  },
-  headerTitle: {
+  headerTitleText: {
     ...Typography.titleLarge,
     fontSize: 20,
     fontWeight: "700",
     color: Colors.textPrimary,
-    flex: 1,
-    textAlign: "center",
-    marginHorizontal: Spacing.md,
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
-  },
-  headerActionButton: {
-    padding: Spacing.xs,
-    position: "relative",
-  },
-  filterBadge: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    backgroundColor: Colors.primaryGreen,
-    borderRadius: 10,
-    minWidth: 18,
-    height: 18,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 4,
-    borderWidth: 2,
-    borderColor: Colors.surface,
-  },
-  filterBadgeText: {
-    ...Typography.caption,
-    fontSize: 10,
-    fontWeight: "700",
-    color: "#FFFFFF",
   },
   scrollView: {
     flex: 1,
@@ -813,7 +783,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
     gap: Spacing.md,
   },
-  actionButton: {
+  actionBarButton: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
@@ -838,7 +808,7 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  actionButtonText: {
+  actionBarButtonText: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
