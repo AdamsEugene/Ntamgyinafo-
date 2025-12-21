@@ -314,6 +314,26 @@ export default function MapScreen() {
     setMapType(mapType === "standard" ? "satellite" : "standard");
   };
 
+  const fitToProperties = () => {
+    if (filteredProperties.length > 0 && mapRef.current) {
+      mapRef.current.fitToCoordinates(
+        filteredProperties.map((p) => ({
+          latitude: p.latitude,
+          longitude: p.longitude,
+        })),
+        {
+          edgePadding: {
+            top: 150,
+            right: 50,
+            bottom: 250,
+            left: 50,
+          },
+          animated: true,
+        }
+      );
+    }
+  };
+
   const handleFilterApply = (appliedFilters: FilterOptions) => {
     setFilters(appliedFilters);
     filterSheetRef.current?.dismiss();
@@ -600,6 +620,17 @@ export default function MapScreen() {
               <Text style={styles.viewDetailsText}>View Details</Text>
             </TouchableOpacity>
           </View>
+        )}
+
+        {/* Fit to Properties Floating Button */}
+        {filteredProperties.length > 0 && (
+          <TouchableOpacity
+            style={styles.fitToPropertiesButton}
+            onPress={fitToProperties}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="locate" size={24} color={Colors.primaryGreen} />
+          </TouchableOpacity>
         )}
 
         {/* Bottom Sheet Toggle Button */}
@@ -891,6 +922,30 @@ const styles = StyleSheet.create({
     color: Colors.primaryGreen,
     fontSize: 12,
     fontWeight: "600",
+  },
+  fitToPropertiesButton: {
+    position: "absolute",
+    bottom: 180,
+    right: Spacing.lg,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+    borderWidth: 2,
+    borderColor: Colors.primaryGreen,
   },
   bottomSheetToggle: {
     position: "absolute",
