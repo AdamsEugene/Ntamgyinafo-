@@ -85,60 +85,92 @@ const DualRangeSlider: React.FC<{
   }, [minValue, maxValue, min, max, sliderWidth]);
 
   const getValueFromPosition = (x: number) => {
+    "worklet";
     const percent = Math.max(0, Math.min(100, (x / sliderWidth) * 100));
     return Math.round(min + (percent / 100) * (max - min));
   };
 
-  const updateMinValue = (value: number) => {
-    onMinChange(value);
-  };
+  const updateMinValue = useCallback(
+    (value: number) => {
+      onMinChange(value);
+    },
+    [onMinChange]
+  );
 
-  const updateMaxValue = (value: number) => {
-    onMaxChange(value);
-  };
+  const updateMaxValue = useCallback(
+    (value: number) => {
+      onMaxChange(value);
+    },
+    [onMaxChange]
+  );
+
+  // Update counter for throttling
+  const updateCounter = useSharedValue(0);
 
   const minGesture = Gesture.Pan()
+    .minDistance(5)
+    .activeOffsetX([-5, 5])
+    .failOffsetY([-20, 20])
     .onStart(() => {
+      "worklet";
       minStartPos.value = minPos.value;
     })
     .onUpdate((event) => {
+      "worklet";
       const newPos = Math.max(
         0,
         Math.min(maxPos.value - 20, minStartPos.value + event.translationX)
       );
       minPos.value = newPos;
-      const value = getValueFromPosition(newPos);
-      if (value <= maxValue) {
-        runOnJS(updateMinValue)(value);
+      // Throttle JS updates - only update every 5th frame
+      updateCounter.value += 1;
+      if (updateCounter.value % 5 === 0) {
+        const value = getValueFromPosition(newPos);
+        if (value <= maxValue) {
+          runOnJS(updateMinValue)(value);
+        }
       }
     })
     .onEnd(() => {
+      "worklet";
       const value = getValueFromPosition(minPos.value);
       if (value <= maxValue) {
         runOnJS(updateMinValue)(value);
       }
+      updateCounter.value = 0;
     });
 
   const maxGesture = Gesture.Pan()
+    .minDistance(5)
+    .activeOffsetX([-5, 5])
+    .failOffsetY([-20, 20])
     .onStart(() => {
+      "worklet";
       maxStartPos.value = maxPos.value;
     })
     .onUpdate((event) => {
+      "worklet";
       const newPos = Math.min(
         sliderWidth,
         Math.max(minPos.value + 20, maxStartPos.value + event.translationX)
       );
       maxPos.value = newPos;
-      const value = getValueFromPosition(newPos);
-      if (value >= minValue) {
-        runOnJS(updateMaxValue)(value);
+      // Throttle JS updates - only update every 5th frame
+      updateCounter.value += 1;
+      if (updateCounter.value % 5 === 0) {
+        const value = getValueFromPosition(newPos);
+        if (value >= minValue) {
+          runOnJS(updateMaxValue)(value);
+        }
       }
     })
     .onEnd(() => {
+      "worklet";
       const value = getValueFromPosition(maxPos.value);
       if (value >= minValue) {
         runOnJS(updateMaxValue)(value);
       }
+      updateCounter.value = 0;
     });
 
   const minThumbStyle = useAnimatedStyle(() => ({
@@ -155,14 +187,24 @@ const DualRangeSlider: React.FC<{
   }));
 
   return (
-    <View style={styles.sliderContainer}>
+    <View
+      style={styles.sliderContainer}
+      onStartShouldSetResponder={() => true}
+      onMoveShouldSetResponder={() => true}
+    >
       <View style={styles.sliderTrack}>
         <Animated.View style={[styles.sliderActiveTrack, activeTrackStyle]} />
         <GestureDetector gesture={minGesture}>
-          <Animated.View style={[styles.sliderThumb, minThumbStyle]} />
+          <Animated.View
+            style={[styles.sliderThumb, minThumbStyle]}
+            collapsable={false}
+          />
         </GestureDetector>
         <GestureDetector gesture={maxGesture}>
-          <Animated.View style={[styles.sliderThumb, maxThumbStyle]} />
+          <Animated.View
+            style={[styles.sliderThumb, maxThumbStyle]}
+            collapsable={false}
+          />
         </GestureDetector>
       </View>
     </View>
