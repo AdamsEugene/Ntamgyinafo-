@@ -13,7 +13,6 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
 
 interface Property {
@@ -129,11 +128,11 @@ const ALL_PROPERTIES: Property[] = [
 ];
 
 export default function SearchScreen() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
   const searchInputRef = useRef<RNTextInput>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [selectedLocation] = useState("Accra");
   const [savedProperties, setSavedProperties] = useState<Set<string>>(
     new Set(["2", "5"])
   );
@@ -362,92 +361,68 @@ export default function SearchScreen() {
           <View style={styles.circle2} />
         </View>
 
-        {/* Header */}
-        <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+        {/* Floating Sticky Header - Same as Home Screen */}
+        <View
+          style={[
+            styles.floatingHeader,
+            { paddingTop: insets.top + Spacing.md },
+          ]}
+        >
           <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
+            onPress={() => {
+              // TODO: Show location picker
+              console.log("Change Location");
+            }}
+            style={styles.locationContainer}
             activeOpacity={0.7}
           >
-            <View style={styles.backButtonCircle}>
-              <Ionicons
-                name="arrow-back"
-                size={20}
-                color={Colors.textPrimary}
-              />
+            <View style={styles.locationIconContainer}>
+              <Ionicons name="location" size={18} color={Colors.primaryGreen} />
             </View>
+            <Text style={styles.location}>{selectedLocation}</Text>
+            <Ionicons
+              name="chevron-down"
+              size={16}
+              color={Colors.textSecondary}
+            />
           </TouchableOpacity>
 
-          <View style={styles.searchInputContainer}>
-            <Ionicons
-              name="search"
-              size={20}
-              color={Colors.textSecondary}
-              style={styles.searchIcon}
-            />
-            <RNTextInput
-              ref={searchInputRef}
-              style={styles.searchInput}
-              placeholder="Search properties..."
-              placeholderTextColor={Colors.textSecondary}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              returnKeyType="search"
-              autoCapitalize="none"
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity
-                onPress={() => setSearchQuery("")}
-                style={styles.clearButton}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name="close-circle"
-                  size={20}
-                  color={Colors.textSecondary}
-                />
-              </TouchableOpacity>
-            )}
-          </View>
-
-          <View style={styles.headerActions}>
+          {/* Search and Notification Buttons */}
+          <View style={styles.actionButtonsContainer}>
             <TouchableOpacity
-              style={styles.actionButton}
               onPress={() => {
-                console.log("Open filters");
-                // TODO: Open filter bottom sheet
+                // Focus the search input at bottom
+                searchInputRef.current?.focus();
               }}
+              style={styles.searchButton}
               activeOpacity={0.7}
             >
-              <View style={styles.actionButtonBackground}>
+              <View style={styles.searchIconContainer}>
                 <Ionicons
-                  name="options-outline"
+                  name="search-outline"
                   size={22}
                   color={Colors.textPrimary}
                 />
-                {hasActiveFilters && (
-                  <View style={styles.filterBadge}>
-                    <Text style={styles.filterBadgeText}>
-                      {activeFiltersCount}
-                    </Text>
-                  </View>
-                )}
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() =>
-                setViewMode((prev) => (prev === "list" ? "grid" : "list"))
-              }
+              onPress={() => {
+                // TODO: Navigate to notifications
+                console.log("Notifications");
+              }}
+              style={styles.notificationButton}
               activeOpacity={0.7}
             >
-              <View style={styles.actionButtonBackground}>
+              <View style={styles.notificationIconContainer}>
                 <Ionicons
-                  name={viewMode === "list" ? "grid-outline" : "list-outline"}
+                  name="notifications-outline"
                   size={22}
                   color={Colors.textPrimary}
                 />
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationBadgeText}>3</Text>
+                </View>
               </View>
             </TouchableOpacity>
           </View>
@@ -457,7 +432,10 @@ export default function SearchScreen() {
           style={styles.scrollView}
           contentContainerStyle={[
             styles.content,
-            { paddingBottom: 100 + insets.bottom },
+            {
+              paddingTop: 80 + insets.top,
+              paddingBottom: 120 + insets.bottom, // Extra space for search input and bottom nav
+            },
           ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -586,6 +564,91 @@ export default function SearchScreen() {
             </View>
           )}
         </ScrollView>
+
+        {/* Floating Search Input - Above Bottom Navigation */}
+        <View
+          style={[
+            styles.floatingSearchContainer,
+            {
+              paddingBottom: Math.max(insets.bottom, Spacing.md) + 70, // Space for bottom nav
+            },
+          ]}
+        >
+          <View style={styles.floatingSearchInputContainer}>
+            <Ionicons
+              name="search"
+              size={20}
+              color={Colors.textSecondary}
+              style={styles.floatingSearchIcon}
+            />
+            <RNTextInput
+              ref={searchInputRef}
+              style={styles.floatingSearchInput}
+              placeholder="Search properties..."
+              placeholderTextColor={Colors.textSecondary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              returnKeyType="search"
+              autoCapitalize="none"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setSearchQuery("")}
+                style={styles.floatingClearButton}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="close-circle"
+                  size={20}
+                  color={Colors.textSecondary}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Filter and View Mode Buttons */}
+          <View style={styles.floatingActionsContainer}>
+            <TouchableOpacity
+              style={styles.floatingActionButton}
+              onPress={() => {
+                console.log("Open filters");
+                // TODO: Open filter bottom sheet
+              }}
+              activeOpacity={0.7}
+            >
+              <View style={styles.floatingActionButtonBackground}>
+                <Ionicons
+                  name="options-outline"
+                  size={22}
+                  color={Colors.textPrimary}
+                />
+                {hasActiveFilters && (
+                  <View style={styles.floatingFilterBadge}>
+                    <Text style={styles.floatingFilterBadgeText}>
+                      {activeFiltersCount}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.floatingActionButton}
+              onPress={() =>
+                setViewMode((prev) => (prev === "list" ? "grid" : "list"))
+              }
+              activeOpacity={0.7}
+            >
+              <View style={styles.floatingActionButtonBackground}>
+                <Ionicons
+                  name={viewMode === "list" ? "grid-outline" : "list-outline"}
+                  size={22}
+                  color={Colors.textPrimary}
+                />
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
     </>
   );
@@ -624,88 +687,135 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primaryGreen,
     opacity: 0.05,
   },
-  header: {
+  floatingHeader: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: Spacing.lg,
+    justifyContent: "space-between",
+    paddingHorizontal: Spacing.xl,
     paddingBottom: Spacing.md,
-    gap: Spacing.md,
-    zIndex: 10,
+    zIndex: 100,
   },
-  backButton: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  backButtonCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.surface,
-    justifyContent: "center",
-    alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
-  },
-  searchInputContainer: {
-    flex: 1,
+  actionButtonsContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.surface,
-    borderRadius: 20,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.divider,
-    gap: Spacing.xs,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
-  },
-  searchIcon: {
-    marginRight: Spacing.xs,
-  },
-  searchInput: {
-    flex: 1,
-    ...Typography.bodyMedium,
-    fontSize: 15,
-    color: Colors.textPrimary,
-    padding: 0,
-    ...Platform.select({
-      android: {
-        includeFontPadding: false,
-        textAlignVertical: "center",
-      },
-    }),
-  },
-  clearButton: {
-    padding: Spacing.xs,
-  },
-  headerActions: {
-    flexDirection: "row",
     gap: Spacing.sm,
   },
-  actionButton: {
+  locationContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    backgroundColor: Colors.surface,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    borderRadius: 20,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  locationIconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#F1F8F4",
     justifyContent: "center",
     alignItems: "center",
   },
-  actionButtonBackground: {
+  location: {
+    ...Typography.bodyMedium,
+    fontSize: 15,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+  },
+  notificationButton: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  notificationIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.surface,
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  notificationBadge: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    backgroundColor: "#FF3B30",
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: Colors.surface,
+  },
+  notificationBadgeText: {
+    ...Typography.caption,
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  searchButton: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  searchIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.surface,
+    justifyContent: "center",
+    alignItems: "center",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  floatingActionsContainer: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    justifyContent: "flex-end",
+    marginBottom: Spacing.sm,
+  },
+  floatingActionButton: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  floatingActionButtonBackground: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -725,7 +835,7 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  filterBadge: {
+  floatingFilterBadge: {
     position: "absolute",
     top: -2,
     right: -2,
@@ -739,11 +849,63 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: Colors.surface,
   },
-  filterBadgeText: {
+  floatingFilterBadgeText: {
     ...Typography.caption,
     fontSize: 10,
     fontWeight: "700",
     color: "#FFFFFF",
+  },
+  floatingSearchContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+    zIndex: 999,
+    backgroundColor: Colors.background,
+  },
+  floatingSearchInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.surface,
+    borderRadius: 20,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    gap: Spacing.xs,
+    marginBottom: Spacing.md,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  floatingSearchIcon: {
+    marginRight: Spacing.xs,
+  },
+  floatingSearchInput: {
+    flex: 1,
+    ...Typography.bodyMedium,
+    fontSize: 15,
+    color: Colors.textPrimary,
+    padding: 0,
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        textAlignVertical: "center",
+      },
+    }),
+  },
+  floatingClearButton: {
+    padding: Spacing.xs,
   },
   scrollView: {
     flex: 1,
