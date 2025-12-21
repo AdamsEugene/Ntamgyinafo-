@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -17,6 +17,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import {
+  BottomSheetModal,
+  BottomSheetBackdrop,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -119,6 +124,7 @@ export default function PropertyDetailScreen() {
   const [isSaved, setIsSaved] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+  const chatBottomSheetRef = useRef<BottomSheetModal>(null);
 
   // In a real app, fetch property by ID
   const property = MOCK_PROPERTY;
@@ -152,11 +158,74 @@ export default function PropertyDetailScreen() {
     Linking.openURL(`tel:${phoneNumber}`);
   };
 
+  const chatSnapPoints = useMemo(() => ["50%"], []);
+
   const handleChat = () => {
     // In a real app, check subscription first
-    // TODO: Navigate to chat screen when implemented
-    console.log("Navigate to chat with:", property.owner.id);
+    console.log("Chat button clicked, presenting bottom sheet");
+    try {
+      chatBottomSheetRef.current?.present();
+    } catch (error) {
+      console.error("Error presenting bottom sheet:", error);
+    }
   };
+
+  const handleChatInApp = () => {
+    chatBottomSheetRef.current?.dismiss();
+    // Navigate to in-app chat screen
+    // TODO: Implement chat screen route
+    console.log("Navigate to in-app chat with:", property.owner.id);
+    // router.push(`/chat/${property.owner.id}` as any);
+  };
+
+  const handleChatViaApp = async (app: string, phoneNumber: string) => {
+    chatBottomSheetRef.current?.dismiss();
+    const formattedPhone = phoneNumber.replace(/[^0-9]/g, ""); // Remove non-digits
+
+    try {
+      let url = "";
+      switch (app) {
+        case "whatsapp":
+          url = `whatsapp://send?phone=${formattedPhone}`;
+          break;
+        case "telegram":
+          url = `tg://resolve?phone=${formattedPhone}`;
+          break;
+        case "sms":
+          url = `sms:${phoneNumber}`;
+          break;
+        case "call":
+          url = `tel:${phoneNumber}`;
+          break;
+        default:
+          return;
+      }
+
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        // Fallback for WhatsApp web or install prompt
+        if (app === "whatsapp") {
+          await Linking.openURL(`https://wa.me/${formattedPhone}`);
+        }
+      }
+    } catch (error) {
+      console.error(`Error opening ${app}:`, error);
+    }
+  };
+
+  const renderChatBackdrop = useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.5}
+      />
+    ),
+    []
+  );
 
   const handleImageScroll = (event: any) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
@@ -828,6 +897,117 @@ export default function PropertyDetailScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Chat Options Bottom Sheet */}
+      <BottomSheetModal
+        ref={chatBottomSheetRef}
+        index={0}
+        snapPoints={chatSnapPoints}
+        enablePanDownToClose
+        onDismiss={() => {
+          // Optional: handle dismiss if needed
+        }}
+        backdropComponent={renderChatBackdrop}
+        backgroundStyle={styles.chatBottomSheet}
+        handleIndicatorStyle={styles.handleIndicator}
+      >
+        <BottomSheetView style={styles.chatSheetContent}>
+          <Text style={styles.chatSheetTitle}>Choose how to contact</Text>
+
+          {/* In-App Chat Option */}
+          <TouchableOpacity
+            style={styles.chatOption}
+            onPress={handleChatInApp}
+            activeOpacity={0.7}
+          >
+            <View style={styles.chatOptionIcon}>
+              <Ionicons
+                name="chatbubbles"
+                size={24}
+                color={Colors.primaryGreen}
+              />
+            </View>
+            <View style={styles.chatOptionContent}>
+              <Text style={styles.chatOptionTitle}>Chat in-app</Text>
+              <Text style={styles.chatOptionSubtitle}>
+                Send messages within the app
+              </Text>
+            </View>
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color={Colors.textSecondary}
+            />
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View style={styles.chatDivider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>Or use external apps</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* External Chat Apps */}
+          <View style={styles.externalAppsContainer}>
+            <TouchableOpacity
+              style={styles.externalAppOption}
+              onPress={() =>
+                handleChatViaApp(
+                  "whatsapp",
+                  property.owner.phone || "+233123456789"
+                )
+              }
+              activeOpacity={0.7}
+            >
+              <Ionicons name="logo-whatsapp" size={28} color="#25D366" />
+              <Text style={styles.externalAppText}>WhatsApp</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.externalAppOption}
+              onPress={() =>
+                handleChatViaApp(
+                  "telegram",
+                  property.owner.phone || "+233123456789"
+                )
+              }
+              activeOpacity={0.7}
+            >
+              <Ionicons name="paper-plane" size={28} color="#0088cc" />
+              <Text style={styles.externalAppText}>Telegram</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.externalAppOption}
+              onPress={() =>
+                handleChatViaApp("sms", property.owner.phone || "+233123456789")
+              }
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="chatbubble"
+                size={28}
+                color={Colors.primaryGreen}
+              />
+              <Text style={styles.externalAppText}>SMS</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.externalAppOption}
+              onPress={() =>
+                handleChatViaApp(
+                  "call",
+                  property.owner.phone || "+233123456789"
+                )
+              }
+              activeOpacity={0.7}
+            >
+              <Ionicons name="call" size={28} color={Colors.primaryGreen} />
+              <Text style={styles.externalAppText}>Call</Text>
+            </TouchableOpacity>
+          </View>
+        </BottomSheetView>
+      </BottomSheetModal>
     </>
   );
 }
@@ -1575,5 +1755,126 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: "#FFFFFF",
+  },
+  chatBottomSheet: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  handleIndicator: {
+    backgroundColor: Colors.divider,
+    width: 40,
+    height: 4,
+  },
+  chatSheetContent: {
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.xl,
+  },
+  chatSheetTitle: {
+    ...Typography.titleLarge,
+    fontSize: 22,
+    fontWeight: "800",
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xl,
+    textAlign: "center",
+    letterSpacing: -0.3,
+  },
+  chatOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
+    borderWidth: 2,
+    borderColor: Colors.primaryGreen,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.primaryGreen,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  chatOptionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.primaryLight,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: Spacing.md,
+  },
+  chatOptionContent: {
+    flex: 1,
+  },
+  chatOptionTitle: {
+    ...Typography.titleMedium,
+    fontSize: 17,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs / 2,
+  },
+  chatOptionSubtitle: {
+    ...Typography.bodyMedium,
+    fontSize: 14,
+    color: Colors.textSecondary,
+    fontWeight: "500",
+  },
+  chatDivider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: Spacing.lg,
+    gap: Spacing.md,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.divider,
+  },
+  dividerText: {
+    ...Typography.caption,
+    fontSize: 12,
+    color: Colors.textSecondary,
+    fontWeight: "600",
+  },
+  externalAppsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    flexWrap: "wrap",
+    gap: Spacing.xs,
+    width: "100%",
+  },
+  externalAppOption: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 80,
+    padding: Spacing.sm,
+    borderRadius: 16,
+    backgroundColor: Colors.surface,
+    borderWidth: 1.5,
+    borderColor: Colors.divider,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  externalAppText: {
+    ...Typography.caption,
+    fontSize: 10,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+    marginTop: Spacing.xs,
   },
 });
