@@ -37,6 +37,7 @@ import {
   PropertyGridCard,
   type Property,
 } from "@/components/PropertyCard";
+import { BottomNavigation, type TabItem } from "@/components/BottomNavigation";
 
 interface PropertyWithTypes extends Property {
   propertyType?: "house" | "apartment" | "land" | "commercial";
@@ -175,6 +176,39 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "newest", label: "Newest First" },
   { value: "oldest", label: "Oldest First" },
   { value: "bedrooms", label: "Most Bedrooms" },
+];
+
+const BOTTOM_NAV_TABS: TabItem[] = [
+  {
+    id: "index",
+    label: "Home",
+    icon: "home-outline",
+    activeIcon: "home",
+  },
+  {
+    id: "search",
+    label: "Search",
+    icon: "search-outline",
+    activeIcon: "search",
+  },
+  {
+    id: "map",
+    label: "Map",
+    icon: "map-outline",
+    activeIcon: "map",
+  },
+  {
+    id: "messages",
+    label: "Messages",
+    icon: "chatbubbles-outline",
+    activeIcon: "chatbubbles",
+  },
+  {
+    id: "profile",
+    label: "Profile",
+    icon: "person-outline",
+    activeIcon: "person",
+  },
 ];
 
 export default function SearchResultsScreen() {
@@ -447,7 +481,7 @@ export default function SearchResultsScreen() {
             styles.content,
             {
               paddingTop: 80 + insets.top,
-              paddingBottom: insets.bottom + 100,
+              paddingBottom: insets.bottom + 120, // Extra padding for bottom nav
             },
           ]}
           showsVerticalScrollIndicator={false}
@@ -666,6 +700,25 @@ export default function SearchResultsScreen() {
           }}
           initialFilters={filters as FilterOptions}
           resultsCount={filteredProperties.length}
+        />
+
+        {/* Bottom Navigation */}
+        <BottomNavigation
+          tabs={BOTTOM_NAV_TABS}
+          activeTab="search"
+          onTabPress={(tabId) => {
+            if (tabId === "index") {
+              router.replace("/(tabs)");
+            } else if (tabId === "search") {
+              router.replace("/(tabs)/search");
+            } else if (tabId === "map") {
+              router.replace("/(tabs)/map");
+            } else if (tabId === "messages") {
+              router.replace("/(tabs)/messages");
+            } else if (tabId === "profile") {
+              router.replace("/(tabs)/profile");
+            }
+          }}
         />
       </View>
     </>
