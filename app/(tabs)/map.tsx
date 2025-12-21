@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   Platform,
+  Dimensions,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -36,12 +37,13 @@ import {
 import { BottomNavigation, type TabItem } from "@/components/BottomNavigation";
 import { PropertyListCard, type Property } from "@/components/PropertyCard";
 
-// Screen dimensions available if needed
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 // Extended Property interface with coordinates
 interface MapProperty extends Property {
   latitude: number;
   longitude: number;
+  images?: string[]; // Additional images for the property
 }
 
 // Mock properties with coordinates (Accra area)
@@ -204,6 +206,7 @@ export default function MapScreen() {
   const [selectedProperty, setSelectedProperty] = useState<MapProperty | null>(
     null
   );
+  const [popupExpanded, setPopupExpanded] = useState(false);
   const [, setUserLocation] = useState<{
     latitude: number;
     longitude: number;
@@ -284,6 +287,7 @@ export default function MapScreen() {
 
   const handleMarkerPress = (property: MapProperty) => {
     setSelectedProperty(property);
+    setPopupExpanded(false); // Reset expanded state when selecting new property
     // Center map on selected property
     if (mapRef.current) {
       mapRef.current.animateToRegion(
@@ -302,6 +306,7 @@ export default function MapScreen() {
     // Close popup if clicking on map (not on marker)
     if (selectedProperty) {
       setSelectedProperty(null);
+      setPopupExpanded(false);
     }
   };
 
@@ -484,46 +489,109 @@ export default function MapScreen() {
         {/* Property Popup Card */}
         {selectedProperty && (
           <View style={styles.popupContainer}>
-            <TouchableOpacity
-              style={styles.popupCard}
-              onPress={() => router.push(`/property/${selectedProperty.id}`)}
-              activeOpacity={0.9}
-            >
-              <Image
-                source={{ uri: selectedProperty.image }}
-                style={styles.popupImage}
-              />
-              <View style={styles.popupContent}>
-                <Text style={styles.popupTitle} numberOfLines={1}>
-                  {selectedProperty.title}
-                </Text>
-                <Text style={styles.popupLocation} numberOfLines={1}>
-                  {selectedProperty.location}
-                </Text>
-                <Text style={styles.popupPrice}>
-                  {formatPrice(selectedProperty.price)}
-                </Text>
-                {selectedProperty.bedrooms && (
-                  <View style={styles.popupStats}>
-                    <Text style={styles.popupStat}>
-                      {selectedProperty.bedrooms} Bed
-                    </Text>
-                    {selectedProperty.bathrooms && (
-                      <Text style={styles.popupStat}>
-                        {selectedProperty.bathrooms} Bath
-                      </Text>
-                    )}
-                  </View>
-                )}
-              </View>
+            <View style={styles.popupCard}>
               <TouchableOpacity
-                style={styles.popupCloseButton}
-                onPress={() => setSelectedProperty(null)}
+                style={styles.popupCardContent}
+                onPress={() => router.push(`/property/${selectedProperty.id}`)}
+                activeOpacity={0.9}
+              >
+                <Image
+                  source={{ uri: selectedProperty.image }}
+                  style={styles.popupImage}
+                />
+                <View style={styles.popupContent}>
+                  <Text style={styles.popupTitle} numberOfLines={1}>
+                    {selectedProperty.title}
+                  </Text>
+                  <Text style={styles.popupLocation} numberOfLines={1}>
+                    {selectedProperty.location}
+                  </Text>
+                  <Text style={styles.popupPrice}>
+                    {formatPrice(selectedProperty.price)}
+                  </Text>
+                  {selectedProperty.bedrooms && (
+                    <View style={styles.popupStats}>
+                      <Text style={styles.popupStat}>
+                        {selectedProperty.bedrooms} Bed
+                      </Text>
+                      {selectedProperty.bathrooms && (
+                        <Text style={styles.popupStat}>
+                          {selectedProperty.bathrooms} Bath
+                        </Text>
+                      )}
+                    </View>
+                  )}
+                </View>
+                <TouchableOpacity
+                  style={styles.popupCloseButton}
+                  onPress={() => {
+                    setSelectedProperty(null);
+                    setPopupExpanded(false);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="close" size={20} color={Colors.textPrimary} />
+                </TouchableOpacity>
+              </TouchableOpacity>
+
+              {/* Expandable Images Section */}
+              <TouchableOpacity
+                style={styles.expandButton}
+                onPress={() => setPopupExpanded(!popupExpanded)}
                 activeOpacity={0.7}
               >
-                <Ionicons name="close" size={20} color={Colors.textPrimary} />
+                <Ionicons
+                  name={popupExpanded ? "chevron-up" : "chevron-down"}
+                  size={18}
+                  color={Colors.textSecondary}
+                />
+                <Text style={styles.expandButtonText}>
+                  {popupExpanded ? "Hide Images" : "Show Images"}
+                </Text>
               </TouchableOpacity>
-            </TouchableOpacity>
+
+              {popupExpanded && (
+                <View style={styles.popupImagesContainer}>
+                  <View style={styles.popupImagesGrid}>
+                    {[
+                      selectedProperty.image,
+                      ...(selectedProperty.images || []),
+                    ]
+                      .slice(0, 4)
+                      .map((img, index) => (
+                        <TouchableOpacity
+                          key={index}
+                          onPress={() =>
+                            router.push(
+                              `/property/${selectedProperty.id}/gallery?index=${index}`
+                            )
+                          }
+                          activeOpacity={0.8}
+                        >
+                          <Image
+                            source={{ uri: img }}
+                            style={styles.popupThumbnail}
+                          />
+                        </TouchableOpacity>
+                      ))}
+                  </View>
+                  {(selectedProperty.images?.length || 0) + 1 > 4 && (
+                    <TouchableOpacity
+                      style={styles.viewAllImagesButton}
+                      onPress={() =>
+                        router.push(`/property/${selectedProperty.id}/gallery`)
+                      }
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.viewAllImagesText}>
+                        View All {(selectedProperty.images?.length || 0) + 1}{" "}
+                        Images
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
+            </View>
             <TouchableOpacity
               style={styles.viewDetailsButton}
               onPress={() => router.push(`/property/${selectedProperty.id}`)}
@@ -686,7 +754,7 @@ const styles = StyleSheet.create({
   },
   popupContainer: {
     position: "absolute",
-    top: 100,
+    top: 140,
     left: Spacing.lg,
     right: Spacing.lg,
     zIndex: 1000,
@@ -694,7 +762,6 @@ const styles = StyleSheet.create({
   popupCard: {
     backgroundColor: Colors.surface,
     borderRadius: 16,
-    flexDirection: "row",
     padding: Spacing.md,
     ...Platform.select({
       ios: {
@@ -707,6 +774,9 @@ const styles = StyleSheet.create({
         elevation: 8,
       },
     }),
+  },
+  popupCardContent: {
+    flexDirection: "row",
   },
   popupImage: {
     width: 100,
@@ -779,16 +849,60 @@ const styles = StyleSheet.create({
     color: Colors.surface,
     fontWeight: "600",
   },
+  expandButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.sm,
+    marginTop: Spacing.sm,
+    gap: Spacing.xs,
+  },
+  expandButtonText: {
+    ...Typography.labelMedium,
+    color: Colors.textSecondary,
+    fontSize: 12,
+  },
+  popupImagesContainer: {
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Colors.divider,
+  },
+  popupImagesGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  popupThumbnail: {
+    width:
+      (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.md * 2 - Spacing.sm * 3) / 4,
+    height:
+      (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.md * 2 - Spacing.sm * 3) / 4,
+    borderRadius: 8,
+    backgroundColor: Colors.divider,
+  },
+  viewAllImagesButton: {
+    paddingVertical: Spacing.sm,
+    alignItems: "center",
+  },
+  viewAllImagesText: {
+    ...Typography.labelMedium,
+    color: Colors.primaryGreen,
+    fontSize: 12,
+    fontWeight: "600",
+  },
   bottomSheetToggle: {
     position: "absolute",
     bottom: 100,
-    left: Spacing.lg,
-    right: Spacing.lg,
+    alignSelf: "center",
     backgroundColor: Colors.surface,
     borderRadius: 24,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
     alignItems: "center",
+    maxWidth: "70%",
+    minWidth: 200,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
