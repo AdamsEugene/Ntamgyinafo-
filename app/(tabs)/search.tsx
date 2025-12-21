@@ -17,6 +17,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import {
+  FilterBottomSheet,
+  type FilterOptions,
+} from "@/components/FilterBottomSheet";
 
 interface Property {
   id: string;
@@ -30,11 +34,11 @@ interface Property {
 }
 
 interface Filter {
-  type?: string[];
-  transaction?: string;
+  propertyTypes?: string[];
+  transactionType?: "buy" | "rent" | null;
   minPrice?: number;
   maxPrice?: number;
-  bedrooms?: number;
+  bedrooms?: number | null;
   amenities?: string[];
 }
 
@@ -146,6 +150,7 @@ export default function SearchScreen() {
   const [filters, setFilters] = useState<Filter>({});
   const [filteredProperties, setFilteredProperties] =
     useState<Property[]>(ALL_PROPERTIES);
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
   const searchInputWidth = useRef(new Animated.Value(200)).current;
   const searchInputHeight = useRef(new Animated.Value(44)).current;
 
@@ -222,8 +227,12 @@ export default function SearchScreen() {
     }
 
     // Apply filters
-    if (filters.type && filters.type.length > 0) {
-      // Filter by type logic would go here
+    if (filters.propertyTypes && filters.propertyTypes.length > 0) {
+      // Filter by property type logic would go here
+      // For now, we'll keep all properties
+    }
+    if (filters.amenities && filters.amenities.length > 0) {
+      // Filter by amenities logic would go here
     }
     if (filters.minPrice !== undefined) {
       results = results.filter(
@@ -270,10 +279,18 @@ export default function SearchScreen() {
     setFilters({});
   };
 
-  const activeFiltersCount = Object.keys(filters).filter(
-    (key) => filters[key as keyof Filter] !== undefined
-  ).length;
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (filters.propertyTypes && filters.propertyTypes.length > 0) count++;
+    if (filters.transactionType) count++;
+    if (filters.minPrice !== undefined) count++;
+    if (filters.maxPrice !== undefined) count++;
+    if (filters.bedrooms !== null && filters.bedrooms !== undefined) count++;
+    if (filters.amenities && filters.amenities.length > 0) count++;
+    return count;
+  };
 
+  const activeFiltersCount = getActiveFiltersCount();
   const hasActiveFilters = activeFiltersCount > 0;
 
   const renderPropertyList = (property: Property) => (
@@ -347,8 +364,8 @@ export default function SearchScreen() {
     <TouchableOpacity
       style={styles.gridCard}
       onPress={() => {
+        // TODO: Navigate to property detail screen when created
         console.log("Navigate to property:", property.id);
-        // TODO: Navigate to property detail
       }}
       activeOpacity={0.8}
     >
@@ -445,10 +462,7 @@ export default function SearchScreen() {
           <View style={styles.headerActions}>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => {
-                console.log("Open filters");
-                // TODO: Open filter bottom sheet
-              }}
+              onPress={() => setShowFilterSheet(true)}
               activeOpacity={0.7}
             >
               <View style={styles.actionButtonBackground}>
@@ -502,14 +516,69 @@ export default function SearchScreen() {
           {hasActiveFilters && (
             <View style={styles.filtersBar}>
               <View style={styles.filtersChips}>
-                {filters.type && filters.type.length > 0 && (
+                {filters.propertyTypes && filters.propertyTypes.length > 0 && (
                   <View style={styles.filterChip}>
                     <Text style={styles.filterChipText}>
-                      {filters.type.join(", ")}
+                      {filters.propertyTypes.join(", ")}
                     </Text>
                     <TouchableOpacity
                       onPress={() =>
-                        setFilters({ ...filters, type: undefined })
+                        setFilters({ ...filters, propertyTypes: undefined })
+                      }
+                    >
+                      <Ionicons
+                        name="close-circle"
+                        size={16}
+                        color={Colors.textSecondary}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                )}
+                {filters.transactionType && (
+                  <View style={styles.filterChip}>
+                    <Text style={styles.filterChipText}>
+                      {filters.transactionType === "buy" ? "Buy" : "Rent"}
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() =>
+                        setFilters({ ...filters, transactionType: null })
+                      }
+                    >
+                      <Ionicons
+                        name="close-circle"
+                        size={16}
+                        color={Colors.textSecondary}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                )}
+                {filters.bedrooms !== null &&
+                  filters.bedrooms !== undefined && (
+                    <View style={styles.filterChip}>
+                      <Text style={styles.filterChipText}>
+                        {filters.bedrooms === 5 ? "5+" : filters.bedrooms} Beds
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() =>
+                          setFilters({ ...filters, bedrooms: null })
+                        }
+                      >
+                        <Ionicons
+                          name="close-circle"
+                          size={16}
+                          color={Colors.textSecondary}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                {filters.amenities && filters.amenities.length > 0 && (
+                  <View style={styles.filterChip}>
+                    <Text style={styles.filterChipText}>
+                      {filters.amenities.length} Amenities
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() =>
+                        setFilters({ ...filters, amenities: undefined })
                       }
                     >
                       <Ionicons
@@ -678,6 +747,17 @@ export default function SearchScreen() {
             )}
           </Animated.View>
         </Animated.View>
+
+        {/* Filter Bottom Sheet */}
+        <FilterBottomSheet
+          visible={showFilterSheet}
+          onClose={() => setShowFilterSheet(false)}
+          onApply={(newFilters: FilterOptions) => {
+            setFilters(newFilters as Filter);
+          }}
+          initialFilters={filters as FilterOptions}
+          resultsCount={filteredProperties.length}
+        />
       </View>
     </>
   );
