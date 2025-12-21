@@ -986,9 +986,10 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   resultsCount: {
-    ...Typography.bodyMedium,
-    fontSize: 14,
-    color: Colors.textSecondary,
+    ...Typography.titleLarge,
+    fontSize: 20,
+    fontWeight: "700",
+    color: Colors.textPrimary,
   },
   listContainer: {
     gap: Spacing.md,
