@@ -583,6 +583,7 @@ export default function Property360ViewerScreen() {
           tabs={GALLERY_TABS}
           activeTab="360"
           onTabPress={handleTabPress}
+          variant="dark"
         />
       </View>
     </>

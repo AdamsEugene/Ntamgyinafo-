@@ -522,6 +522,7 @@ export default function VideoPlayerScreen() {
           tabs={GALLERY_TABS}
           activeTab="videos"
           onTabPress={handleTabPress}
+          variant="dark"
         />
       </View>
     </>

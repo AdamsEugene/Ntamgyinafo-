@@ -7,6 +7,7 @@ import {
   Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, Typography, Spacing } from "@/constants/design";
 
@@ -21,53 +22,106 @@ interface BottomNavigationProps {
   tabs: TabItem[];
   activeTab: string;
   onTabPress: (tabId: string) => void;
+  variant?: "default" | "dark";
 }
 
 export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   tabs,
   activeTab,
   onTabPress,
+  variant = "default",
 }) => {
   const insets = useSafeAreaInsets();
+  const isDark = variant === "dark";
 
   return (
     <View
       style={[
         styles.floatingContainer,
         {
-          paddingBottom: Math.max(insets.bottom, Spacing.xs),
-          marginBottom: Spacing.lg,
-          marginHorizontal: Spacing.lg,
+          marginBottom: Math.max(insets.bottom, Spacing.md),
         },
       ]}
     >
-      <View style={styles.container}>
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
-          const iconName =
-            isActive && tab.activeIcon ? tab.activeIcon : tab.icon;
-          return (
-            <TouchableOpacity
-              key={tab.id}
-              style={styles.tab}
-              onPress={() => onTabPress(tab.id)}
-              activeOpacity={0.7}
-            >
-              {isActive && <View style={styles.activeOverlay} />}
-              <View style={styles.tabContent}>
-                <Ionicons
-                  name={iconName}
-                  size={22}
-                  color={isActive ? Colors.primaryGreen : Colors.textSecondary}
-                />
-                <Text style={[styles.label, isActive && styles.activeLabel]}>
+      {/* Blur Background */}
+      <BlurView
+        intensity={isDark ? 40 : 80}
+        tint={isDark ? "dark" : "light"}
+        style={styles.blurContainer}
+      >
+        {/* Glass overlay */}
+        <View
+          style={[
+            styles.glassOverlay,
+            isDark ? styles.glassOverlayDark : styles.glassOverlayLight,
+          ]}
+        />
+
+        {/* Tabs Container */}
+        <View style={styles.container}>
+          {tabs.map((tab, index) => {
+            const isActive = activeTab === tab.id;
+            const iconName =
+              isActive && tab.activeIcon ? tab.activeIcon : tab.icon;
+
+            return (
+              <TouchableOpacity
+                key={tab.id}
+                style={styles.tab}
+                onPress={() => onTabPress(tab.id)}
+                activeOpacity={0.6}
+              >
+                {/* Active Pill Indicator */}
+                {isActive && (
+                  <View
+                    style={[
+                      styles.activePill,
+                      isDark ? styles.activePillDark : styles.activePillLight,
+                    ]}
+                  />
+                )}
+
+                {/* Icon Container */}
+                <View style={styles.iconContainer}>
+                  <Ionicons
+                    name={iconName}
+                    size={24}
+                    color={
+                      isActive
+                        ? Colors.primaryGreen
+                        : isDark
+                        ? "rgba(255, 255, 255, 0.5)"
+                        : Colors.textSecondary
+                    }
+                  />
+                  {/* Active dot indicator */}
+                  {isActive && <View style={styles.activeDot} />}
+                </View>
+
+                {/* Label */}
+                <Text
+                  style={[
+                    styles.label,
+                    isDark && styles.labelDark,
+                    isActive && styles.activeLabel,
+                  ]}
+                  numberOfLines={1}
+                >
                   {tab.label}
                 </Text>
-              </View>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Top highlight line (iOS style) */}
+        <View
+          style={[
+            styles.topHighlight,
+            isDark ? styles.topHighlightDark : styles.topHighlightLight,
+          ]}
+        />
+      </BlurView>
     </View>
   );
 };
@@ -75,66 +129,108 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
 const styles = StyleSheet.create({
   floatingContainer: {
     position: "absolute",
-    bottom: 10,
-    left: 0,
-    right: 0,
-    minHeight: 56,
-    height: 56,
+    bottom: 0,
+    left: Spacing.lg,
+    right: Spacing.lg,
     zIndex: 1000,
-    backgroundColor: Colors.surface,
-    borderRadius: 24,
+    borderRadius: 28,
+    overflow: "hidden",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: { width: 0, height: -4 },
         shadowOpacity: 0.15,
-        shadowRadius: 16,
+        shadowRadius: 20,
       },
       android: {
-        elevation: 12,
+        elevation: 16,
       },
     }),
+  },
+  blurContainer: {
+    borderRadius: 28,
+    overflow: "hidden",
+  },
+  glassOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 28,
+  },
+  glassOverlayLight: {
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
+  },
+  glassOverlayDark: {
+    backgroundColor: "rgba(30, 30, 30, 0.75)",
   },
   container: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
-    paddingTop: Spacing.xs,
-    paddingBottom: Spacing.xs,
-    paddingHorizontal: Spacing.xs,
-    minHeight: 56,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.sm,
+    minHeight: 64,
   },
   tab: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 6,
+    paddingVertical: Spacing.xs,
     position: "relative",
-    borderRadius: 16,
-    overflow: "hidden",
   },
-  activeOverlay: {
+  activePill: {
     position: "absolute",
     top: 0,
-    left: 0,
-    right: 0,
+    left: 8,
+    right: 8,
     bottom: 0,
-    backgroundColor: "#F1F8F4",
-    borderRadius: 16,
+    borderRadius: 20,
   },
-  tabContent: {
+  activePillLight: {
+    backgroundColor: "rgba(34, 197, 94, 0.12)",
+  },
+  activePillDark: {
+    backgroundColor: "rgba(34, 197, 94, 0.2)",
+  },
+  iconContainer: {
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
-    zIndex: 1,
+    position: "relative",
+    marginBottom: 2,
+  },
+  activeDot: {
+    position: "absolute",
+    bottom: -6,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: Colors.primaryGreen,
   },
   label: {
     ...Typography.caption,
-    fontSize: 10,
+    fontSize: 11,
+    fontWeight: "500",
     color: Colors.textSecondary,
+    marginTop: 2,
+    letterSpacing: -0.2,
+  },
+  labelDark: {
+    color: "rgba(255, 255, 255, 0.5)",
   },
   activeLabel: {
     color: Colors.primaryGreen,
     fontWeight: "600",
+  },
+  topHighlight: {
+    position: "absolute",
+    top: 0,
+    left: 20,
+    right: 20,
+    height: 1,
+    borderRadius: 0.5,
+  },
+  topHighlightLight: {
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+  },
+  topHighlightDark: {
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
 });

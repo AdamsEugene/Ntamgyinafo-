@@ -684,6 +684,7 @@ export default function PropertyGalleryScreen() {
           tabs={GALLERY_TABS}
           activeTab={activeTab}
           onTabPress={(tabId) => setActiveTab(tabId as TabType)}
+          variant="dark"
         />
       </View>
     </>
