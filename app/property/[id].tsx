@@ -16,6 +16,7 @@ import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import { Colors, Typography, Spacing } from "@/constants/design";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -610,6 +611,94 @@ export default function PropertyDetailScreen() {
             </View>
           </View>
 
+          {/* Image Gallery Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Photos & Media</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  router.push(`/property/${property.id}/gallery?tab=photos`);
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.viewButton}>View All</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.imageGalleryContainer}
+            >
+              {property.images.slice(0, 6).map((image, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.galleryImageWrapper}
+                  onPress={() => {
+                    router.push(
+                      `/property/${property.id}/gallery?tab=photos&index=${index}`
+                    );
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Image source={{ uri: image }} style={styles.galleryImage} />
+                  {index === 5 && property.images.length > 6 && (
+                    <View style={styles.moreImagesOverlay}>
+                      <Text style={styles.moreImagesText}>
+                        +{property.images.length - 6}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <View style={styles.mediaButtonsRow}>
+              <TouchableOpacity
+                style={styles.mediaButton}
+                onPress={() => {
+                  router.push(`/property/${property.id}/gallery?tab=photos`);
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="camera-outline"
+                  size={18}
+                  color={Colors.primaryGreen}
+                />
+                <Text style={styles.mediaButtonText}>
+                  {property.images.length} Photos
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.mediaButton}
+                onPress={() => {
+                  router.push(`/property/${property.id}/gallery?tab=videos`);
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="videocam-outline"
+                  size={18}
+                  color={Colors.primaryGreen}
+                />
+                <Text style={styles.mediaButtonText}>3 Videos</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.mediaButton}
+                onPress={() => {
+                  router.push(`/property/${property.id}/360`);
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="cube-outline"
+                  size={18}
+                  color={Colors.primaryGreen}
+                />
+                <Text style={styles.mediaButtonText}>360° View</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
           {/* Location Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -623,16 +712,53 @@ export default function PropertyDetailScreen() {
                 <Text style={styles.viewButton}>View</Text>
               </TouchableOpacity>
             </View>
-            <View style={styles.mapPreview}>
-              <View style={styles.mapPlaceholder}>
-                <Ionicons
-                  name="map-outline"
-                  size={48}
-                  color={Colors.textSecondary}
-                />
-                <Text style={styles.mapPlaceholderText}>Map Preview</Text>
-              </View>
-            </View>
+            <TouchableOpacity
+              style={styles.mapPreview}
+              onPress={() => {
+                router.push(`/map?property=${property.id}`);
+              }}
+              activeOpacity={0.9}
+            >
+              {property.latitude && property.longitude ? (
+                <MapView
+                  provider={
+                    Platform.OS === "android" ? PROVIDER_GOOGLE : undefined
+                  }
+                  style={styles.map}
+                  initialRegion={{
+                    latitude: property.latitude,
+                    longitude: property.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                  }}
+                  scrollEnabled={false}
+                  zoomEnabled={false}
+                  pitchEnabled={false}
+                  rotateEnabled={false}
+                  showsUserLocation={false}
+                  showsBuildings={true}
+                  mapType="standard"
+                >
+                  <Marker
+                    coordinate={{
+                      latitude: property.latitude,
+                      longitude: property.longitude,
+                    }}
+                    title={property.title}
+                    pinColor={Colors.primaryGreen}
+                  />
+                </MapView>
+              ) : (
+                <View style={styles.mapPlaceholder}>
+                  <Ionicons
+                    name="map-outline"
+                    size={48}
+                    color={Colors.textSecondary}
+                  />
+                  <Text style={styles.mapPlaceholderText}>Map Preview</Text>
+                </View>
+              )}
+            </TouchableOpacity>
             <Text style={styles.addressText}>{property.address}</Text>
           </View>
 
@@ -1198,6 +1324,81 @@ const styles = StyleSheet.create({
     flex: 1,
     fontWeight: "600",
   },
+  imageGalleryContainer: {
+    gap: Spacing.md,
+    paddingRight: Spacing.xl,
+  },
+  galleryImageWrapper: {
+    width: 120,
+    height: 120,
+    borderRadius: 16,
+    overflow: "hidden",
+    backgroundColor: Colors.surface,
+    borderWidth: 1.5,
+    borderColor: "rgba(0, 0, 0, 0.05)",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
+  },
+  galleryImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+  moreImagesOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  moreImagesText: {
+    ...Typography.headlineMedium,
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  mediaButtonsRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    marginTop: Spacing.lg,
+  },
+  mediaButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.xs,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: "rgba(34, 197, 94, 0.2)",
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.primaryGreen,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  mediaButtonText: {
+    ...Typography.labelMedium,
+    fontSize: 13,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
+  },
   mapPreview: {
     height: 240,
     borderRadius: 24,
@@ -1217,6 +1418,10 @@ const styles = StyleSheet.create({
         elevation: 4,
       },
     }),
+  },
+  map: {
+    width: "100%",
+    height: "100%",
   },
   mapPlaceholder: {
     flex: 1,
