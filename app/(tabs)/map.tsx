@@ -356,10 +356,29 @@ export default function MapScreen() {
           minZoom={1}
           maxZoom={20}
           minPoints={2}
-          preserveClusterPressBehavior={true}
+          preserveClusterPressBehavior={false}
           animationEnabled={true}
-          spiralEnabled={true}
-          superClusterRef={{ current: null }}
+          spiralEnabled={false}
+          onClusterPress={(cluster, markers) => {
+            // Get the coordinates of all markers in this cluster
+            const coordinates = markers?.map((marker: any) => ({
+              latitude: marker.geometry.coordinates[1],
+              longitude: marker.geometry.coordinates[0],
+            }));
+
+            if (coordinates && coordinates.length > 0 && mapRef.current) {
+              // Zoom in to fit all markers in this cluster
+              mapRef.current.fitToCoordinates(coordinates, {
+                edgePadding: {
+                  top: 100,
+                  right: 50,
+                  bottom: 200,
+                  left: 50,
+                },
+                animated: true,
+              });
+            }
+          }}
           renderCluster={(cluster) => {
             const { id, geometry, onPress, properties } = cluster;
             const points = properties.point_count;
