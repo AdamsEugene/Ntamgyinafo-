@@ -45,6 +45,9 @@ const MOCK_VIDEOS = [
     title: "Full Property Tour",
     duration: "5:32",
     views: "1.2K",
+    quality: "HD",
+    category: "Virtual Tour",
+    description: "Complete walkthrough of the entire property",
     videoUrl:
       "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
   },
@@ -55,6 +58,9 @@ const MOCK_VIDEOS = [
     title: "Living Room Walkthrough",
     duration: "2:15",
     views: "856",
+    quality: "HD",
+    category: "Room Tour",
+    description: "Detailed view of the spacious living room",
     videoUrl:
       "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
   },
@@ -65,6 +71,9 @@ const MOCK_VIDEOS = [
     title: "Kitchen & Dining Area",
     duration: "3:48",
     views: "642",
+    quality: "4K",
+    category: "Room Tour",
+    description: "Modern kitchen with premium appliances",
     videoUrl:
       "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
   },
@@ -418,7 +427,7 @@ export default function PropertyGalleryScreen() {
 
   const renderVideos = () => (
     <ScrollView
-      style={[styles.tabContent, { backgroundColor: "#000000" }]}
+      style={[styles.tabContent, { backgroundColor: "#0A0A0A" }]}
       contentContainerStyle={styles.videoContainer}
       showsVerticalScrollIndicator={false}
     >
@@ -427,14 +436,17 @@ export default function PropertyGalleryScreen() {
         style={[styles.videoHeader, { paddingTop: insets.top + Spacing.xl }]}
       >
         <View style={styles.videoHeaderContent}>
-          <Ionicons name="videocam" size={28} color={Colors.primaryGreen} />
+          <View style={styles.videoHeaderIcon}>
+            <Ionicons name="videocam" size={24} color="#FFFFFF" />
+          </View>
           <View style={styles.videoHeaderText}>
             <Text style={styles.videoHeaderTitle}>Property Videos</Text>
             <Text style={styles.videoHeaderSubtitle}>
-              {MOCK_VIDEOS.length} videos available
+              {MOCK_VIDEOS.length} videos • HD Quality
             </Text>
           </View>
         </View>
+        <View style={styles.videoHeaderDivider} />
       </View>
 
       {/* Video Cards */}
@@ -442,11 +454,16 @@ export default function PropertyGalleryScreen() {
         <TouchableOpacity
           key={video.id}
           style={styles.videoCard}
-          activeOpacity={0.9}
+          activeOpacity={0.95}
           onPress={() => {
             router.push(`/property/${params.id}/video?id=${video.id}`);
           }}
         >
+          {/* Video Number */}
+          <View style={styles.videoNumberBadge}>
+            <Text style={styles.videoNumberText}>{index + 1}</Text>
+          </View>
+
           <View style={styles.videoThumbnailContainer}>
             <Image
               source={{ uri: video.thumbnail }}
@@ -455,6 +472,16 @@ export default function PropertyGalleryScreen() {
             {/* Gradient Overlay */}
             <View style={styles.videoGradientOverlay} />
 
+            {/* Top Badges */}
+            <View style={styles.videoBadgesRow}>
+              <View style={styles.qualityBadge}>
+                <Text style={styles.qualityBadgeText}>{video.quality}</Text>
+              </View>
+              <View style={styles.categoryBadge}>
+                <Text style={styles.categoryBadgeText}>{video.category}</Text>
+              </View>
+            </View>
+
             {/* Duration Badge */}
             <View style={styles.durationBadge}>
               <Ionicons name="time-outline" size={12} color="#FFFFFF" />
@@ -462,32 +489,45 @@ export default function PropertyGalleryScreen() {
             </View>
 
             {/* Play Button */}
-            <TouchableOpacity
-              style={styles.videoPlayButtonContainer}
-              activeOpacity={0.8}
-              onPress={() => {
-                router.push(`/property/${params.id}/video?id=${video.id}`);
-              }}
-            >
+            <View style={styles.videoPlayButtonContainer}>
               <View style={styles.playButton}>
+                <View style={styles.playButtonRing} />
                 <View style={styles.playButtonInner}>
-                  <Ionicons name="play" size={32} color="#FFFFFF" />
+                  <Ionicons
+                    name="play"
+                    size={28}
+                    color="#FFFFFF"
+                    style={{ marginLeft: 3 }}
+                  />
                 </View>
               </View>
-            </TouchableOpacity>
+              <Text style={styles.playButtonLabel}>Play Video</Text>
+            </View>
           </View>
 
           {/* Video Info */}
           <View style={styles.videoInfo}>
             <View style={styles.videoInfoTop}>
               <Text style={styles.videoTitle}>{video.title}</Text>
-              <View style={styles.videoMeta}>
-                <Ionicons
-                  name="eye-outline"
-                  size={14}
-                  color={Colors.textSecondary}
-                />
-                <Text style={styles.videoViews}>{video.views} views</Text>
+              <Text style={styles.videoDescription}>{video.description}</Text>
+              <View style={styles.videoStats}>
+                <View style={styles.videoStatItem}>
+                  <Ionicons
+                    name="eye-outline"
+                    size={14}
+                    color={Colors.textSecondary}
+                  />
+                  <Text style={styles.videoStatText}>{video.views} views</Text>
+                </View>
+                <View style={styles.videoStatDivider} />
+                <View style={styles.videoStatItem}>
+                  <Ionicons
+                    name="time-outline"
+                    size={14}
+                    color={Colors.textSecondary}
+                  />
+                  <Text style={styles.videoStatText}>{video.duration}</Text>
+                </View>
               </View>
             </View>
             <View style={styles.videoActionRow}>
@@ -495,36 +535,51 @@ export default function PropertyGalleryScreen() {
                 style={styles.videoActionButton}
                 activeOpacity={0.7}
                 onPress={() => {
-                  // TODO: Share video
                   console.log("Share video:", video.id);
                 }}
               >
-                <Ionicons
-                  name="share-outline"
-                  size={18}
-                  color={Colors.primaryGreen}
-                />
+                <View style={styles.videoActionIconBg}>
+                  <Ionicons
+                    name="share-social-outline"
+                    size={16}
+                    color={Colors.primaryGreen}
+                  />
+                </View>
                 <Text style={styles.videoActionText}>Share</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.videoActionButton}
                 activeOpacity={0.7}
                 onPress={() => {
-                  // TODO: Save video
                   console.log("Save video:", video.id);
                 }}
               >
-                <Ionicons
-                  name="bookmark-outline"
-                  size={18}
-                  color={Colors.primaryGreen}
-                />
+                <View style={styles.videoActionIconBg}>
+                  <Ionicons
+                    name="bookmark-outline"
+                    size={16}
+                    color={Colors.primaryGreen}
+                  />
+                </View>
                 <Text style={styles.videoActionText}>Save</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.videoActionButton, styles.videoWatchButton]}
+                activeOpacity={0.7}
+                onPress={() => {
+                  router.push(`/property/${params.id}/video?id=${video.id}`);
+                }}
+              >
+                <Ionicons name="play" size={16} color="#FFFFFF" />
+                <Text style={styles.videoWatchText}>Watch</Text>
               </TouchableOpacity>
             </View>
           </View>
         </TouchableOpacity>
       ))}
+
+      {/* Bottom Spacing */}
+      <View style={{ height: 100 }} />
     </ScrollView>
   );
 
@@ -749,13 +804,13 @@ const styles = StyleSheet.create({
   },
   videoContainer: {
     paddingBottom: Spacing["2xl"],
-    backgroundColor: "#000000",
+    backgroundColor: "#0A0A0A",
     width: "100%",
+    paddingHorizontal: Spacing.lg,
   },
   videoHeader: {
-    paddingHorizontal: Spacing.xl,
     paddingBottom: Spacing.lg,
-    backgroundColor: "#000000",
+    backgroundColor: "#0A0A0A",
     zIndex: 1,
     width: "100%",
   },
@@ -764,44 +819,89 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: Spacing.md,
   },
+  videoHeaderIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.primaryGreen,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   videoHeaderText: {
     flex: 1,
   },
   videoHeaderTitle: {
     ...Typography.headlineMedium,
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "800",
     color: "#FFFFFF",
-    marginBottom: Spacing.xs / 2,
+    marginBottom: 2,
     letterSpacing: -0.5,
   },
   videoHeaderSubtitle: {
     ...Typography.bodyMedium,
-    fontSize: 15,
-    color: "rgba(255, 255, 255, 0.8)",
+    fontSize: 14,
+    color: "rgba(255, 255, 255, 0.6)",
     fontWeight: "500",
+  },
+  videoHeaderDivider: {
+    height: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    marginTop: Spacing.lg,
   },
   videoCard: {
     marginBottom: Spacing.xl,
-    borderRadius: 12,
+    borderRadius: 20,
     overflow: "hidden",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#1A1A1A",
     width: "100%",
+    position: "relative",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.4,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 10,
+      },
+    }),
+  },
+  videoNumberBadge: {
+    position: "absolute",
+    top: -8,
+    left: 16,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primaryGreen,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+    borderWidth: 3,
+    borderColor: "#0A0A0A",
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.primaryGreen,
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
       },
       android: {
         elevation: 6,
       },
     }),
   },
+  videoNumberText: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#FFFFFF",
+  },
   videoThumbnailContainer: {
     width: "100%",
-    height: 240,
+    height: 220,
     position: "relative",
     backgroundColor: "#000000",
   },
@@ -812,31 +912,53 @@ const styles = StyleSheet.create({
   },
   videoGradientOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.2)",
+    backgroundColor: "rgba(0, 0, 0, 0.35)",
+  },
+  videoBadgesRow: {
+    position: "absolute",
+    top: Spacing.md,
+    left: Spacing.md,
+    flexDirection: "row",
+    gap: Spacing.xs,
+  },
+  qualityBadge: {
+    backgroundColor: Colors.primaryGreen,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  qualityBadgeText: {
+    ...Typography.caption,
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    letterSpacing: 0.5,
+  },
+  categoryBadge: {
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+  },
+  categoryBadgeText: {
+    ...Typography.caption,
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
   durationBadge: {
     position: "absolute",
-    top: Spacing.md,
+    bottom: Spacing.md,
     right: Spacing.md,
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.xs / 2,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: 16,
-    backdropFilter: "blur(10px)",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+    gap: 4,
+    backgroundColor: "rgba(0, 0, 0, 0.85)",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
   durationText: {
     ...Typography.caption,
@@ -851,98 +973,136 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   playButton: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+  playButtonRing: {
+    position: "absolute",
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 3,
+    borderColor: "rgba(255, 255, 255, 0.4)",
+  },
+  playButtonInner: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: Colors.primaryGreen,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 4,
-    borderColor: "rgba(255, 255, 255, 0.3)",
     ...Platform.select({
       ios: {
         shadowColor: Colors.primaryGreen,
-        shadowOffset: { width: 0, height: 8 },
+        shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.5,
-        shadowRadius: 16,
+        shadowRadius: 12,
       },
       android: {
-        elevation: 12,
+        elevation: 8,
       },
     }),
   },
-  playButtonInner: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Colors.primaryGreen,
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 3, // Slight offset for play icon
+  playButtonLabel: {
+    ...Typography.caption,
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    marginTop: Spacing.sm,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   videoInfo: {
     padding: Spacing.lg,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#1A1A1A",
   },
   videoInfoTop: {
     marginBottom: Spacing.md,
   },
   videoTitle: {
     ...Typography.titleLarge,
-    fontSize: 19,
-    fontWeight: "800",
-    color: "#000000",
-    marginBottom: Spacing.xs,
-    letterSpacing: -0.3,
-    lineHeight: 26,
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    marginBottom: 4,
+    letterSpacing: -0.2,
   },
-  videoMeta: {
+  videoDescription: {
+    ...Typography.bodyMedium,
+    fontSize: 13,
+    color: "rgba(255, 255, 255, 0.6)",
+    marginBottom: Spacing.sm,
+    lineHeight: 18,
+  },
+  videoStats: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.xs / 2,
   },
-  videoViews: {
+  videoStatItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  videoStatText: {
     ...Typography.caption,
-    fontSize: 14,
-    color: "#666666",
-    fontWeight: "600",
+    fontSize: 12,
+    color: "rgba(255, 255, 255, 0.5)",
+    fontWeight: "500",
+  },
+  videoStatDivider: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    marginHorizontal: Spacing.sm,
   },
   videoActionRow: {
     flexDirection: "row",
-    gap: Spacing.md,
+    gap: Spacing.sm,
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: "#E5E5E5",
+    borderTopColor: "rgba(255, 255, 255, 0.1)",
   },
   videoActionButton: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: Spacing.xs,
-    paddingVertical: Spacing.md,
-    borderRadius: 12,
-    backgroundColor: "#F0F9F4",
-    borderWidth: 1.5,
-    borderColor: "rgba(34, 197, 94, 0.3)",
-    ...Platform.select({
-      ios: {
-        shadowColor: Colors.primaryGreen,
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.08,
-        shadowRadius: 2,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
+    gap: 6,
+    paddingVertical: Spacing.sm,
+    borderRadius: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  videoActionIconBg: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(34, 197, 94, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   videoActionText: {
     ...Typography.labelMedium,
-    fontSize: 14,
+    fontSize: 12,
+    fontWeight: "600",
+    color: "rgba(255, 255, 255, 0.8)",
+  },
+  videoWatchButton: {
+    backgroundColor: Colors.primaryGreen,
+    borderColor: Colors.primaryGreen,
+  },
+  videoWatchText: {
+    ...Typography.labelMedium,
+    fontSize: 12,
     fontWeight: "700",
-    color: Colors.primaryGreen,
-    letterSpacing: 0.2,
+    color: "#FFFFFF",
   },
   placeholder360: {
     flex: 1,
