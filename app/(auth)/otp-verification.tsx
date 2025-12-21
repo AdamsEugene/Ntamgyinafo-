@@ -17,7 +17,11 @@ import { OTPInput } from "@/components/ui/OTPInput";
 
 export default function OTPVerificationScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ phone?: string }>();
+  const params = useLocalSearchParams<{
+    phone?: string;
+    fullName?: string;
+    role?: string;
+  }>();
   const insets = useSafeAreaInsets();
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
@@ -79,10 +83,14 @@ export default function OTPVerificationScreen() {
       // TODO: Verify OTP with backend
       console.log("Verifying OTP:", code);
       // Navigate to role selection after verification
-      router.push({
+      router.replace({
         pathname: "/(auth)/role-selection",
-        params: { ...params },
-      });
+        params: {
+          phone: params.phone,
+          fullName: params.fullName,
+          role: params.role,
+        },
+      } as any);
     } catch {
       hasNavigatedRef.current = false;
       setError("Invalid verification code. Please try again.");
@@ -108,10 +116,14 @@ export default function OTPVerificationScreen() {
     try {
       // TODO: Verify OTP with backend
       console.log("Verifying OTP:", otp);
-      router.push({
+      router.replace({
         pathname: "/(auth)/role-selection",
-        params: { ...params },
-      });
+        params: {
+          phone: params.phone,
+          fullName: params.fullName,
+          role: params.role,
+        },
+      } as any);
     } catch {
       hasNavigatedRef.current = false;
       setError("Invalid verification code. Please try again.");

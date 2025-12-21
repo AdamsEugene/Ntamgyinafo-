@@ -7,30 +7,9 @@ import {
   TextInput,
   Platform,
 } from "react-native";
+import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, Typography, Spacing } from "@/constants/design";
-
-// Conditionally import MapView to handle cases where native module isn't built yet
-let MapView: any = null;
-let Marker: any = null;
-let PROVIDER_GOOGLE: any = null;
-
-type Region = {
-  latitude: number;
-  longitude: number;
-  latitudeDelta: number;
-  longitudeDelta: number;
-};
-
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mapsModule = require("react-native-maps");
-  MapView = mapsModule.default;
-  Marker = mapsModule.Marker;
-  PROVIDER_GOOGLE = mapsModule.PROVIDER_GOOGLE;
-} catch {
-  // Map module not available - button will still show but map won't render
-}
 
 interface LocationSelectorProps {
   selectedLocations: string[];
@@ -87,9 +66,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showMap, setShowMap] = useState(false);
-  const mapRef = useRef<any>(null);
-
-  const isMapAvailable = MapView !== null;
+  const mapRef = useRef<MapView>(null);
 
   const filteredLocations = ALL_LOCATIONS.filter((location) =>
     location.toLowerCase().includes(searchQuery.toLowerCase())
@@ -174,7 +151,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
       </View>
 
       {/* Map View */}
-      {showMap && isMapAvailable && MapView ? (
+      {showMap && (
         <View style={styles.mapContainer}>
           <MapView
             ref={mapRef}
@@ -228,23 +205,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
             </Text>
           </View>
         </View>
-      ) : showMap && !isMapAvailable ? (
-        <View style={styles.mapContainer}>
-          <View style={styles.mapPlaceholder}>
-            <Ionicons
-              name="map-outline"
-              size={48}
-              color={Colors.textSecondary}
-            />
-            <Text style={styles.mapPlaceholderText}>
-              Map requires native build
-            </Text>
-            <Text style={styles.mapPlaceholderSubtext}>
-              Run: npx expo prebuild && npx expo run:ios (or run:android)
-            </Text>
-          </View>
-        </View>
-      ) : null}
+      )}
 
       {/* Location List */}
       {!showMap && (
@@ -462,25 +423,5 @@ const styles = StyleSheet.create({
     ...Typography.bodyMedium,
     fontSize: 16,
     color: Colors.textSecondary,
-  },
-  mapPlaceholder: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: Spacing.xl,
-  },
-  mapPlaceholderText: {
-    ...Typography.labelLarge,
-    fontSize: 16,
-    color: Colors.textPrimary,
-    marginTop: Spacing.md,
-    fontWeight: "600",
-  },
-  mapPlaceholderSubtext: {
-    ...Typography.bodyMedium,
-    fontSize: 12,
-    color: Colors.textSecondary,
-    marginTop: Spacing.xs,
-    textAlign: "center",
   },
 });

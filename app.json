@@ -40,23 +40,6 @@
             "backgroundColor": "#000000"
           }
         }
-      ],
-      [
-        "react-native-maps",
-        {
-          "ios": {
-            "infoPlist": {
-              "NSLocationWhenInUseUsageDescription": "We need your location to show you properties on the map.",
-              "NSLocationAlwaysAndWhenInUseUsageDescription": "We need your location to show you properties on the map."
-            }
-          },
-          "android": {
-            "permissions": [
-              "ACCESS_FINE_LOCATION",
-              "ACCESS_COARSE_LOCATION"
-            ]
-          }
-        }
       ]
     ],
     "experiments": {
