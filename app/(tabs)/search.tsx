@@ -297,8 +297,7 @@ export default function SearchScreen() {
     <TouchableOpacity
       style={styles.propertyCard}
       onPress={() => {
-        console.log("Navigate to property:", property.id);
-        // TODO: Navigate to property detail
+        router.push(`/property/${property.id}`);
       }}
       activeOpacity={0.8}
     >
@@ -364,8 +363,7 @@ export default function SearchScreen() {
     <TouchableOpacity
       style={styles.gridCard}
       onPress={() => {
-        // TODO: Navigate to property detail screen when created
-        console.log("Navigate to property:", property.id);
+        router.push(`/property/${property.id}`);
       }}
       activeOpacity={0.8}
     >
