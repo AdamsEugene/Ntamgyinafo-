@@ -342,6 +342,9 @@ export default function PropertyDetailScreen() {
               </Text>
             </View>
 
+            {/* Gradient Overlay for better visibility */}
+            <View style={styles.imageGradientOverlay} />
+
             {/* Image Dots */}
             <View style={styles.imageDots}>
               {property.images.map((_, index) => (
@@ -654,22 +657,29 @@ export default function PropertyDetailScreen() {
           {/* Description */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Description</Text>
-            <Text
-              style={styles.description}
-              numberOfLines={showFullDescription ? undefined : 3}
-            >
-              {property.description}
-            </Text>
-            {property.description.length > 150 && (
-              <TouchableOpacity
-                onPress={() => setShowFullDescription(!showFullDescription)}
-                style={styles.readMoreButton}
+            <View style={styles.descriptionCard}>
+              <Text
+                style={styles.description}
+                numberOfLines={showFullDescription ? undefined : 4}
               >
-                <Text style={styles.readMoreText}>
-                  {showFullDescription ? "Read Less" : "Read More"}
-                </Text>
-              </TouchableOpacity>
-            )}
+                {property.description}
+              </Text>
+              {property.description.length > 150 && (
+                <TouchableOpacity
+                  onPress={() => setShowFullDescription(!showFullDescription)}
+                  style={styles.readMoreButton}
+                >
+                  <Text style={styles.readMoreText}>
+                    {showFullDescription ? "Show Less" : "Read More"}
+                  </Text>
+                  <Ionicons
+                    name={showFullDescription ? "chevron-up" : "chevron-down"}
+                    size={16}
+                    color={Colors.primaryGreen}
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
 
           {/* Amenities */}
@@ -678,11 +688,13 @@ export default function PropertyDetailScreen() {
             <View style={styles.amenitiesGrid}>
               {property.amenities.map((amenity, index) => (
                 <View key={index} style={styles.amenityItem}>
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={20}
-                    color={Colors.primaryGreen}
-                  />
+                  <View style={styles.amenityIconBg}>
+                    <Ionicons
+                      name="checkmark"
+                      size={14}
+                      color={Colors.primaryGreen}
+                    />
+                  </View>
                   <Text style={styles.amenityText}>{amenity}</Text>
                 </View>
               ))}
@@ -844,21 +856,29 @@ export default function PropertyDetailScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Listed By</Text>
             <View style={styles.ownerCard}>
-              <Image
-                source={{ uri: property.owner.avatar }}
-                style={styles.ownerAvatar}
-              />
+              <View style={styles.ownerAvatarContainer}>
+                <Image
+                  source={{ uri: property.owner.avatar }}
+                  style={styles.ownerAvatar}
+                />
+                {property.owner.verified && (
+                  <View style={styles.verifiedBadge}>
+                    <Ionicons name="checkmark" size={10} color="#FFFFFF" />
+                  </View>
+                )}
+              </View>
               <View style={styles.ownerInfo}>
-                <View style={styles.ownerNameRow}>
-                  <Text style={styles.ownerName}>{property.owner.name}</Text>
-                  {property.owner.verified && (
+                <Text style={styles.ownerName}>{property.owner.name}</Text>
+                {property.owner.verified && (
+                  <View style={styles.verifiedTextRow}>
                     <Ionicons
-                      name="checkmark-circle"
-                      size={20}
+                      name="shield-checkmark"
+                      size={14}
                       color={Colors.primaryGreen}
                     />
-                  )}
-                </View>
+                    <Text style={styles.verifiedText}>Verified Owner</Text>
+                  </View>
+                )}
                 <Text style={styles.memberSince}>
                   Member since {property.owner.memberSince}
                 </Text>
@@ -870,7 +890,11 @@ export default function PropertyDetailScreen() {
                 }}
                 style={styles.viewProfileButton}
               >
-                <Text style={styles.viewProfileText}>View Profile</Text>
+                <Ionicons
+                  name="arrow-forward"
+                  size={18}
+                  color={Colors.primaryGreen}
+                />
               </TouchableOpacity>
             </View>
           </View>
@@ -891,16 +915,24 @@ export default function PropertyDetailScreen() {
             style={[styles.actionButton, styles.callButton]}
             activeOpacity={0.8}
           >
-            <Ionicons name="call-outline" size={20} color="#FFFFFF" />
-            <Text style={styles.actionButtonText}>Call</Text>
+            <View style={styles.actionButtonIconBg}>
+              <Ionicons name="call" size={18} color="#FFFFFF" />
+            </View>
+            <Text style={styles.callButtonText}>Call Now</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleChat}
             style={[styles.actionButton, styles.chatButton]}
             activeOpacity={0.8}
           >
-            <Ionicons name="chatbubble-outline" size={20} color="#FFFFFF" />
-            <Text style={styles.actionButtonText}>Chat</Text>
+            <View style={styles.chatButtonIconBg}>
+              <Ionicons
+                name="chatbubbles"
+                size={18}
+                color={Colors.primaryGreen}
+              />
+            </View>
+            <Text style={styles.chatButtonText}>Message</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -1115,6 +1147,24 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "600",
   },
+  imageGradientOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 120,
+    backgroundColor: "transparent",
+    // Creating gradient effect with multiple steps
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: -60 },
+        shadowOpacity: 0.5,
+        shadowRadius: 30,
+      },
+      android: {},
+    }),
+  },
   imageDots: {
     position: "absolute",
     bottom: Spacing.lg,
@@ -1128,11 +1178,23 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
+    backgroundColor: "rgba(255, 255, 255, 0.4)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   dotActive: {
     backgroundColor: "#FFFFFF",
-    width: 24,
+    width: 28,
+    borderColor: "#FFFFFF",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#FFF",
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.5,
+        shadowRadius: 4,
+      },
+      android: {},
+    }),
   },
   mediaBadges: {
     position: "absolute",
@@ -1402,39 +1464,86 @@ const styles = StyleSheet.create({
     color: Colors.primaryGreen,
     fontWeight: "600",
   },
+  descriptionCard: {
+    backgroundColor: Colors.surface,
+    padding: Spacing.lg,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.05)",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
   description: {
     ...Typography.bodyMedium,
-    fontSize: 16,
+    fontSize: 15,
     color: Colors.textPrimary,
     lineHeight: 26,
     fontWeight: "400",
   },
   readMoreButton: {
-    marginTop: Spacing.sm,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: Colors.divider,
   },
   readMoreText: {
     ...Typography.labelMedium,
     fontSize: 14,
     color: Colors.primaryGreen,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   amenitiesGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
   amenityItem: {
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.sm,
-    width: "48%",
-    paddingVertical: Spacing.xs,
+    backgroundColor: Colors.surface,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.05)",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
+  },
+  amenityIconBg: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: Colors.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
   },
   amenityText: {
     ...Typography.bodyMedium,
-    fontSize: 15,
+    fontSize: 14,
     color: Colors.textPrimary,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   detailsGrid: {
     gap: Spacing.md,
@@ -1635,14 +1744,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: Colors.surface,
     borderRadius: 24,
-    padding: Spacing.xl,
+    padding: Spacing.lg,
     borderWidth: 1.5,
-    borderColor: "rgba(0, 0, 0, 0.05)",
+    borderColor: "rgba(34, 197, 94, 0.15)",
     ...Platform.select({
       ios: {
-        shadowColor: "#000",
+        shadowColor: Colors.primaryGreen,
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
+        shadowOpacity: 0.1,
         shadowRadius: 12,
       },
       android: {
@@ -1650,22 +1759,32 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  ownerAvatarContainer: {
+    position: "relative",
+    marginRight: Spacing.md,
+  },
   ownerAvatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    marginRight: Spacing.lg,
-    borderWidth: 2,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 3,
     borderColor: Colors.primaryLight,
+  },
+  verifiedBadge: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: Colors.primaryGreen,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: Colors.surface,
   },
   ownerInfo: {
     flex: 1,
-  },
-  ownerNameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs,
-    marginBottom: Spacing.xs / 2,
   },
   ownerName: {
     ...Typography.titleMedium,
@@ -1673,39 +1792,45 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: Colors.textPrimary,
     letterSpacing: -0.2,
+    marginBottom: 2,
+  },
+  verifiedTextRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginBottom: 2,
+  },
+  verifiedText: {
+    ...Typography.caption,
+    fontSize: 12,
+    color: Colors.primaryGreen,
+    fontWeight: "600",
   },
   memberSince: {
     ...Typography.bodyMedium,
-    fontSize: 13,
+    fontSize: 12,
     color: Colors.textSecondary,
     fontWeight: "500",
     marginTop: 2,
   },
   viewProfileButton: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: Colors.primaryGreen,
-    backgroundColor: "rgba(34, 197, 94, 0.05)",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
     ...Platform.select({
       ios: {
         shadowColor: Colors.primaryGreen,
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowOpacity: 0.15,
+        shadowRadius: 6,
       },
       android: {
-        elevation: 2,
+        elevation: 3,
       },
     }),
-  },
-  viewProfileText: {
-    ...Typography.labelMedium,
-    fontSize: 14,
-    color: Colors.primaryGreen,
-    fontWeight: "700",
-    letterSpacing: 0.2,
   },
   actionButtons: {
     position: "absolute",
@@ -1736,32 +1861,68 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: Spacing.sm,
+    paddingVertical: Spacing.md + 2,
+    borderRadius: 16,
+  },
+  callButton: {
     backgroundColor: Colors.primaryGreen,
-    paddingVertical: Spacing.lg,
-    borderRadius: 20,
     ...Platform.select({
       ios: {
         shadowColor: Colors.primaryGreen,
         shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.4,
         shadowRadius: 12,
       },
       android: {
-        elevation: 6,
+        elevation: 8,
       },
     }),
   },
-  callButton: {
-    backgroundColor: Colors.primaryGreen,
-  },
   chatButton: {
-    backgroundColor: Colors.primaryGreen,
+    backgroundColor: Colors.surface,
+    borderWidth: 2,
+    borderColor: Colors.primaryGreen,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
-  actionButtonText: {
+  actionButtonIconBg: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  chatButtonIconBg: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  callButtonText: {
     ...Typography.labelLarge,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
     color: "#FFFFFF",
+    letterSpacing: 0.3,
+  },
+  chatButtonText: {
+    ...Typography.labelLarge,
+    fontSize: 15,
+    fontWeight: "700",
+    color: Colors.primaryGreen,
+    letterSpacing: 0.3,
   },
   chatBottomSheet: {
     backgroundColor: Colors.surface,
