@@ -446,19 +446,22 @@ export default function SearchScreen() {
             { paddingTop: insets.top + Spacing.md },
           ]}
         >
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={FloatingHeaderStyles.backButton}
-            activeOpacity={0.7}
-          >
-            <View style={FloatingHeaderStyles.backButtonCircle}>
-              <Ionicons
-                name="arrow-back"
-                size={HEADER_ICON_SIZE}
-                color={Colors.textPrimary}
-              />
-            </View>
-          </TouchableOpacity>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={FloatingHeaderStyles.backButton}
+              activeOpacity={0.7}
+            >
+              <View style={FloatingHeaderStyles.backButtonCircle}>
+                <Ionicons
+                  name="arrow-back"
+                  size={HEADER_ICON_SIZE}
+                  color={Colors.textPrimary}
+                />
+              </View>
+            </TouchableOpacity>
+            <Text style={styles.headerTitleText}>Search</Text>
+          </View>
 
           {/* Filter and View Mode Toggle Buttons */}
           <View style={FloatingHeaderStyles.headerActions}>
@@ -780,6 +783,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    flex: 1,
+  },
+  headerTitleText: {
+    ...Typography.titleLarge,
+    fontSize: 20,
+    fontWeight: "700",
+    color: Colors.textPrimary,
   },
   decorativeBackground: {
     position: "absolute",
