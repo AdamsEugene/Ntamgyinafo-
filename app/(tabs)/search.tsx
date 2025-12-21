@@ -13,6 +13,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
 
 interface Property {
@@ -128,11 +129,11 @@ const ALL_PROPERTIES: Property[] = [
 ];
 
 export default function SearchScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const searchInputRef = useRef<RNTextInput>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-  const [selectedLocation] = useState("Accra");
   const [savedProperties, setSavedProperties] = useState<Set<string>>(
     new Set(["2", "5"])
   );
@@ -361,7 +362,7 @@ export default function SearchScreen() {
           <View style={styles.circle2} />
         </View>
 
-        {/* Floating Sticky Header - Same as Home Screen */}
+        {/* Floating Sticky Header */}
         <View
           style={[
             styles.floatingHeader,
@@ -369,60 +370,58 @@ export default function SearchScreen() {
           ]}
         >
           <TouchableOpacity
-            onPress={() => {
-              // TODO: Show location picker
-              console.log("Change Location");
-            }}
-            style={styles.locationContainer}
+            onPress={() => router.back()}
+            style={styles.backButton}
             activeOpacity={0.7}
           >
-            <View style={styles.locationIconContainer}>
-              <Ionicons name="location" size={18} color={Colors.primaryGreen} />
+            <View style={styles.backButtonCircle}>
+              <Ionicons
+                name="arrow-back"
+                size={20}
+                color={Colors.textPrimary}
+              />
             </View>
-            <Text style={styles.location}>{selectedLocation}</Text>
-            <Ionicons
-              name="chevron-down"
-              size={16}
-              color={Colors.textSecondary}
-            />
           </TouchableOpacity>
 
-          {/* Search and Notification Buttons */}
-          <View style={styles.actionButtonsContainer}>
+          {/* Filter and View Mode Toggle Buttons */}
+          <View style={styles.headerActions}>
             <TouchableOpacity
+              style={styles.actionButton}
               onPress={() => {
-                // Focus the search input at bottom
-                searchInputRef.current?.focus();
+                console.log("Open filters");
+                // TODO: Open filter bottom sheet
               }}
-              style={styles.searchButton}
               activeOpacity={0.7}
             >
-              <View style={styles.searchIconContainer}>
+              <View style={styles.actionButtonBackground}>
                 <Ionicons
-                  name="search-outline"
+                  name="options-outline"
                   size={22}
                   color={Colors.textPrimary}
                 />
+                {hasActiveFilters && (
+                  <View style={styles.filterBadge}>
+                    <Text style={styles.filterBadgeText}>
+                      {activeFiltersCount}
+                    </Text>
+                  </View>
+                )}
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => {
-                // TODO: Navigate to notifications
-                console.log("Notifications");
-              }}
-              style={styles.notificationButton}
+              style={styles.actionButton}
+              onPress={() =>
+                setViewMode((prev) => (prev === "list" ? "grid" : "list"))
+              }
               activeOpacity={0.7}
             >
-              <View style={styles.notificationIconContainer}>
+              <View style={styles.actionButtonBackground}>
                 <Ionicons
-                  name="notifications-outline"
+                  name={viewMode === "list" ? "grid-outline" : "list-outline"}
                   size={22}
                   color={Colors.textPrimary}
                 />
-                <View style={styles.notificationBadge}>
-                  <Text style={styles.notificationBadgeText}>3</Text>
-                </View>
               </View>
             </TouchableOpacity>
           </View>
@@ -699,19 +698,17 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.md,
     zIndex: 100,
   },
-  actionButtonsContainer: {
-    flexDirection: "row",
+  backButton: {
+    justifyContent: "center",
     alignItems: "center",
-    gap: Spacing.sm,
   },
-  locationContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs,
-    backgroundColor: Colors.surface,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.sm,
+  backButtonCircle: {
+    width: 40,
+    height: 40,
     borderRadius: 20,
+    backgroundColor: Colors.surface,
+    justifyContent: "center",
+    alignItems: "center",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -724,28 +721,18 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  locationIconContainer: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#F1F8F4",
+  headerActions: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+  },
+  actionButton: {
     justifyContent: "center",
     alignItems: "center",
   },
-  location: {
-    ...Typography.bodyMedium,
-    fontSize: 15,
-    fontWeight: "600",
-    color: Colors.textPrimary,
-  },
-  notificationButton: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  notificationIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  actionButtonBackground: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: Colors.surface,
     justifyContent: "center",
     alignItems: "center",
@@ -762,11 +749,11 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  notificationBadge: {
+  filterBadge: {
     position: "absolute",
-    top: 4,
-    right: 4,
-    backgroundColor: "#FF3B30",
+    top: -2,
+    right: -2,
+    backgroundColor: Colors.primaryGreen,
     borderRadius: 10,
     minWidth: 18,
     height: 18,
@@ -776,34 +763,11 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: Colors.surface,
   },
-  notificationBadgeText: {
+  filterBadgeText: {
     ...Typography.caption,
     fontSize: 10,
     fontWeight: "700",
     color: "#FFFFFF",
-  },
-  searchButton: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  searchIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.surface,
-    justifyContent: "center",
-    alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
   },
   floatingActionsContainer: {
     flexDirection: "row",
