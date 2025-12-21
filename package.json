@@ -24,6 +24,7 @@
     "@tamagui/metro-plugin": "^1.141.5",
     "@tamagui/vite-plugin": "^1.141.5",
     "expo": "~54.0.30",
+    "expo-av": "^16.0.8",
     "expo-constants": "~18.0.12",
     "expo-font": "~14.0.10",
     "expo-haptics": "~15.0.8",

@@ -44,6 +44,8 @@ const MOCK_VIDEOS = [
     title: "Full Property Tour",
     duration: "5:32",
     views: "1.2K",
+    videoUrl:
+      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
   },
   {
     id: "2",
@@ -52,6 +54,8 @@ const MOCK_VIDEOS = [
     title: "Living Room Walkthrough",
     duration: "2:15",
     views: "856",
+    videoUrl:
+      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
   },
   {
     id: "3",
@@ -60,6 +64,8 @@ const MOCK_VIDEOS = [
     title: "Kitchen & Dining Area",
     duration: "3:48",
     views: "642",
+    videoUrl:
+      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
   },
 ];
 
@@ -343,8 +349,7 @@ export default function PropertyGalleryScreen() {
           style={styles.videoCard}
           activeOpacity={0.9}
           onPress={() => {
-            // TODO: Open video player
-            console.log("Play video:", video.id);
+            router.push(`/property/${params.id}/video?id=${video.id}`);
           }}
         >
           <View style={styles.videoThumbnailContainer}>
@@ -362,13 +367,19 @@ export default function PropertyGalleryScreen() {
             </View>
 
             {/* Play Button */}
-            <View style={styles.videoPlayButtonContainer}>
+            <TouchableOpacity
+              style={styles.videoPlayButtonContainer}
+              activeOpacity={0.8}
+              onPress={() => {
+                router.push(`/property/${params.id}/video?id=${video.id}`);
+              }}
+            >
               <View style={styles.playButton}>
                 <View style={styles.playButtonInner}>
                   <Ionicons name="play" size={32} color="#FFFFFF" />
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
           </View>
 
           {/* Video Info */}

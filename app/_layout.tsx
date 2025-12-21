@@ -55,6 +55,13 @@ export default function RootLayout() {
                 }}
               />
               <Stack.Screen
+                name="property/[id]/video"
+                options={{
+                  headerShown: false,
+                  presentation: "fullScreenModal",
+                }}
+              />
+              <Stack.Screen
                 name="modal"
                 options={{ presentation: "modal", title: "Modal" }}
               />
