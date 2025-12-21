@@ -37,8 +37,6 @@ import { BottomNavigation, type TabItem } from "@/components/BottomNavigation";
 import { PropertyListCard } from "@/components/PropertyCard";
 import { MAP_PROPERTIES, type MapProperty } from "@/constants/mockData";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
 // Default Accra region
 const DEFAULT_REGION: Region = {
   latitude: 5.6037,
@@ -422,66 +420,164 @@ export default function MapScreen() {
         {selectedProperty && (
           <View style={styles.popupContainer}>
             <View style={styles.popupCard}>
+              {/* Hero Image */}
               <TouchableOpacity
-                style={styles.popupCardContent}
                 onPress={() => router.push(`/property/${selectedProperty.id}`)}
-                activeOpacity={0.9}
+                activeOpacity={0.95}
               >
-                <Image
-                  source={{ uri: selectedProperty.image }}
-                  style={styles.popupImage}
-                />
-                <View style={styles.popupContent}>
-                  <Text style={styles.popupTitle} numberOfLines={1}>
-                    {selectedProperty.title}
-                  </Text>
-                  <Text style={styles.popupLocation} numberOfLines={1}>
-                    {selectedProperty.location}
-                  </Text>
-                  <Text style={styles.popupPrice}>
-                    {formatPrice(selectedProperty.price)}
-                  </Text>
-                  {selectedProperty.bedrooms && (
-                    <View style={styles.popupStats}>
-                      <Text style={styles.popupStat}>
-                        {selectedProperty.bedrooms} Bed
+                <View style={styles.popupImageContainer}>
+                  <Image
+                    source={{ uri: selectedProperty.image }}
+                    style={styles.popupImage}
+                  />
+                  {/* Image Overlay Gradient */}
+                  <View style={styles.popupImageOverlay} />
+
+                  {/* Close Button */}
+                  <TouchableOpacity
+                    style={styles.popupCloseButton}
+                    onPress={() => {
+                      setSelectedProperty(null);
+                      setPopupExpanded(false);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="close" size={18} color={Colors.surface} />
+                  </TouchableOpacity>
+
+                  {/* Save Button */}
+                  <TouchableOpacity
+                    style={styles.popupSaveButton}
+                    onPress={() => handleToggleSave(selectedProperty.id)}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons
+                      name={
+                        savedProperties.has(selectedProperty.id)
+                          ? "heart"
+                          : "heart-outline"
+                      }
+                      size={18}
+                      color={
+                        savedProperties.has(selectedProperty.id)
+                          ? "#EF4444"
+                          : Colors.surface
+                      }
+                    />
+                  </TouchableOpacity>
+
+                  {/* Price Badge */}
+                  <View style={styles.popupPriceBadge}>
+                    <Text style={styles.popupPriceText}>
+                      {formatPrice(selectedProperty.price)}
+                    </Text>
+                  </View>
+
+                  {/* Image Count Badge */}
+                  {(selectedProperty.images?.length || 0) > 0 && (
+                    <View style={styles.popupImageCountBadge}>
+                      <Ionicons
+                        name="images"
+                        size={12}
+                        color={Colors.surface}
+                      />
+                      <Text style={styles.popupImageCountText}>
+                        {(selectedProperty.images?.length || 0) + 1}
                       </Text>
-                      {selectedProperty.bathrooms && (
-                        <Text style={styles.popupStat}>
-                          {selectedProperty.bathrooms} Bath
-                        </Text>
-                      )}
                     </View>
                   )}
                 </View>
+              </TouchableOpacity>
+
+              {/* Content */}
+              <View style={styles.popupContent}>
+                <Text style={styles.popupTitle} numberOfLines={2}>
+                  {selectedProperty.title}
+                </Text>
+
+                <View style={styles.popupLocationRow}>
+                  <Ionicons
+                    name="location"
+                    size={14}
+                    color={Colors.primaryGreen}
+                  />
+                  <Text style={styles.popupLocation} numberOfLines={1}>
+                    {selectedProperty.location}
+                  </Text>
+                </View>
+
+                {/* Stats Row */}
+                {(selectedProperty.bedrooms || selectedProperty.bathrooms) && (
+                  <View style={styles.popupStatsRow}>
+                    {selectedProperty.bedrooms && (
+                      <View style={styles.popupStatBadge}>
+                        <Ionicons
+                          name="bed-outline"
+                          size={14}
+                          color={Colors.textSecondary}
+                        />
+                        <Text style={styles.popupStatText}>
+                          {selectedProperty.bedrooms} Beds
+                        </Text>
+                      </View>
+                    )}
+                    {selectedProperty.bathrooms && (
+                      <View style={styles.popupStatBadge}>
+                        <Ionicons
+                          name="water-outline"
+                          size={14}
+                          color={Colors.textSecondary}
+                        />
+                        <Text style={styles.popupStatText}>
+                          {selectedProperty.bathrooms} Baths
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+              </View>
+
+              {/* Action Buttons */}
+              <View style={styles.popupActions}>
                 <TouchableOpacity
-                  style={styles.popupCloseButton}
-                  onPress={() => {
-                    setSelectedProperty(null);
-                    setPopupExpanded(false);
-                  }}
+                  style={styles.popupExpandButton}
+                  onPress={() => setPopupExpanded(!popupExpanded)}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="close" size={20} color={Colors.textPrimary} />
+                  <Ionicons
+                    name={popupExpanded ? "images" : "images-outline"}
+                    size={16}
+                    color={
+                      popupExpanded ? Colors.primaryGreen : Colors.textSecondary
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.popupExpandText,
+                      popupExpanded && styles.popupExpandTextActive,
+                    ]}
+                  >
+                    {popupExpanded ? "Hide" : "Gallery"}
+                  </Text>
                 </TouchableOpacity>
-              </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.popupViewButton}
+                  onPress={() =>
+                    router.push(`/property/${selectedProperty.id}`)
+                  }
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.popupViewButtonText}>View Details</Text>
+                  <Ionicons
+                    name="arrow-forward"
+                    size={16}
+                    color={Colors.surface}
+                  />
+                </TouchableOpacity>
+              </View>
 
               {/* Expandable Images Section */}
-              <TouchableOpacity
-                style={styles.expandButton}
-                onPress={() => setPopupExpanded(!popupExpanded)}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name={popupExpanded ? "chevron-up" : "chevron-down"}
-                  size={18}
-                  color={Colors.textSecondary}
-                />
-                <Text style={styles.expandButtonText}>
-                  {popupExpanded ? "Hide Images" : "Show Images"}
-                </Text>
-              </TouchableOpacity>
-
               {popupExpanded && (
                 <View style={styles.popupImagesContainer}>
                   <View style={styles.popupImagesGrid}>
@@ -499,38 +595,29 @@ export default function MapScreen() {
                             )
                           }
                           activeOpacity={0.8}
+                          style={styles.popupThumbnailWrapper}
                         >
                           <Image
                             source={{ uri: img }}
                             style={styles.popupThumbnail}
                           />
+                          {index === 3 &&
+                            (selectedProperty.images?.length || 0) + 1 > 4 && (
+                              <View style={styles.popupThumbnailOverlay}>
+                                <Text style={styles.popupThumbnailMoreText}>
+                                  +
+                                  {(selectedProperty.images?.length || 0) +
+                                    1 -
+                                    4}
+                                </Text>
+                              </View>
+                            )}
                         </TouchableOpacity>
                       ))}
                   </View>
-                  {(selectedProperty.images?.length || 0) + 1 > 4 && (
-                    <TouchableOpacity
-                      style={styles.viewAllImagesButton}
-                      onPress={() =>
-                        router.push(`/property/${selectedProperty.id}/gallery`)
-                      }
-                      activeOpacity={0.8}
-                    >
-                      <Text style={styles.viewAllImagesText}>
-                        View All {(selectedProperty.images?.length || 0) + 1}{" "}
-                        Images
-                      </Text>
-                    </TouchableOpacity>
-                  )}
                 </View>
               )}
             </View>
-            <TouchableOpacity
-              style={styles.viewDetailsButton}
-              onPress={() => router.push(`/property/${selectedProperty.id}`)}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.viewDetailsText}>View Details</Text>
-            </TouchableOpacity>
           </View>
         )}
 
@@ -756,89 +843,81 @@ const styles = StyleSheet.create({
   },
   popupContainer: {
     position: "absolute",
-    top: 140,
-    left: Spacing.lg,
-    right: Spacing.lg,
+    top: 130,
+    left: Spacing.md,
+    right: Spacing.md,
     zIndex: 1000,
   },
   popupCard: {
     backgroundColor: Colors.surface,
-    borderRadius: 16,
-    padding: Spacing.md,
+    borderRadius: 20,
+    overflow: "hidden",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.2,
+        shadowRadius: 16,
       },
       android: {
-        elevation: 8,
+        elevation: 12,
       },
     }),
   },
-  popupCardContent: {
-    flexDirection: "row",
+  popupImageContainer: {
+    position: "relative",
+    width: "100%",
+    height: 140,
   },
   popupImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 12,
-    marginRight: Spacing.md,
+    width: "100%",
+    height: "100%",
+    backgroundColor: Colors.divider,
   },
-  popupContent: {
-    flex: 1,
-    justifyContent: "center",
-  },
-  popupTitle: {
-    ...Typography.titleMedium,
-    color: Colors.textPrimary,
-    marginBottom: 4,
-  },
-  popupLocation: {
-    ...Typography.bodyMedium,
-    color: Colors.textSecondary,
-    marginBottom: 4,
-    fontSize: 12,
-  },
-  popupPrice: {
-    ...Typography.titleLarge,
-    color: Colors.primaryGreen,
-    fontWeight: "700",
-    marginBottom: 4,
-  },
-  popupStats: {
-    flexDirection: "row",
-    gap: Spacing.sm,
-    marginTop: 4,
-  },
-  popupStat: {
-    ...Typography.labelMedium,
-    color: Colors.textSecondary,
-    fontSize: 12,
+  popupImageOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 60,
+    backgroundColor: "transparent",
+    // Gradient effect using multiple views would be ideal, but we'll use opacity
   },
   popupCloseButton: {
     position: "absolute",
     top: Spacing.sm,
-    right: Spacing.sm,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: Colors.background,
+    left: Spacing.sm,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(0,0,0,0.5)",
     alignItems: "center",
     justifyContent: "center",
   },
-  viewDetailsButton: {
-    marginTop: Spacing.sm,
-    backgroundColor: Colors.primaryGreen,
-    paddingVertical: Spacing.md,
-    borderRadius: 12,
+  popupSaveButton: {
+    position: "absolute",
+    top: Spacing.sm,
+    right: Spacing.sm,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(0,0,0,0.5)",
     alignItems: "center",
+    justifyContent: "center",
+  },
+  popupPriceBadge: {
+    position: "absolute",
+    bottom: Spacing.sm,
+    left: Spacing.sm,
+    backgroundColor: Colors.primaryGreen,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    borderRadius: 10,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
+        shadowOpacity: 0.3,
         shadowRadius: 4,
       },
       android: {
@@ -846,53 +925,158 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  viewDetailsText: {
+  popupPriceText: {
     ...Typography.labelLarge,
     color: Colors.surface,
-    fontWeight: "600",
+    fontWeight: "700",
+    fontSize: 14,
   },
-  expandButton: {
+  popupImageCountBadge: {
+    position: "absolute",
+    bottom: Spacing.sm,
+    right: Spacing.sm,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: 8,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: Spacing.sm,
-    marginTop: Spacing.sm,
-    gap: Spacing.xs,
+    gap: 4,
   },
-  expandButtonText: {
-    ...Typography.labelMedium,
+  popupImageCountText: {
+    ...Typography.caption,
+    color: Colors.surface,
+    fontWeight: "600",
+    fontSize: 11,
+  },
+  popupContent: {
+    padding: Spacing.md,
+    paddingBottom: 0,
+  },
+  popupTitle: {
+    ...Typography.titleMedium,
+    color: Colors.textPrimary,
+    fontWeight: "700",
+    marginBottom: 6,
+    lineHeight: 22,
+  },
+  popupLocationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginBottom: Spacing.sm,
+  },
+  popupLocation: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    flex: 1,
+    fontSize: 13,
+  },
+  popupStatsRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  popupStatBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: Colors.background,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  popupStatText: {
+    ...Typography.caption,
     color: Colors.textSecondary,
     fontSize: 12,
   },
-  popupImagesContainer: {
-    marginTop: Spacing.sm,
+  popupActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: Spacing.md,
     paddingTop: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: Colors.divider,
+    gap: Spacing.sm,
+  },
+  popupExpandButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.background,
+    borderRadius: 10,
+  },
+  popupExpandText: {
+    ...Typography.labelMedium,
+    color: Colors.textSecondary,
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  popupExpandTextActive: {
+    color: Colors.primaryGreen,
+    fontWeight: "600",
+  },
+  popupViewButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: Colors.primaryGreen,
+    paddingVertical: Spacing.sm + 2,
+    borderRadius: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.primaryGreen,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  popupViewButtonText: {
+    ...Typography.labelMedium,
+    color: Colors.surface,
+    fontWeight: "600",
+    fontSize: 13,
+  },
+  popupImagesContainer: {
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.md,
   },
   popupImagesGrid: {
     flexDirection: "row",
-    flexWrap: "wrap",
     gap: Spacing.sm,
-    marginBottom: Spacing.sm,
+  },
+  popupThumbnailWrapper: {
+    flex: 1,
+    aspectRatio: 1,
+    borderRadius: 10,
+    overflow: "hidden",
   },
   popupThumbnail: {
-    width:
-      (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.md * 2 - Spacing.sm * 3) / 4,
-    height:
-      (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.md * 2 - Spacing.sm * 3) / 4,
-    borderRadius: 8,
+    width: "100%",
+    height: "100%",
     backgroundColor: Colors.divider,
   },
-  viewAllImagesButton: {
-    paddingVertical: Spacing.sm,
+  popupThumbnailOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.6)",
     alignItems: "center",
+    justifyContent: "center",
   },
-  viewAllImagesText: {
-    ...Typography.labelMedium,
-    color: Colors.primaryGreen,
-    fontSize: 12,
-    fontWeight: "600",
+  popupThumbnailMoreText: {
+    ...Typography.titleMedium,
+    color: Colors.surface,
+    fontWeight: "700",
   },
   fitToPropertiesButton: {
     position: "absolute",
