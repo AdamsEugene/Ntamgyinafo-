@@ -109,59 +109,45 @@ export default function WelcomeScreen() {
         >
           <YStack width="100%" space="$3">
             <Button
-              buttonVariant="primary"
+              title="Login"
               onPress={() => router.push("/(auth)/login")}
-              backgroundColor="#FFFFFF"
-              width="100%"
-              shadowColor="#000"
-              shadowOffset={{ width: 0, height: 4 }}
-              shadowOpacity={0.2}
-              shadowRadius={8}
-              elevation={4}
-            >
-              <Text
-                fontSize={16}
-                fontWeight="600"
-                color={Colors.primaryGreen}
-                letterSpacing={0.5}
-              >
-                Login
-              </Text>
-            </Button>
+              variant="primary"
+              style={{
+                backgroundColor: "#FFFFFF",
+                width: "100%",
+              }}
+              textStyle={{
+                color: Colors.primaryGreen,
+              }}
+            />
 
             <Button
-              buttonVariant="secondary"
+              title="Create Account"
               onPress={() => router.push("/(auth)/register")}
-              borderColor="#FFFFFF"
-              borderWidth={2}
-              width="100%"
-              backgroundColor="transparent"
-            >
-              <Text
-                fontSize={16}
-                fontWeight="600"
-                color="#FFFFFF"
-                letterSpacing={0.5}
-              >
-                Create Account
-              </Text>
-            </Button>
+              variant="secondary"
+              style={{
+                borderColor: "#FFFFFF",
+                borderWidth: 2,
+                width: "100%",
+                backgroundColor: "transparent",
+              }}
+              textStyle={{
+                color: "#FFFFFF",
+              }}
+            />
 
             <Button
-              buttonVariant="text"
+              title="Explore as Guest"
               onPress={() => router.replace("/(tabs)")}
-              width="100%"
-              marginTop={Spacing.md}
-            >
-              <Text
-                fontSize={14}
-                fontWeight="400"
-                color="rgba(255,255,255,0.9)"
-                letterSpacing={0.3}
-              >
-                Explore as Guest
-              </Text>
-            </Button>
+              variant="text"
+              style={{
+                width: "100%",
+                marginTop: Spacing.md,
+              }}
+              textStyle={{
+                color: "rgba(255,255,255,0.9)",
+              }}
+            />
           </YStack>
         </Animated.View>
       </YStack>

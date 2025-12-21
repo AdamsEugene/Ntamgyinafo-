@@ -1,94 +1,160 @@
-import { Button as TamaguiButton, ButtonProps, Text } from 'tamagui';
-import { ActivityIndicator } from 'react-native';
-import { Colors, BorderRadius } from '@/constants/design';
+import React from "react";
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  ViewStyle,
+  TextStyle,
+  Platform,
+} from "react-native";
+import { Colors, Spacing, Typography } from "@/constants/design";
 
-interface CustomButtonProps extends Omit<ButtonProps, 'variant'> {
-  buttonVariant?: 'primary' | 'secondary' | 'text' | 'icon';
+export interface ButtonProps {
+  title: string;
+  onPress: () => void;
+  variant?: "primary" | "secondary" | "text";
+  disabled?: boolean;
   loading?: boolean;
-  children: React.ReactNode;
+  style?: ViewStyle;
+  textStyle?: TextStyle;
 }
 
-export function Button({
-  buttonVariant = 'primary',
+export const Button: React.FC<ButtonProps> = ({
+  title,
+  onPress,
+  variant = "primary",
+  disabled = false,
   loading = false,
-  children,
-  disabled,
-  ...props
-}: CustomButtonProps) {
-  const getStyles = () => {
-    switch (buttonVariant) {
-      case 'primary':
-        return {
-          backgroundColor: Colors.primaryGreen,
-          color: '#FFFFFF',
-          borderWidth: 0,
-          height: 48,
-          paddingHorizontal: 24,
-          paddingVertical: 16,
-          borderRadius: BorderRadius.medium,
-          pressStyle: { backgroundColor: Colors.primaryDark },
-          disabledStyle: { backgroundColor: Colors.divider, opacity: 0.6 },
-        };
-      case 'secondary':
-        return {
-          backgroundColor: 'transparent',
-          borderWidth: 1,
-          borderColor: Colors.primaryGreen,
-          color: Colors.primaryGreen,
-          height: 48,
-          paddingHorizontal: 24,
-          paddingVertical: 16,
-          borderRadius: BorderRadius.medium,
-          pressStyle: { backgroundColor: Colors.primaryGreen + '10' },
-        };
-      case 'text':
-        return {
-          backgroundColor: 'transparent',
-          borderWidth: 0,
-          color: Colors.primaryGreen,
-          height: 40,
-          paddingHorizontal: 16,
-          paddingVertical: 8,
-          borderRadius: 0,
-          pressStyle: { opacity: 0.7 },
-        };
-      case 'icon':
-        return {
-          backgroundColor: 'transparent',
-          borderWidth: 0,
-          width: 40,
-          height: 40,
-          borderRadius: BorderRadius.full,
-          pressStyle: { backgroundColor: Colors.divider },
-        };
-      default:
-        return {};
-    }
-  };
+  style,
+  textStyle,
+}) => {
+  const buttonStyles = [
+    styles.button,
+    styles[variant],
+    disabled && styles.disabled,
+    style,
+  ];
 
-  const styles = getStyles();
+  const textStyles = [
+    styles.textStyle,
+    styles[`${variant}Text`],
+    disabled && styles.disabledText,
+    textStyle,
+  ];
 
-  return (
-    <TamaguiButton
-      disabled={disabled || loading}
-      {...styles}
-      {...props}
-    >
+  const buttonContent = (
+    <>
       {loading ? (
         <ActivityIndicator
+          color={variant === "primary" ? "#FFFFFF" : Colors.primaryGreen}
           size="small"
-          color={buttonVariant === 'primary' ? '#FFFFFF' : Colors.primaryGreen}
         />
       ) : (
-        <Text
-          fontSize={buttonVariant === 'text' ? 14 : 16}
-          fontWeight={buttonVariant === 'text' ? '400' : '600'}
-          color={styles.color}
-        >
-          {children}
-        </Text>
+        <Text style={textStyles}>{title}</Text>
       )}
-    </TamaguiButton>
+    </>
   );
-}
 
+  return (
+    <TouchableOpacity
+      style={buttonStyles}
+      onPress={onPress}
+      disabled={disabled || loading}
+      activeOpacity={0.7}
+    >
+      {buttonContent}
+    </TouchableOpacity>
+  );
+};
+
+const styles = StyleSheet.create({
+  button: {
+    minHeight: 56,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 120,
+    overflow: "visible",
+    position: "relative",
+  },
+  primary: {
+    backgroundColor: Colors.primaryGreen,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.25,
+        shadowRadius: 20,
+      },
+      android: {
+        elevation: 8,
+        shadowColor: "#000",
+      },
+    }),
+  },
+  secondary: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 2,
+    borderColor: Colors.primaryGreen,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.15,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
+  },
+  text: {
+    backgroundColor: "transparent",
+    height: 40,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+  },
+  disabled: {
+    backgroundColor: Colors.divider,
+    ...Platform.select({
+      ios: {
+        shadowOpacity: 0,
+      },
+      android: {
+        elevation: 0,
+      },
+    }),
+  },
+  textStyle: {
+    ...Typography.labelLarge,
+    fontWeight: "800",
+    fontSize: 16,
+    letterSpacing: 0.5,
+    lineHeight: 22,
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        textAlignVertical: "center",
+      },
+    }),
+  },
+  primaryText: {
+    color: "#FFFFFF",
+    textShadowColor: "rgba(0, 0, 0, 0.4)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  secondaryText: {
+    color: Colors.primaryGreen,
+    fontWeight: "700",
+  },
+  textText: {
+    color: Colors.primaryGreen,
+  },
+  disabledText: {
+    color: "#9E9E9E",
+  },
+});
