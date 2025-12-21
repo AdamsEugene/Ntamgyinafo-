@@ -584,20 +584,73 @@ export default function PropertyGalleryScreen() {
   );
 
   const render360 = () => (
-    <View style={styles.tabContent}>
+    <View style={[styles.tabContent, { backgroundColor: "#0A0A0A" }]}>
       <View style={styles.placeholder360}>
-        <Ionicons name="cube-outline" size={80} color={Colors.textSecondary} />
-        <Text style={styles.placeholderText}>360° View</Text>
-        <Text style={styles.placeholderSubtext}>
-          Interactive 360° panorama viewer
+        {/* Decorative Background */}
+        <View style={styles.placeholder360Bg}>
+          <View style={styles.placeholder360Ring1} />
+          <View style={styles.placeholder360Ring2} />
+          <View style={styles.placeholder360Ring3} />
+        </View>
+
+        {/* Icon */}
+        <View style={styles.placeholder360Icon}>
+          <Ionicons name="cube" size={48} color="#FFFFFF" />
+        </View>
+
+        {/* Content */}
+        <Text style={styles.placeholderTitle}>360° Virtual Tour</Text>
+        <Text style={styles.placeholderText}>
+          Explore every room with immersive 360° panoramic views
         </Text>
+
+        {/* Features */}
+        <View style={styles.placeholder360Features}>
+          <View style={styles.placeholder360Feature}>
+            <View style={styles.placeholder360FeatureIcon}>
+              <Ionicons
+                name="eye-outline"
+                size={18}
+                color={Colors.primaryGreen}
+              />
+            </View>
+            <Text style={styles.placeholder360FeatureText}>5 Rooms</Text>
+          </View>
+          <View style={styles.placeholder360FeatureDivider} />
+          <View style={styles.placeholder360Feature}>
+            <View style={styles.placeholder360FeatureIcon}>
+              <Ionicons
+                name="sync-outline"
+                size={18}
+                color={Colors.primaryGreen}
+              />
+            </View>
+            <Text style={styles.placeholder360FeatureText}>Auto-Rotate</Text>
+          </View>
+          <View style={styles.placeholder360FeatureDivider} />
+          <View style={styles.placeholder360Feature}>
+            <View style={styles.placeholder360FeatureIcon}>
+              <Ionicons
+                name="hand-left-outline"
+                size={18}
+                color={Colors.primaryGreen}
+              />
+            </View>
+            <Text style={styles.placeholder360FeatureText}>Interactive</Text>
+          </View>
+        </View>
+
+        {/* Button */}
         <TouchableOpacity
           style={styles.view360Button}
           onPress={() => {
             router.push(`/property/${params.id}/360`);
           }}
+          activeOpacity={0.8}
         >
-          <Text style={styles.view360ButtonText}>Open 360° Viewer</Text>
+          <Ionicons name="cube" size={20} color="#FFFFFF" />
+          <Text style={styles.view360ButtonText}>Start Virtual Tour</Text>
+          <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
     </View>
@@ -1109,27 +1162,130 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: Spacing.xl,
+    position: "relative",
   },
-  placeholderText: {
+  placeholder360Bg: {
+    position: "absolute",
+    width: 300,
+    height: 300,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  placeholder360Ring1: {
+    position: "absolute",
+    width: 250,
+    height: 250,
+    borderRadius: 125,
+    borderWidth: 1,
+    borderColor: "rgba(34, 197, 94, 0.1)",
+  },
+  placeholder360Ring2: {
+    position: "absolute",
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    borderWidth: 1,
+    borderColor: "rgba(34, 197, 94, 0.15)",
+  },
+  placeholder360Ring3: {
+    position: "absolute",
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    borderWidth: 1,
+    borderColor: "rgba(34, 197, 94, 0.2)",
+  },
+  placeholder360Icon: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: Colors.primaryGreen,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: Spacing.xl,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.primaryGreen,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.4,
+        shadowRadius: 20,
+      },
+      android: {
+        elevation: 12,
+      },
+    }),
+  },
+  placeholderTitle: {
     ...Typography.headlineMedium,
     fontSize: 24,
-    fontWeight: "700",
-    color: Colors.textPrimary,
-    marginTop: Spacing.lg,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    marginBottom: Spacing.sm,
+    letterSpacing: -0.5,
   },
-  placeholderSubtext: {
+  placeholderText: {
     ...Typography.bodyMedium,
-    fontSize: 16,
-    color: Colors.textSecondary,
-    marginTop: Spacing.sm,
+    fontSize: 15,
+    color: "rgba(255, 255, 255, 0.6)",
     textAlign: "center",
+    lineHeight: 22,
+    maxWidth: 280,
+  },
+  placeholder360Features: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: Spacing.xl,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderRadius: 16,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  placeholder360Feature: {
+    alignItems: "center",
+    gap: 6,
+  },
+  placeholder360FeatureIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(34, 197, 94, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  placeholder360FeatureText: {
+    ...Typography.caption,
+    fontSize: 11,
+    fontWeight: "600",
+    color: "rgba(255, 255, 255, 0.7)",
+  },
+  placeholder360FeatureDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    marginHorizontal: Spacing.md,
   },
   view360Button: {
     marginTop: Spacing.xl,
     backgroundColor: Colors.primaryGreen,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    borderRadius: 20,
+    paddingHorizontal: Spacing["2xl"],
+    paddingVertical: Spacing.lg,
+    borderRadius: 30,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.primaryGreen,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.4,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   view360ButtonText: {
     ...Typography.labelLarge,
