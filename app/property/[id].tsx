@@ -1150,7 +1150,7 @@ const styles = StyleSheet.create({
   quickStats: {
     flexDirection: "row",
     flexWrap: "wrap",
-    paddingHorizontal: Spacing.xl,
+    padding: Spacing.xl,
     marginBottom: Spacing["2xl"],
     gap: Spacing.md,
   },
@@ -1158,7 +1158,7 @@ const styles = StyleSheet.create({
     width: "48%",
     backgroundColor: Colors.surface,
     borderRadius: 24,
-    padding: Spacing.xl,
+    padding: Spacing.lg,
     alignItems: "center",
     borderWidth: 1.5,
     borderColor: "rgba(0, 0, 0, 0.05)",
