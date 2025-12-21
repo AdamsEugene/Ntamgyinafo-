@@ -669,7 +669,9 @@ export default function SearchScreen() {
           ) : (
             <View style={styles.gridContainer}>
               {filteredProperties.map((property) => (
-                <View key={property.id}>{renderPropertyGrid(property)}</View>
+                <View key={property.id} style={styles.gridItem}>
+                  {renderPropertyGrid(property)}
+                </View>
               ))}
             </View>
           )}
@@ -1114,12 +1116,13 @@ const styles = StyleSheet.create({
   gridContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    width: "100%",
     gap: Spacing.md,
-    justifyContent: "space-between",
+    marginHorizontal: -Spacing.xs,
+  },
+  gridItem: {
+    width: "48%",
   },
   gridCard: {
-    width: "100%",
     backgroundColor: Colors.surface,
     borderRadius: 20,
     overflow: "hidden",
