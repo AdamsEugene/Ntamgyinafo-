@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -35,29 +36,87 @@ export default function VideoPlayerScreen() {
   const params = useLocalSearchParams();
   const videoRef = useRef<Video>(null);
   const [status, setStatus] = useState<AVPlaybackStatus | null>(null);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isReady, setIsReady] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   const videoId = (params.id as string) || "1";
   const videoUri = VIDEO_URLS[videoId] || VIDEO_URLS["1"];
   const videoTitle = VIDEO_TITLES[videoId] || "Property Video";
 
+  useEffect(() => {
+    // Reset states when video changes
+    setIsLoading(true);
+    setIsReady(false);
+    setIsPlaying(false);
+    setHasError(false);
+  }, [videoId]);
+
   const togglePlayPause = async () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        await videoRef.current.pauseAsync();
-      } else {
-        await videoRef.current.playAsync();
+    if (videoRef.current && isReady) {
+      try {
+        if (isPlaying) {
+          await videoRef.current.pauseAsync();
+        } else {
+          await videoRef.current.playAsync();
+        }
+        setIsPlaying(!isPlaying);
+      } catch (error) {
+        console.error("Error toggling play/pause:", error);
       }
-      setIsPlaying(!isPlaying);
     }
   };
 
   const handlePlaybackStatusUpdate = (playbackStatus: AVPlaybackStatus) => {
     setStatus(playbackStatus);
+
     if (playbackStatus.isLoaded) {
+      // Video is loaded and ready
+      if (!isReady) {
+        setIsReady(true);
+        setIsLoading(false);
+      }
+
+      // Update playing state
       setIsPlaying(playbackStatus.isPlaying);
+
+      // Check if video is buffering
+      if (playbackStatus.isBuffering) {
+        setIsLoading(true);
+      } else {
+        setIsLoading(false);
+      }
+    } else {
+      // Video is not loaded yet or has an error
+      if (!playbackStatus.isLoaded) {
+        setIsLoading(true);
+      }
     }
+  };
+
+  const handleLoadStart = () => {
+    setIsLoading(true);
+    setIsReady(false);
+  };
+
+  const handleLoad = () => {
+    setIsLoading(false);
+    setIsReady(true);
+    // Auto-play when ready
+    if (videoRef.current) {
+      videoRef.current.playAsync().catch((error) => {
+        console.error("Error auto-playing:", error);
+      });
+    }
+  };
+
+  const handleError = (error: string) => {
+    console.error("Video error:", error);
+    setHasError(true);
+    setIsLoading(false);
+    setIsReady(false);
   };
 
   const formatTime = (milliseconds: number) => {
@@ -87,9 +146,44 @@ export default function VideoPlayerScreen() {
             source={{ uri: videoUri }}
             resizeMode={ResizeMode.CONTAIN}
             isLooping={false}
-            shouldPlay={isPlaying}
+            shouldPlay={false}
+            useNativeControls={false}
             onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
+            onLoadStart={handleLoadStart}
+            onLoad={handleLoad}
+            onError={handleError}
           />
+
+          {/* Loading Overlay */}
+          {isLoading && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color={Colors.primaryGreen} />
+              <Text style={styles.loadingText}>Loading video...</Text>
+            </View>
+          )}
+
+          {/* Error Overlay */}
+          {hasError && (
+            <View style={styles.loadingOverlay}>
+              <Ionicons name="alert-circle" size={48} color="#FF3B30" />
+              <Text style={styles.errorText}>Failed to load video</Text>
+              <TouchableOpacity
+                style={styles.retryButton}
+                onPress={() => {
+                  setHasError(false);
+                  setIsLoading(true);
+                  setIsReady(false);
+                  if (videoRef.current) {
+                    videoRef.current.unloadAsync().then(() => {
+                      videoRef.current?.loadAsync({ uri: videoUri });
+                    });
+                  }
+                }}
+              >
+                <Text style={styles.retryButtonText}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Controls Overlay */}
           {showControls && (
@@ -114,19 +208,21 @@ export default function VideoPlayerScreen() {
               </View>
 
               {/* Center Play/Pause Button */}
-              <View style={styles.centerControls}>
-                <TouchableOpacity
-                  onPress={togglePlayPause}
-                  style={styles.playPauseButton}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons
-                    name={isPlaying ? "pause" : "play"}
-                    size={48}
-                    color="#FFFFFF"
-                  />
-                </TouchableOpacity>
-              </View>
+              {!isLoading && isReady && (
+                <View style={styles.centerControls}>
+                  <TouchableOpacity
+                    onPress={togglePlayPause}
+                    style={styles.playPauseButton}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons
+                      name={isPlaying ? "pause" : "play"}
+                      size={48}
+                      color="#FFFFFF"
+                    />
+                  </TouchableOpacity>
+                </View>
+              )}
 
               {/* Bottom Controls */}
               <View
@@ -155,28 +251,30 @@ export default function VideoPlayerScreen() {
                 </View>
 
                 {/* Control Buttons */}
-                <View style={styles.controlButtons}>
-                  <TouchableOpacity
-                    onPress={togglePlayPause}
-                    style={styles.controlButton}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons
-                      name={isPlaying ? "pause" : "play"}
-                      size={24}
-                      color="#FFFFFF"
-                    />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.controlButton}
-                    activeOpacity={0.7}
-                    onPress={() => {
-                      // TODO: Implement fullscreen
-                    }}
-                  >
-                    <Ionicons name="expand" size={24} color="#FFFFFF" />
-                  </TouchableOpacity>
-                </View>
+                {!isLoading && isReady && (
+                  <View style={styles.controlButtons}>
+                    <TouchableOpacity
+                      onPress={togglePlayPause}
+                      style={styles.controlButton}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons
+                        name={isPlaying ? "pause" : "play"}
+                        size={24}
+                        color="#FFFFFF"
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.controlButton}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        // TODO: Implement fullscreen
+                      }}
+                    >
+                      <Ionicons name="expand" size={24} color="#FFFFFF" />
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
             </View>
           )}
@@ -322,5 +420,51 @@ const styles = StyleSheet.create({
         elevation: 4,
       },
     }),
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+  },
+  loadingText: {
+    ...Typography.bodyMedium,
+    fontSize: 16,
+    color: "#FFFFFF",
+    marginTop: Spacing.md,
+    fontWeight: "600",
+  },
+  errorText: {
+    ...Typography.bodyMedium,
+    fontSize: 16,
+    color: "#FFFFFF",
+    marginTop: Spacing.md,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  retryButton: {
+    marginTop: Spacing.lg,
+    backgroundColor: Colors.primaryGreen,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderRadius: 20,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.primaryGreen,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  retryButtonText: {
+    ...Typography.labelLarge,
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
 });
