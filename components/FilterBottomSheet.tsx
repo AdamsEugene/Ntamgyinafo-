@@ -13,7 +13,6 @@ import {
   ScrollView,
   Platform,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   BottomSheetModal,
   BottomSheetBackdrop,
@@ -58,7 +57,6 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
   initialFilters = {},
   resultsCount,
 }) => {
-  const insets = useSafeAreaInsets();
   const [filters, setFilters] = useState<FilterOptions>(initialFilters);
   const bottomSheetRef = useRef<BottomSheetModal>(null);
 
@@ -160,14 +158,7 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
       backgroundStyle={styles.bottomSheet}
       handleIndicatorStyle={styles.handleIndicator}
     >
-      <BottomSheetView
-        style={[
-          styles.bottomSheetContent,
-          {
-            paddingBottom: Math.max(insets.bottom, Spacing.lg),
-          },
-        ]}
-      >
+      <BottomSheetView style={styles.bottomSheetContent}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Filters</Text>
