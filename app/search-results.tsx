@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import {
   View,
   Text,
@@ -8,7 +14,6 @@ import {
   Image,
   Platform,
   RefreshControl,
-  Modal,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -23,6 +28,11 @@ import {
   FloatingHeaderStyles,
   HEADER_ICON_SIZE,
 } from "@/components/FloatingHeader.styles";
+import {
+  BottomSheetModal,
+  BottomSheetBackdrop,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
 
 interface Property {
   id: string;
@@ -183,8 +193,11 @@ export default function SearchResultsScreen() {
   const [filteredProperties, setFilteredProperties] =
     useState<Property[]>(ALL_PROPERTIES);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
-  const [showSortModal, setShowSortModal] = useState(false);
+  const [showMenuSheet, setShowMenuSheet] = useState(false);
+  const [showSortSheet, setShowSortSheet] = useState(false);
   const [sortOption, setSortOption] = useState<SortOption>("relevance");
+  const menuSheetRef = useRef<BottomSheetModal>(null);
+  const sortSheetRef = useRef<BottomSheetModal>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
@@ -466,6 +479,24 @@ export default function SearchResultsScreen() {
 
   const hasActiveFilters = getActiveFiltersCount() > 0;
 
+  // Control menu sheet visibility
+  useEffect(() => {
+    if (showMenuSheet) {
+      menuSheetRef.current?.present();
+    } else {
+      menuSheetRef.current?.dismiss();
+    }
+  }, [showMenuSheet]);
+
+  // Control sort sheet visibility
+  useEffect(() => {
+    if (showSortSheet) {
+      sortSheetRef.current?.present();
+    } else {
+      sortSheetRef.current?.dismiss();
+    }
+  }, [showSortSheet]);
+
   return (
     <>
       <StatusBar style="dark" />
@@ -538,10 +569,7 @@ export default function SearchResultsScreen() {
 
             <TouchableOpacity
               style={FloatingHeaderStyles.actionButton}
-              onPress={() => {
-                // TODO: Show menu options
-                console.log("Menu pressed");
-              }}
+              onPress={() => setShowMenuSheet(true)}
               activeOpacity={0.7}
             >
               <View style={FloatingHeaderStyles.actionButtonBackground}>
@@ -581,57 +609,6 @@ export default function SearchResultsScreen() {
             </Text>
           </View>
 
-          {/* Action Bar */}
-          <View style={styles.actionBar}>
-            <TouchableOpacity
-              style={styles.actionBarButton}
-              onPress={() => setShowFilterSheet(true)}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="options-outline"
-                size={18}
-                color={Colors.primaryGreen}
-              />
-              <Text style={styles.actionBarButtonText}>Filter</Text>
-              {hasActiveFilters && (
-                <View style={styles.actionBadge}>
-                  <Text style={styles.actionBadgeText}>
-                    {getActiveFiltersCount()}
-                  </Text>
-                </View>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.actionBarButton}
-              onPress={() => setShowSortModal(true)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.actionBarButtonText}>Sort</Text>
-              <Ionicons
-                name="chevron-down"
-                size={16}
-                color={Colors.textPrimary}
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.actionBarButton}
-              onPress={() => {
-                router.push("/(tabs)/map");
-              }}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="map-outline"
-                size={18}
-                color={Colors.primaryGreen}
-              />
-              <Text style={styles.actionBarButtonText}>Map</Text>
-            </TouchableOpacity>
-          </View>
-
           {/* Property List/Grid */}
           {viewMode === "list" ? (
             <View style={styles.listContainer}>
@@ -666,64 +643,148 @@ export default function SearchResultsScreen() {
           )}
         </ScrollView>
 
-        {/* Sort Modal */}
-        <Modal
-          visible={showSortModal}
-          transparent
-          animationType="slide"
-          onRequestClose={() => setShowSortModal(false)}
+        {/* Menu Bottom Sheet */}
+        <BottomSheetModal
+          ref={menuSheetRef}
+          index={0}
+          snapPoints={useMemo(() => ["30%"], [])}
+          enablePanDownToClose
+          onDismiss={() => setShowMenuSheet(false)}
+          backdropComponent={useCallback(
+            (props: any) => (
+              <BottomSheetBackdrop
+                {...props}
+                disappearsOnIndex={-1}
+                appearsOnIndex={0}
+                opacity={0.5}
+              />
+            ),
+            []
+          )}
+          backgroundStyle={styles.bottomSheetBackground}
+          handleIndicatorStyle={styles.handleIndicator}
         >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setShowSortModal(false)}
-          >
-            <View style={styles.sortModal}>
-              <View style={styles.sortModalHeader}>
-                <Text style={styles.sortModalTitle}>Sort By</Text>
+          <BottomSheetView style={styles.menuSheetContent}>
+            <Text style={styles.menuSheetTitle}>Options</Text>
+            <TouchableOpacity
+              style={styles.menuOption}
+              onPress={() => {
+                setShowMenuSheet(false);
+                setTimeout(() => setShowSortSheet(true), 300);
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="swap-vertical-outline"
+                size={24}
+                color={Colors.textPrimary}
+              />
+              <View style={styles.menuOptionContent}>
+                <Text style={styles.menuOptionTitle}>Sort</Text>
+                <Text style={styles.menuOptionSubtitle}>
+                  {SORT_OPTIONS.find((opt) => opt.value === sortOption)?.label}
+                </Text>
+              </View>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={Colors.textSecondary}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuOption}
+              onPress={() => {
+                setShowMenuSheet(false);
+                router.push("/(tabs)/map");
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="map-outline"
+                size={24}
+                color={Colors.textPrimary}
+              />
+              <View style={styles.menuOptionContent}>
+                <Text style={styles.menuOptionTitle}>Map View</Text>
+                <Text style={styles.menuOptionSubtitle}>
+                  View properties on map
+                </Text>
+              </View>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={Colors.textSecondary}
+              />
+            </TouchableOpacity>
+          </BottomSheetView>
+        </BottomSheetModal>
+
+        {/* Sort Bottom Sheet */}
+        <BottomSheetModal
+          ref={sortSheetRef}
+          index={0}
+          snapPoints={useMemo(() => ["50%"], [])}
+          enablePanDownToClose
+          onDismiss={() => setShowSortSheet(false)}
+          backdropComponent={useCallback(
+            (props: any) => (
+              <BottomSheetBackdrop
+                {...props}
+                disappearsOnIndex={-1}
+                appearsOnIndex={0}
+                opacity={0.5}
+              />
+            ),
+            []
+          )}
+          backgroundStyle={styles.bottomSheetBackground}
+          handleIndicatorStyle={styles.handleIndicator}
+        >
+          <BottomSheetView style={styles.sortSheetContent}>
+            <View style={styles.sortSheetHeader}>
+              <Text style={styles.sortSheetTitle}>Sort By</Text>
+              <TouchableOpacity
+                onPress={() => setShowSortSheet(false)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close" size={24} color={Colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.sortOptions}>
+              {SORT_OPTIONS.map((option) => (
                 <TouchableOpacity
-                  onPress={() => setShowSortModal(false)}
+                  key={option.value}
+                  style={[
+                    styles.sortOption,
+                    sortOption === option.value && styles.sortOptionActive,
+                  ]}
+                  onPress={() => {
+                    setSortOption(option.value);
+                    setShowSortSheet(false);
+                  }}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="close" size={24} color={Colors.textPrimary} />
-                </TouchableOpacity>
-              </View>
-              <View style={styles.sortOptions}>
-                {SORT_OPTIONS.map((option) => (
-                  <TouchableOpacity
-                    key={option.value}
+                  <Text
                     style={[
-                      styles.sortOption,
-                      sortOption === option.value && styles.sortOptionActive,
+                      styles.sortOptionText,
+                      sortOption === option.value &&
+                        styles.sortOptionTextActive,
                     ]}
-                    onPress={() => {
-                      setSortOption(option.value);
-                      setShowSortModal(false);
-                    }}
-                    activeOpacity={0.7}
                   >
-                    <Text
-                      style={[
-                        styles.sortOptionText,
-                        sortOption === option.value &&
-                          styles.sortOptionTextActive,
-                      ]}
-                    >
-                      {option.label}
-                    </Text>
-                    {sortOption === option.value && (
-                      <Ionicons
-                        name="checkmark"
-                        size={20}
-                        color={Colors.primaryGreen}
-                      />
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </View>
+                    {option.label}
+                  </Text>
+                  {sortOption === option.value && (
+                    <Ionicons
+                      name="checkmark"
+                      size={20}
+                      color={Colors.primaryGreen}
+                    />
+                  )}
+                </TouchableOpacity>
+              ))}
             </View>
-          </TouchableOpacity>
-        </Modal>
+          </BottomSheetView>
+        </BottomSheetModal>
 
         {/* Filter Bottom Sheet */}
         <FilterBottomSheet
@@ -1026,45 +1087,75 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: Colors.primaryGreen,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end",
-  },
-  sortModal: {
+  bottomSheetBackground: {
     backgroundColor: Colors.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingBottom: Spacing.xl,
-    maxHeight: "70%",
   },
-  sortModalHeader: {
+  handleIndicator: {
+    backgroundColor: Colors.divider,
+  },
+  menuSheetContent: {
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.xl,
+  },
+  menuSheetTitle: {
+    ...Typography.titleLarge,
+    fontSize: 20,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+    marginBottom: Spacing.lg,
+  },
+  menuOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    borderRadius: 12,
+    backgroundColor: Colors.background,
+    marginBottom: Spacing.sm,
+  },
+  menuOptionContent: {
+    flex: 1,
+    marginLeft: Spacing.md,
+  },
+  menuOptionTitle: {
+    ...Typography.titleMedium,
+    fontSize: 16,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs / 2,
+  },
+  menuOptionSubtitle: {
+    ...Typography.bodyMedium,
+    fontSize: 14,
+    color: Colors.textSecondary,
+  },
+  sortSheetContent: {
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.xl,
+  },
+  sortSheetHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
+    marginBottom: Spacing.lg,
   },
-  sortModalTitle: {
+  sortSheetTitle: {
     ...Typography.titleLarge,
     fontSize: 20,
     fontWeight: "700",
     color: Colors.textPrimary,
   },
   sortOptions: {
-    paddingTop: Spacing.md,
+    gap: Spacing.xs,
   },
   sortOption: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: Spacing.xl,
+    paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
+    borderRadius: 12,
+    backgroundColor: Colors.background,
   },
   sortOptionActive: {
     backgroundColor: Colors.primaryLight,
