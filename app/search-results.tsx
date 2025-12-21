@@ -178,7 +178,8 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "bedrooms", label: "Most Bedrooms" },
 ];
 
-const BOTTOM_NAV_TABS: TabItem[] = [
+// Custom bottom navigation tabs for Search Results - only relevant tabs
+const SEARCH_NAV_TABS: TabItem[] = [
   {
     id: "index",
     label: "Home",
@@ -198,16 +199,10 @@ const BOTTOM_NAV_TABS: TabItem[] = [
     activeIcon: "map",
   },
   {
-    id: "messages",
-    label: "Messages",
-    icon: "chatbubbles-outline",
-    activeIcon: "chatbubbles",
-  },
-  {
-    id: "profile",
-    label: "Profile",
-    icon: "person-outline",
-    activeIcon: "person",
+    id: "saved",
+    label: "Saved",
+    icon: "heart-outline",
+    activeIcon: "heart",
   },
 ];
 
@@ -702,9 +697,9 @@ export default function SearchResultsScreen() {
           resultsCount={filteredProperties.length}
         />
 
-        {/* Bottom Navigation */}
+        {/* Bottom Navigation - Search Context Only */}
         <BottomNavigation
-          tabs={BOTTOM_NAV_TABS}
+          tabs={SEARCH_NAV_TABS}
           activeTab="search"
           onTabPress={(tabId) => {
             if (tabId === "index") {
@@ -713,9 +708,9 @@ export default function SearchResultsScreen() {
               router.replace("/(tabs)/search");
             } else if (tabId === "map") {
               router.replace("/(tabs)/map");
-            } else if (tabId === "messages") {
-              router.replace("/(tabs)/messages");
-            } else if (tabId === "profile") {
+            } else if (tabId === "saved") {
+              // TODO: Navigate to Saved Properties screen when implemented
+              // For now, navigate to profile where saved properties might be
               router.replace("/(tabs)/profile");
             }
           }}
