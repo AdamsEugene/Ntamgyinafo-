@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -69,7 +69,7 @@ export default function PropertyGalleryScreen() {
 
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [currentImageIndex, setCurrentImageIndex] = useState(initialIndex);
-  const flatListRef = React.useRef<FlatList>(null);
+  const flatListRef = useRef<FlatList>(null);
 
   const handleImageScroll = (event: any) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
@@ -259,6 +259,7 @@ export default function PropertyGalleryScreen() {
   const renderPhotos = () => (
     <GestureHandlerRootView style={styles.tabContent}>
       <FlatList
+        ref={flatListRef}
         data={MOCK_IMAGES}
         horizontal
         pagingEnabled
@@ -282,6 +283,29 @@ export default function PropertyGalleryScreen() {
           {currentImageIndex + 1}/{MOCK_IMAGES.length}
         </Text>
       </View>
+      {/* Navigation Buttons */}
+      {currentImageIndex > 0 && (
+        <TouchableOpacity
+          style={styles.navButtonLeft}
+          onPress={goToPreviousImage}
+          activeOpacity={0.7}
+        >
+          <View style={styles.navButtonContent}>
+            <Ionicons name="chevron-back" size={28} color="#FFFFFF" />
+          </View>
+        </TouchableOpacity>
+      )}
+      {currentImageIndex < MOCK_IMAGES.length - 1 && (
+        <TouchableOpacity
+          style={styles.navButtonRight}
+          onPress={goToNextImage}
+          activeOpacity={0.7}
+        >
+          <View style={styles.navButtonContent}>
+            <Ionicons name="chevron-forward" size={28} color="#FFFFFF" />
+          </View>
+        </TouchableOpacity>
+      )}
     </GestureHandlerRootView>
   );
 
@@ -676,5 +700,38 @@ const styles = StyleSheet.create({
   tabTextActive: {
     color: Colors.primaryGreen,
     fontWeight: "700",
+  },
+  navButtonLeft: {
+    position: "absolute",
+    left: Spacing.lg,
+    top: "50%",
+    marginTop: -30,
+    zIndex: 50,
+  },
+  navButtonRight: {
+    position: "absolute",
+    right: Spacing.lg,
+    top: "50%",
+    marginTop: -30,
+    zIndex: 50,
+  },
+  navButtonContent: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
 });
