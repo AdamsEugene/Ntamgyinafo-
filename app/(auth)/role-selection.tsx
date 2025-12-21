@@ -42,7 +42,6 @@ export default function RoleSelectionScreen() {
   const insets = useSafeAreaInsets();
 
   const role = (params.role as "buyer" | "owner") || "buyer";
-  // const fullName = params.fullName || ""; // Available if needed for display
 
   // Buyer step state
   const [currentStep, setCurrentStep] = useState(1);
@@ -101,16 +100,6 @@ export default function RoleSelectionScreen() {
   };
 
   const handleCreateAccount = () => {
-    // TODO: Create buyer account
-    console.log("Creating buyer account:", {
-      preferredLocations: selectedLocations,
-      budgetRange: {
-        min: minBudget ? parseFloat(minBudget) : null,
-        max: maxBudget ? parseFloat(maxBudget) : null,
-      },
-      propertyTypes: selectedPropertyTypes,
-      profilePhoto,
-    });
     router.replace("/(tabs)");
   };
 
@@ -119,12 +108,6 @@ export default function RoleSelectionScreen() {
       // Show error - both required
       return;
     }
-    // TODO: Submit owner verification
-    console.log("Submitting owner verification:", {
-      idDocument,
-      selfie,
-      profilePhoto: ownerProfilePhoto,
-    });
     router.push("/(auth)/pending-verification");
   };
 
@@ -782,6 +765,50 @@ export default function RoleSelectionScreen() {
                       </TouchableOpacity>
                     )}
                   </View>
+
+                  {/* Upload Options */}
+                  {!ownerProfilePhoto && (
+                    <View style={styles.photoOptionsContainer}>
+                      <TouchableOpacity
+                        style={styles.photoOptionButton}
+                        onPress={() => {
+                          // TODO: Open camera
+                          console.log("Open camera");
+                          setOwnerProfilePhoto("demo-photo");
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.photoOptionIcon}>
+                          <Ionicons
+                            name="camera"
+                            size={24}
+                            color={Colors.primaryGreen}
+                          />
+                        </View>
+                        <Text style={styles.photoOptionText}>Take Photo</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.photoOptionButton}
+                        onPress={() => {
+                          // TODO: Open gallery
+                          console.log("Open gallery");
+                          setOwnerProfilePhoto("demo-photo");
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.photoOptionIcon}>
+                          <Ionicons
+                            name="images-outline"
+                            size={24}
+                            color={Colors.primaryGreen}
+                          />
+                        </View>
+                        <Text style={styles.photoOptionText}>
+                          Choose from Gallery
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </View>
 
                 <Button

@@ -80,3 +80,11 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Expo
+.expo/
+.expo-shared/
+
+# Native build directories
+android/
+ios/
