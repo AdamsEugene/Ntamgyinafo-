@@ -76,6 +76,27 @@ export default function RootLayout() {
                 }}
               />
               <Stack.Screen
+                name="subscription-plans"
+                options={{
+                  headerShown: false,
+                  presentation: "card",
+                }}
+              />
+              <Stack.Screen
+                name="payment"
+                options={{
+                  headerShown: false,
+                  presentation: "card",
+                }}
+              />
+              <Stack.Screen
+                name="payment-receipt"
+                options={{
+                  headerShown: false,
+                  presentation: "card",
+                }}
+              />
+              <Stack.Screen
                 name="modal"
                 options={{ presentation: "modal", title: "Modal" }}
               />

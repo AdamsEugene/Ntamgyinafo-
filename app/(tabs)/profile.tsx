@@ -42,7 +42,7 @@ export default function ProfileScreen() {
       icon: "card",
       label: "Subscription",
       value: "Basic Plan",
-      onPress: () => {},
+      onPress: () => router.push("/subscription-plans"),
     },
     {
       id: "payment",
