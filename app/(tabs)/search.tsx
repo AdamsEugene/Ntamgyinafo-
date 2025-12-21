@@ -1112,7 +1112,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   gridCard: {
-    width: "48%",
+    width: "100%",
     backgroundColor: Colors.surface,
     borderRadius: 20,
     overflow: "hidden",
