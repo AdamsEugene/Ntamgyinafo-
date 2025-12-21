@@ -372,27 +372,50 @@ export default function MapScreen() {
           }}
         >
           {/* Property Markers */}
-          {filteredProperties.map((property) => (
-            <Marker
-              key={property.id}
-              coordinate={{
-                latitude: property.latitude,
-                longitude: property.longitude,
-              }}
-              onPress={() => handleMarkerPress(property)}
-              tracksViewChanges={false}
-              anchor={{ x: 0.5, y: 1 }}
-            >
-              <View style={styles.markerContainer}>
-                <View style={styles.markerPin}>
-                  <Text style={styles.markerPrice} numberOfLines={1}>
-                    {formatPrice(property.price)}
-                  </Text>
-                </View>
-                <View style={styles.markerDot} />
-              </View>
-            </Marker>
-          ))}
+          {filteredProperties.map((property) => {
+            const isSelected = selectedProperty?.id === property.id;
+            return (
+              <Marker
+                key={property.id}
+                coordinate={{
+                  latitude: property.latitude,
+                  longitude: property.longitude,
+                }}
+                onPress={() => handleMarkerPress(property)}
+                tracksViewChanges={isSelected}
+                anchor={{ x: 0.5, y: 1 }}
+              >
+                {isSelected ? (
+                  <View style={styles.activeMarkerContainer}>
+                    <View style={styles.activeMarkerCard}>
+                      <Image
+                        source={{ uri: property.image }}
+                        style={styles.activeMarkerImage}
+                      />
+                      <View style={styles.activeMarkerPriceBadge}>
+                        <Text
+                          style={styles.activeMarkerPrice}
+                          numberOfLines={1}
+                        >
+                          {formatPrice(property.price)}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.activeMarkerPointer} />
+                  </View>
+                ) : (
+                  <View style={styles.markerContainer}>
+                    <View style={styles.markerPin}>
+                      <Text style={styles.markerPrice} numberOfLines={1}>
+                        {formatPrice(property.price)}
+                      </Text>
+                    </View>
+                    <View style={styles.markerDot} />
+                  </View>
+                )}
+              </Marker>
+            );
+          })}
         </MapView>
 
         {/* Property Popup Card */}
@@ -672,6 +695,60 @@ const styles = StyleSheet.create({
     borderLeftWidth: 6,
     borderRightWidth: 6,
     borderTopWidth: 8,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+    borderTopColor: Colors.primaryGreen,
+    marginTop: -1,
+  },
+  // Active Marker Styles (when selected)
+  activeMarkerContainer: {
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
+  activeMarkerCard: {
+    width: 90,
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    overflow: "hidden",
+    borderWidth: 3,
+    borderColor: Colors.primaryGreen,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 10,
+      },
+    }),
+  },
+  activeMarkerImage: {
+    width: "100%",
+    height: 70,
+    backgroundColor: Colors.divider,
+  },
+  activeMarkerPriceBadge: {
+    backgroundColor: Colors.primaryGreen,
+    paddingVertical: 6,
+    paddingHorizontal: Spacing.sm,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  activeMarkerPrice: {
+    ...Typography.labelMedium,
+    color: Colors.surface,
+    fontWeight: "700",
+    fontSize: 11,
+    textAlign: "center",
+  },
+  activeMarkerPointer: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 10,
+    borderRightWidth: 10,
+    borderTopWidth: 12,
     borderLeftColor: "transparent",
     borderRightColor: "transparent",
     borderTopColor: Colors.primaryGreen,
