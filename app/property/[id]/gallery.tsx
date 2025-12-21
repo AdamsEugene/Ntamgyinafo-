@@ -672,12 +672,14 @@ const styles = StyleSheet.create({
   videoContainer: {
     paddingBottom: Spacing["2xl"],
     backgroundColor: "#000000",
+    width: "100%",
   },
   videoHeader: {
     paddingHorizontal: Spacing.xl,
     paddingBottom: Spacing.lg,
     backgroundColor: "#000000",
     zIndex: 1,
+    width: "100%",
   },
   videoHeaderContent: {
     flexDirection: "row",
@@ -702,11 +704,11 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   videoCard: {
-    marginHorizontal: Spacing.xl,
     marginBottom: Spacing.xl,
-    borderRadius: 20,
+    borderRadius: 12,
     overflow: "hidden",
     backgroundColor: "#FFFFFF",
+    width: "100%",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
