@@ -370,24 +370,27 @@ export default function MapScreen() {
           style={[
             FloatingHeaderStyles.floatingHeader,
             {
-              paddingTop: insets.top + Spacing.sm,
+              paddingTop: insets.top + Spacing.md,
               paddingBottom: Spacing.sm,
             },
           ]}
         >
-          <TouchableOpacity
-            style={FloatingHeaderStyles.actionButtonBackground}
-            onPress={() => router.back()}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="arrow-back"
-              size={HEADER_ICON_SIZE}
-              color={Colors.textPrimary}
-            />
-          </TouchableOpacity>
-
-          <Text style={FloatingHeaderStyles.headerTitle}>Map View</Text>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={FloatingHeaderStyles.backButton}
+              activeOpacity={0.7}
+            >
+              <View style={FloatingHeaderStyles.backButtonCircle}>
+                <Ionicons
+                  name="arrow-back"
+                  size={HEADER_ICON_SIZE}
+                  color={Colors.textPrimary}
+                />
+              </View>
+            </TouchableOpacity>
+            <Text style={styles.headerTitleText}>Map View</Text>
+          </View>
 
           <View style={styles.headerRight}>
             <TouchableOpacity
@@ -434,21 +437,23 @@ export default function MapScreen() {
           onMapReady={() => {
             // Fit map to show all markers
             if (filteredProperties.length > 0) {
-              mapRef.current?.fitToCoordinates(
-                filteredProperties.map((p) => ({
-                  latitude: p.latitude,
-                  longitude: p.longitude,
-                })),
-                {
-                  edgePadding: {
-                    top: 100,
-                    right: 50,
-                    bottom: 200,
-                    left: 50,
-                  },
-                  animated: true,
-                }
-              );
+              setTimeout(() => {
+                mapRef.current?.fitToCoordinates(
+                  filteredProperties.map((p) => ({
+                    latitude: p.latitude,
+                    longitude: p.longitude,
+                  })),
+                  {
+                    edgePadding: {
+                      top: 150,
+                      right: 50,
+                      bottom: 250,
+                      left: 50,
+                    },
+                    animated: true,
+                  }
+                );
+              }, 500);
             }
           }}
         >
@@ -461,10 +466,12 @@ export default function MapScreen() {
                 longitude: property.longitude,
               }}
               onPress={() => handleMarkerPress(property)}
+              tracksViewChanges={false}
+              anchor={{ x: 0.5, y: 1 }}
             >
               <View style={styles.markerContainer}>
                 <View style={styles.markerPin}>
-                  <Text style={styles.markerPrice}>
+                  <Text style={styles.markerPrice} numberOfLines={1}>
                     {formatPrice(property.price)}
                   </Text>
                 </View>
@@ -614,6 +621,18 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
   },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    flex: 1,
+  },
+  headerTitleText: {
+    ...Typography.titleLarge,
+    fontSize: 20,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+  },
   headerRight: {
     flexDirection: "row",
     alignItems: "center",
@@ -624,6 +643,7 @@ const styles = StyleSheet.create({
   },
   markerContainer: {
     alignItems: "center",
+    justifyContent: "flex-end",
   },
   markerPin: {
     backgroundColor: Colors.primaryGreen,
@@ -631,7 +651,9 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
     minWidth: 60,
+    maxWidth: 100,
     alignItems: "center",
+    justifyContent: "center",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -648,7 +670,8 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     color: Colors.surface,
     fontWeight: "600",
-    fontSize: 11,
+    fontSize: 10,
+    textAlign: "center",
   },
   markerDot: {
     width: 0,
