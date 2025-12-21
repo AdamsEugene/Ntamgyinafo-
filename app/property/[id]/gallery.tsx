@@ -72,6 +72,9 @@ export default function PropertyGalleryScreen() {
   const [imageRotations, setImageRotations] = useState<{
     [key: number]: Animated.Value;
   }>({});
+  const [imageTranslations, setImageTranslations] = useState<{
+    [key: number]: Animated.ValueXY;
+  }>({});
   const doubleTapRefs = useRef<{ [key: number]: any }>({});
   const pinchRefs = useRef<{ [key: number]: any }>({});
   const panRefs = useRef<{ [key: number]: any }>({});
@@ -229,7 +232,7 @@ export default function PropertyGalleryScreen() {
                           ],
                         },
                       ]}
-                      resizeMode="contain"
+                      resizeMode="cover"
                     />
                   </Animated.View>
                 </PanGestureHandler>
@@ -281,11 +284,6 @@ export default function PropertyGalleryScreen() {
       <View style={styles.counterContainer}>
         <Text style={styles.counterText}>
           {currentImageIndex + 1}/{MOCK_IMAGES.length}
-        </Text>
-      </View>
-      <View style={styles.instructionsContainer}>
-        <Text style={styles.instructionsText}>
-          Pinch to zoom • Double tap to zoom • Tap rotate to rotate
         </Text>
       </View>
     </View>
@@ -345,34 +343,19 @@ export default function PropertyGalleryScreen() {
     <>
       <StatusBar style="light" />
       <View style={styles.container}>
-        {/* Header */}
-        <View
+        {/* Back Button */}
+        <TouchableOpacity
+          onPress={() => router.back()}
           style={[
-            styles.header,
+            styles.backButton,
             {
-              paddingTop: insets.top + Spacing.sm,
-              paddingBottom: Spacing.md,
+              top: insets.top + Spacing.md,
             },
           ]}
+          activeOpacity={0.7}
         >
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.closeButton}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="close" size={28} color="#FFFFFF" />
-          </TouchableOpacity>
-          <View style={styles.counterHeader}>
-            <Text style={styles.counterHeaderText}>
-              {activeTab === "photos"
-                ? `${currentImageIndex + 1}/${MOCK_IMAGES.length}`
-                : activeTab === "videos"
-                ? `${MOCK_VIDEOS.length} Videos`
-                : "360° View"}
-            </Text>
-          </View>
-          <View style={styles.placeholder} />
-        </View>
+          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
 
         {/* Content */}
         {activeTab === "photos" && renderPhotos()}
@@ -461,38 +444,27 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#000000",
   },
-  header: {
+  backButton: {
     position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.lg,
+    left: Spacing.lg,
     zIndex: 100,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  closeButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
-  },
-  counterHeader: {
-    flex: 1,
-    alignItems: "center",
-  },
-  counterHeaderText: {
-    ...Typography.titleMedium,
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#FFFFFF",
-  },
-  placeholder: {
-    width: 44,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   tabContent: {
     flex: 1,
@@ -519,6 +491,7 @@ const styles = StyleSheet.create({
   fullImage: {
     width: SCREEN_WIDTH,
     height: SCREEN_HEIGHT,
+    resizeMode: "cover",
   },
   imageControls: {
     position: "absolute",
