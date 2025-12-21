@@ -11,7 +11,15 @@ import {
   StyleSheet,
   TouchableOpacity,
   Platform,
+  TextInput,
+  Dimensions,
 } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  runOnJS,
+} from "react-native-reanimated";
 import {
   BottomSheetModal,
   BottomSheetBackdrop,
@@ -38,7 +46,7 @@ interface FilterBottomSheetProps {
   resultsCount?: number;
 }
 
-const PROPERTY_TYPES = ["House", "Apartment", "Land", "Commercial"];
+const PROPERTY_TYPES = ["House", "Apartment", "Land", "Commercial", "All"];
 const BEDROOM_OPTIONS = [null, 1, 2, 3, 4, 5]; // null = Any
 const AMENITIES = [
   "Water",
@@ -49,6 +57,118 @@ const AMENITIES = [
   "Pool",
 ];
 
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const PRICE_MIN = 0;
+const PRICE_MAX = 5000000; // 5M max
+
+// Dual Range Slider Component
+const DualRangeSlider: React.FC<{
+  minValue: number;
+  maxValue: number;
+  onMinChange: (value: number) => void;
+  onMaxChange: (value: number) => void;
+  min: number;
+  max: number;
+}> = ({ minValue, maxValue, onMinChange, onMaxChange, min, max }) => {
+  const sliderWidth = SCREEN_WIDTH - Spacing.xl * 4; // Account for padding
+  const minPos = useSharedValue(0);
+  const maxPos = useSharedValue(sliderWidth);
+  const minStartPos = useSharedValue(0);
+  const maxStartPos = useSharedValue(0);
+
+  useEffect(() => {
+    const minPercent = ((minValue - min) / (max - min)) * 100;
+    const maxPercent = ((maxValue - min) / (max - min)) * 100;
+    minPos.value = (minPercent / 100) * sliderWidth;
+    maxPos.value = (maxPercent / 100) * sliderWidth;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [minValue, maxValue, min, max, sliderWidth]);
+
+  const getValueFromPosition = (x: number) => {
+    const percent = Math.max(0, Math.min(100, (x / sliderWidth) * 100));
+    return Math.round(min + (percent / 100) * (max - min));
+  };
+
+  const updateMinValue = (value: number) => {
+    onMinChange(value);
+  };
+
+  const updateMaxValue = (value: number) => {
+    onMaxChange(value);
+  };
+
+  const minGesture = Gesture.Pan()
+    .onStart(() => {
+      minStartPos.value = minPos.value;
+    })
+    .onUpdate((event) => {
+      const newPos = Math.max(
+        0,
+        Math.min(maxPos.value - 20, minStartPos.value + event.translationX)
+      );
+      minPos.value = newPos;
+      const value = getValueFromPosition(newPos);
+      if (value <= maxValue) {
+        runOnJS(updateMinValue)(value);
+      }
+    })
+    .onEnd(() => {
+      const value = getValueFromPosition(minPos.value);
+      if (value <= maxValue) {
+        runOnJS(updateMinValue)(value);
+      }
+    });
+
+  const maxGesture = Gesture.Pan()
+    .onStart(() => {
+      maxStartPos.value = maxPos.value;
+    })
+    .onUpdate((event) => {
+      const newPos = Math.min(
+        sliderWidth,
+        Math.max(minPos.value + 20, maxStartPos.value + event.translationX)
+      );
+      maxPos.value = newPos;
+      const value = getValueFromPosition(newPos);
+      if (value >= minValue) {
+        runOnJS(updateMaxValue)(value);
+      }
+    })
+    .onEnd(() => {
+      const value = getValueFromPosition(maxPos.value);
+      if (value >= minValue) {
+        runOnJS(updateMaxValue)(value);
+      }
+    });
+
+  const minThumbStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: minPos.value - 12 }],
+  }));
+
+  const maxThumbStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: maxPos.value - 12 }],
+  }));
+
+  const activeTrackStyle = useAnimatedStyle(() => ({
+    left: minPos.value,
+    width: maxPos.value - minPos.value,
+  }));
+
+  return (
+    <View style={styles.sliderContainer}>
+      <View style={styles.sliderTrack}>
+        <Animated.View style={[styles.sliderActiveTrack, activeTrackStyle]} />
+        <GestureDetector gesture={minGesture}>
+          <Animated.View style={[styles.sliderThumb, minThumbStyle]} />
+        </GestureDetector>
+        <GestureDetector gesture={maxGesture}>
+          <Animated.View style={[styles.sliderThumb, maxThumbStyle]} />
+        </GestureDetector>
+      </View>
+    </View>
+  );
+};
+
 export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
   visible,
   onClose,
@@ -57,6 +177,8 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
   resultsCount,
 }) => {
   const [filters, setFilters] = useState<FilterOptions>(initialFilters);
+  const [minPriceInput, setMinPriceInput] = useState("");
+  const [maxPriceInput, setMaxPriceInput] = useState("");
   const bottomSheetRef = useRef<BottomSheetModal>(null);
 
   // Snap points for the bottom sheet
@@ -66,6 +188,8 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
   useEffect(() => {
     if (visible) {
       setFilters(initialFilters);
+      setMinPriceInput(initialFilters.minPrice?.toString() || "");
+      setMaxPriceInput(initialFilters.maxPrice?.toString() || "");
     }
   }, [initialFilters, visible]);
 
@@ -99,9 +223,15 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
 
   const togglePropertyType = (type: string) => {
     setFilters((prev) => {
+      if (type === "All") {
+        // If "All" is selected, clear all property types
+        return { ...prev, propertyTypes: [] };
+      }
       const types = prev.propertyTypes || [];
       if (types.includes(type)) {
-        return { ...prev, propertyTypes: types.filter((t) => t !== type) };
+        const newTypes = types.filter((t) => t !== type);
+        // If no types selected, it means "All" is effectively selected
+        return { ...prev, propertyTypes: newTypes };
       }
       return { ...prev, propertyTypes: [...types, type] };
     });
@@ -145,6 +275,46 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
       return `${(price / 1000).toFixed(0)}K`;
     }
     return price.toString();
+  };
+
+  const formatPriceRange = (): string => {
+    const min = filters.minPrice || 0;
+    const max = filters.maxPrice;
+    const minStr = formatPrice(min);
+    const maxStr = max ? formatPrice(max) : "2M+";
+    return `${minStr} - ${maxStr}`;
+  };
+
+  const handleMinPriceChange = (text: string) => {
+    setMinPriceInput(text);
+    const value = parseInt(text.replace(/[^0-9]/g, ""), 10);
+    if (!isNaN(value)) {
+      setFilters((prev) => ({
+        ...prev,
+        minPrice: Math.max(PRICE_MIN, Math.min(value, PRICE_MAX)),
+      }));
+    } else if (text === "") {
+      setFilters((prev) => ({
+        ...prev,
+        minPrice: undefined,
+      }));
+    }
+  };
+
+  const handleMaxPriceChange = (text: string) => {
+    setMaxPriceInput(text);
+    const value = parseInt(text.replace(/[^0-9]/g, ""), 10);
+    if (!isNaN(value)) {
+      setFilters((prev) => ({
+        ...prev,
+        maxPrice: Math.max(PRICE_MIN, Math.min(value, PRICE_MAX)),
+      }));
+    } else if (text === "") {
+      setFilters((prev) => ({
+        ...prev,
+        maxPrice: undefined,
+      }));
+    }
   };
 
   return (
@@ -235,68 +405,100 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
           {/* Price Range */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Price Range (GHS)</Text>
-            <View style={styles.priceRangeContainer}>
-              <View style={styles.priceInputRow}>
-                <View style={styles.priceInput}>
-                  <Text style={styles.priceLabel}>Min</Text>
-                  <View style={styles.priceInputWrapper}>
-                    <Text style={styles.currencySymbol}>GHS</Text>
-                    <Text style={styles.priceDisplay}>
-                      {filters.minPrice ? formatPrice(filters.minPrice) : "0"}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.priceInput}>
-                  <Text style={styles.priceLabel}>Max</Text>
-                  <View style={styles.priceInputWrapper}>
-                    <Text style={styles.currencySymbol}>GHS</Text>
-                    <Text style={styles.priceDisplay}>
-                      {filters.maxPrice
-                        ? formatPrice(filters.maxPrice)
-                        : "No limit"}
-                    </Text>
-                  </View>
+            {/* Combined Display */}
+            <View style={styles.priceRangeDisplay}>
+              <Text style={styles.priceRangeDisplayText}>
+                {formatPriceRange()}
+              </Text>
+            </View>
+            {/* Dual Range Slider */}
+            <View style={styles.sliderWrapper}>
+              <DualRangeSlider
+                minValue={filters.minPrice || PRICE_MIN}
+                maxValue={filters.maxPrice || PRICE_MAX}
+                onMinChange={(value) => {
+                  setFilters((prev) => ({ ...prev, minPrice: value }));
+                  setMinPriceInput(value.toString());
+                }}
+                onMaxChange={(value) => {
+                  setFilters((prev) => ({ ...prev, maxPrice: value }));
+                  setMaxPriceInput(value.toString());
+                }}
+                min={PRICE_MIN}
+                max={PRICE_MAX}
+              />
+            </View>
+            {/* Min/Max Inputs */}
+            <View style={styles.priceInputRow}>
+              <View style={styles.priceInput}>
+                <Text style={styles.priceLabel}>Min</Text>
+                <View style={styles.priceInputWrapper}>
+                  <Text style={styles.currencySymbol}>GHS</Text>
+                  <TextInput
+                    style={styles.priceInputField}
+                    value={minPriceInput}
+                    onChangeText={handleMinPriceChange}
+                    placeholder="0"
+                    keyboardType="numeric"
+                    placeholderTextColor={Colors.textSecondary}
+                  />
                 </View>
               </View>
-              {/* Price Presets */}
-              <View style={styles.pricePresets}>
-                {[
-                  { label: "Under 100K", min: 0, max: 100000 },
-                  { label: "100K - 500K", min: 100000, max: 500000 },
-                  { label: "500K - 1M", min: 500000, max: 1000000 },
-                  { label: "1M+", min: 1000000, max: undefined },
-                ].map((preset, index) => {
-                  const isSelected =
-                    filters.minPrice === preset.min &&
-                    filters.maxPrice === preset.max;
-                  return (
-                    <TouchableOpacity
-                      key={index}
+              <View style={styles.priceInput}>
+                <Text style={styles.priceLabel}>Max</Text>
+                <View style={styles.priceInputWrapper}>
+                  <Text style={styles.currencySymbol}>GHS</Text>
+                  <TextInput
+                    style={styles.priceInputField}
+                    value={maxPriceInput}
+                    onChangeText={handleMaxPriceChange}
+                    placeholder="No limit"
+                    keyboardType="numeric"
+                    placeholderTextColor={Colors.textSecondary}
+                  />
+                </View>
+              </View>
+            </View>
+            {/* Price Presets */}
+            <View style={styles.pricePresets}>
+              {[
+                { label: "Under 100K", min: 0, max: 100000 },
+                { label: "100K - 500K", min: 100000, max: 500000 },
+                { label: "500K - 1M", min: 500000, max: 1000000 },
+                { label: "1M+", min: 1000000, max: undefined },
+              ].map((preset, index) => {
+                const isSelected =
+                  filters.minPrice === preset.min &&
+                  filters.maxPrice === preset.max;
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.pricePresetChip,
+                      isSelected && styles.pricePresetChipSelected,
+                    ]}
+                    onPress={() => {
+                      setFilters({
+                        ...filters,
+                        minPrice: preset.min,
+                        maxPrice: preset.max,
+                      });
+                      setMinPriceInput(preset.min.toString());
+                      setMaxPriceInput(preset.max?.toString() || "");
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text
                       style={[
-                        styles.pricePresetChip,
-                        isSelected && styles.pricePresetChipSelected,
+                        styles.pricePresetText,
+                        isSelected && styles.pricePresetTextSelected,
                       ]}
-                      onPress={() =>
-                        setFilters({
-                          ...filters,
-                          minPrice: preset.min,
-                          maxPrice: preset.max,
-                        })
-                      }
-                      activeOpacity={0.7}
                     >
-                      <Text
-                        style={[
-                          styles.pricePresetText,
-                          isSelected && styles.pricePresetTextSelected,
-                        ]}
-                      >
-                        {preset.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+                      {preset.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
 
@@ -472,9 +674,77 @@ const styles = StyleSheet.create({
   priceRangeContainer: {
     gap: Spacing.md,
   },
+  priceRangeDisplay: {
+    backgroundColor: Colors.primaryGreen,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: 16,
+    marginBottom: Spacing.xl,
+    alignItems: "center",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  priceRangeDisplayText: {
+    ...Typography.headlineMedium,
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  sliderWrapper: {
+    marginBottom: Spacing.xl,
+    paddingHorizontal: Spacing.xs,
+  },
+  sliderContainer: {
+    height: 50,
+    justifyContent: "center",
+    paddingVertical: Spacing.md,
+  },
+  sliderTrack: {
+    height: 6,
+    backgroundColor: Colors.divider,
+    borderRadius: 3,
+    position: "relative",
+  },
+  sliderActiveTrack: {
+    height: 6,
+    backgroundColor: Colors.primaryGreen,
+    borderRadius: 3,
+    position: "absolute",
+  },
+  sliderThumb: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: Colors.primaryGreen,
+    position: "absolute",
+    top: -9,
+    borderWidth: 4,
+    borderColor: Colors.surface,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
+  },
   priceInputRow: {
     flexDirection: "row",
     gap: Spacing.md,
+    marginBottom: Spacing.lg,
   },
   priceInput: {
     flex: 1,
@@ -489,13 +759,14 @@ const styles = StyleSheet.create({
   priceInputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F8F9FA",
+    backgroundColor: Colors.surface,
     borderRadius: 12,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
     borderWidth: 1.5,
     borderColor: Colors.divider,
     gap: Spacing.xs,
+    minHeight: 48,
   },
   currencySymbol: {
     ...Typography.labelLarge,
@@ -509,10 +780,25 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: Colors.textPrimary,
   },
+  priceInputField: {
+    ...Typography.bodyMedium,
+    fontSize: 16,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+    flex: 1,
+    padding: 0,
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        textAlignVertical: "center",
+      },
+    }),
+  },
   pricePresets: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: Spacing.sm,
+    marginTop: Spacing.md,
   },
   pricePresetChip: {
     paddingHorizontal: Spacing.md,
