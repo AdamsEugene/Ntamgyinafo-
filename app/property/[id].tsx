@@ -16,7 +16,6 @@ import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
 import { Colors, Typography, Spacing } from "@/constants/design";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -159,12 +158,6 @@ export default function PropertyDetailScreen() {
               )}
             />
 
-            {/* Gradient Overlay for Header */}
-            <LinearGradient
-              colors={["rgba(0,0,0,0.6)", "rgba(0,0,0,0.3)", "transparent"]}
-              style={styles.headerGradient}
-            />
-
             {/* Header - Overlay on Image */}
             <View
               style={[
@@ -181,7 +174,11 @@ export default function PropertyDetailScreen() {
                 activeOpacity={0.7}
               >
                 <View style={styles.headerButtonBackground}>
-                  <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+                  <Ionicons
+                    name="arrow-back"
+                    size={22}
+                    color={Colors.textPrimary}
+                  />
                 </View>
               </TouchableOpacity>
 
@@ -194,7 +191,11 @@ export default function PropertyDetailScreen() {
                   activeOpacity={0.7}
                 >
                   <View style={styles.headerButtonBackground}>
-                    <Ionicons name="share-outline" size={22} color="#FFFFFF" />
+                    <Ionicons
+                      name="share-outline"
+                      size={22}
+                      color={Colors.textPrimary}
+                    />
                   </View>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -206,7 +207,7 @@ export default function PropertyDetailScreen() {
                     <Ionicons
                       name={isSaved ? "heart" : "heart-outline"}
                       size={22}
-                      color={isSaved ? "#FF3B30" : "#FFFFFF"}
+                      color={isSaved ? "#FF3B30" : Colors.textPrimary}
                     />
                   </View>
                 </TouchableOpacity>
@@ -449,14 +450,6 @@ const styles = StyleSheet.create({
     position: "relative",
     marginTop: 0,
   },
-  headerGradient: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 200,
-    zIndex: 1,
-  },
   header: {
     position: "absolute",
     top: 0,
@@ -477,15 +470,14 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
     justifyContent: "center",
     alignItems: "center",
-    backdropFilter: "blur(10px)",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
+        shadowOpacity: 0.15,
         shadowRadius: 8,
       },
       android: {
@@ -518,7 +510,7 @@ const styles = StyleSheet.create({
   },
   imageCounter: {
     position: "absolute",
-    top: Spacing.xl + 60,
+    top: Spacing.xl + 120,
     right: Spacing.lg,
     backgroundColor: "rgba(0, 0, 0, 0.7)",
     paddingHorizontal: Spacing.md,
