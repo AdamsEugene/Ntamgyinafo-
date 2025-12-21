@@ -1,101 +1,1245 @@
-import { YStack, XStack, Button, Text, Card, H2, Paragraph, Separator } from 'tamagui';
-import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet } from 'react-native';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  RefreshControl,
+  Platform,
+  FlatList,
+} from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { Colors, Typography, Spacing } from "@/constants/design";
 
-export default function HomeScreen() {
+interface Property {
+  id: string;
+  title: string;
+  location: string;
+  price: number;
+  image: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  isSaved?: boolean;
+}
+
+const CATEGORIES = [
+  {
+    id: "house",
+    label: "House",
+    icon: "home-outline" as const,
+  },
+  {
+    id: "apartment",
+    label: "Apartment",
+    icon: "business-outline" as const,
+  },
+  {
+    id: "land",
+    label: "Land",
+    icon: "map-outline" as const,
+  },
+  {
+    id: "commercial",
+    label: "Commercial",
+    icon: "storefront-outline" as const,
+  },
+];
+
+// Mock data - replace with actual API data
+const FEATURED_PROPERTIES: Property[] = [
+  {
+    id: "1",
+    title: "4 Bedroom House in East Legon",
+    location: "East Legon, Accra",
+    price: 850000,
+    image:
+      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=500&fit=crop",
+    bedrooms: 4,
+    bathrooms: 3,
+    isSaved: false,
+  },
+  {
+    id: "2",
+    title: "Modern 3 Bedroom Apartment",
+    location: "Airport Residential, Accra",
+    price: 650000,
+    image:
+      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&h=500&fit=crop",
+    bedrooms: 3,
+    bathrooms: 2,
+    isSaved: true,
+  },
+  {
+    id: "3",
+    title: "Luxury Villa with Pool",
+    location: "Labone, Accra",
+    price: 1200000,
+    image:
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=500&fit=crop",
+    bedrooms: 5,
+    bathrooms: 4,
+    isSaved: false,
+  },
+];
+
+const NEAR_YOU_PROPERTIES: Property[] = [
+  {
+    id: "4",
+    title: "2 Bedroom House for Rent",
+    location: "Cantonments, Accra",
+    price: 3500,
+    image:
+      "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=300&h=300&fit=crop",
+    bedrooms: 2,
+    bathrooms: 1,
+    isSaved: false,
+  },
+  {
+    id: "5",
+    title: "Spacious 3 Bedroom Apartment",
+    location: "Osu, Accra",
+    price: 4500,
+    image:
+      "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=300&h=300&fit=crop",
+    bedrooms: 3,
+    bathrooms: 2,
+    isSaved: true,
+  },
+  {
+    id: "6",
+    title: "Cozy 1 Bedroom Studio",
+    location: "Adabraka, Accra",
+    price: 2000,
+    image:
+      "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=300&h=300&fit=crop",
+    bedrooms: 1,
+    bathrooms: 1,
+    isSaved: false,
+  },
+];
+
+const NEW_LISTINGS: Property[] = [
+  {
+    id: "7",
+    title: "Modern 2 Bedroom Apartment",
+    location: "Teshie, Accra",
+    price: 2800,
+    image:
+      "https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=300&h=300&fit=crop",
+    bedrooms: 2,
+    bathrooms: 2,
+    isSaved: false,
+  },
+  {
+    id: "8",
+    title: "Luxury 4 Bedroom Duplex",
+    location: "Spintex, Accra",
+    price: 1200000,
+    image:
+      "https://images.unsplash.com/photo-1600585154084-4c5f0ea33f38?w=300&h=300&fit=crop",
+    bedrooms: 4,
+    bathrooms: 3,
+    isSaved: false,
+  },
+  {
+    id: "9",
+    title: "Affordable 1 Bedroom Flat",
+    location: "Madina, Accra",
+    price: 1800,
+    image:
+      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=300&h=300&fit=crop",
+    bedrooms: 1,
+    bathrooms: 1,
+    isSaved: false,
+  },
+];
+
+const POPULAR_AREAS = [
+  {
+    id: "east-legon",
+    name: "East Legon",
+    count: 234,
+    image:
+      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=200&h=150&fit=crop",
+  },
+  {
+    id: "airport",
+    name: "Airport Residential",
+    count: 189,
+    image:
+      "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=200&h=150&fit=crop",
+  },
+  {
+    id: "labone",
+    name: "Labone",
+    count: 156,
+    image:
+      "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=200&h=150&fit=crop",
+  },
+  {
+    id: "cantonments",
+    name: "Cantonments",
+    count: 142,
+    image:
+      "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=200&h=150&fit=crop",
+  },
+];
+
+export default function BuyerHomeScreen() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedLocation] = useState("Accra");
+  const [savedProperties, setSavedProperties] = useState<Set<string>>(
+    new Set(["2", "5"])
+  );
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    // TODO: Fetch fresh data
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  }, []);
+
+  const toggleSave = (propertyId: string) => {
+    setSavedProperties((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(propertyId)) {
+        newSet.delete(propertyId);
+      } else {
+        newSet.add(propertyId);
+      }
+      return newSet;
+    });
+  };
+
+  const formatPrice = (price: number): string => {
+    if (price >= 1000000) {
+      return `GHS ${(price / 1000000).toFixed(1)}M`;
+    }
+    if (price >= 1000) {
+      return `GHS ${(price / 1000).toFixed(0)}K`;
+    }
+    return `GHS ${price.toLocaleString()}`;
+  };
+
   return (
-    <YStack flex={1} backgroundColor="$background" padding="$4" space="$4">
-      <Card elevate size="$4" bordered>
-        <Card.Header padded>
-          <XStack alignItems="center" space="$3">
-            <Ionicons name="rocket" size={32} color="#007AFF" />
-            <H2>Welcome to Tamagui!</H2>
-          </XStack>
-        </Card.Header>
-        <Card.Footer padded>
-          <Paragraph>
-            Beautiful, performant UI components built with Tamagui and Expo.
-          </Paragraph>
-        </Card.Footer>
-      </Card>
+    <>
+      <StatusBar style="dark" />
+      <View style={styles.container}>
+        {/* Decorative Background Elements */}
+        <View style={styles.decorativeBackground}>
+          <View style={styles.circle1} />
+          <View style={styles.circle2} />
+        </View>
 
-      <YStack space="$3">
-        <Text fontSize="$6" fontWeight="bold" color="$color">
-          Quick Actions
-        </Text>
-        <Separator />
-        
-        <XStack space="$3" flexWrap="wrap">
-          <Button
-            icon={<Ionicons name="star" size={20} color="white" />}
-            theme="active"
-            size="$4"
-            flex={1}
-            minWidth={120}
+        {/* Floating Sticky Header */}
+        <View
+          style={[
+            styles.floatingHeader,
+            { paddingTop: insets.top + Spacing.md },
+          ]}
+        >
+          <TouchableOpacity
+            onPress={() => {
+              // TODO: Show location picker
+              console.log("Change Location");
+            }}
+            style={styles.locationContainer}
+            activeOpacity={0.7}
           >
-            <Text color="white" fontWeight="600">Favorite</Text>
-          </Button>
-          
-          <Button
-            icon={<Ionicons name="share-social" size={20} color="white" />}
-            theme="blue"
-            size="$4"
-            flex={1}
-            minWidth={120}
-          >
-            <Text color="white" fontWeight="600">Share</Text>
-          </Button>
-        </XStack>
+            <View style={styles.locationIconContainer}>
+              <Ionicons name="location" size={18} color={Colors.primaryGreen} />
+            </View>
+            <Text style={styles.location}>{selectedLocation}</Text>
+            <Ionicons
+              name="chevron-down"
+              size={16}
+              color={Colors.textSecondary}
+            />
+          </TouchableOpacity>
 
-        <XStack space="$3" flexWrap="wrap">
-          <Button
-            icon={<Ionicons name="settings" size={20} color="white" />}
-            theme="green"
-            size="$4"
-            flex={1}
-            minWidth={120}
-          >
-            <Text color="white" fontWeight="600">Settings</Text>
-          </Button>
-          
-          <Button
-            icon={<Ionicons name="notifications" size={20} color="white" />}
-            theme="orange"
-            size="$4"
-            flex={1}
-            minWidth={120}
-          >
-            <Text color="white" fontWeight="600">Notifications</Text>
-          </Button>
-        </XStack>
-      </YStack>
+          {/* Search and Notification Buttons */}
+          <View style={styles.actionButtonsContainer}>
+            <TouchableOpacity
+              onPress={() => router.push("/(tabs)/search")}
+              style={styles.searchButton}
+              activeOpacity={0.7}
+            >
+              <View style={styles.searchIconContainer}>
+                <Ionicons
+                  name="search-outline"
+                  size={22}
+                  color={Colors.textPrimary}
+                />
+              </View>
+            </TouchableOpacity>
 
-      <Card elevate size="$3" bordered backgroundColor="$blue2">
-        <Card.Header padded>
-          <XStack alignItems="center" space="$2">
-            <Ionicons name="information-circle" size={24} color="#007AFF" />
-            <Text fontSize="$5" fontWeight="600" color="$blue11">
-              Getting Started
-            </Text>
-          </XStack>
-        </Card.Header>
-        <Card.Footer padded>
-          <YStack space="$2">
-            <XStack alignItems="center" space="$2">
-              <Ionicons name="checkmark-circle" size={20} color="#34C759" />
-              <Text>Tamagui is installed and configured</Text>
-            </XStack>
-            <XStack alignItems="center" space="$2">
-              <Ionicons name="checkmark-circle" size={20} color="#34C759" />
-              <Text>Icons from @expo/vector-icons are ready</Text>
-            </XStack>
-            <XStack alignItems="center" space="$2">
-              <Ionicons name="checkmark-circle" size={20} color="#34C759" />
-              <Text>Start building your amazing app!</Text>
-            </XStack>
-          </YStack>
-        </Card.Footer>
-      </Card>
-    </YStack>
+            <TouchableOpacity
+              onPress={() => {
+                // TODO: Navigate to notifications
+                console.log("Notifications");
+              }}
+              style={styles.notificationButton}
+              activeOpacity={0.7}
+            >
+              <View style={styles.notificationIconContainer}>
+                <Ionicons
+                  name="notifications-outline"
+                  size={22}
+                  color={Colors.textPrimary}
+                />
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationBadgeText}>3</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={[
+            styles.content,
+            {
+              paddingTop: 80 + insets.top,
+              paddingBottom: 40 + insets.bottom,
+            },
+          ]}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          {/* Categories Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Categories</Text>
+            <FlatList
+              data={CATEGORIES}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoriesContainer}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item: category }) => (
+                <TouchableOpacity
+                  style={styles.categoryCard}
+                  onPress={() => {
+                    console.log("Category:", category.id);
+                    router.push("/(tabs)/search");
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.categoryIconContainer}>
+                    <View style={styles.categoryIconBackground}>
+                      <Ionicons
+                        name={category.icon}
+                        size={32}
+                        color={Colors.primaryGreen}
+                      />
+                    </View>
+                  </View>
+                  <Text style={styles.categoryLabel}>{category.label}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+
+          {/* Featured Properties Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Featured Properties</Text>
+              <TouchableOpacity
+                onPress={() => router.push("/(tabs)/search")}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.seeAll}>See All →</Text>
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={FEATURED_PROPERTIES}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.featuredContainer}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item: property }) => (
+                <TouchableOpacity
+                  style={styles.featuredCard}
+                  onPress={() => {
+                    console.log("Property:", property.id);
+                    // TODO: Navigate to property detail
+                  }}
+                  activeOpacity={0.9}
+                >
+                  <View style={styles.featuredImageContainer}>
+                    <Image
+                      source={{ uri: property.image }}
+                      style={styles.featuredImage}
+                      resizeMode="cover"
+                    />
+                    <View style={styles.featuredImageOverlay} />
+                    <TouchableOpacity
+                      style={styles.saveButton}
+                      onPress={() => toggleSave(property.id)}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons
+                        name={
+                          savedProperties.has(property.id)
+                            ? "heart"
+                            : "heart-outline"
+                        }
+                        size={22}
+                        color={
+                          savedProperties.has(property.id)
+                            ? "#FF3B30"
+                            : Colors.textPrimary
+                        }
+                      />
+                    </TouchableOpacity>
+                    {property.bedrooms && property.bathrooms && (
+                      <View style={styles.featuredBadge}>
+                        <Ionicons
+                          name="bed-outline"
+                          size={14}
+                          color={Colors.textPrimary}
+                        />
+                        <Text style={styles.featuredBadgeText}>
+                          {property.bedrooms}
+                        </Text>
+                        <Ionicons
+                          name="water-outline"
+                          size={14}
+                          color={Colors.textPrimary}
+                          style={{ marginLeft: Spacing.xs }}
+                        />
+                        <Text style={styles.featuredBadgeText}>
+                          {property.bathrooms}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.featuredContent}>
+                    <Text style={styles.featuredTitle} numberOfLines={2}>
+                      {property.title}
+                    </Text>
+                    <View style={styles.featuredLocationRow}>
+                      <Ionicons
+                        name="location-outline"
+                        size={14}
+                        color={Colors.textSecondary}
+                      />
+                      <Text style={styles.featuredLocation} numberOfLines={1}>
+                        {property.location}
+                      </Text>
+                    </View>
+                    <Text style={styles.featuredPrice}>
+                      {formatPrice(property.price)}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+
+          {/* Near You Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Near You</Text>
+              <TouchableOpacity
+                onPress={() => router.push("/(tabs)/search")}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.seeAll}>See All →</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.nearYouContainer}>
+              {NEAR_YOU_PROPERTIES.map((property) => (
+                <TouchableOpacity
+                  key={property.id}
+                  style={styles.nearYouCard}
+                  onPress={() => {
+                    console.log("Property:", property.id);
+                    // TODO: Navigate to property detail
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.nearYouImageContainer}>
+                    <Image
+                      source={{ uri: property.image }}
+                      style={styles.nearYouImage}
+                      resizeMode="cover"
+                    />
+                    <TouchableOpacity
+                      style={styles.nearYouSaveButton}
+                      onPress={() => toggleSave(property.id)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.nearYouSaveButtonBackground}>
+                        <Ionicons
+                          name={
+                            savedProperties.has(property.id)
+                              ? "heart"
+                              : "heart-outline"
+                          }
+                          size={20}
+                          color={
+                            savedProperties.has(property.id)
+                              ? "#FF3B30"
+                              : Colors.textPrimary
+                          }
+                        />
+                      </View>
+                    </TouchableOpacity>
+                    {property.bedrooms && property.bathrooms && (
+                      <View style={styles.nearYouBadge}>
+                        <Ionicons
+                          name="bed-outline"
+                          size={12}
+                          color={Colors.textPrimary}
+                        />
+                        <Text style={styles.nearYouBadgeText}>
+                          {property.bedrooms}
+                        </Text>
+                        <Ionicons
+                          name="water-outline"
+                          size={12}
+                          color={Colors.textPrimary}
+                          style={{ marginLeft: Spacing.xs }}
+                        />
+                        <Text style={styles.nearYouBadgeText}>
+                          {property.bathrooms}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.nearYouContent}>
+                    <Text style={styles.nearYouTitle} numberOfLines={2}>
+                      {property.title}
+                    </Text>
+                    <View style={styles.nearYouLocation}>
+                      <Ionicons
+                        name="location-outline"
+                        size={14}
+                        color={Colors.textSecondary}
+                      />
+                      <Text
+                        style={styles.nearYouLocationText}
+                        numberOfLines={1}
+                      >
+                        {property.location}
+                      </Text>
+                    </View>
+                    <View style={styles.nearYouFooter}>
+                      <Text style={styles.nearYouPrice}>
+                        {formatPrice(property.price)}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Popular Areas Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Popular Areas</Text>
+              <TouchableOpacity activeOpacity={0.7}>
+                <Text style={styles.seeAll}>See All →</Text>
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={POPULAR_AREAS}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.popularAreasContainer}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item: area }) => (
+                <TouchableOpacity
+                  style={styles.popularAreaCard}
+                  onPress={() => {
+                    console.log("Navigate to area:", area.id);
+                    router.push("/(tabs)/search");
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Image
+                    source={{ uri: area.image }}
+                    style={styles.popularAreaImage}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.popularAreaOverlay} />
+                  <View style={styles.popularAreaContent}>
+                    <Text style={styles.popularAreaName}>{area.name}</Text>
+                    <Text style={styles.popularAreaCount}>
+                      {area.count} properties
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+
+          {/* New Listings Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>New Listings</Text>
+              <TouchableOpacity
+                onPress={() => router.push("/(tabs)/search")}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.seeAll}>See All →</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.nearYouContainer}>
+              {NEW_LISTINGS.map((property) => (
+                <TouchableOpacity
+                  key={property.id}
+                  style={styles.nearYouCard}
+                  onPress={() => {
+                    console.log("Property:", property.id);
+                    // TODO: Navigate to property detail
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.nearYouImageContainer}>
+                    <Image
+                      source={{ uri: property.image }}
+                      style={styles.nearYouImage}
+                      resizeMode="cover"
+                    />
+                    <View style={styles.newBadge}>
+                      <Text style={styles.newBadgeText}>NEW</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.nearYouSaveButton}
+                      onPress={() => toggleSave(property.id)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.nearYouSaveButtonBackground}>
+                        <Ionicons
+                          name={
+                            savedProperties.has(property.id)
+                              ? "heart"
+                              : "heart-outline"
+                          }
+                          size={20}
+                          color={
+                            savedProperties.has(property.id)
+                              ? "#FF3B30"
+                              : Colors.textPrimary
+                          }
+                        />
+                      </View>
+                    </TouchableOpacity>
+                    {property.bedrooms && property.bathrooms && (
+                      <View style={styles.nearYouBadge}>
+                        <Ionicons
+                          name="bed-outline"
+                          size={12}
+                          color={Colors.textPrimary}
+                        />
+                        <Text style={styles.nearYouBadgeText}>
+                          {property.bedrooms}
+                        </Text>
+                        <Ionicons
+                          name="water-outline"
+                          size={12}
+                          color={Colors.textPrimary}
+                          style={{ marginLeft: Spacing.xs }}
+                        />
+                        <Text style={styles.nearYouBadgeText}>
+                          {property.bathrooms}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.nearYouContent}>
+                    <Text style={styles.nearYouTitle} numberOfLines={2}>
+                      {property.title}
+                    </Text>
+                    <View style={styles.nearYouLocation}>
+                      <Ionicons
+                        name="location-outline"
+                        size={14}
+                        color={Colors.textSecondary}
+                      />
+                      <Text
+                        style={styles.nearYouLocationText}
+                        numberOfLines={1}
+                      >
+                        {property.location}
+                      </Text>
+                    </View>
+                    <View style={styles.nearYouFooter}>
+                      <Text style={styles.nearYouPrice}>
+                        {formatPrice(property.price)}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </ScrollView>
+      </View>
+    </>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  decorativeBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+  },
+  circle1: {
+    position: "absolute",
+    top: -100,
+    right: -100,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: Colors.primaryLight,
+    opacity: 0.08,
+  },
+  circle2: {
+    position: "absolute",
+    bottom: -150,
+    left: -150,
+    width: 400,
+    height: 400,
+    borderRadius: 200,
+    backgroundColor: Colors.primaryGreen,
+    opacity: 0.05,
+  },
+  scrollView: {
+    flex: 1,
+    zIndex: 1,
+  },
+  content: {
+    paddingHorizontal: Spacing.xl,
+    paddingTop: 100,
+    paddingBottom: Spacing["2xl"],
+  },
+  floatingHeader: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.md,
+    zIndex: 100,
+  },
+  actionButtonsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  locationContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    backgroundColor: Colors.surface,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    borderRadius: 20,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  locationIconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#F1F8F4",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  location: {
+    ...Typography.bodyMedium,
+    fontSize: 15,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+  },
+  notificationButton: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  notificationIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.surface,
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  notificationBadge: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    backgroundColor: "#FF3B30",
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: Colors.surface,
+  },
+  notificationBadgeText: {
+    ...Typography.caption,
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  searchButton: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  searchIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.surface,
+    justifyContent: "center",
+    alignItems: "center",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  section: {
+    marginBottom: Spacing["2xl"],
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.lg,
+  },
+  sectionTitle: {
+    ...Typography.titleLarge,
+    fontSize: 20,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+  },
+  seeAll: {
+    ...Typography.labelLarge,
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
+  },
+  categoriesContainer: {
+    paddingRight: Spacing.xl,
+    gap: Spacing.lg,
+    paddingVertical: Spacing.sm,
+  },
+  categoryCard: {
+    alignItems: "center",
+    backgroundColor: Colors.surface,
+    borderRadius: 20,
+    padding: Spacing.lg,
+    minWidth: 100,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
+  },
+  categoryIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  categoryIconBackground: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "#F1F8F4",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#E8F5E9",
+  },
+  categoryLabel: {
+    ...Typography.labelLarge,
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+    textAlign: "center",
+  },
+  featuredContainer: {
+    paddingRight: Spacing.xl,
+    gap: Spacing.lg,
+    paddingVertical: Spacing.sm,
+  },
+  featuredCard: {
+    width: 280,
+    backgroundColor: Colors.surface,
+    borderRadius: 24,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
+  },
+  featuredImageContainer: {
+    position: "relative",
+    width: "100%",
+    aspectRatio: 4 / 5,
+  },
+  featuredImage: {
+    width: "100%",
+    height: "100%",
+  },
+  featuredImageOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 60,
+    backgroundColor: "transparent",
+  },
+  saveButton: {
+    position: "absolute",
+    top: Spacing.md,
+    right: Spacing.md,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    justifyContent: "center",
+    alignItems: "center",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  featuredBadge: {
+    position: "absolute",
+    bottom: Spacing.md,
+    left: Spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: 16,
+    gap: Spacing.xs,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  featuredBadgeText: {
+    ...Typography.caption,
+    fontSize: 12,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+  },
+  featuredContent: {
+    padding: Spacing.lg,
+  },
+  featuredTitle: {
+    ...Typography.titleLarge,
+    fontSize: 16,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+    minHeight: 44,
+    lineHeight: 22,
+  },
+  featuredLocationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  featuredLocation: {
+    ...Typography.bodyMedium,
+    fontSize: 13,
+    color: Colors.textSecondary,
+    flex: 1,
+  },
+  featuredPrice: {
+    ...Typography.headlineMedium,
+    fontSize: 20,
+    fontWeight: "700",
+    color: Colors.primaryGreen,
+  },
+  nearYouContainer: {
+    gap: Spacing.lg,
+  },
+  nearYouCard: {
+    flexDirection: "row",
+    backgroundColor: Colors.surface,
+    borderRadius: 20,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    overflow: "hidden",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  nearYouImageContainer: {
+    position: "relative",
+    width: 140,
+    height: 140,
+    borderRadius: 16,
+    overflow: "hidden",
+    marginRight: Spacing.md,
+  },
+  nearYouImage: {
+    width: "100%",
+    height: "100%",
+  },
+  nearYouSaveButton: {
+    position: "absolute",
+    top: Spacing.sm,
+    right: Spacing.sm,
+    zIndex: 10,
+  },
+  nearYouSaveButtonBackground: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    justifyContent: "center",
+    alignItems: "center",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  nearYouBadge: {
+    position: "absolute",
+    bottom: Spacing.sm,
+    left: Spacing.sm,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
+  },
+  nearYouBadgeText: {
+    ...Typography.caption,
+    fontSize: 11,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+  },
+  nearYouContent: {
+    flex: 1,
+    justifyContent: "space-between",
+    paddingVertical: Spacing.xs,
+  },
+  nearYouTitle: {
+    ...Typography.titleLarge,
+    fontSize: 16,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+    lineHeight: 22,
+  },
+  nearYouLocation: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    marginBottom: Spacing.md,
+  },
+  nearYouLocationText: {
+    ...Typography.bodyMedium,
+    fontSize: 13,
+    color: Colors.textSecondary,
+    flex: 1,
+  },
+  nearYouFooter: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    alignItems: "center",
+  },
+  nearYouPrice: {
+    ...Typography.headlineMedium,
+    fontSize: 18,
+    fontWeight: "700",
+    color: Colors.primaryGreen,
+  },
+  popularAreasContainer: {
+    paddingRight: Spacing.xl,
+    gap: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  popularAreaCard: {
+    width: 200,
+    height: 140,
+    borderRadius: 20,
+    overflow: "hidden",
+    position: "relative",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  popularAreaImage: {
+    width: "100%",
+    height: "100%",
+  },
+  popularAreaOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: "50%",
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+  },
+  popularAreaContent: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: Spacing.md,
+  },
+  popularAreaName: {
+    ...Typography.titleLarge,
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    marginBottom: Spacing.xs / 2,
+  },
+  popularAreaCount: {
+    ...Typography.bodyMedium,
+    fontSize: 13,
+    color: "rgba(255, 255, 255, 0.9)",
+  },
+  newBadge: {
+    position: "absolute",
+    top: Spacing.sm,
+    left: Spacing.sm,
+    backgroundColor: Colors.primaryGreen,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: 12,
+    zIndex: 5,
+  },
+  newBadgeText: {
+    ...Typography.caption,
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    letterSpacing: 0.5,
+  },
+});
