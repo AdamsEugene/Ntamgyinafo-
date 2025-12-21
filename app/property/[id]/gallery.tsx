@@ -69,11 +69,34 @@ export default function PropertyGalleryScreen() {
 
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [currentImageIndex, setCurrentImageIndex] = useState(initialIndex);
+  const flatListRef = React.useRef<FlatList>(null);
 
   const handleImageScroll = (event: any) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
     const index = Math.round(contentOffsetX / SCREEN_WIDTH);
     setCurrentImageIndex(index);
+  };
+
+  const goToPreviousImage = () => {
+    if (currentImageIndex > 0) {
+      const newIndex = currentImageIndex - 1;
+      flatListRef.current?.scrollToIndex({
+        index: newIndex,
+        animated: true,
+      });
+      setCurrentImageIndex(newIndex);
+    }
+  };
+
+  const goToNextImage = () => {
+    if (currentImageIndex < MOCK_IMAGES.length - 1) {
+      const newIndex = currentImageIndex + 1;
+      flatListRef.current?.scrollToIndex({
+        index: newIndex,
+        animated: true,
+      });
+      setCurrentImageIndex(newIndex);
+    }
   };
 
   const ZoomableImage = ({ item, index }: { item: string; index: number }) => {

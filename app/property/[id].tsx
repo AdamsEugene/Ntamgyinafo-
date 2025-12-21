@@ -178,16 +178,7 @@ export default function PropertyDetailScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Image Carousel - Full Bleed */}
-          <TouchableOpacity
-            style={styles.imageCarousel}
-            activeOpacity={1}
-            onPress={() => {
-              // Navigate to Gallery Screen when image is tapped
-              router.push(
-                `/property/${property.id}/gallery?index=${currentImageIndex}`
-              );
-            }}
-          >
+          <View style={styles.imageCarousel}>
             <FlatList
               data={property.images}
               horizontal
@@ -196,8 +187,19 @@ export default function PropertyDetailScreen() {
               onScroll={handleImageScroll}
               scrollEventThrottle={16}
               keyExtractor={(item, index) => `image-${index}`}
-              renderItem={({ item }) => (
-                <Image source={{ uri: item }} style={styles.carouselImage} />
+              renderItem={({ item, index }) => (
+                <TouchableOpacity
+                  activeOpacity={1}
+                  onPress={() => {
+                    // Navigate to Gallery Screen when image is tapped
+                    router.push(
+                      `/property/${property.id}/gallery?index=${index}`
+                    );
+                  }}
+                  style={{ width: SCREEN_WIDTH }}
+                >
+                  <Image source={{ uri: item }} style={styles.carouselImage} />
+                </TouchableOpacity>
               )}
             />
 
@@ -315,7 +317,7 @@ export default function PropertyDetailScreen() {
                 <Text style={styles.mediaBadgeText}>360°</Text>
               </TouchableOpacity>
             </View>
-          </TouchableOpacity>
+          </View>
 
           {/* Property Info */}
           <View style={styles.propertyInfo}>
