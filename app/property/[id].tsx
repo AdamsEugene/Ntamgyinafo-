@@ -177,7 +177,16 @@ export default function PropertyDetailScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Image Carousel - Full Bleed */}
-          <View style={styles.imageCarousel}>
+          <TouchableOpacity
+            style={styles.imageCarousel}
+            activeOpacity={1}
+            onPress={() => {
+              // Navigate to Gallery Screen when image is tapped
+              router.push(
+                `/property/${property.id}/gallery?index=${currentImageIndex}`
+              );
+            }}
+          >
             <FlatList
               data={property.images}
               horizontal
@@ -269,22 +278,43 @@ export default function PropertyDetailScreen() {
 
             {/* Media Badges */}
             <View style={styles.mediaBadges}>
-              <View style={styles.mediaBadge}>
+              <TouchableOpacity
+                style={styles.mediaBadge}
+                onPress={() => {
+                  // Navigate to Gallery Screen with Photos tab
+                  router.push(`/property/${property.id}/gallery?tab=photos`);
+                }}
+                activeOpacity={0.7}
+              >
                 <Ionicons name="camera-outline" size={14} color="#FFFFFF" />
                 <Text style={styles.mediaBadgeText}>
                   {property.images.length}
                 </Text>
-              </View>
-              <View style={styles.mediaBadge}>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.mediaBadge}
+                onPress={() => {
+                  // Navigate to Gallery Screen with Videos tab
+                  router.push(`/property/${property.id}/gallery?tab=videos`);
+                }}
+                activeOpacity={0.7}
+              >
                 <Ionicons name="videocam-outline" size={14} color="#FFFFFF" />
                 <Text style={styles.mediaBadgeText}>3</Text>
-              </View>
-              <View style={styles.mediaBadge}>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.mediaBadge}
+                onPress={() => {
+                  // Navigate to 360° Viewer Screen
+                  router.push(`/property/${property.id}/360`);
+                }}
+                activeOpacity={0.7}
+              >
                 <Ionicons name="cube-outline" size={14} color="#FFFFFF" />
                 <Text style={styles.mediaBadgeText}>360°</Text>
-              </View>
+              </TouchableOpacity>
             </View>
-          </View>
+          </TouchableOpacity>
 
           {/* Property Info */}
           <View style={styles.propertyInfo}>
@@ -997,9 +1027,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   statCard: {
-    flex: 1,
-    minWidth: "22%",
-    maxWidth: "48%",
+    width: "48%",
     backgroundColor: Colors.surface,
     borderRadius: 24,
     padding: Spacing.xl,

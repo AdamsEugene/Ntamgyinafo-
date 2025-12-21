@@ -41,6 +41,20 @@ export default function RootLayout() {
                 }}
               />
               <Stack.Screen
+                name="property/[id]/gallery"
+                options={{
+                  headerShown: false,
+                  presentation: "fullScreenModal",
+                }}
+              />
+              <Stack.Screen
+                name="property/[id]/360"
+                options={{
+                  headerShown: false,
+                  presentation: "fullScreenModal",
+                }}
+              />
+              <Stack.Screen
                 name="modal"
                 options={{ presentation: "modal", title: "Modal" }}
               />
