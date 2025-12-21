@@ -211,17 +211,17 @@ const DualRangeSlider: React.FC<{
   );
 };
 
-export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
-  visible,
-  onClose,
-  onApply,
-  initialFilters = {},
-  resultsCount,
-}) => {
+export const FilterBottomSheet = React.forwardRef<
+  BottomSheetModal,
+  FilterBottomSheetProps
+>(({ visible, onClose, onApply, initialFilters = {}, resultsCount }, ref) => {
   const [filters, setFilters] = useState<FilterOptions>(initialFilters);
   const [minPriceInput, setMinPriceInput] = useState("");
   const [maxPriceInput, setMaxPriceInput] = useState("");
   const bottomSheetRef = useRef<BottomSheetModal>(null);
+
+  // Forward ref to internal ref
+  React.useImperativeHandle(ref, () => bottomSheetRef.current!);
 
   // Snap points for the bottom sheet
   const snapPoints = useMemo(() => ["90%"], []);
@@ -614,7 +614,9 @@ export const FilterBottomSheet: React.FC<FilterBottomSheetProps> = ({
       </BottomSheetScrollView>
     </BottomSheetModal>
   );
-};
+});
+
+FilterBottomSheet.displayName = "FilterBottomSheet";
 
 const styles = StyleSheet.create({
   bottomSheet: {
