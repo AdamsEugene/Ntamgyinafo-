@@ -16,6 +16,10 @@ import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { LineChart, BarChart, PieChart } from "react-native-gifted-charts";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import {
+  FloatingHeaderStyles,
+  HEADER_ICON_SIZE,
+} from "@/components/FloatingHeader.styles";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CHART_WIDTH = SCREEN_WIDTH - Spacing.xl * 2 - 32;
@@ -151,35 +155,63 @@ export default function ListingAnalyticsScreen() {
   return (
     <>
       <StatusBar style="dark" />
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.headerButton}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Listing Analytics</Text>
-          <TouchableOpacity
-            onPress={handleExportReport}
-            style={styles.headerButton}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="download-outline"
-              size={24}
-              color={Colors.primaryGreen}
-            />
-          </TouchableOpacity>
+      <View style={styles.container}>
+        {/* Decorative Background Elements */}
+        <View style={styles.decorativeBackground}>
+          <View style={styles.circle1} />
+          <View style={styles.circle2} />
+        </View>
+
+        {/* Floating Sticky Header */}
+        <View
+          style={[
+            FloatingHeaderStyles.floatingHeader,
+            { paddingTop: insets.top + Spacing.md },
+          ]}
+        >
+          <View style={styles.headerLeft}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={FloatingHeaderStyles.backButton}
+              activeOpacity={0.7}
+            >
+              <View style={FloatingHeaderStyles.backButtonCircle}>
+                <Ionicons
+                  name="arrow-back"
+                  size={HEADER_ICON_SIZE}
+                  color={Colors.textPrimary}
+                />
+              </View>
+            </TouchableOpacity>
+            <Text style={styles.headerTitleText}>Listing Analytics</Text>
+          </View>
+
+          {/* Action Button */}
+          <View style={FloatingHeaderStyles.headerActions}>
+            <TouchableOpacity
+              style={FloatingHeaderStyles.actionButton}
+              onPress={handleExportReport}
+              activeOpacity={0.7}
+            >
+              <View style={FloatingHeaderStyles.actionButtonBackground}>
+                <Ionicons
+                  name="download-outline"
+                  size={HEADER_ICON_SIZE}
+                  color={Colors.primaryGreen}
+                />
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingBottom: insets.bottom + 40 },
+            {
+              paddingTop: 80 + insets.top,
+              paddingBottom: insets.bottom + 40,
+            },
           ]}
           showsVerticalScrollIndicator={false}
         >
@@ -535,31 +567,54 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  header: {
+  // Decorative Background
+  decorativeBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+  },
+  circle1: {
+    position: "absolute",
+    top: -100,
+    right: -100,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: Colors.primaryLight,
+    opacity: 0.08,
+  },
+  circle2: {
+    position: "absolute",
+    bottom: -150,
+    left: -150,
+    width: 400,
+    height: 400,
+    borderRadius: 200,
+    backgroundColor: Colors.primaryGreen,
+    opacity: 0.05,
+  },
+  // Header
+  headerLeft: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E5E5",
+    gap: Spacing.md,
+    flex: 1,
   },
-  headerButton: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerTitle: {
-    ...Typography.headlineMedium,
+  headerTitleText: {
+    ...Typography.titleLarge,
+    fontSize: 20,
+    fontWeight: "700",
     color: Colors.textPrimary,
   },
   scrollView: {
     flex: 1,
+    zIndex: 1,
   },
   scrollContent: {
-    padding: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
   },
 
   // Period Selector
