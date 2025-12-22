@@ -11,12 +11,17 @@ import {
   Switch,
   KeyboardAvoidingView,
   Animated,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
+import * as ImagePicker from "expo-image-picker";
+import * as Location from "expo-location";
+import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import {
   FloatingHeaderStyles,
@@ -96,9 +101,14 @@ export default function AddListingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef<ScrollView>(null);
+  const mapRef = useRef<MapView>(null);
 
   // Current step
   const [currentStep, setCurrentStep] = useState(1);
+
+  // Loading states
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [isPickingMedia, setIsPickingMedia] = useState(false);
 
   // Form data
   const [formData, setFormData] = useState<ListingFormData>({
@@ -121,12 +131,235 @@ export default function AddListingScreen() {
     address: "",
   });
 
-  // Mock photos for demo
-  const mockPhotos = [
-    "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400",
-    "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400",
-    "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=400",
-  ];
+  // Default region for Ghana
+  const defaultRegion = {
+    latitude: formData.latitude || 5.6037,
+    longitude: formData.longitude || -0.187,
+    latitudeDelta: 0.01,
+    longitudeDelta: 0.01,
+  };
+
+  // Pick photos from gallery or camera
+  const pickPhotos = async (useCamera: boolean = false) => {
+    try {
+      setIsPickingMedia(true);
+
+      // Request permissions
+      if (useCamera) {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== "granted") {
+          Alert.alert(
+            "Permission Required",
+            "Camera permission is needed to take photos."
+          );
+          return;
+        }
+      } else {
+        const { status } =
+          await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== "granted") {
+          Alert.alert(
+            "Permission Required",
+            "Gallery permission is needed to select photos."
+          );
+          return;
+        }
+      }
+
+      const result = useCamera
+        ? await ImagePicker.launchCameraAsync({
+            mediaTypes: ["images"],
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 0.8,
+          })
+        : await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ["images"],
+            allowsMultipleSelection: true,
+            selectionLimit: 15 - formData.photos.length,
+            quality: 0.8,
+          });
+
+      if (!result.canceled && result.assets) {
+        const newPhotos = result.assets.map((asset) => asset.uri);
+        setFormData({
+          ...formData,
+          photos: [...formData.photos, ...newPhotos].slice(0, 15),
+        });
+      }
+    } catch {
+      Alert.alert("Error", "Failed to pick photos. Please try again.");
+    } finally {
+      setIsPickingMedia(false);
+    }
+  };
+
+  // Pick videos from gallery or camera
+  const pickVideos = async (useCamera: boolean = false) => {
+    try {
+      setIsPickingMedia(true);
+
+      if (useCamera) {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== "granted") {
+          Alert.alert(
+            "Permission Required",
+            "Camera permission is needed to record videos."
+          );
+          return;
+        }
+      } else {
+        const { status } =
+          await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== "granted") {
+          Alert.alert(
+            "Permission Required",
+            "Gallery permission is needed to select videos."
+          );
+          return;
+        }
+      }
+
+      const result = useCamera
+        ? await ImagePicker.launchCameraAsync({
+            mediaTypes: ["videos"],
+            allowsEditing: true,
+            videoMaxDuration: 120,
+            quality: 0.8,
+          })
+        : await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ["videos"],
+            allowsMultipleSelection: false,
+            videoMaxDuration: 120,
+            quality: 0.8,
+          });
+
+      if (!result.canceled && result.assets) {
+        const newVideos = result.assets.map((asset) => asset.uri);
+        setFormData({
+          ...formData,
+          videos: [...formData.videos, ...newVideos].slice(0, 3),
+        });
+      }
+    } catch {
+      Alert.alert("Error", "Failed to pick video. Please try again.");
+    } finally {
+      setIsPickingMedia(false);
+    }
+  };
+
+  // Remove photo
+  const removePhoto = (index: number) => {
+    const newPhotos = formData.photos.filter((_, i) => i !== index);
+    setFormData({ ...formData, photos: newPhotos });
+  };
+
+  // Remove video
+  const removeVideo = (index: number) => {
+    const newVideos = formData.videos.filter((_, i) => i !== index);
+    setFormData({ ...formData, videos: newVideos });
+  };
+
+  // Get current location
+  const getCurrentLocation = async () => {
+    try {
+      setIsLoadingLocation(true);
+
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Required",
+          "Location permission is needed to get your current location."
+        );
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      setFormData({
+        ...formData,
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      // Center map on location
+      mapRef.current?.animateToRegion({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+
+      // Try to get address
+      try {
+        const [address] = await Location.reverseGeocodeAsync({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+        if (address) {
+          const addressString = [
+            address.street,
+            address.city,
+            address.region,
+            address.country,
+          ]
+            .filter(Boolean)
+            .join(", ");
+          setFormData((prev) => ({
+            ...prev,
+            address: addressString,
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          }));
+        }
+      } catch {
+        // Address lookup failed, but we still have coordinates
+      }
+    } catch {
+      Alert.alert("Error", "Failed to get location. Please try again.");
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
+
+  // Handle map press to set location
+  const handleMapPress = (event: any) => {
+    const { latitude, longitude } = event.nativeEvent.coordinate;
+    setFormData({
+      ...formData,
+      latitude,
+      longitude,
+    });
+  };
+
+  // Show photo picker options
+  const showPhotoOptions = () => {
+    Alert.alert("Add Photos", "Choose how to add photos", [
+      { text: "Camera", onPress: () => pickPhotos(true) },
+      { text: "Gallery", onPress: () => pickPhotos(false) },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  };
+
+  // Show video picker options
+  const showVideoOptions = () => {
+    Alert.alert("Add Video", "Choose how to add video", [
+      { text: "Record Video", onPress: () => pickVideos(true) },
+      { text: "Gallery", onPress: () => pickVideos(false) },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  };
+
+  // Show 360 info
+  const show360Info = () => {
+    Alert.alert(
+      "360° Virtual Tour",
+      "To create a 360° virtual tour, you can:\n\n1. Use a 360° camera like Insta360 or Ricoh Theta\n\n2. Use the Google Street View app to capture panoramas\n\n3. Hire a professional photographer\n\nOnce you have your 360° images, you can upload them in the app settings.",
+      [{ text: "Got it", style: "default" }]
+    );
+  };
 
   // Progress percentage
   const progressPercentage = (currentStep / TOTAL_STEPS) * 100;
@@ -165,7 +398,7 @@ export default function AddListingScreen() {
       case 5:
         return true; // Amenities are optional
       case 6:
-        return formData.photos.length >= 5 || mockPhotos.length >= 3; // Using mock for demo
+        return formData.photos.length >= 3; // Minimum 3 photos required
       case 7:
         return true; // Videos are optional
       case 8:
@@ -616,12 +849,12 @@ export default function AddListingScreen() {
       <View style={styles.photoCounter}>
         <Ionicons name="images" size={20} color={Colors.primaryGreen} />
         <Text style={styles.photoCounterText}>
-          {mockPhotos.length}/15 photos added
+          {formData.photos.length}/15 photos added
         </Text>
       </View>
 
       <View style={styles.photosGrid}>
-        {mockPhotos.map((photo, index) => (
+        {formData.photos.map((photo, index) => (
           <View key={index} style={styles.photoWrapper}>
             <Image source={{ uri: photo }} style={styles.photoThumbnail} />
             {index === 0 && (
@@ -629,15 +862,31 @@ export default function AddListingScreen() {
                 <Text style={styles.coverBadgeText}>Cover</Text>
               </View>
             )}
-            <TouchableOpacity style={styles.removePhotoButton}>
+            <TouchableOpacity
+              style={styles.removePhotoButton}
+              onPress={() => removePhoto(index)}
+            >
               <Ionicons name="close" size={16} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         ))}
-        <TouchableOpacity style={styles.addPhotoButton} activeOpacity={0.8}>
-          <Ionicons name="add" size={32} color={Colors.primaryGreen} />
-          <Text style={styles.addPhotoText}>Add Photo</Text>
-        </TouchableOpacity>
+        {formData.photos.length < 15 && (
+          <TouchableOpacity
+            style={styles.addPhotoButton}
+            activeOpacity={0.8}
+            onPress={showPhotoOptions}
+            disabled={isPickingMedia}
+          >
+            {isPickingMedia ? (
+              <ActivityIndicator color={Colors.primaryGreen} />
+            ) : (
+              <>
+                <Ionicons name="add" size={32} color={Colors.primaryGreen} />
+                <Text style={styles.addPhotoText}>Add Photo</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.tipsContainer}>
@@ -666,24 +915,65 @@ export default function AddListingScreen() {
       <View style={styles.mediaLimitInfo}>
         <Ionicons name="videocam" size={24} color={Colors.primaryGreen} />
         <Text style={styles.mediaLimitText}>
-          Maximum 3 videos, 2 minutes each
+          {formData.videos.length}/3 videos added (max 2 min each)
         </Text>
       </View>
 
-      <TouchableOpacity style={styles.addMediaButton} activeOpacity={0.8}>
-        <LinearGradient
-          colors={[`${Colors.primaryGreen}15`, `${Colors.primaryGreen}05`]}
-          style={styles.addMediaGradient}
+      {/* Show added videos */}
+      {formData.videos.length > 0 && (
+        <View style={styles.videosGrid}>
+          {formData.videos.map((video, index) => (
+            <View key={index} style={styles.videoWrapper}>
+              <View style={styles.videoThumbnail}>
+                <Ionicons
+                  name="videocam"
+                  size={32}
+                  color={Colors.textSecondary}
+                />
+                <Text style={styles.videoLabel}>Video {index + 1}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.removePhotoButton}
+                onPress={() => removeVideo(index)}
+              >
+                <Ionicons name="close" size={16} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {formData.videos.length < 3 && (
+        <TouchableOpacity
+          style={styles.addMediaButton}
+          activeOpacity={0.8}
+          onPress={showVideoOptions}
+          disabled={isPickingMedia}
         >
-          <View style={styles.addMediaIconCircle}>
-            <Ionicons name="videocam" size={32} color={Colors.primaryGreen} />
-          </View>
-          <Text style={styles.addMediaTitle}>Add Video</Text>
-          <Text style={styles.addMediaSubtitle}>
-            Record or upload from gallery
-          </Text>
-        </LinearGradient>
-      </TouchableOpacity>
+          <LinearGradient
+            colors={[`${Colors.primaryGreen}15`, `${Colors.primaryGreen}05`]}
+            style={styles.addMediaGradient}
+          >
+            {isPickingMedia ? (
+              <ActivityIndicator size="large" color={Colors.primaryGreen} />
+            ) : (
+              <>
+                <View style={styles.addMediaIconCircle}>
+                  <Ionicons
+                    name="videocam"
+                    size={32}
+                    color={Colors.primaryGreen}
+                  />
+                </View>
+                <Text style={styles.addMediaTitle}>Add Video</Text>
+                <Text style={styles.addMediaSubtitle}>
+                  Record or upload from gallery
+                </Text>
+              </>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+      )}
 
       <TouchableOpacity style={styles.skipButton} onPress={goToNextStep}>
         <Text style={styles.skipButtonText}>Skip for now</Text>
@@ -699,7 +989,11 @@ export default function AddListingScreen() {
         Add an immersive 360° view of your property (Optional)
       </Text>
 
-      <TouchableOpacity style={styles.addMediaButton} activeOpacity={0.8}>
+      <TouchableOpacity
+        style={styles.addMediaButton}
+        activeOpacity={0.8}
+        onPress={show360Info}
+      >
         <LinearGradient
           colors={[`${Colors.primaryGreen}15`, `${Colors.primaryGreen}05`]}
           style={styles.addMediaGradient}
@@ -707,19 +1001,23 @@ export default function AddListingScreen() {
           <View style={styles.addMediaIconCircle}>
             <Ionicons name="globe" size={32} color={Colors.primaryGreen} />
           </View>
-          <Text style={styles.addMediaTitle}>Capture 360° View</Text>
-          <Text style={styles.addMediaSubtitle}>Take a panoramic photo</Text>
+          <Text style={styles.addMediaTitle}>Add 360° Tour</Text>
+          <Text style={styles.addMediaSubtitle}>
+            Learn how to create a virtual tour
+          </Text>
         </LinearGradient>
       </TouchableOpacity>
 
       <View style={styles.tipsContainer}>
         <Text style={styles.tipsTitle}>📷 How to capture 360°:</Text>
-        <Text style={styles.tipText}>• Stand in the center of the room</Text>
         <Text style={styles.tipText}>
-          • Hold your phone steady and rotate slowly
+          • Use a 360° camera (Insta360, Ricoh Theta)
         </Text>
         <Text style={styles.tipText}>
-          • Capture living room, bedrooms, and kitchen
+          • Or use Google Street View app for panoramas
+        </Text>
+        <Text style={styles.tipText}>
+          • Consider hiring a professional photographer
         </Text>
       </View>
 
@@ -734,17 +1032,62 @@ export default function AddListingScreen() {
     <View style={styles.stepContent}>
       <Text style={styles.stepTitle}>Set Location</Text>
       <Text style={styles.stepSubtitle}>
-        Pinpoint the exact location of your property
+        Tap on the map to pinpoint your property location
       </Text>
 
-      <View style={styles.mapPlaceholder}>
-        <Ionicons name="map" size={64} color={Colors.textSecondary} />
-        <Text style={styles.mapPlaceholderText}>Map will appear here</Text>
+      <View style={styles.mapContainer}>
+        <MapView
+          ref={mapRef}
+          style={styles.map}
+          provider={PROVIDER_DEFAULT}
+          initialRegion={defaultRegion}
+          onPress={handleMapPress}
+          mapType="standard"
+        >
+          {formData.latitude && formData.longitude && (
+            <Marker
+              coordinate={{
+                latitude: formData.latitude,
+                longitude: formData.longitude,
+              }}
+              title="Property Location"
+            >
+              <View style={styles.markerContainer}>
+                <View style={styles.markerInner}>
+                  <Ionicons name="home" size={16} color="#FFFFFF" />
+                </View>
+              </View>
+            </Marker>
+          )}
+        </MapView>
+        {formData.latitude && formData.longitude && (
+          <View style={styles.mapLocationBadge}>
+            <Ionicons
+              name="checkmark-circle"
+              size={16}
+              color={Colors.primaryGreen}
+            />
+            <Text style={styles.mapLocationBadgeText}>Location set</Text>
+          </View>
+        )}
       </View>
 
-      <TouchableOpacity style={styles.locationButton} activeOpacity={0.8}>
-        <Ionicons name="locate" size={20} color={Colors.primaryGreen} />
-        <Text style={styles.locationButtonText}>Use My Current Location</Text>
+      <TouchableOpacity
+        style={styles.locationButton}
+        activeOpacity={0.8}
+        onPress={getCurrentLocation}
+        disabled={isLoadingLocation}
+      >
+        {isLoadingLocation ? (
+          <ActivityIndicator size="small" color={Colors.primaryGreen} />
+        ) : (
+          <Ionicons name="locate" size={20} color={Colors.primaryGreen} />
+        )}
+        <Text style={styles.locationButtonText}>
+          {isLoadingLocation
+            ? "Getting location..."
+            : "Use My Current Location"}
+        </Text>
       </TouchableOpacity>
 
       <View style={styles.formGroup}>
@@ -766,6 +1109,10 @@ export default function AddListingScreen() {
             placeholder="5.6037"
             placeholderTextColor={Colors.textSecondary}
             keyboardType="numeric"
+            value={formData.latitude?.toString() || ""}
+            onChangeText={(text) =>
+              setFormData({ ...formData, latitude: parseFloat(text) || null })
+            }
           />
         </View>
         <View style={[styles.formGroup, { flex: 1 }]}>
@@ -775,6 +1122,10 @@ export default function AddListingScreen() {
             placeholder="-0.1870"
             placeholderTextColor={Colors.textSecondary}
             keyboardType="numeric"
+            value={formData.longitude?.toString() || ""}
+            onChangeText={(text) =>
+              setFormData({ ...formData, longitude: parseFloat(text) || null })
+            }
           />
         </View>
       </View>
@@ -790,11 +1141,24 @@ export default function AddListingScreen() {
       </Text>
 
       <View style={styles.previewCard}>
-        <Image
-          source={{ uri: mockPhotos[0] }}
-          style={styles.previewImage}
-          resizeMode="cover"
-        />
+        {formData.photos.length > 0 ? (
+          <Image
+            source={{ uri: formData.photos[0] }}
+            style={styles.previewImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={[styles.previewImage, styles.previewImagePlaceholder]}>
+            <Ionicons
+              name="image-outline"
+              size={48}
+              color={Colors.textSecondary}
+            />
+            <Text style={styles.previewImagePlaceholderText}>
+              No photos added
+            </Text>
+          </View>
+        )}
         <View style={styles.previewContent}>
           <Text style={styles.previewTitle}>
             {formData.title || "4 Bedroom House in East Legon"}
@@ -869,7 +1233,8 @@ export default function AddListingScreen() {
             </TouchableOpacity>
           </View>
           <Text style={styles.previewSectionValue}>
-            {mockPhotos.length} Photos • 0 Videos • No 360° View
+            {formData.photos.length} Photos • {formData.videos.length} Videos •{" "}
+            {formData.has360 ? "360° View" : "No 360° View"}
           </Text>
         </View>
       </View>
@@ -1493,12 +1858,40 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.sm,
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   mediaLimitText: {
     ...Typography.bodyMedium,
     fontSize: 14,
     color: Colors.textSecondary,
+  },
+  videosGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
+  },
+  videoWrapper: {
+    width: "31%",
+    aspectRatio: 1,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  videoThumbnail: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  videoLabel: {
+    ...Typography.caption,
+    fontSize: 11,
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
   },
   addMediaButton: {
     borderRadius: 20,
@@ -1545,21 +1938,70 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   // Location
-  mapPlaceholder: {
-    height: 200,
-    backgroundColor: Colors.surface,
+  mapContainer: {
+    height: 220,
     borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
+    overflow: "hidden",
     marginBottom: Spacing.lg,
     borderWidth: 1,
     borderColor: Colors.divider,
   },
-  mapPlaceholderText: {
-    ...Typography.bodyMedium,
-    fontSize: 14,
-    color: Colors.textSecondary,
-    marginTop: Spacing.sm,
+  map: {
+    width: "100%",
+    height: "100%",
+  },
+  markerContainer: {
+    alignItems: "center",
+  },
+  markerInner: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.primaryGreen,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 3,
+    borderColor: "#FFFFFF",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  mapLocationBadge: {
+    position: "absolute",
+    top: Spacing.sm,
+    right: Spacing.sm,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: Colors.surface,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  mapLocationBadgeText: {
+    ...Typography.caption,
+    fontSize: 11,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
   },
   locationButton: {
     flexDirection: "row",
@@ -1604,6 +2046,17 @@ const styles = StyleSheet.create({
   previewImage: {
     width: "100%",
     height: 200,
+  },
+  previewImagePlaceholder: {
+    backgroundColor: Colors.surface,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  previewImagePlaceholderText: {
+    ...Typography.bodyMedium,
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginTop: Spacing.sm,
   },
   previewContent: {
     padding: Spacing.lg,
