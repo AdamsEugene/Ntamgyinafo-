@@ -4,9 +4,9 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
   Platform,
 } from "react-native";
+import Animated from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
@@ -50,10 +50,11 @@ export const PropertyListCard: React.FC<PropertyCardProps> = ({
       activeOpacity={0.8}
     >
       <View style={PropertyCardStyles.propertyImageContainer}>
-        <Image
+        <Animated.Image
           source={{ uri: property.image }}
           style={PropertyCardStyles.propertyImage}
           resizeMode="cover"
+          {...{ sharedTransitionTag: `property-image-${property.id}` }}
         />
         <TouchableOpacity
           style={PropertyCardStyles.propertySaveButton}
@@ -145,10 +146,11 @@ export const PropertyGridCard: React.FC<PropertyCardProps> = ({
       activeOpacity={0.8}
     >
       <View style={PropertyCardStyles.gridImageContainer}>
-        <Image
+        <Animated.Image
           source={{ uri: property.image }}
           style={PropertyCardStyles.gridImage}
           resizeMode="cover"
+          {...{ sharedTransitionTag: `property-image-${property.id}` }}
         />
         <TouchableOpacity
           style={PropertyCardStyles.gridSaveButton}

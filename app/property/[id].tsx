@@ -12,6 +12,7 @@ import {
   Linking,
   FlatList,
 } from "react-native";
+import Animated from "react-native-reanimated";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -274,7 +275,20 @@ export default function PropertyDetailScreen() {
                   }}
                   style={{ width: SCREEN_WIDTH }}
                 >
-                  <Image source={{ uri: item }} style={styles.carouselImage} />
+                  {index === 0 ? (
+                    <Animated.Image
+                      source={{ uri: item }}
+                      style={styles.carouselImage}
+                      {...{
+                        sharedTransitionTag: `property-image-${property.id}`,
+                      }}
+                    />
+                  ) : (
+                    <Image
+                      source={{ uri: item }}
+                      style={styles.carouselImage}
+                    />
+                  )}
                 </TouchableOpacity>
               )}
             />

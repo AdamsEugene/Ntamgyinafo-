@@ -5,11 +5,11 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   RefreshControl,
   Platform,
   FlatList,
 } from "react-native";
+import Animated from "react-native-reanimated";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -312,10 +312,13 @@ export default function BuyerHomeScreen() {
                   activeOpacity={0.9}
                 >
                   <View style={styles.featuredImageContainer}>
-                    <Image
+                    <Animated.Image
                       source={{ uri: property.image }}
                       style={styles.featuredImage}
                       resizeMode="cover"
+                      {...{
+                        sharedTransitionTag: `property-image-${property.id}`,
+                      }}
                     />
                     <View style={styles.featuredImageOverlay} />
                     <TouchableOpacity
@@ -402,10 +405,13 @@ export default function BuyerHomeScreen() {
                   activeOpacity={0.8}
                 >
                   <View style={styles.nearYouImageContainer}>
-                    <Image
+                    <Animated.Image
                       source={{ uri: property.image }}
                       style={styles.nearYouImage}
                       resizeMode="cover"
+                      {...{
+                        sharedTransitionTag: `property-image-${property.id}`,
+                      }}
                     />
                     <TouchableOpacity
                       style={styles.nearYouSaveButton}
@@ -542,10 +548,13 @@ export default function BuyerHomeScreen() {
                   activeOpacity={0.8}
                 >
                   <View style={styles.nearYouImageContainer}>
-                    <Image
+                    <Animated.Image
                       source={{ uri: property.image }}
                       style={styles.nearYouImage}
                       resizeMode="cover"
+                      {...{
+                        sharedTransitionTag: `property-image-${property.id}`,
+                      }}
                     />
                     <View style={styles.newBadge}>
                       <Text style={styles.newBadgeText}>NEW</Text>
