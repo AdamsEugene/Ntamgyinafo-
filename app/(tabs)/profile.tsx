@@ -69,7 +69,7 @@ export default function ProfileScreen() {
       id: "notifications",
       icon: "notifications-outline",
       label: "Notifications",
-      route: null,
+      route: "/notifications",
     },
     {
       id: "help",

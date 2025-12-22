@@ -266,9 +266,7 @@ export default function OwnerDashboardScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => {
-                // TODO: Navigate to notifications
-              }}
+              onPress={() => router.push("/notifications")}
               style={FloatingHeaderStyles.actionButton}
               activeOpacity={0.7}
             >

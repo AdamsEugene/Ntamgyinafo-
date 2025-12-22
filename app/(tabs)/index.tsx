@@ -195,10 +195,7 @@ export default function BuyerHomeScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => {
-                // TODO: Navigate to notifications
-                console.log("Notifications");
-              }}
+              onPress={() => router.push("/notifications")}
               style={FloatingHeaderStyles.actionButton}
               activeOpacity={0.7}
             >

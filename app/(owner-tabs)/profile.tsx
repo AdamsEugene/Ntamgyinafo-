@@ -71,7 +71,7 @@ const MENU_ITEMS = [
     id: "notifications",
     icon: "notifications-outline" as const,
     label: "Notifications",
-    route: null,
+    route: "/notifications",
   },
   {
     id: "help",
