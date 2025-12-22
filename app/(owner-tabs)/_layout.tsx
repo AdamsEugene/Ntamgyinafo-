@@ -91,6 +91,12 @@ export default function OwnerTabLayout() {
         }}
       />
       <Tabs.Screen
+        name="subscription"
+        options={{
+          title: "Subscription",
+        }}
+      />
+      <Tabs.Screen
         name="messages"
         options={{
           title: "Messages",

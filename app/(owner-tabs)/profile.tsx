@@ -14,6 +14,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import {
+  FloatingHeaderStyles,
+  HEADER_ICON_SIZE,
+} from "@/components/FloatingHeader.styles";
 
 // Mock user data
 const USER = {
@@ -39,10 +43,16 @@ const MENU_ITEMS = [
     route: "/(owner-tabs)/my-listings",
   },
   {
+    id: "inquiries",
+    icon: "chatbubble-ellipses-outline" as const,
+    label: "Inquiries",
+    route: "/(owner-tabs)/inquiries",
+  },
+  {
     id: "subscription",
     icon: "diamond-outline" as const,
     label: "Subscription",
-    route: "/subscription-plans",
+    route: "/(owner-tabs)/subscription",
     badge: "Standard",
   },
   {
@@ -94,7 +104,6 @@ export default function OwnerProfileScreen() {
         text: "Logout",
         style: "destructive",
         onPress: () => {
-          // TODO: Clear auth state and navigate to login
           router.replace("/(auth)/welcome");
         },
       },
@@ -105,11 +114,46 @@ export default function OwnerProfileScreen() {
     <>
       <StatusBar style="dark" />
       <View style={styles.container}>
+        {/* Decorative Background Elements */}
+        <View style={styles.decorativeBackground}>
+          <View style={styles.circle1} />
+          <View style={styles.circle2} />
+        </View>
+
+        {/* Floating Sticky Header */}
+        <View
+          style={[
+            FloatingHeaderStyles.floatingHeader,
+            { paddingTop: insets.top + Spacing.md },
+          ]}
+        >
+          <View style={styles.headerLeft}>
+            <Text style={styles.headerTitleText}>Profile</Text>
+          </View>
+
+          {/* Action Buttons */}
+          <View style={FloatingHeaderStyles.headerActions}>
+            <TouchableOpacity
+              style={FloatingHeaderStyles.actionButton}
+              activeOpacity={0.7}
+            >
+              <View style={FloatingHeaderStyles.actionButtonBackground}>
+                <Ionicons
+                  name="settings-outline"
+                  size={HEADER_ICON_SIZE}
+                  color={Colors.textPrimary}
+                />
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         <ScrollView
+          style={styles.scrollView}
           contentContainerStyle={[
             styles.content,
             {
-              paddingTop: insets.top + Spacing.xl,
+              paddingTop: 80 + insets.top,
               paddingBottom: 100 + insets.bottom,
             },
           ]}
@@ -148,16 +192,36 @@ export default function OwnerProfileScreen() {
           {/* Stats */}
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
+              <View
+                style={[
+                  styles.statIconBg,
+                  { backgroundColor: `${Colors.primaryGreen}15` },
+                ]}
+              >
+                <Ionicons name="home" size={18} color={Colors.primaryGreen} />
+              </View>
               <Text style={styles.statValue}>{USER.stats.listings}</Text>
               <Text style={styles.statLabel}>Listings</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{USER.stats.views}</Text>
+              <View
+                style={[styles.statIconBg, { backgroundColor: "#3B82F615" }]}
+              >
+                <Ionicons name="eye" size={18} color="#3B82F6" />
+              </View>
+              <Text style={styles.statValue}>
+                {USER.stats.views.toLocaleString()}
+              </Text>
               <Text style={styles.statLabel}>Views</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
+              <View
+                style={[styles.statIconBg, { backgroundColor: "#F59E0B15" }]}
+              >
+                <Ionicons name="chatbubble" size={18} color="#F59E0B" />
+              </View>
               <Text style={styles.statValue}>{USER.stats.inquiries}</Text>
               <Text style={styles.statLabel}>Inquiries</Text>
             </View>
@@ -228,6 +292,52 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  // Decorative Background
+  decorativeBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+  },
+  circle1: {
+    position: "absolute",
+    top: -100,
+    right: -100,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: Colors.primaryLight,
+    opacity: 0.08,
+  },
+  circle2: {
+    position: "absolute",
+    bottom: -150,
+    left: -150,
+    width: 400,
+    height: 400,
+    borderRadius: 200,
+    backgroundColor: Colors.primaryGreen,
+    opacity: 0.05,
+  },
+  // Header
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    flex: 1,
+  },
+  headerTitleText: {
+    ...Typography.titleLarge,
+    fontSize: 20,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+  },
+  scrollView: {
+    flex: 1,
+    zIndex: 1,
   },
   content: {
     paddingHorizontal: Spacing.xl,
@@ -331,21 +441,29 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
   },
+  statIconBg: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.xs,
+  },
   statValue: {
     ...Typography.headlineMedium,
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "700",
     color: Colors.textPrimary,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   statLabel: {
     ...Typography.caption,
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.textSecondary,
   },
   statDivider: {
     width: 1,
-    height: "80%",
+    height: 60,
     backgroundColor: Colors.divider,
     alignSelf: "center",
   },
