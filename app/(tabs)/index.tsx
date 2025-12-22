@@ -53,30 +53,54 @@ const POPULAR_AREAS = [
     id: "east-legon",
     name: "East Legon",
     count: 234,
-    image:
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=200&h=150&fit=crop",
+    icon: "location" as const,
+    color: "#10B981",
   },
   {
     id: "airport",
     name: "Airport Residential",
     count: 189,
-    image:
-      "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=200&h=150&fit=crop",
+    icon: "airplane" as const,
+    color: "#3B82F6",
   },
   {
     id: "labone",
     name: "Labone",
     count: 156,
-    image:
-      "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=200&h=150&fit=crop",
+    icon: "leaf" as const,
+    color: "#8B5CF6",
   },
   {
     id: "cantonments",
     name: "Cantonments",
     count: 142,
-    image:
-      "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=200&h=150&fit=crop",
+    icon: "shield" as const,
+    color: "#F59E0B",
   },
+  {
+    id: "osu",
+    name: "Osu",
+    count: 128,
+    icon: "restaurant" as const,
+    color: "#EF4444",
+  },
+];
+
+// Quick stats for the dashboard
+const QUICK_STATS = [
+  {
+    id: "properties",
+    label: "Properties",
+    value: "2,450+",
+    icon: "home" as const,
+  },
+  {
+    id: "verified",
+    label: "Verified",
+    value: "1,200+",
+    icon: "shield-checkmark" as const,
+  },
+  { id: "cities", label: "Cities", value: "16", icon: "map" as const },
 ];
 
 export default function BuyerHomeScreen() {
@@ -212,6 +236,23 @@ export default function BuyerHomeScreen() {
             <Text style={styles.welcomeSubtext}>
               Find your dream property today
             </Text>
+          </View>
+
+          {/* Quick Stats */}
+          <View style={styles.quickStatsContainer}>
+            {QUICK_STATS.map((stat) => (
+              <View key={stat.id} style={styles.quickStatCard}>
+                <View style={styles.quickStatIcon}>
+                  <Ionicons
+                    name={stat.icon}
+                    size={18}
+                    color={Colors.primaryGreen}
+                  />
+                </View>
+                <Text style={styles.quickStatValue}>{stat.value}</Text>
+                <Text style={styles.quickStatLabel}>{stat.label}</Text>
+              </View>
+            ))}
           </View>
 
           {/* Categories Section */}
@@ -455,22 +496,26 @@ export default function BuyerHomeScreen() {
                 <TouchableOpacity
                   style={styles.popularAreaCard}
                   onPress={() => {
-                    console.log("Navigate to area:", area.id);
                     router.push("/(tabs)/search");
                   }}
                   activeOpacity={0.8}
                 >
-                  <Image
-                    source={{ uri: area.image }}
-                    style={styles.popularAreaImage}
-                    resizeMode="cover"
-                  />
-                  <View style={styles.popularAreaOverlay} />
-                  <View style={styles.popularAreaContent}>
-                    <Text style={styles.popularAreaName}>{area.name}</Text>
-                    <Text style={styles.popularAreaCount}>
-                      {area.count} properties
-                    </Text>
+                  <View
+                    style={[
+                      styles.popularAreaIconContainer,
+                      { backgroundColor: `${area.color}15` },
+                    ]}
+                  >
+                    <Ionicons name={area.icon} size={28} color={area.color} />
+                  </View>
+                  <Text style={styles.popularAreaName}>{area.name}</Text>
+                  <View style={styles.popularAreaCountContainer}>
+                    <Ionicons
+                      name="home-outline"
+                      size={12}
+                      color={Colors.textSecondary}
+                    />
+                    <Text style={styles.popularAreaCount}>{area.count}</Text>
                   </View>
                 </TouchableOpacity>
               )}
@@ -1006,11 +1051,13 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
   },
   popularAreaCard: {
-    width: 200,
-    height: 140,
+    alignItems: "center",
+    backgroundColor: Colors.surface,
     borderRadius: 20,
-    overflow: "hidden",
-    position: "relative",
+    padding: Spacing.lg,
+    minWidth: 120,
+    borderWidth: 1,
+    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -1023,36 +1070,31 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  popularAreaImage: {
-    width: "100%",
-    height: "100%",
-  },
-  popularAreaOverlay: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: "50%",
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
-  },
-  popularAreaContent: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: Spacing.md,
+  popularAreaIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: Spacing.md,
   },
   popularAreaName: {
-    ...Typography.titleLarge,
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#FFFFFF",
-    marginBottom: Spacing.xs / 2,
+    ...Typography.labelLarge,
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+    textAlign: "center",
+    marginBottom: Spacing.xs,
+  },
+  popularAreaCountContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   popularAreaCount: {
-    ...Typography.bodyMedium,
-    fontSize: 13,
-    color: "rgba(255, 255, 255, 0.9)",
+    ...Typography.caption,
+    fontSize: 12,
+    color: Colors.textSecondary,
   },
   newBadge: {
     position: "absolute",
@@ -1073,7 +1115,7 @@ const styles = StyleSheet.create({
   },
   // Welcome Section
   welcomeSection: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   welcomeText: {
     ...Typography.headlineLarge,
@@ -1085,6 +1127,55 @@ const styles = StyleSheet.create({
   welcomeSubtext: {
     ...Typography.bodyMedium,
     fontSize: 15,
+    color: Colors.textSecondary,
+  },
+  // Quick Stats
+  quickStatsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: Spacing.xl,
+    gap: Spacing.md,
+  },
+  quickStatCard: {
+    flex: 1,
+    alignItems: "center",
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.03,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
+  },
+  quickStatIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: Spacing.sm,
+  },
+  quickStatValue: {
+    ...Typography.titleLarge,
+    fontSize: 18,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+    marginBottom: 2,
+  },
+  quickStatLabel: {
+    ...Typography.caption,
+    fontSize: 11,
     color: Colors.textSecondary,
   },
 });
