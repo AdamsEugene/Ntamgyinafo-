@@ -557,7 +557,9 @@ export default function OwnerDashboardScreen() {
                 <TouchableOpacity
                   style={styles.listingCard}
                   activeOpacity={0.8}
-                  onPress={() => router.push(`/property/${listing.id}`)}
+                  onPress={() =>
+                    router.push(`/owner-listing/${listing.id}` as any)
+                  }
                 >
                   <Image
                     source={{ uri: listing.image }}
