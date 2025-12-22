@@ -108,6 +108,13 @@ export default function RootLayout() {
                 }}
               />
               <Stack.Screen
+                name="owner-listing/[id]/analytics"
+                options={{
+                  headerShown: false,
+                  presentation: "card",
+                }}
+              />
+              <Stack.Screen
                 name="modal"
                 options={{ presentation: "modal", title: "Modal" }}
               />

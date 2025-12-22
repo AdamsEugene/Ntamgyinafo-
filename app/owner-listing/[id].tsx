@@ -198,7 +198,7 @@ export default function OwnerListingDetailScreen() {
 
   const handleViewStats = () => {
     // Navigate to listing analytics screen
-    router.push(`/(owner-tabs)/listing/${property.id}/analytics` as any);
+    router.push(`/owner-listing/${property.id}/analytics` as any);
   };
 
   const handleChangeStatus = () => {
@@ -744,7 +744,10 @@ export default function OwnerListingDetailScreen() {
         <View
           style={[
             styles.ownerActionsContainer,
-            { paddingBottom: insets.bottom + Spacing.md, paddingTop: Spacing.md },
+            {
+              paddingBottom: insets.bottom + Spacing.md,
+              paddingTop: Spacing.md,
+            },
           ]}
         >
           <View style={styles.ownerActionsRow}>
