@@ -749,17 +749,32 @@ export default function AddListingScreen() {
         <Text style={styles.priceNote}>per month</Text>
       )}
 
-      <View style={styles.negotiableRow}>
+      <TouchableOpacity
+        style={styles.negotiableRow}
+        activeOpacity={0.8}
+        onPress={() =>
+          setFormData({ ...formData, negotiable: !formData.negotiable })
+        }
+      >
         <View style={styles.negotiableInfo}>
-          <Ionicons
-            name="swap-horizontal"
-            size={24}
-            color={Colors.primaryGreen}
-          />
+          <View
+            style={[
+              styles.negotiableIcon,
+              formData.negotiable && styles.negotiableIconActive,
+            ]}
+          >
+            <Ionicons
+              name="swap-horizontal"
+              size={20}
+              color={formData.negotiable ? "#FFFFFF" : Colors.primaryGreen}
+            />
+          </View>
           <View style={styles.negotiableText}>
             <Text style={styles.negotiableLabel}>Negotiable</Text>
-            <Text style={styles.negotiableHint}>
-              Allow buyers to make offers
+            <Text style={styles.negotiableHint} numberOfLines={1}>
+              {formData.negotiable
+                ? "Buyers can make offers"
+                : "Allow price negotiation"}
             </Text>
           </View>
         </View>
@@ -776,7 +791,7 @@ export default function AddListingScreen() {
             formData.negotiable ? Colors.primaryGreen : Colors.surface
           }
         />
-      </View>
+      </TouchableOpacity>
     </View>
   );
 
@@ -1683,17 +1698,29 @@ const styles = StyleSheet.create({
   negotiableRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     backgroundColor: Colors.surface,
     borderRadius: 16,
-    padding: Spacing.lg,
+    padding: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.divider,
   },
   negotiableInfo: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.md,
+    gap: Spacing.sm,
+    flex: 1,
+    marginRight: Spacing.sm,
+  },
+  negotiableIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: `${Colors.primaryGreen}15`,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  negotiableIconActive: {
+    backgroundColor: Colors.primaryGreen,
   },
   negotiableText: {
     flex: 1,

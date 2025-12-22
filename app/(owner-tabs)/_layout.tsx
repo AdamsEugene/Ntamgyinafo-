@@ -40,10 +40,13 @@ export default function OwnerTabLayout() {
       }}
       tabBar={(props) => {
         const currentRouteName = props.state.routes[props.state.index].name;
+        // Map add-listing to my-listings for bottom nav highlighting
+        const activeTab =
+          currentRouteName === "add-listing" ? "my-listings" : currentRouteName;
         return (
           <BottomNavigation
             tabs={OWNER_TABS}
-            activeTab={currentRouteName}
+            activeTab={activeTab}
             onTabPress={(tabId) => {
               const route = props.state.routes.find((r) => r.name === tabId);
               if (route) {
