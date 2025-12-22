@@ -9,6 +9,7 @@ import {
   Platform,
   ActivityIndicator,
   KeyboardAvoidingView,
+  Modal,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -64,6 +65,7 @@ export default function PaymentScreen() {
   const [cardholderName, setCardholderName] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Format card number with spaces
   const formatCardNumber = (text: string) => {
@@ -100,20 +102,45 @@ export default function PaymentScreen() {
     if (!isFormValid()) return;
 
     setIsProcessing(true);
+    setError(null);
 
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      // Simulate payment processing
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    setIsProcessing(false);
-    setShowSuccess(true);
+      // Simulate occasional payment failure (10% chance for demo)
+      // In production, this would be replaced with actual Paystack integration
+      const shouldFail = Math.random() < 0.1;
 
-    // Navigate to receipt after showing success
-    setTimeout(() => {
-      router.push({
-        pathname: "/payment-receipt",
-        params: { planId: plan.id },
-      });
-    }, 1500);
+      if (shouldFail) {
+        throw new Error(
+          "Payment failed. Please check your details and try again."
+        );
+      }
+
+      setIsProcessing(false);
+      setShowSuccess(true);
+
+      // Navigate to receipt after showing success
+      setTimeout(() => {
+        router.push({
+          pathname: "/payment-receipt",
+          params: { planId: plan.id },
+        });
+      }, 1500);
+    } catch (err) {
+      setIsProcessing(false);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "An unexpected error occurred. Please try again."
+      );
+    }
+  };
+
+  // Dismiss error
+  const dismissError = () => {
+    setError(null);
   };
 
   // Success overlay
@@ -134,9 +161,39 @@ export default function PaymentScreen() {
     );
   }
 
+  // Error modal
+  const renderErrorModal = () => (
+    <Modal
+      visible={!!error}
+      transparent
+      animationType="fade"
+      onRequestClose={dismissError}
+    >
+      <View style={styles.errorModalOverlay}>
+        <View style={styles.errorModalContent}>
+          <View style={styles.errorIconContainer}>
+            <Ionicons name="alert-circle" size={50} color="#EF4444" />
+          </View>
+          <Text style={styles.errorTitle}>Payment Failed</Text>
+          <Text style={styles.errorMessage}>{error}</Text>
+          <TouchableOpacity
+            style={styles.errorButton}
+            onPress={dismissError}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.errorButtonText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
+
+      {/* Error Modal */}
+      {renderErrorModal()}
 
       {/* Header */}
       <View
@@ -760,5 +817,79 @@ const styles = StyleSheet.create({
     ...Typography.bodyMedium,
     fontSize: 15,
     color: "rgba(255, 255, 255, 0.8)",
+  },
+  // Error Modal
+  errorModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: Spacing.xl,
+  },
+  errorModalContent: {
+    backgroundColor: Colors.surface,
+    borderRadius: 24,
+    padding: Spacing.xl,
+    alignItems: "center",
+    width: "100%",
+    maxWidth: 340,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.2,
+        shadowRadius: 24,
+      },
+      android: {
+        elevation: 16,
+      },
+    }),
+  },
+  errorIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "rgba(239, 68, 68, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: Spacing.lg,
+  },
+  errorTitle: {
+    ...Typography.headlineMedium,
+    fontSize: 22,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+    marginBottom: Spacing.sm,
+  },
+  errorMessage: {
+    ...Typography.bodyMedium,
+    fontSize: 14,
+    color: Colors.textSecondary,
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: Spacing.xl,
+  },
+  errorButton: {
+    backgroundColor: Colors.primaryGreen,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl * 2,
+    borderRadius: 14,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.primaryGreen,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  errorButtonText: {
+    ...Typography.labelLarge,
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
 });
