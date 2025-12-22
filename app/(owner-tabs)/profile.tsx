@@ -59,7 +59,7 @@ const MENU_ITEMS = [
     id: "analytics",
     icon: "stats-chart-outline" as const,
     label: "Analytics",
-    route: "/(owner-tabs)/index",
+    route: "/owner-analytics",
   },
   {
     id: "payment-methods",
