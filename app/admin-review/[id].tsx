@@ -294,7 +294,7 @@ export default function AdminPropertyReviewScreen() {
             styles.content,
             {
               paddingTop: 80 + insets.top,
-              paddingBottom: 120 + insets.bottom,
+              paddingBottom: 180 + insets.bottom,
             },
           ]}
           showsVerticalScrollIndicator={false}
@@ -1224,10 +1224,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    zIndex: 100,
     flexDirection: "row",
     gap: Spacing.md,
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
+    paddingTop: Spacing.lg,
     backgroundColor: Colors.background,
     borderTopWidth: 1,
     borderTopColor: Colors.divider,
