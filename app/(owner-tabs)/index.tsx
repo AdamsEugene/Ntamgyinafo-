@@ -306,29 +306,43 @@ export default function OwnerDashboardScreen() {
         >
           {/* Owner Stats Banner */}
           <View style={styles.statsBanner}>
-            <LinearGradient
-              colors={[Colors.primaryGreen, "#2E7D32"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.statsBannerGradient}
-            >
-              <View style={styles.quickStatsRow}>
-                <View style={styles.quickStat}>
-                  <Text style={styles.quickStatValue}>GHS 2.5M</Text>
-                  <Text style={styles.quickStatLabel}>Total Value</Text>
+            <View style={styles.quickStatsRow}>
+              <View style={styles.quickStat}>
+                <View style={styles.quickStatIcon}>
+                  <Ionicons
+                    name="wallet-outline"
+                    size={18}
+                    color={Colors.primaryGreen}
+                  />
                 </View>
-                <View style={styles.quickStatDivider} />
-                <View style={styles.quickStat}>
-                  <Text style={styles.quickStatValue}>5</Text>
-                  <Text style={styles.quickStatLabel}>Properties</Text>
-                </View>
-                <View style={styles.quickStatDivider} />
-                <View style={styles.quickStat}>
-                  <Text style={styles.quickStatValue}>48</Text>
-                  <Text style={styles.quickStatLabel}>Inquiries</Text>
-                </View>
+                <Text style={styles.quickStatValue}>GHS 2.5M</Text>
+                <Text style={styles.quickStatLabel}>Total Value</Text>
               </View>
-            </LinearGradient>
+              <View style={styles.quickStatDivider} />
+              <View style={styles.quickStat}>
+                <View style={styles.quickStatIcon}>
+                  <Ionicons
+                    name="home-outline"
+                    size={18}
+                    color={Colors.primaryGreen}
+                  />
+                </View>
+                <Text style={styles.quickStatValue}>5</Text>
+                <Text style={styles.quickStatLabel}>Properties</Text>
+              </View>
+              <View style={styles.quickStatDivider} />
+              <View style={styles.quickStat}>
+                <View style={styles.quickStatIcon}>
+                  <Ionicons
+                    name="chatbubble-outline"
+                    size={18}
+                    color={Colors.primaryGreen}
+                  />
+                </View>
+                <Text style={styles.quickStatValue}>48</Text>
+                <Text style={styles.quickStatLabel}>Inquiries</Text>
+              </View>
+            </View>
           </View>
           {/* Quick Actions */}
           <View style={styles.quickActionsContainer}>
@@ -413,18 +427,17 @@ export default function OwnerDashboardScreen() {
             activeOpacity={0.9}
             onPress={() => router.push("/subscription-plans")}
           >
-            <LinearGradient
-              colors={["#1E3A5F", "#0F2744"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.subscriptionGradient}
-            >
+            <View style={styles.subscriptionContent}>
               <View style={styles.subscriptionHeader}>
                 <View>
                   <View style={styles.planBadge}>
-                    <Ionicons name="diamond" size={12} color="#FFD700" />
+                    <Ionicons
+                      name="diamond"
+                      size={12}
+                      color={Colors.primaryGreen}
+                    />
                     <Text style={styles.planBadgeText}>
-                      {SUBSCRIPTION.plan.toUpperCase()}
+                      {SUBSCRIPTION.plan}
                     </Text>
                   </View>
                   <Text style={styles.subscriptionTitle}>
@@ -435,7 +448,7 @@ export default function OwnerDashboardScreen() {
                   <Text style={styles.daysNumber}>
                     {SUBSCRIPTION.daysRemaining}
                   </Text>
-                  <Text style={styles.daysLabel}>days</Text>
+                  <Text style={styles.daysLabel}>days left</Text>
                 </View>
               </View>
 
@@ -471,7 +484,7 @@ export default function OwnerDashboardScreen() {
                   <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
                 </TouchableOpacity>
               </View>
-            </LinearGradient>
+            </View>
           </TouchableOpacity>
 
           {/* Recent Inquiries Section */}
@@ -692,22 +705,22 @@ const styles = StyleSheet.create({
   // Stats Banner
   statsBanner: {
     marginBottom: Spacing.xl,
-    borderRadius: 20,
-    overflow: "hidden",
+    borderRadius: 16,
+    backgroundColor: Colors.surface,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
-        shadowColor: Colors.primaryGreen,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 12,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
       },
       android: {
-        elevation: 4,
+        elevation: 2,
       },
     }),
-  },
-  statsBannerGradient: {
-    padding: Spacing.lg,
   },
   quickStatsRow: {
     flexDirection: "row",
@@ -716,22 +729,31 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
   },
+  quickStatIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: `${Colors.primaryGreen}10`,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.xs,
+  },
   quickStatValue: {
     ...Typography.headlineMedium,
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: Colors.textPrimary,
     marginBottom: 2,
   },
   quickStatLabel: {
     ...Typography.caption,
     fontSize: 11,
-    color: "rgba(255, 255, 255, 0.8)",
+    color: Colors.textSecondary,
   },
   quickStatDivider: {
     width: 1,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
-    marginVertical: 4,
+    backgroundColor: Colors.divider,
+    marginVertical: 8,
   },
   // Content
   scrollView: {
@@ -857,22 +879,25 @@ const styles = StyleSheet.create({
   // Subscription Card
   subscriptionCard: {
     marginBottom: Spacing.xl,
-    borderRadius: 20,
+    borderRadius: 16,
     overflow: "hidden",
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
       },
       android: {
-        elevation: 4,
+        elevation: 2,
       },
     }),
   },
-  subscriptionGradient: {
-    padding: Spacing.xl,
+  subscriptionContent: {
+    padding: Spacing.lg,
   },
   subscriptionHeader: {
     flexDirection: "row",
@@ -884,7 +909,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "rgba(255, 215, 0, 0.2)",
+    backgroundColor: `${Colors.primaryGreen}15`,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
     borderRadius: 8,
@@ -892,37 +917,37 @@ const styles = StyleSheet.create({
   },
   planBadgeText: {
     ...Typography.caption,
-    fontSize: 10,
-    fontWeight: "700",
-    color: "#FFD700",
-    letterSpacing: 0.5,
+    fontSize: 11,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
+    letterSpacing: 0.3,
   },
   subscriptionTitle: {
     ...Typography.titleMedium,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "600",
-    color: "#FFFFFF",
+    color: Colors.textPrimary,
   },
   daysCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: `${Colors.primaryGreen}10`,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "rgba(255, 255, 255, 0.3)",
+    borderColor: `${Colors.primaryGreen}30`,
   },
   daysNumber: {
     ...Typography.titleLarge,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
-    color: "#FFFFFF",
+    color: Colors.primaryGreen,
   },
   daysLabel: {
     ...Typography.caption,
-    fontSize: 10,
-    color: "rgba(255, 255, 255, 0.7)",
+    fontSize: 9,
+    color: Colors.textSecondary,
     marginTop: -2,
   },
   subscriptionProgress: {
@@ -936,17 +961,17 @@ const styles = StyleSheet.create({
   progressLabel: {
     ...Typography.caption,
     fontSize: 12,
-    color: "rgba(255, 255, 255, 0.7)",
+    color: Colors.textSecondary,
   },
   progressValue: {
     ...Typography.caption,
     fontSize: 12,
     fontWeight: "600",
-    color: "#FFFFFF",
+    color: Colors.textPrimary,
   },
   progressBar: {
     height: 6,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: Colors.divider,
     borderRadius: 3,
     overflow: "hidden",
   },
@@ -959,11 +984,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: Colors.divider,
   },
   expiryText: {
     ...Typography.bodyMedium,
-    fontSize: 13,
-    color: "rgba(255, 255, 255, 0.7)",
+    fontSize: 12,
+    color: Colors.textSecondary,
   },
   upgradeButton: {
     flexDirection: "row",
@@ -976,7 +1004,7 @@ const styles = StyleSheet.create({
   },
   upgradeButtonText: {
     ...Typography.labelMedium,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "600",
     color: "#FFFFFF",
   },
