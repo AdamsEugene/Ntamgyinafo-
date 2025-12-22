@@ -188,7 +188,7 @@ const REJECTION_REASONS = [
 ];
 
 export default function PropertyQueueScreen() {
-  useRouter();
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const searchInputRef = useRef<RNTextInput>(null);
   const [properties, setProperties] = useState<Property[]>(MOCK_PROPERTIES);
@@ -816,6 +816,10 @@ export default function PropertyQueueScreen() {
                   <TouchableOpacity
                     style={styles.sheetAction}
                     activeOpacity={0.7}
+                    onPress={() => {
+                      actionSheetRef.current?.dismiss();
+                      router.push(`/admin-review/${selectedProperty.id}`);
+                    }}
                   >
                     <View
                       style={[
@@ -896,6 +900,10 @@ export default function PropertyQueueScreen() {
                   <TouchableOpacity
                     style={styles.sheetAction}
                     activeOpacity={0.7}
+                    onPress={() => {
+                      actionSheetRef.current?.dismiss();
+                      router.push(`/admin-user/${selectedProperty.owner.id}`);
+                    }}
                   >
                     <View
                       style={[
