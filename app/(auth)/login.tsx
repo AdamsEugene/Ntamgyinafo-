@@ -224,6 +224,33 @@ export default function LoginScreen() {
                 <Text style={styles.registerLink}>Register</Text>
               </TouchableOpacity>
             </View>
+
+            {/* Demo Buttons */}
+            <View style={styles.demoSection}>
+              <Text style={styles.demoTitle}>Quick Demo Access</Text>
+              <View style={styles.demoButtons}>
+                <TouchableOpacity
+                  style={styles.demoBuyerButton}
+                  onPress={() => router.replace("/(tabs)")}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons
+                    name="search"
+                    size={18}
+                    color={Colors.primaryGreen}
+                  />
+                  <Text style={styles.demoBuyerText}>Buyer Demo</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.demoOwnerButton}
+                  onPress={() => router.replace("/(owner-tabs)")}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="home" size={18} color="#FFFFFF" />
+                  <Text style={styles.demoOwnerText}>Owner Demo</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -400,5 +427,57 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Colors.primaryGreen,
     fontWeight: "700",
+  },
+  // Demo Section
+  demoSection: {
+    marginTop: Spacing["2xl"],
+    paddingTop: Spacing.xl,
+    borderTopWidth: 1,
+    borderTopColor: Colors.divider,
+    alignItems: "center",
+  },
+  demoTitle: {
+    ...Typography.caption,
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.md,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  demoButtons: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  demoBuyerButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.primaryGreen,
+    backgroundColor: Colors.surface,
+  },
+  demoBuyerText: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
+  },
+  demoOwnerButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: 12,
+    backgroundColor: Colors.primaryGreen,
+  },
+  demoOwnerText: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
 });
