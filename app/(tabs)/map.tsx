@@ -136,16 +136,16 @@ export default function MapScreen() {
     if (isMapReady && pendingNavigation && mapRef.current) {
       const { propertyId, lat, lng } = pendingNavigation;
 
-      // Step 1: Animate to the location
+      // Step 1: Animate to the location (maximum zoom)
       setTimeout(() => {
         mapRef.current?.animateToRegion(
           {
             latitude: lat,
             longitude: lng,
-            latitudeDelta: 0.005,
-            longitudeDelta: 0.005,
+            latitudeDelta: 0.0008,
+            longitudeDelta: 0.0008,
           },
-          1000
+          1200
         );
 
         // Step 2: After animation completes, show the marker and popup
@@ -156,7 +156,7 @@ export default function MapScreen() {
           }
           // Clear pending navigation
           setPendingNavigation(null);
-        }, 1100); // Wait for animation to complete (1000ms) + small buffer
+        }, 1300); // Wait for animation to complete (1200ms) + small buffer
       }, 300); // Small delay to ensure map is fully rendered
     }
   }, [isMapReady, pendingNavigation]);
