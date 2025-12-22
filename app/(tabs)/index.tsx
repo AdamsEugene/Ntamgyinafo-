@@ -264,10 +264,7 @@ export default function BuyerHomeScreen() {
               renderItem={({ item: category }) => (
                 <TouchableOpacity
                   style={styles.categoryCard}
-                  onPress={() => {
-                    console.log("Category:", category.id);
-                    router.push("/(tabs)/search");
-                  }}
+                  onPress={() => router.push(`/category/${category.id}`)}
                   activeOpacity={0.8}
                 >
                   <View style={styles.categoryIconContainer}>

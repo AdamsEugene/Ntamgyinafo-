@@ -203,6 +203,13 @@ export default function RootLayout() {
                 }}
               />
               <Stack.Screen
+                name="category/[id]"
+                options={{
+                  headerShown: false,
+                  presentation: "card",
+                }}
+              />
+              <Stack.Screen
                 name="near-you-properties"
                 options={{
                   headerShown: false,
