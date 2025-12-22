@@ -1,0 +1,1354 @@
+import React, { useState, useRef, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  Dimensions,
+  Platform,
+  Alert,
+  FlatList,
+} from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import {
+  BottomSheetModal,
+  BottomSheetBackdrop,
+  BottomSheetView,
+  BottomSheetTextInput,
+} from "@gorhom/bottom-sheet";
+import { Colors, Typography, Spacing } from "@/constants/design";
+import {
+  FloatingHeaderStyles,
+  HEADER_ICON_SIZE,
+} from "@/components/FloatingHeader.styles";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+interface PropertyDocument {
+  id: string;
+  name: string;
+  type: "pdf" | "image" | "certificate";
+  url: string;
+  verified: boolean;
+}
+
+interface PropertyOwner {
+  id: string;
+  name: string;
+  avatar: string;
+  phone: string;
+  email: string;
+  isVerified: boolean;
+  totalListings: number;
+  joinedDate: string;
+}
+
+// Mock property data for review
+const MOCK_PROPERTY = {
+  id: "p1",
+  title: "4 Bedroom House in East Legon",
+  description:
+    "Beautiful 4 bedroom house with modern finishes, spacious living areas, and a well-maintained garden. The property features a large master bedroom with en-suite bathroom, fitted kitchen with modern appliances, and a separate laundry area. Located in a quiet neighborhood with easy access to schools, shopping centers, and major roads.",
+  type: "house" as const,
+  transactionType: "sale" as const,
+  price: 850000,
+  currency: "₵",
+  location: "East Legon, Accra",
+  address: "15 Boundary Road, East Legon, Greater Accra Region",
+  coordinates: { lat: 5.6355, lng: -0.1523 },
+  bedrooms: 4,
+  bathrooms: 3,
+  area: 3500,
+  areaUnit: "sqft",
+  yearBuilt: 2020,
+  parkingSpaces: 2,
+  amenities: [
+    "Swimming Pool",
+    "24/7 Security",
+    "Backup Generator",
+    "Air Conditioning",
+    "Fitted Kitchen",
+    "Garden",
+    "Boys Quarters",
+    "CCTV",
+  ],
+  images: [
+    "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&h=600&fit=crop",
+  ],
+  videos: [
+    {
+      id: "v1",
+      thumbnail:
+        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=300&fit=crop",
+      duration: "2:30",
+    },
+  ],
+  virtualTour: true,
+  documents: [
+    {
+      id: "d1",
+      name: "Land Title Certificate",
+      type: "certificate" as const,
+      url: "#",
+      verified: true,
+    },
+    {
+      id: "d2",
+      name: "Building Permit",
+      type: "pdf" as const,
+      url: "#",
+      verified: true,
+    },
+    {
+      id: "d3",
+      name: "Property Survey Plan",
+      type: "pdf" as const,
+      url: "#",
+      verified: false,
+    },
+    {
+      id: "d4",
+      name: "Tax Clearance Certificate",
+      type: "certificate" as const,
+      url: "#",
+      verified: false,
+    },
+  ] as PropertyDocument[],
+  owner: {
+    id: "u1",
+    name: "Kofi Mensah",
+    avatar: "https://i.pravatar.cc/150?img=11",
+    phone: "+233 24 123 4567",
+    email: "kofi.mensah@email.com",
+    isVerified: true,
+    totalListings: 5,
+    joinedDate: "Jan 2023",
+  } as PropertyOwner,
+  submittedAt: "Dec 22, 2024 at 2:30 PM",
+  status: "pending" as const,
+  negotiable: true,
+};
+
+const REJECTION_REASONS = [
+  "Incomplete or missing property documents",
+  "Poor quality images (blurry, dark, insufficient)",
+  "Inaccurate or misleading property information",
+  "Price seems unrealistic for the market",
+  "Duplicate listing detected",
+  "Property already listed by another user",
+  "Insufficient property details",
+  "Other (please specify)",
+];
+
+export default function AdminPropertyReviewScreen() {
+  const router = useRouter();
+  useLocalSearchParams(); // id available for API call
+  const insets = useSafeAreaInsets();
+  const rejectSheetRef = useRef<BottomSheetModal>(null);
+
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [selectedReason, setSelectedReason] = useState<string>("");
+  const [customReason, setCustomReason] = useState("");
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+
+  const property = MOCK_PROPERTY;
+
+  const renderBackdrop = useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.5}
+      />
+    ),
+    []
+  );
+
+  const handleApprove = () => {
+    Alert.alert(
+      "Approve Listing",
+      "Are you sure you want to approve this property listing? It will be published immediately.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Approve",
+          onPress: () => {
+            setIsApproving(true);
+            // Simulate API call
+            setTimeout(() => {
+              setIsApproving(false);
+              Alert.alert(
+                "Success",
+                "Property listing has been approved and is now live.",
+                [{ text: "OK", onPress: () => router.back() }]
+              );
+            }, 1500);
+          },
+        },
+      ]
+    );
+  };
+
+  const handleReject = () => {
+    if (!selectedReason) {
+      Alert.alert("Error", "Please select a reason for rejection.");
+      return;
+    }
+
+    // Determine the rejection reason for API
+    if (selectedReason === "Other (please specify)" && !customReason.trim()) {
+      Alert.alert("Error", "Please provide a reason for rejection.");
+      return;
+    }
+
+    // API would use: selectedReason === "Other (please specify)" ? customReason : selectedReason
+    setIsRejecting(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsRejecting(false);
+      rejectSheetRef.current?.dismiss();
+      Alert.alert(
+        "Listing Rejected",
+        "The property owner has been notified with the rejection reason.",
+        [{ text: "OK", onPress: () => router.back() }]
+      );
+    }, 1500);
+  };
+
+  const formatPrice = (price: number) => {
+    if (price >= 1000000) {
+      return `${property.currency}${(price / 1000000).toFixed(2)}M`;
+    }
+    return `${property.currency}${price.toLocaleString()}`;
+  };
+
+  const getDocIcon = (type: PropertyDocument["type"]) => {
+    switch (type) {
+      case "pdf":
+        return "document-text";
+      case "image":
+        return "image";
+      case "certificate":
+        return "ribbon";
+      default:
+        return "document";
+    }
+  };
+
+  return (
+    <>
+      <StatusBar style="dark" />
+      <View style={styles.container}>
+        {/* Decorative Background Elements */}
+        <View style={styles.decorativeBackground}>
+          <View style={styles.circle1} />
+          <View style={styles.circle2} />
+        </View>
+
+        {/* Floating Sticky Header */}
+        <View
+          style={[
+            FloatingHeaderStyles.floatingHeader,
+            { paddingTop: insets.top + Spacing.md },
+          ]}
+        >
+          <View style={styles.headerLeft}>
+            <TouchableOpacity
+              style={FloatingHeaderStyles.backButton}
+              onPress={() => router.back()}
+              activeOpacity={0.7}
+            >
+              <View style={FloatingHeaderStyles.backButtonCircle}>
+                <Ionicons
+                  name="arrow-back"
+                  size={HEADER_ICON_SIZE}
+                  color={Colors.textPrimary}
+                />
+              </View>
+            </TouchableOpacity>
+            <Text style={styles.headerTitleText}>Review Property</Text>
+          </View>
+
+          <View style={FloatingHeaderStyles.headerActions}>
+            <View style={styles.pendingBadge}>
+              <Ionicons name="time" size={14} color="#F59E0B" />
+              <Text style={styles.pendingBadgeText}>Pending Review</Text>
+            </View>
+          </View>
+        </View>
+
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={[
+            styles.content,
+            {
+              paddingTop: 80 + insets.top,
+              paddingBottom: 120 + insets.bottom,
+            },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Image Gallery */}
+          <View style={styles.imageGallery}>
+            <FlatList
+              data={property.images}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={(e) => {
+                const index = Math.round(
+                  e.nativeEvent.contentOffset.x /
+                    (SCREEN_WIDTH - Spacing.lg * 2)
+                );
+                setActiveImageIndex(index);
+              }}
+              renderItem={({ item }) => (
+                <Image
+                  source={{ uri: item }}
+                  style={styles.galleryImage}
+                  resizeMode="cover"
+                />
+              )}
+              keyExtractor={(item, index) => index.toString()}
+            />
+            <View style={styles.imagePagination}>
+              {property.images.map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.paginationDot,
+                    activeImageIndex === index && styles.paginationDotActive,
+                  ]}
+                />
+              ))}
+            </View>
+            <View style={styles.imageCount}>
+              <Ionicons name="images" size={14} color="#FFFFFF" />
+              <Text style={styles.imageCountText}>
+                {activeImageIndex + 1}/{property.images.length}
+              </Text>
+            </View>
+          </View>
+
+          {/* Property Title & Price */}
+          <View style={styles.titleSection}>
+            <View style={styles.typeTag}>
+              <Text style={styles.typeTagText}>
+                For {property.transactionType === "sale" ? "Sale" : "Rent"}
+              </Text>
+            </View>
+            <Text style={styles.propertyTitle}>{property.title}</Text>
+            <View style={styles.locationRow}>
+              <Ionicons name="location" size={16} color={Colors.primaryGreen} />
+              <Text style={styles.locationText}>{property.location}</Text>
+            </View>
+            <Text style={styles.priceText}>{formatPrice(property.price)}</Text>
+            {property.negotiable && (
+              <Text style={styles.negotiableText}>Price is negotiable</Text>
+            )}
+          </View>
+
+          {/* Quick Stats */}
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Ionicons
+                name="bed-outline"
+                size={22}
+                color={Colors.primaryGreen}
+              />
+              <Text style={styles.statValue}>{property.bedrooms}</Text>
+              <Text style={styles.statLabel}>Beds</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Ionicons
+                name="water-outline"
+                size={22}
+                color={Colors.primaryGreen}
+              />
+              <Text style={styles.statValue}>{property.bathrooms}</Text>
+              <Text style={styles.statLabel}>Baths</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Ionicons
+                name="expand-outline"
+                size={22}
+                color={Colors.primaryGreen}
+              />
+              <Text style={styles.statValue}>
+                {property.area.toLocaleString()}
+              </Text>
+              <Text style={styles.statLabel}>{property.areaUnit}</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Ionicons
+                name="car-outline"
+                size={22}
+                color={Colors.primaryGreen}
+              />
+              <Text style={styles.statValue}>{property.parkingSpaces}</Text>
+              <Text style={styles.statLabel}>Parking</Text>
+            </View>
+          </View>
+
+          {/* Description */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Description</Text>
+            <View style={styles.sectionCard}>
+              <Text style={styles.descriptionText}>{property.description}</Text>
+            </View>
+          </View>
+
+          {/* Property Details */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Property Details</Text>
+            <View style={styles.sectionCard}>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Property Type</Text>
+                <Text style={styles.detailValue}>
+                  {property.type.charAt(0).toUpperCase() +
+                    property.type.slice(1)}
+                </Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Year Built</Text>
+                <Text style={styles.detailValue}>{property.yearBuilt}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Full Address</Text>
+                <Text style={styles.detailValue}>{property.address}</Text>
+              </View>
+              <View style={[styles.detailRow, { borderBottomWidth: 0 }]}>
+                <Text style={styles.detailLabel}>Submitted</Text>
+                <Text style={styles.detailValue}>{property.submittedAt}</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Amenities */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Amenities</Text>
+            <View style={styles.sectionCard}>
+              <View style={styles.amenitiesGrid}>
+                {property.amenities.map((amenity, index) => (
+                  <View key={index} style={styles.amenityItem}>
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={18}
+                      color={Colors.primaryGreen}
+                    />
+                    <Text style={styles.amenityText}>{amenity}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </View>
+
+          {/* Videos */}
+          {property.videos.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Videos</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {property.videos.map((video) => (
+                  <TouchableOpacity
+                    key={video.id}
+                    style={styles.videoThumbnail}
+                  >
+                    <Image
+                      source={{ uri: video.thumbnail }}
+                      style={styles.videoImage}
+                    />
+                    <View style={styles.videoPlayButton}>
+                      <Ionicons name="play" size={24} color="#FFFFFF" />
+                    </View>
+                    <View style={styles.videoDuration}>
+                      <Text style={styles.videoDurationText}>
+                        {video.duration}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              {property.virtualTour && (
+                <TouchableOpacity style={styles.virtualTourButton}>
+                  <Ionicons
+                    name="cube-outline"
+                    size={20}
+                    color={Colors.primaryGreen}
+                  />
+                  <Text style={styles.virtualTourText}>
+                    360° Virtual Tour Available
+                  </Text>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={18}
+                    color={Colors.textSecondary}
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+
+          {/* Documents */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Documents</Text>
+              <View style={styles.docStats}>
+                <Text style={styles.docStatsText}>
+                  {property.documents.filter((d) => d.verified).length}/
+                  {property.documents.length} Verified
+                </Text>
+              </View>
+            </View>
+            <View style={styles.sectionCard}>
+              {property.documents.map((doc, index) => (
+                <TouchableOpacity
+                  key={doc.id}
+                  style={[
+                    styles.documentRow,
+                    index === property.documents.length - 1 && {
+                      borderBottomWidth: 0,
+                    },
+                  ]}
+                >
+                  <View style={styles.documentIcon}>
+                    <Ionicons
+                      name={getDocIcon(doc.type) as any}
+                      size={20}
+                      color={Colors.primaryGreen}
+                    />
+                  </View>
+                  <View style={styles.documentInfo}>
+                    <Text style={styles.documentName}>{doc.name}</Text>
+                    <View style={styles.documentStatus}>
+                      <Ionicons
+                        name={doc.verified ? "checkmark-circle" : "time"}
+                        size={14}
+                        color={doc.verified ? Colors.primaryGreen : "#F59E0B"}
+                      />
+                      <Text
+                        style={[
+                          styles.documentStatusText,
+                          {
+                            color: doc.verified
+                              ? Colors.primaryGreen
+                              : "#F59E0B",
+                          },
+                        ]}
+                      >
+                        {doc.verified ? "Verified" : "Pending Verification"}
+                      </Text>
+                    </View>
+                  </View>
+                  <Ionicons
+                    name="eye-outline"
+                    size={20}
+                    color={Colors.textSecondary}
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Owner Information */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Property Owner</Text>
+            <View style={styles.ownerCard}>
+              <Image
+                source={{ uri: property.owner.avatar }}
+                style={styles.ownerAvatar}
+              />
+              <View style={styles.ownerInfo}>
+                <View style={styles.ownerNameRow}>
+                  <Text style={styles.ownerName}>{property.owner.name}</Text>
+                  {property.owner.isVerified && (
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={16}
+                      color={Colors.primaryGreen}
+                    />
+                  )}
+                </View>
+                <Text style={styles.ownerMeta}>
+                  {property.owner.totalListings} listings • Joined{" "}
+                  {property.owner.joinedDate}
+                </Text>
+              </View>
+              <TouchableOpacity style={styles.ownerViewButton}>
+                <Text style={styles.ownerViewButtonText}>View Profile</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.ownerContactCard}>
+              <View style={styles.ownerContactRow}>
+                <Ionicons
+                  name="call-outline"
+                  size={18}
+                  color={Colors.textSecondary}
+                />
+                <Text style={styles.ownerContactText}>
+                  {property.owner.phone}
+                </Text>
+              </View>
+              <View style={styles.ownerContactRow}>
+                <Ionicons
+                  name="mail-outline"
+                  size={18}
+                  color={Colors.textSecondary}
+                />
+                <Text style={styles.ownerContactText}>
+                  {property.owner.email}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Review Notes */}
+          <View style={styles.reviewNotesCard}>
+            <Ionicons name="information-circle" size={22} color="#3B82F6" />
+            <View style={styles.reviewNotesContent}>
+              <Text style={styles.reviewNotesTitle}>Review Checklist</Text>
+              <Text style={styles.reviewNotesText}>
+                • Verify all images are clear and genuine{"\n"}• Check document
+                authenticity{"\n"}• Confirm pricing is market-appropriate{"\n"}•
+                Validate property details accuracy
+              </Text>
+            </View>
+          </View>
+        </ScrollView>
+
+        {/* Fixed Action Bar */}
+        <View
+          style={[
+            styles.actionBar,
+            { paddingBottom: insets.bottom + Spacing.md },
+          ]}
+        >
+          <TouchableOpacity
+            style={styles.rejectButton}
+            onPress={() => rejectSheetRef.current?.present()}
+            activeOpacity={0.8}
+            disabled={isApproving}
+          >
+            <Ionicons name="close-circle" size={22} color="#EF4444" />
+            <Text style={styles.rejectButtonText}>Reject</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.approveButton, isApproving && styles.buttonDisabled]}
+            onPress={handleApprove}
+            activeOpacity={0.8}
+            disabled={isApproving}
+          >
+            {isApproving ? (
+              <Text style={styles.approveButtonText}>Approving...</Text>
+            ) : (
+              <>
+                <Ionicons name="checkmark-circle" size={22} color="#FFFFFF" />
+                <Text style={styles.approveButtonText}>Approve Listing</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Rejection Reason Bottom Sheet */}
+        <BottomSheetModal
+          ref={rejectSheetRef}
+          index={0}
+          snapPoints={["75%"]}
+          backdropComponent={renderBackdrop}
+          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+        >
+          <BottomSheetView style={styles.rejectSheetContent}>
+            <Text style={styles.rejectSheetTitle}>Reject Listing</Text>
+            <Text style={styles.rejectSheetSubtitle}>
+              Select a reason for rejection. The property owner will be
+              notified.
+            </Text>
+
+            <ScrollView
+              style={styles.reasonsList}
+              showsVerticalScrollIndicator={false}
+            >
+              {REJECTION_REASONS.map((reason) => (
+                <TouchableOpacity
+                  key={reason}
+                  style={[
+                    styles.reasonOption,
+                    selectedReason === reason && styles.reasonOptionActive,
+                  ]}
+                  onPress={() => setSelectedReason(reason)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name={
+                      selectedReason === reason
+                        ? "radio-button-on"
+                        : "radio-button-off"
+                    }
+                    size={22}
+                    color={
+                      selectedReason === reason
+                        ? Colors.primaryGreen
+                        : Colors.textSecondary
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.reasonText,
+                      selectedReason === reason && styles.reasonTextActive,
+                    ]}
+                  >
+                    {reason}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+
+              {selectedReason === "Other (please specify)" && (
+                <BottomSheetTextInput
+                  style={styles.customReasonInput}
+                  placeholder="Enter reason for rejection..."
+                  placeholderTextColor={Colors.textSecondary}
+                  value={customReason}
+                  onChangeText={setCustomReason}
+                  multiline
+                  numberOfLines={3}
+                />
+              )}
+            </ScrollView>
+
+            <TouchableOpacity
+              style={[
+                styles.confirmRejectButton,
+                (!selectedReason || isRejecting) && styles.buttonDisabled,
+              ]}
+              onPress={handleReject}
+              disabled={!selectedReason || isRejecting}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.confirmRejectButtonText}>
+                {isRejecting ? "Rejecting..." : "Confirm Rejection"}
+              </Text>
+            </TouchableOpacity>
+          </BottomSheetView>
+        </BottomSheetModal>
+      </View>
+    </>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  decorativeBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+  },
+  circle1: {
+    position: "absolute",
+    top: -100,
+    right: -100,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: Colors.primaryLight,
+    opacity: 0.08,
+  },
+  circle2: {
+    position: "absolute",
+    bottom: -150,
+    left: -150,
+    width: 400,
+    height: 400,
+    borderRadius: 200,
+    backgroundColor: Colors.primaryGreen,
+    opacity: 0.05,
+  },
+  // Header
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    flex: 1,
+  },
+  headerTitleText: {
+    ...Typography.titleLarge,
+    fontSize: 18,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+  },
+  pendingBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#FEF3C7",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  pendingBadgeText: {
+    ...Typography.caption,
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#F59E0B",
+  },
+  scrollView: {
+    flex: 1,
+    zIndex: 1,
+  },
+  content: {
+    paddingHorizontal: Spacing.lg,
+  },
+  // Image Gallery
+  imageGallery: {
+    marginBottom: Spacing.lg,
+    borderRadius: 20,
+    overflow: "hidden",
+    position: "relative",
+  },
+  galleryImage: {
+    width: SCREEN_WIDTH - Spacing.lg * 2,
+    height: 240,
+    borderRadius: 20,
+  },
+  imagePagination: {
+    position: "absolute",
+    bottom: 16,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 6,
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "rgba(255,255,255,0.5)",
+  },
+  paginationDotActive: {
+    width: 24,
+    backgroundColor: "#FFFFFF",
+  },
+  imageCount: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  imageCountText: {
+    ...Typography.caption,
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  // Title Section
+  titleSection: {
+    marginBottom: Spacing.lg,
+  },
+  typeTag: {
+    alignSelf: "flex-start",
+    backgroundColor: Colors.primaryGreen,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginBottom: Spacing.sm,
+  },
+  typeTagText: {
+    ...Typography.caption,
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  propertyTitle: {
+    ...Typography.headlineMedium,
+    fontSize: 22,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+    marginBottom: 8,
+  },
+  locationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginBottom: Spacing.sm,
+  },
+  locationText: {
+    ...Typography.bodyMedium,
+    fontSize: 14,
+    color: Colors.textSecondary,
+  },
+  priceText: {
+    ...Typography.headlineLarge,
+    fontSize: 28,
+    fontWeight: "800",
+    color: Colors.primaryGreen,
+  },
+  negotiableText: {
+    ...Typography.caption,
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 4,
+  },
+  // Stats Row
+  statsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+  },
+  statItem: {
+    alignItems: "center",
+    flex: 1,
+  },
+  statValue: {
+    ...Typography.titleMedium,
+    fontSize: 18,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+    marginTop: 4,
+  },
+  statLabel: {
+    ...Typography.caption,
+    fontSize: 11,
+    color: Colors.textSecondary,
+  },
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: Colors.divider,
+  },
+  // Section
+  section: {
+    marginBottom: Spacing.xl,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: Spacing.md,
+  },
+  sectionTitle: {
+    ...Typography.titleMedium,
+    fontSize: 16,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
+  },
+  sectionCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+  },
+  descriptionText: {
+    ...Typography.bodyMedium,
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 22,
+  },
+  // Detail Row
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
+  },
+  detailLabel: {
+    ...Typography.bodyMedium,
+    fontSize: 14,
+    color: Colors.textSecondary,
+    flex: 1,
+  },
+  detailValue: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+    flex: 1.5,
+    textAlign: "right",
+  },
+  // Amenities
+  amenitiesGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.md,
+  },
+  amenityItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    width: "47%",
+  },
+  amenityText: {
+    ...Typography.bodyMedium,
+    fontSize: 13,
+    color: Colors.textPrimary,
+  },
+  // Videos
+  videoThumbnail: {
+    width: 180,
+    height: 120,
+    borderRadius: 14,
+    marginRight: Spacing.md,
+    overflow: "hidden",
+    position: "relative",
+  },
+  videoImage: {
+    width: "100%",
+    height: "100%",
+  },
+  videoPlayButton: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    marginTop: -20,
+    marginLeft: -20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  videoDuration: {
+    position: "absolute",
+    bottom: 8,
+    right: 8,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  videoDurationText: {
+    ...Typography.caption,
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  virtualTourButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    padding: Spacing.md,
+    marginTop: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+  },
+  virtualTourText: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
+    flex: 1,
+  },
+  // Documents
+  docStats: {
+    backgroundColor: `${Colors.primaryGreen}15`,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  docStatsText: {
+    ...Typography.caption,
+    fontSize: 11,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
+  },
+  documentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
+  },
+  documentIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: `${Colors.primaryGreen}15`,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  documentInfo: {
+    flex: 1,
+  },
+  documentName: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+    marginBottom: 2,
+  },
+  documentStatus: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  documentStatusText: {
+    ...Typography.caption,
+    fontSize: 11,
+    fontWeight: "500",
+  },
+  // Owner
+  ownerCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    marginBottom: Spacing.sm,
+  },
+  ownerAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
+  ownerInfo: {
+    flex: 1,
+  },
+  ownerNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  ownerName: {
+    ...Typography.labelMedium,
+    fontSize: 16,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+  },
+  ownerMeta: {
+    ...Typography.caption,
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  ownerViewButton: {
+    borderWidth: 1,
+    borderColor: Colors.primaryGreen,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: 10,
+  },
+  ownerViewButtonText: {
+    ...Typography.labelMedium,
+    fontSize: 12,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
+  },
+  ownerContactCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    gap: Spacing.sm,
+  },
+  ownerContactRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  ownerContactText: {
+    ...Typography.bodyMedium,
+    fontSize: 14,
+    color: Colors.textPrimary,
+  },
+  // Review Notes
+  reviewNotesCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: Spacing.md,
+    backgroundColor: "#DBEAFE",
+    borderRadius: 16,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
+  },
+  reviewNotesContent: {
+    flex: 1,
+  },
+  reviewNotesTitle: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#3B82F6",
+    marginBottom: 4,
+  },
+  reviewNotesText: {
+    ...Typography.bodyMedium,
+    fontSize: 13,
+    color: "#1E40AF",
+    lineHeight: 20,
+  },
+  // Action Bar
+  actionBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+    backgroundColor: Colors.background,
+    borderTopWidth: 1,
+    borderTopColor: Colors.divider,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  rejectButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    paddingVertical: Spacing.lg,
+    borderRadius: 16,
+    backgroundColor: "#FEE2E2",
+  },
+  rejectButtonText: {
+    ...Typography.labelLarge,
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#EF4444",
+  },
+  approveButton: {
+    flex: 2,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    paddingVertical: Spacing.lg,
+    borderRadius: 16,
+    backgroundColor: Colors.primaryGreen,
+  },
+  approveButtonText: {
+    ...Typography.labelLarge,
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  // Reject Sheet
+  rejectSheetContent: {
+    flex: 1,
+    padding: Spacing.xl,
+  },
+  rejectSheetTitle: {
+    ...Typography.headlineMedium,
+    fontSize: 22,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+  },
+  rejectSheetSubtitle: {
+    ...Typography.bodyMedium,
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.xl,
+  },
+  reasonsList: {
+    flex: 1,
+  },
+  reasonOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    marginBottom: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+  },
+  reasonOptionActive: {
+    borderColor: Colors.primaryGreen,
+    backgroundColor: `${Colors.primaryGreen}08`,
+  },
+  reasonText: {
+    ...Typography.bodyMedium,
+    fontSize: 14,
+    color: Colors.textSecondary,
+    flex: 1,
+  },
+  reasonTextActive: {
+    color: Colors.textPrimary,
+    fontWeight: "500",
+  },
+  customReasonInput: {
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    ...Typography.bodyMedium,
+    fontSize: 14,
+    color: Colors.textPrimary,
+    minHeight: 80,
+    textAlignVertical: "top",
+    marginTop: Spacing.sm,
+  },
+  confirmRejectButton: {
+    backgroundColor: "#EF4444",
+    paddingVertical: Spacing.lg,
+    borderRadius: 16,
+    marginTop: Spacing.lg,
+    alignItems: "center",
+  },
+  confirmRejectButtonText: {
+    ...Typography.labelLarge,
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+});

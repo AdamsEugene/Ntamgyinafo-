@@ -175,6 +175,13 @@ export default function RootLayout() {
                 }}
               />
               <Stack.Screen
+                name="admin-review/[id]"
+                options={{
+                  headerShown: false,
+                  presentation: "card",
+                }}
+              />
+              <Stack.Screen
                 name="modal"
                 options={{ presentation: "modal", title: "Modal" }}
               />

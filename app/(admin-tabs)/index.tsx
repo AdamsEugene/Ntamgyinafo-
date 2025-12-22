@@ -450,6 +450,14 @@ export default function AdminDashboardScreen() {
                 key={item.id}
                 style={styles.pendingItem}
                 activeOpacity={0.7}
+                onPress={() => {
+                  if (item.type === "property") {
+                    router.push(`/admin-review/${item.id}`);
+                  } else {
+                    // For users, go to users tab with this user selected
+                    router.push("/(admin-tabs)/users");
+                  }
+                }}
               >
                 <Image
                   source={{
