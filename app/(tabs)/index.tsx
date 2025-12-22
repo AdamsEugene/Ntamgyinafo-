@@ -206,6 +206,14 @@ export default function BuyerHomeScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
+          {/* Welcome Section */}
+          <View style={styles.welcomeSection}>
+            <Text style={styles.welcomeText}>Hello, Kofi 👋</Text>
+            <Text style={styles.welcomeSubtext}>
+              Find your dream property today
+            </Text>
+          </View>
+
           {/* Categories Section */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Categories</Text>
@@ -259,10 +267,7 @@ export default function BuyerHomeScreen() {
               renderItem={({ item: property }) => (
                 <TouchableOpacity
                   style={styles.featuredCard}
-                  onPress={() => {
-                    console.log("Property:", property.id);
-                    // TODO: Navigate to property detail
-                  }}
+                  onPress={() => router.push(`/property/${property.id}`)}
                   activeOpacity={0.9}
                 >
                   <View style={styles.featuredImageContainer}>
@@ -352,10 +357,7 @@ export default function BuyerHomeScreen() {
                 <TouchableOpacity
                   key={property.id}
                   style={styles.nearYouCard}
-                  onPress={() => {
-                    console.log("Property:", property.id);
-                    // TODO: Navigate to property detail
-                  }}
+                  onPress={() => router.push(`/property/${property.id}`)}
                   activeOpacity={0.8}
                 >
                   <View style={styles.nearYouImageContainer}>
@@ -491,10 +493,7 @@ export default function BuyerHomeScreen() {
                 <TouchableOpacity
                   key={property.id}
                   style={styles.nearYouCard}
-                  onPress={() => {
-                    console.log("Property:", property.id);
-                    // TODO: Navigate to property detail
-                  }}
+                  onPress={() => router.push(`/property/${property.id}`)}
                   activeOpacity={0.8}
                 >
                   <View style={styles.nearYouImageContainer}>
@@ -1071,5 +1070,21 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#FFFFFF",
     letterSpacing: 0.5,
+  },
+  // Welcome Section
+  welcomeSection: {
+    marginBottom: Spacing.xl,
+  },
+  welcomeText: {
+    ...Typography.headlineLarge,
+    fontSize: 28,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+  },
+  welcomeSubtext: {
+    ...Typography.bodyMedium,
+    fontSize: 15,
+    color: Colors.textSecondary,
   },
 });
