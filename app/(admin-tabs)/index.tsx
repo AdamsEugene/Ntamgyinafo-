@@ -321,7 +321,7 @@ export default function AdminDashboardScreen() {
           })}
 
           {/* Key Metrics */}
-          <Text style={styles.sectionTitle}>Overview</Text>
+          <Text style={styles.sectionTitleFirst}>Overview</Text>
           <View style={styles.metricsGrid}>
             {METRICS.map((metric) => (
               <TouchableOpacity
@@ -376,7 +376,9 @@ export default function AdminDashboardScreen() {
           </View>
 
           {/* Quick Actions */}
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <Text style={[styles.sectionTitle, { marginTop: Spacing.xl }]}>
+            Quick Actions
+          </Text>
           <View style={styles.quickActions}>
             <TouchableOpacity
               style={styles.quickAction}
@@ -610,14 +612,15 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: Spacing.lg,
+    gap: Spacing.xs,
   },
   // Alert Card
   alertCard: {
     flexDirection: "row",
     alignItems: "center",
     padding: Spacing.md,
-    borderRadius: 12,
-    marginBottom: Spacing.md,
+    borderRadius: 14,
+    marginBottom: Spacing.sm,
     borderWidth: 1,
     gap: Spacing.md,
   },
@@ -640,14 +643,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: Spacing.md,
-    marginTop: Spacing.lg,
+    marginBottom: Spacing.sm,
+    marginTop: Spacing.xl,
+  },
+  sectionTitleFirst: {
+    ...Typography.labelMedium,
+    fontSize: 15,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   sectionTitle: {
     ...Typography.labelMedium,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "700",
     color: Colors.textPrimary,
+    marginBottom: Spacing.sm,
   },
   seeAllText: {
     ...Typography.labelMedium,
@@ -659,22 +671,21 @@ const styles = StyleSheet.create({
   metricsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: Spacing.md,
-    marginTop: Spacing.md,
+    gap: Spacing.sm,
   },
   metricCard: {
-    width: "47%",
+    width: "48.5%",
     backgroundColor: Colors.surface,
     borderRadius: 16,
-    padding: Spacing.md,
+    padding: Spacing.lg,
     borderWidth: 1,
     borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
       },
       android: {
         elevation: 2,
@@ -715,29 +726,40 @@ const styles = StyleSheet.create({
   // Quick Actions
   quickActions: {
     flexDirection: "row",
-    gap: Spacing.md,
-    marginTop: Spacing.md,
+    gap: Spacing.sm,
   },
   quickAction: {
     flex: 1,
     backgroundColor: Colors.surface,
     borderRadius: 16,
-    padding: Spacing.md,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.sm,
     alignItems: "center",
     borderWidth: 1,
     borderColor: Colors.divider,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   quickActionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
+    width: 50,
+    height: 50,
+    borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: Spacing.sm,
   },
   quickActionText: {
     ...Typography.caption,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
     color: Colors.textPrimary,
     textAlign: "center",
@@ -767,18 +789,30 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderColor: Colors.divider,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   pendingItem: {
     flexDirection: "row",
     alignItems: "center",
-    padding: Spacing.md,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Colors.divider,
     gap: Spacing.md,
   },
   pendingImage: {
-    width: 56,
-    height: 56,
+    width: 52,
+    height: 52,
     borderRadius: 12,
   },
   pendingAvatar: {
@@ -830,11 +864,24 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderColor: Colors.divider,
+    marginBottom: Spacing.md,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   activityItem: {
     flexDirection: "row",
     alignItems: "center",
-    padding: Spacing.md,
+    paddingVertical: Spacing.sm + 2,
+    paddingHorizontal: Spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Colors.divider,
     gap: Spacing.md,
