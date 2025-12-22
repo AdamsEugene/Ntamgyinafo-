@@ -450,9 +450,13 @@ export default function PropertyDetailScreen() {
             <Text style={styles.propertyTitle}>{property.title}</Text>
             <TouchableOpacity
               style={styles.locationRow}
-              onPress={() =>
-                router.push(`/(tabs)/map?propertyId=${property.id}`)
-              }
+              onPress={() => {
+                const lat = property.latitude || 5.6037;
+                const lng = property.longitude || -0.187;
+                router.push(
+                  `/(tabs)/map?propertyId=${property.id}&lat=${lat}&lng=${lng}`
+                );
+              }}
               activeOpacity={0.7}
             >
               <Ionicons
@@ -825,7 +829,11 @@ export default function PropertyDetailScreen() {
               <TouchableOpacity
                 onPress={() => {
                   // Navigate to full map view
-                  router.push(`/map?property=${property.id}`);
+                  const lat = property.latitude || 5.6037;
+                  const lng = property.longitude || -0.187;
+                  router.push(
+                    `/(tabs)/map?propertyId=${property.id}&lat=${lat}&lng=${lng}`
+                  );
                 }}
               >
                 <Text style={styles.viewButton}>View</Text>
@@ -834,7 +842,11 @@ export default function PropertyDetailScreen() {
             <TouchableOpacity
               style={styles.mapPreview}
               onPress={() => {
-                router.push(`/map?property=${property.id}`);
+                const lat = property.latitude || 5.6037;
+                const lng = property.longitude || -0.187;
+                router.push(
+                  `/(tabs)/map?propertyId=${property.id}&lat=${lat}&lng=${lng}`
+                );
               }}
               activeOpacity={0.9}
             >

@@ -115,33 +115,38 @@ export default function MapScreen() {
   // This runs first and sets the flag so location effect doesn't override
   React.useEffect(() => {
     const propertyId = params.propertyId as string;
-    if (propertyId) {
-      const property = MAP_PROPERTIES.find((p) => p.id === propertyId);
+    const lat = params.lat ? parseFloat(params.lat as string) : null;
+    const lng = params.lng ? parseFloat(params.lng as string) : null;
+
+    if (propertyId && lat && lng) {
+      // Find property in MAP_PROPERTIES or create a temporary one
+      let property = MAP_PROPERTIES.find((p) => p.id === propertyId);
+
       if (property) {
-        // Select the property to show popup
         setSelectedProperty(property);
-        setPopupExpanded(false);
-        setHasAnimatedToProperty(true);
-
-        // Animate to the property location after a delay to ensure map is ready
-        const timer = setTimeout(() => {
-          if (mapRef.current) {
-            mapRef.current.animateToRegion(
-              {
-                latitude: property.latitude,
-                longitude: property.longitude,
-                latitudeDelta: 0.008,
-                longitudeDelta: 0.008,
-              },
-              800
-            );
-          }
-        }, 300);
-
-        return () => clearTimeout(timer);
       }
+
+      setPopupExpanded(false);
+      setHasAnimatedToProperty(true);
+
+      // Animate to the passed coordinates
+      const timer = setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.animateToRegion(
+            {
+              latitude: lat,
+              longitude: lng,
+              latitudeDelta: 0.005,
+              longitudeDelta: 0.005,
+            },
+            1000
+          );
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
     }
-  }, [params.propertyId]);
+  }, [params.propertyId, params.lat, params.lng]);
 
   // Request location permission and get user location
   // Skip animation if we're navigating to a specific property
@@ -442,22 +447,22 @@ export default function MapScreen() {
           onMapReady={() => {
             // Skip default fit if navigating to specific property
             const propertyId = params.propertyId as string;
-            if (propertyId) {
-              // Animate to the specific property
-              const property = MAP_PROPERTIES.find((p) => p.id === propertyId);
-              if (property) {
-                setTimeout(() => {
-                  mapRef.current?.animateToRegion(
-                    {
-                      latitude: property.latitude,
-                      longitude: property.longitude,
-                      latitudeDelta: 0.008,
-                      longitudeDelta: 0.008,
-                    },
-                    800
-                  );
-                }, 100);
-              }
+            const lat = params.lat ? parseFloat(params.lat as string) : null;
+            const lng = params.lng ? parseFloat(params.lng as string) : null;
+
+            if (propertyId && lat && lng) {
+              // Animate to the passed coordinates
+              setTimeout(() => {
+                mapRef.current?.animateToRegion(
+                  {
+                    latitude: lat,
+                    longitude: lng,
+                    latitudeDelta: 0.005,
+                    longitudeDelta: 0.005,
+                  },
+                  800
+                );
+              }, 100);
               return;
             }
 
@@ -1262,7 +1267,7 @@ const styles = StyleSheet.create({
   },
   bottomSheetToggle: {
     position: "absolute",
-    bottom: 100,
+    bottom: 115,
     alignSelf: "center",
     backgroundColor: Colors.surface,
     borderRadius: 24,
