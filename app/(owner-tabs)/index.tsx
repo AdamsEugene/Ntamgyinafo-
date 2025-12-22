@@ -8,6 +8,7 @@ import {
   Image,
   RefreshControl,
   Platform,
+  FlatList,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -15,39 +16,83 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Colors, Typography, Spacing } from "@/constants/design";
-import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+
+// Get time-based greeting
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good Morning";
+  if (hour < 17) return "Good Afternoon";
+  return "Good Evening";
+};
+
+// Quick actions
+const QUICK_ACTIONS = [
+  {
+    id: "add",
+    label: "Add Listing",
+    icon: "add-circle" as const,
+    color: Colors.primaryGreen,
+    route: "/(owner-tabs)/add-listing",
+  },
+  {
+    id: "analytics",
+    label: "Analytics",
+    icon: "analytics" as const,
+    color: "#3B82F6",
+    route: null,
+  },
+  {
+    id: "messages",
+    label: "Messages",
+    icon: "chatbubbles" as const,
+    color: "#8B5CF6",
+    route: "/(owner-tabs)/messages",
+  },
+  {
+    id: "promote",
+    label: "Promote",
+    icon: "megaphone" as const,
+    color: "#F59E0B",
+    route: null,
+  },
+];
 
 // Mock data for the dashboard
 const STATS = [
   {
     id: "views",
-    label: "Views",
+    label: "Total Views",
     value: "1,234",
-    icon: "eye-outline" as const,
+    change: "+12%",
+    trending: "up" as const,
+    icon: "eye" as const,
     color: "#3B82F6",
   },
   {
     id: "inquiries",
     label: "Inquiries",
     value: "48",
-    icon: "chatbubble-outline" as const,
+    change: "+8%",
+    trending: "up" as const,
+    icon: "chatbubble" as const,
     color: "#10B981",
   },
   {
     id: "active",
-    label: "Active",
+    label: "Active Listings",
     value: "5",
-    icon: "checkmark-circle-outline" as const,
+    change: "0%",
+    trending: "neutral" as const,
+    icon: "checkmark-circle" as const,
     color: "#8B5CF6",
   },
   {
     id: "pending",
-    label: "Pending",
+    label: "Pending Review",
     value: "2",
-    icon: "time-outline" as const,
+    change: "-1",
+    trending: "down" as const,
+    icon: "time" as const,
     color: "#F59E0B",
   },
 ];
@@ -69,6 +114,7 @@ const RECENT_INQUIRIES = [
         "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
     },
     property: "4 Bedroom House in East Legon",
+    message: "Is the property still available?",
     time: "2 hours ago",
     unread: true,
   },
@@ -80,6 +126,7 @@ const RECENT_INQUIRIES = [
         "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
     },
     property: "3 Bedroom Apartment in Airport",
+    message: "Can I schedule a viewing?",
     time: "5 hours ago",
     unread: true,
   },
@@ -91,12 +138,13 @@ const RECENT_INQUIRIES = [
         "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop",
     },
     property: "2 Plots of Land in Tema",
+    message: "What are the payment terms?",
     time: "Yesterday",
     unread: false,
   },
 ];
 
-const RECENT_LISTINGS = [
+const TOP_LISTINGS = [
   {
     id: "1",
     title: "4 Bedroom House",
@@ -118,17 +166,6 @@ const RECENT_LISTINGS = [
     views: 189,
     inquiries: 8,
     status: "active" as const,
-  },
-  {
-    id: "3",
-    title: "2 Plots of Land",
-    location: "Tema Community 25",
-    price: 120000,
-    image:
-      "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&h=300&fit=crop",
-    views: 156,
-    inquiries: 5,
-    status: "pending" as const,
   },
 ];
 
@@ -169,89 +206,170 @@ export default function OwnerDashboardScreen() {
     }
   };
 
+  const getTrendIcon = (trending: string) => {
+    switch (trending) {
+      case "up":
+        return "trending-up";
+      case "down":
+        return "trending-down";
+      default:
+        return "remove";
+    }
+  };
+
+  const getTrendColor = (trending: string) => {
+    switch (trending) {
+      case "up":
+        return "#10B981";
+      case "down":
+        return "#EF4444";
+      default:
+        return Colors.textSecondary;
+    }
+  };
+
   return (
     <>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <View style={styles.container}>
-        {/* Decorative Background */}
-        <View style={styles.decorativeBackground}>
-          <LinearGradient
-            colors={[`${Colors.primaryGreen}08`, "transparent"]}
-            style={styles.gradientBg}
-          />
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
-        </View>
-
-        {/* Header */}
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
+        {/* Header with gradient background */}
+        <LinearGradient
+          colors={[Colors.primaryGreen, "#1B5E20"]}
+          style={[styles.headerGradient, { paddingTop: insets.top }]}
         >
-          <View style={styles.greetingContainer}>
-            <Text style={styles.greeting}>Hi, Kofi 👋</Text>
-            <Text style={styles.subGreeting}>Manage your properties</Text>
-          </View>
+          <View style={styles.headerContent}>
+            <View style={styles.greetingContainer}>
+              <Text style={styles.greeting}>{getGreeting()}, Kofi 👋</Text>
+              <Text style={styles.subGreeting}>
+                Here&apos;s what&apos;s happening with your properties
+              </Text>
+            </View>
 
-          <TouchableOpacity
-            onPress={() => {
-              // TODO: Navigate to notifications
-            }}
-            style={FloatingHeaderStyles.actionButton}
-            activeOpacity={0.7}
-          >
-            <View style={FloatingHeaderStyles.actionButtonBackground}>
-              <Ionicons
-                name="notifications-outline"
-                size={HEADER_ICON_SIZE}
-                color={Colors.textPrimary}
-              />
+            <TouchableOpacity
+              onPress={() => {
+                // TODO: Navigate to notifications
+              }}
+              style={styles.notificationButton}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="notifications" size={22} color="#FFFFFF" />
               <View style={styles.notificationBadge}>
                 <Text style={styles.notificationBadgeText}>5</Text>
               </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Quick Stats Row */}
+          <View style={styles.quickStatsRow}>
+            <View style={styles.quickStat}>
+              <Text style={styles.quickStatValue}>GHS 2.5M</Text>
+              <Text style={styles.quickStatLabel}>Total Value</Text>
             </View>
-          </TouchableOpacity>
-        </View>
+            <View style={styles.quickStatDivider} />
+            <View style={styles.quickStat}>
+              <Text style={styles.quickStatValue}>5</Text>
+              <Text style={styles.quickStatLabel}>Properties</Text>
+            </View>
+            <View style={styles.quickStatDivider} />
+            <View style={styles.quickStat}>
+              <Text style={styles.quickStatValue}>48</Text>
+              <Text style={styles.quickStatLabel}>Inquiries</Text>
+            </View>
+          </View>
+        </LinearGradient>
 
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={[
             styles.content,
             {
-              paddingTop: 90 + insets.top,
-              paddingBottom: 120 + insets.bottom,
+              paddingBottom: 100 + insets.bottom,
             },
           ]}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={Colors.primaryGreen}
+            />
           }
         >
-          {/* Stats Grid */}
-          <View style={styles.statsGrid}>
-            {STATS.map((stat) => (
+          {/* Quick Actions */}
+          <View style={styles.quickActionsContainer}>
+            {QUICK_ACTIONS.map((action) => (
               <TouchableOpacity
-                key={stat.id}
-                style={styles.statCard}
+                key={action.id}
+                style={styles.quickActionCard}
                 activeOpacity={0.8}
                 onPress={() => {
-                  // TODO: Navigate to detailed analytics
+                  if (action.route) {
+                    router.push(action.route as never);
+                  }
                 }}
               >
                 <View
                   style={[
-                    styles.statIconContainer,
-                    { backgroundColor: `${stat.color}15` },
+                    styles.quickActionIcon,
+                    { backgroundColor: `${action.color}15` },
                   ]}
                 >
-                  <Ionicons name={stat.icon} size={22} color={stat.color} />
+                  <Ionicons name={action.icon} size={24} color={action.color} />
                 </View>
-                <Text style={styles.statValue}>{stat.value}</Text>
-                <Text style={styles.statLabel}>{stat.label}</Text>
+                <Text style={styles.quickActionLabel}>{action.label}</Text>
               </TouchableOpacity>
             ))}
+          </View>
+
+          {/* Stats Grid */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Performance Overview</Text>
+              <TouchableOpacity activeOpacity={0.7}>
+                <Text style={styles.seeAll}>This Month</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.statsGrid}>
+              {STATS.map((stat) => (
+                <View key={stat.id} style={styles.statCard}>
+                  <View style={styles.statHeader}>
+                    <View
+                      style={[
+                        styles.statIconContainer,
+                        { backgroundColor: `${stat.color}15` },
+                      ]}
+                    >
+                      <Ionicons name={stat.icon} size={18} color={stat.color} />
+                    </View>
+                    <View
+                      style={[
+                        styles.trendBadge,
+                        {
+                          backgroundColor: `${getTrendColor(stat.trending)}15`,
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        name={getTrendIcon(stat.trending) as any}
+                        size={12}
+                        color={getTrendColor(stat.trending)}
+                      />
+                      <Text
+                        style={[
+                          styles.trendText,
+                          { color: getTrendColor(stat.trending) },
+                        ]}
+                      >
+                        {stat.change}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.statValue}>{stat.value}</Text>
+                  <Text style={styles.statLabel}>{stat.label}</Text>
+                </View>
+              ))}
+            </View>
           </View>
 
           {/* Subscription Card */}
@@ -261,26 +379,38 @@ export default function OwnerDashboardScreen() {
             onPress={() => router.push("/subscription-plans")}
           >
             <LinearGradient
-              colors={[Colors.primaryGreen, "#2E7D32"]}
+              colors={["#1E3A5F", "#0F2744"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.subscriptionGradient}
             >
               <View style={styles.subscriptionHeader}>
                 <View>
-                  <Text style={styles.subscriptionPlan}>
-                    {SUBSCRIPTION.plan}
-                  </Text>
-                  <Text style={styles.subscriptionExpiry}>
-                    Expires: {SUBSCRIPTION.expiresDate}
+                  <View style={styles.planBadge}>
+                    <Ionicons name="diamond" size={12} color="#FFD700" />
+                    <Text style={styles.planBadgeText}>
+                      {SUBSCRIPTION.plan.toUpperCase()}
+                    </Text>
+                  </View>
+                  <Text style={styles.subscriptionTitle}>
+                    Your Subscription
                   </Text>
                 </View>
-                <View style={styles.subscriptionBadge}>
-                  <Ionicons name="diamond" size={16} color="#FFD700" />
+                <View style={styles.daysCircle}>
+                  <Text style={styles.daysNumber}>
+                    {SUBSCRIPTION.daysRemaining}
+                  </Text>
+                  <Text style={styles.daysLabel}>days</Text>
                 </View>
               </View>
 
               <View style={styles.subscriptionProgress}>
+                <View style={styles.progressHeader}>
+                  <Text style={styles.progressLabel}>Listings Used</Text>
+                  <Text style={styles.progressValue}>
+                    {SUBSCRIPTION.listingsUsed}/{SUBSCRIPTION.listingsTotal}
+                  </Text>
+                </View>
                 <View style={styles.progressBar}>
                   <View
                     style={[
@@ -295,21 +425,14 @@ export default function OwnerDashboardScreen() {
                     ]}
                   />
                 </View>
-                <Text style={styles.progressText}>
-                  {SUBSCRIPTION.listingsUsed}/{SUBSCRIPTION.listingsTotal}{" "}
-                  listings used
-                </Text>
               </View>
 
               <View style={styles.subscriptionFooter}>
-                <View style={styles.daysRemaining}>
-                  <Ionicons name="time-outline" size={16} color="#FFFFFF" />
-                  <Text style={styles.daysRemainingText}>
-                    {SUBSCRIPTION.daysRemaining} days remaining
-                  </Text>
-                </View>
-                <TouchableOpacity style={styles.renewButton}>
-                  <Text style={styles.renewButtonText}>Upgrade</Text>
+                <Text style={styles.expiryText}>
+                  Expires: {SUBSCRIPTION.expiresDate}
+                </Text>
+                <TouchableOpacity style={styles.upgradeButton}>
+                  <Text style={styles.upgradeButtonText}>Upgrade</Text>
                   <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
                 </TouchableOpacity>
               </View>
@@ -320,7 +443,10 @@ export default function OwnerDashboardScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Recent Inquiries</Text>
-              <TouchableOpacity activeOpacity={0.7}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => router.push("/(owner-tabs)/messages")}
+              >
                 <Text style={styles.seeAll}>See All →</Text>
               </TouchableOpacity>
             </View>
@@ -343,28 +469,28 @@ export default function OwnerDashboardScreen() {
                     {inquiry.unread && <View style={styles.unreadDot} />}
                   </View>
                   <View style={styles.inquiryContent}>
-                    <Text style={styles.inquiryBuyerName}>
-                      {inquiry.buyer.name}
-                    </Text>
+                    <View style={styles.inquiryHeader}>
+                      <Text style={styles.inquiryBuyerName}>
+                        {inquiry.buyer.name}
+                      </Text>
+                      <Text style={styles.inquiryTime}>{inquiry.time}</Text>
+                    </View>
                     <Text style={styles.inquiryProperty} numberOfLines={1}>
                       {inquiry.property}
                     </Text>
-                    <Text style={styles.inquiryTime}>{inquiry.time}</Text>
+                    <Text style={styles.inquiryMessage} numberOfLines={1}>
+                      {inquiry.message}
+                    </Text>
                   </View>
-                  <Ionicons
-                    name="chevron-forward"
-                    size={20}
-                    color={Colors.textSecondary}
-                  />
                 </TouchableOpacity>
               ))}
             </View>
           </View>
 
-          {/* My Listings Section */}
+          {/* Top Performing Listings */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>My Listings</Text>
+              <Text style={styles.sectionTitle}>Top Listings</Text>
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => router.push("/(owner-tabs)/my-listings")}
@@ -373,10 +499,14 @@ export default function OwnerDashboardScreen() {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.listingsContainer}>
-              {RECENT_LISTINGS.map((listing) => (
+            <FlatList
+              data={TOP_LISTINGS}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.listingsContainer}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item: listing }) => (
                 <TouchableOpacity
-                  key={listing.id}
                   style={styles.listingCard}
                   activeOpacity={0.8}
                   onPress={() => router.push(`/property/${listing.id}`)}
@@ -385,6 +515,10 @@ export default function OwnerDashboardScreen() {
                     source={{ uri: listing.image }}
                     style={styles.listingImage}
                     resizeMode="cover"
+                  />
+                  <LinearGradient
+                    colors={["transparent", "rgba(0,0,0,0.7)"]}
+                    style={styles.listingOverlay}
                   />
                   <View
                     style={[
@@ -397,40 +531,25 @@ export default function OwnerDashboardScreen() {
                         listing.status.slice(1)}
                     </Text>
                   </View>
-                  <View style={styles.listingContent}>
+                  <View style={styles.listingInfo}>
                     <Text style={styles.listingTitle} numberOfLines={1}>
                       {listing.title}
                     </Text>
-                    <View style={styles.listingLocationRow}>
-                      <Ionicons
-                        name="location-outline"
-                        size={12}
-                        color={Colors.textSecondary}
-                      />
-                      <Text style={styles.listingLocation} numberOfLines={1}>
-                        {listing.location}
-                      </Text>
-                    </View>
+                    <Text style={styles.listingLocation} numberOfLines={1}>
+                      {listing.location}
+                    </Text>
                     <Text style={styles.listingPrice}>
                       {formatPrice(listing.price)}
                     </Text>
                     <View style={styles.listingStats}>
                       <View style={styles.listingStat}>
-                        <Ionicons
-                          name="eye-outline"
-                          size={14}
-                          color={Colors.textSecondary}
-                        />
+                        <Ionicons name="eye" size={14} color="#FFFFFF" />
                         <Text style={styles.listingStatText}>
                           {listing.views}
                         </Text>
                       </View>
                       <View style={styles.listingStat}>
-                        <Ionicons
-                          name="chatbubble-outline"
-                          size={14}
-                          color={Colors.textSecondary}
-                        />
+                        <Ionicons name="chatbubble" size={14} color="#FFFFFF" />
                         <Text style={styles.listingStatText}>
                           {listing.inquiries}
                         </Text>
@@ -438,8 +557,8 @@ export default function OwnerDashboardScreen() {
                     </View>
                   </View>
                 </TouchableOpacity>
-              ))}
-            </View>
+              )}
+            />
           </View>
         </ScrollView>
 
@@ -454,7 +573,6 @@ export default function OwnerDashboardScreen() {
             style={styles.floatingAddButtonGradient}
           >
             <Ionicons name="add" size={28} color="#FFFFFF" />
-            <Text style={styles.floatingAddButtonText}>Add Listing</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -467,49 +585,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  decorativeBackground: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 0,
+  // Header
+  headerGradient: {
+    paddingBottom: Spacing.xl,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
   },
-  gradientBg: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 300,
-  },
-  circle1: {
-    position: "absolute",
-    top: -100,
-    right: -100,
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: Colors.primaryLight,
-    opacity: 0.08,
-  },
-  circle2: {
-    position: "absolute",
-    bottom: -150,
-    left: -150,
-    width: 400,
-    height: 400,
-    borderRadius: 200,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
-  },
-  scrollView: {
-    flex: 1,
-    zIndex: 1,
-  },
-  content: {
+  headerContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     paddingHorizontal: Spacing.xl,
-    paddingTop: 100,
-    paddingBottom: Spacing["2xl"],
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.md,
   },
   greetingContainer: {
     flex: 1,
@@ -518,90 +606,202 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 24,
     fontWeight: "700",
-    color: Colors.textPrimary,
+    color: "#FFFFFF",
+    marginBottom: 4,
   },
   subGreeting: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
-    marginTop: 2,
+    color: "rgba(255, 255, 255, 0.8)",
+  },
+  notificationButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   notificationBadge: {
     position: "absolute",
-    top: 4,
-    right: 4,
+    top: -4,
+    right: -4,
     backgroundColor: "#FF3B30",
     borderRadius: 10,
-    minWidth: 18,
-    height: 18,
+    minWidth: 20,
+    height: 20,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 4,
+    paddingHorizontal: 6,
     borderWidth: 2,
-    borderColor: Colors.surface,
+    borderColor: Colors.primaryGreen,
   },
   notificationBadgeText: {
     ...Typography.caption,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "700",
     color: "#FFFFFF",
+  },
+  quickStatsRow: {
+    flexDirection: "row",
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    marginHorizontal: Spacing.xl,
+    borderRadius: 16,
+    padding: Spacing.lg,
+  },
+  quickStat: {
+    flex: 1,
+    alignItems: "center",
+  },
+  quickStatValue: {
+    ...Typography.headlineMedium,
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    marginBottom: 2,
+  },
+  quickStatLabel: {
+    ...Typography.caption,
+    fontSize: 11,
+    color: "rgba(255, 255, 255, 0.8)",
+  },
+  quickStatDivider: {
+    width: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    marginVertical: 4,
+  },
+  // Content
+  scrollView: {
+    flex: 1,
+  },
+  content: {
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.xl,
+  },
+  // Quick Actions
+  quickActionsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: Spacing.xl,
+    marginTop: -40,
+  },
+  quickActionCard: {
+    alignItems: "center",
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: Spacing.md,
+    width: "23%",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
+  },
+  quickActionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: Spacing.sm,
+  },
+  quickActionLabel: {
+    ...Typography.caption,
+    fontSize: 11,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+    textAlign: "center",
+  },
+  // Section
+  section: {
+    marginBottom: Spacing.xl,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  sectionTitle: {
+    ...Typography.titleLarge,
+    fontSize: 18,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+  },
+  seeAll: {
+    ...Typography.labelMedium,
+    fontSize: 13,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
   },
   // Stats Grid
   statsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: Spacing.md,
-    marginBottom: Spacing.xl,
   },
   statCard: {
-    width: "47%",
+    width: "47.5%",
     backgroundColor: Colors.surface,
-    borderRadius: 20,
-    padding: Spacing.lg,
+    borderRadius: 16,
+    padding: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.divider,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
   },
-  statIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    justifyContent: "center",
+  statHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
     marginBottom: Spacing.md,
   },
+  statIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  trendBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  trendText: {
+    ...Typography.caption,
+    fontSize: 10,
+    fontWeight: "600",
+  },
   statValue: {
-    ...Typography.headlineLarge,
-    fontSize: 28,
+    ...Typography.headlineMedium,
+    fontSize: 24,
     fontWeight: "700",
     color: Colors.textPrimary,
     marginBottom: 2,
   },
   statLabel: {
-    ...Typography.bodyMedium,
-    fontSize: 13,
+    ...Typography.caption,
+    fontSize: 12,
     color: Colors.textSecondary,
   },
   // Subscription Card
   subscriptionCard: {
     marginBottom: Spacing.xl,
-    borderRadius: 24,
+    borderRadius: 20,
     overflow: "hidden",
     ...Platform.select({
       ios: {
-        shadowColor: Colors.primaryGreen,
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
+        shadowOpacity: 0.15,
         shadowRadius: 12,
       },
       android: {
@@ -618,101 +818,109 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: Spacing.lg,
   },
-  subscriptionPlan: {
+  planBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(255, 215, 0, 0.2)",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginBottom: Spacing.sm,
+  },
+  planBadgeText: {
+    ...Typography.caption,
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#FFD700",
+    letterSpacing: 0.5,
+  },
+  subscriptionTitle: {
+    ...Typography.titleMedium,
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  daysCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+  },
+  daysNumber: {
     ...Typography.titleLarge,
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "700",
     color: "#FFFFFF",
   },
-  subscriptionExpiry: {
-    ...Typography.bodyMedium,
-    fontSize: 13,
-    color: "rgba(255, 255, 255, 0.8)",
-    marginTop: 4,
-  },
-  subscriptionBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    justifyContent: "center",
-    alignItems: "center",
+  daysLabel: {
+    ...Typography.caption,
+    fontSize: 10,
+    color: "rgba(255, 255, 255, 0.7)",
+    marginTop: -2,
   },
   subscriptionProgress: {
     marginBottom: Spacing.lg,
   },
-  progressBar: {
-    height: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
-    borderRadius: 4,
+  progressHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: Spacing.sm,
+  },
+  progressLabel: {
+    ...Typography.caption,
+    fontSize: 12,
+    color: "rgba(255, 255, 255, 0.7)",
+  },
+  progressValue: {
+    ...Typography.caption,
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  progressBar: {
+    height: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 3,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 4,
-  },
-  progressText: {
-    ...Typography.caption,
-    fontSize: 12,
-    color: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: Colors.primaryGreen,
+    borderRadius: 3,
   },
   subscriptionFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  daysRemaining: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  daysRemainingText: {
+  expiryText: {
     ...Typography.bodyMedium,
     fontSize: 13,
-    color: "rgba(255, 255, 255, 0.9)",
+    color: "rgba(255, 255, 255, 0.7)",
   },
-  renewButton: {
+  upgradeButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: Colors.primaryGreen,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: 20,
   },
-  renewButtonText: {
+  upgradeButtonText: {
     ...Typography.labelMedium,
     fontSize: 13,
     fontWeight: "600",
     color: "#FFFFFF",
   },
-  // Section
-  section: {
-    marginBottom: Spacing.xl,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: Spacing.lg,
-  },
-  sectionTitle: {
-    ...Typography.titleLarge,
-    fontSize: 20,
-    fontWeight: "700",
-    color: Colors.textPrimary,
-  },
-  seeAll: {
-    ...Typography.labelLarge,
-    fontSize: 14,
-    fontWeight: "600",
-    color: Colors.primaryGreen,
-  },
   // Inquiries
   inquiriesContainer: {
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
   inquiryCard: {
     flexDirection: "row",
@@ -722,17 +930,6 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.divider,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.03,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
   },
   inquiryLeft: {
     position: "relative",
@@ -757,55 +954,61 @@ const styles = StyleSheet.create({
   inquiryContent: {
     flex: 1,
   },
+  inquiryHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 2,
+  },
   inquiryBuyerName: {
     ...Typography.titleMedium,
     fontSize: 15,
     fontWeight: "600",
     color: Colors.textPrimary,
-    marginBottom: 2,
-  },
-  inquiryProperty: {
-    ...Typography.bodyMedium,
-    fontSize: 13,
-    color: Colors.textSecondary,
-    marginBottom: 4,
   },
   inquiryTime: {
     ...Typography.caption,
+    fontSize: 11,
+    color: Colors.textSecondary,
+  },
+  inquiryProperty: {
+    ...Typography.caption,
     fontSize: 12,
+    color: Colors.primaryGreen,
+    marginBottom: 2,
+  },
+  inquiryMessage: {
+    ...Typography.bodyMedium,
+    fontSize: 13,
     color: Colors.textSecondary,
   },
   // Listings
   listingsContainer: {
     gap: Spacing.md,
+    paddingRight: Spacing.xl,
   },
   listingCard: {
-    flexDirection: "row",
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
+    width: 220,
+    height: 260,
+    borderRadius: 20,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: Colors.divider,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
+    backgroundColor: Colors.surface,
   },
   listingImage: {
-    width: 120,
-    height: 120,
+    width: "100%",
+    height: "100%",
+  },
+  listingOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: "60%",
   },
   listingStatusBadge: {
     position: "absolute",
-    top: Spacing.sm,
-    left: Spacing.sm,
+    top: Spacing.md,
+    left: Spacing.md,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
     borderRadius: 8,
@@ -817,36 +1020,32 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     letterSpacing: 0.5,
   },
-  listingContent: {
-    flex: 1,
+  listingInfo: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     padding: Spacing.md,
-    justifyContent: "space-between",
   },
   listingTitle: {
     ...Typography.titleMedium,
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "700",
-    color: Colors.textPrimary,
-    marginBottom: 4,
-  },
-  listingLocationRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginBottom: 4,
+    color: "#FFFFFF",
+    marginBottom: 2,
   },
   listingLocation: {
-    ...Typography.bodyMedium,
+    ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
-    flex: 1,
+    color: "rgba(255, 255, 255, 0.8)",
+    marginBottom: Spacing.xs,
   },
   listingPrice: {
     ...Typography.titleMedium,
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "700",
-    color: Colors.primaryGreen,
-    marginBottom: 8,
+    color: "#FFFFFF",
+    marginBottom: Spacing.sm,
   },
   listingStats: {
     flexDirection: "row",
@@ -860,7 +1059,7 @@ const styles = StyleSheet.create({
   listingStatText: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: "rgba(255, 255, 255, 0.9)",
   },
   // Floating Add Button
   floatingAddButton: {
@@ -881,16 +1080,9 @@ const styles = StyleSheet.create({
     }),
   },
   floatingAddButtonGradient: {
-    flexDirection: "row",
+    width: 56,
+    height: 56,
+    justifyContent: "center",
     alignItems: "center",
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.xl,
-    gap: Spacing.sm,
-  },
-  floatingAddButtonText: {
-    ...Typography.labelLarge,
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#FFFFFF",
   },
 });
