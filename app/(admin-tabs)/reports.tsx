@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { BarChart, PieChart } from "react-native-gifted-charts";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { FloatingHeaderStyles } from "@/components/FloatingHeader.styles";
 
 interface Transaction {
   id: string;
@@ -170,12 +171,38 @@ export default function PaymentReportsScreen() {
           <View style={styles.circle2} />
         </View>
 
+        {/* Floating Sticky Header */}
+        <View
+          style={[
+            FloatingHeaderStyles.floatingHeader,
+            { paddingTop: insets.top + Spacing.md },
+          ]}
+        >
+          <View style={styles.headerLeft}>
+            <Text style={styles.headerTitleText}>Reports</Text>
+          </View>
+
+          {/* Export Button */}
+          <TouchableOpacity
+            style={styles.exportButton}
+            onPress={handleExport}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name="download-outline"
+              size={18}
+              color={Colors.primaryGreen}
+            />
+            <Text style={styles.exportButtonText}>Export</Text>
+          </TouchableOpacity>
+        </View>
+
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={[
             styles.content,
             {
-              paddingTop: insets.top + Spacing.lg,
+              paddingTop: 80 + insets.top,
               paddingBottom: 100 + insets.bottom,
             },
           ]}
@@ -185,27 +212,10 @@ export default function PaymentReportsScreen() {
               refreshing={refreshing}
               onRefresh={handleRefresh}
               tintColor={Colors.primaryGreen}
-              progressViewOffset={insets.top}
+              progressViewOffset={80 + insets.top}
             />
           }
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Reports</Text>
-            <TouchableOpacity
-              style={styles.exportButton}
-              onPress={handleExport}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="download-outline"
-                size={18}
-                color={Colors.primaryGreen}
-              />
-              <Text style={styles.exportButtonText}>Export</Text>
-            </TouchableOpacity>
-          </View>
-
           {/* Time Period Selector */}
           <View style={styles.timePeriodContainer}>
             {TIME_PERIODS.map((period) => (
@@ -515,16 +525,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
   },
   // Header
-  header: {
+  headerLeft: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: Spacing.xl,
+    gap: Spacing.md,
+    flex: 1,
   },
-  headerTitle: {
-    ...Typography.headlineLarge,
-    fontSize: 28,
-    fontWeight: "800",
+  headerTitleText: {
+    ...Typography.titleLarge,
+    fontSize: 20,
+    fontWeight: "700",
     color: Colors.textPrimary,
   },
   exportButton: {
