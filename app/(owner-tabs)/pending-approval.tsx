@@ -91,7 +91,7 @@ export default function PendingApprovalScreen() {
           style={styles.scrollView}
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingBottom: 100 + insets.bottom },
+            { paddingBottom: 200 + insets.bottom },
           ]}
           showsVerticalScrollIndicator={false}
         >
@@ -245,40 +245,43 @@ export default function PendingApprovalScreen() {
                 </View>
               </View>
             </Animated.View>
-
-            {/* Footer Buttons */}
-            <Animated.View style={[styles.footer, { opacity: fadeAnim }]}>
-              <TouchableOpacity
-                style={styles.secondaryButton}
-                onPress={handleViewMyListings}
-                activeOpacity={0.8}
-              >
-                <Ionicons
-                  name="list-outline"
-                  size={20}
-                  color={Colors.primaryGreen}
-                />
-                <Text style={styles.secondaryButtonText}>View My Listings</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={handleBackToDashboard}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={[Colors.primaryGreen, "#2E7D32"]}
-                  style={styles.primaryButtonGradient}
-                >
-                  <Text style={styles.primaryButtonText}>
-                    Back to Dashboard
-                  </Text>
-                  <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-                </LinearGradient>
-              </TouchableOpacity>
-            </Animated.View>
           </View>
         </ScrollView>
+
+        {/* Fixed Footer Buttons */}
+        <Animated.View
+          style={[
+            styles.footer,
+            { paddingBottom: insets.bottom + 100, opacity: fadeAnim },
+          ]}
+        >
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={handleViewMyListings}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name="list-outline"
+              size={20}
+              color={Colors.primaryGreen}
+            />
+            <Text style={styles.secondaryButtonText}>View My Listings</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.primaryButton}
+            onPress={handleBackToDashboard}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={[Colors.primaryGreen, "#2E7D32"]}
+              style={styles.primaryButtonGradient}
+            >
+              <Text style={styles.primaryButtonText}>Back to Dashboard</Text>
+              <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
       </View>
     </>
   );
@@ -542,8 +545,12 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   footer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     gap: Spacing.md,
-    marginTop: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
   },
   secondaryButton: {
     flexDirection: "row",
