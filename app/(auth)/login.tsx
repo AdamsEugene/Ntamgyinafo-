@@ -239,7 +239,7 @@ export default function LoginScreen() {
                     size={18}
                     color={Colors.primaryGreen}
                   />
-                  <Text style={styles.demoBuyerText}>Buyer Demo</Text>
+                  <Text style={styles.demoBuyerText}>Buyer</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.demoOwnerButton}
@@ -247,7 +247,15 @@ export default function LoginScreen() {
                   activeOpacity={0.8}
                 >
                   <Ionicons name="home" size={18} color="#FFFFFF" />
-                  <Text style={styles.demoOwnerText}>Owner Demo</Text>
+                  <Text style={styles.demoOwnerText}>Owner</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.demoAdminButton}
+                  onPress={() => router.replace("/(admin-tabs)")}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="shield" size={18} color="#FFFFFF" />
+                  <Text style={styles.demoAdminText}>Admin</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -475,6 +483,21 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primaryGreen,
   },
   demoOwnerText: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  demoAdminButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: 12,
+    backgroundColor: "#8B5CF6",
+  },
+  demoAdminText: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",

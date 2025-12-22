@@ -38,6 +38,10 @@ export default function RootLayout() {
                 options={{ headerShown: false }}
               />
               <Stack.Screen
+                name="(admin-tabs)"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
                 name="property/[id]"
                 options={{
                   headerShown: false,
