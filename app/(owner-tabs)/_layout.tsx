@@ -40,9 +40,12 @@ export default function OwnerTabLayout() {
       }}
       tabBar={(props) => {
         const currentRouteName = props.state.routes[props.state.index].name;
-        // Map add-listing to my-listings for bottom nav highlighting
+        // Map add-listing and pending-approval to my-listings for bottom nav highlighting
         const activeTab =
-          currentRouteName === "add-listing" ? "my-listings" : currentRouteName;
+          currentRouteName === "add-listing" ||
+          currentRouteName === "pending-approval"
+            ? "my-listings"
+            : currentRouteName;
         return (
           <BottomNavigation
             tabs={OWNER_TABS}
@@ -73,6 +76,12 @@ export default function OwnerTabLayout() {
         name="add-listing"
         options={{
           title: "Add Listing",
+        }}
+      />
+      <Tabs.Screen
+        name="pending-approval"
+        options={{
+          title: "Pending Approval",
         }}
       />
       <Tabs.Screen

@@ -416,7 +416,11 @@ export default function AddListingScreen() {
   const handleSubmit = () => {
     console.log("Submitting listing:", formData);
     // TODO: Submit to backend
-    router.back();
+    // Navigate to pending approval screen
+    router.replace({
+      pathname: "/(owner-tabs)/pending-approval",
+      params: { listingTitle: formData.title || "New Property Listing" },
+    });
   };
 
   // Render step content
