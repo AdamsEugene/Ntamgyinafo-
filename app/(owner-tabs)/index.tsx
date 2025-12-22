@@ -381,7 +381,18 @@ export default function OwnerDashboardScreen() {
 
             <View style={styles.statsGrid}>
               {STATS.map((stat) => (
-                <View key={stat.id} style={styles.statCard}>
+                <TouchableOpacity
+                  key={stat.id}
+                  style={styles.statCard}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    if (stat.id === "inquiries") {
+                      router.push("/(owner-tabs)/inquiries");
+                    } else if (stat.id === "active" || stat.id === "pending") {
+                      router.push("/(owner-tabs)/my-listings");
+                    }
+                  }}
+                >
                   <View style={styles.statHeader}>
                     <View
                       style={[
@@ -416,7 +427,7 @@ export default function OwnerDashboardScreen() {
                   </View>
                   <Text style={styles.statValue}>{stat.value}</Text>
                   <Text style={styles.statLabel}>{stat.label}</Text>
-                </View>
+                </TouchableOpacity>
               ))}
             </View>
           </View>
@@ -493,7 +504,7 @@ export default function OwnerDashboardScreen() {
               <Text style={styles.sectionTitle}>Recent Inquiries</Text>
               <TouchableOpacity
                 activeOpacity={0.7}
-                onPress={() => router.push("/(owner-tabs)/messages")}
+                onPress={() => router.push("/(owner-tabs)/inquiries")}
               >
                 <Text style={styles.seeAll}>See All →</Text>
               </TouchableOpacity>
@@ -506,7 +517,7 @@ export default function OwnerDashboardScreen() {
                   style={styles.inquiryCard}
                   activeOpacity={0.8}
                   onPress={() => {
-                    // TODO: Navigate to chat
+                    router.push("/(owner-tabs)/inquiries");
                   }}
                 >
                   <View style={styles.inquiryLeft}>
