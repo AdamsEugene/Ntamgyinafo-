@@ -448,14 +448,29 @@ export default function PropertyDetailScreen() {
               </View>
             </View>
             <Text style={styles.propertyTitle}>{property.title}</Text>
-            <View style={styles.locationRow}>
+            <TouchableOpacity
+              style={styles.locationRow}
+              onPress={() =>
+                router.push(`/(tabs)/map?propertyId=${property.id}`)
+              }
+              activeOpacity={0.7}
+            >
               <Ionicons
                 name="location-outline"
                 size={16}
-                color={Colors.textSecondary}
+                color={Colors.primaryGreen}
               />
-              <Text style={styles.locationText}>{property.location}</Text>
-            </View>
+              <Text
+                style={[styles.locationText, { color: Colors.primaryGreen }]}
+              >
+                {property.location}
+              </Text>
+              <Ionicons
+                name="chevron-forward"
+                size={16}
+                color={Colors.primaryGreen}
+              />
+            </TouchableOpacity>
             <View style={styles.priceRow}>
               <Text style={styles.price}>{formatPrice(property.price)}</Text>
               {property.negotiable && (

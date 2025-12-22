@@ -11,7 +11,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import RNMapView, {
   Marker,
   PROVIDER_GOOGLE,
@@ -81,6 +81,7 @@ const BOTTOM_NAV_TABS: TabItem[] = [
 
 export default function MapScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const mapRef = useRef<RNMapView>(null);
   const bottomSheetRef = useRef<BottomSheetModal>(null);
@@ -101,6 +102,7 @@ export default function MapScreen() {
   const [savedProperties, setSavedProperties] = useState<Set<string>>(
     new Set(["2", "5"])
   );
+  const [hasAnimatedToProperty, setHasAnimatedToProperty] = useState(false);
 
   // Snap points for bottom sheet - max height is 50% of screen
   // Using absolute values to ensure it never exceeds 50% of screen height
@@ -109,8 +111,44 @@ export default function MapScreen() {
     return [screenHeight * 0.25, screenHeight * 0.5];
   }, []);
 
-  // Request location permission and get user location
+  // Handle propertyId param - animate to and select the property
+  // This runs first and sets the flag so location effect doesn't override
   React.useEffect(() => {
+    const propertyId = params.propertyId as string;
+    if (propertyId) {
+      const property = MAP_PROPERTIES.find((p) => p.id === propertyId);
+      if (property) {
+        // Select the property to show popup
+        setSelectedProperty(property);
+        setPopupExpanded(false);
+        setHasAnimatedToProperty(true);
+
+        // Animate to the property location after a delay to ensure map is ready
+        const timer = setTimeout(() => {
+          if (mapRef.current) {
+            mapRef.current.animateToRegion(
+              {
+                latitude: property.latitude,
+                longitude: property.longitude,
+                latitudeDelta: 0.008,
+                longitudeDelta: 0.008,
+              },
+              800
+            );
+          }
+        }, 300);
+
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [params.propertyId]);
+
+  // Request location permission and get user location
+  // Skip animation if we're navigating to a specific property
+  React.useEffect(() => {
+    const propertyId = params.propertyId as string;
+    if (propertyId) return; // Skip if navigating to specific property
+
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status === "granted") {
@@ -119,8 +157,8 @@ export default function MapScreen() {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         });
-        // Center map on user location
-        if (mapRef.current) {
+        // Center map on user location only if no property selected
+        if (mapRef.current && !hasAnimatedToProperty) {
           mapRef.current.animateToRegion(
             {
               latitude: location.coords.latitude,
@@ -133,7 +171,7 @@ export default function MapScreen() {
         }
       }
     })();
-  }, []);
+  }, [params.propertyId, hasAnimatedToProperty]);
 
   // Filter properties based on filters
   React.useEffect(() => {
@@ -402,7 +440,28 @@ export default function MapScreen() {
             );
           }}
           onMapReady={() => {
-            // Fit map to show all markers
+            // Skip default fit if navigating to specific property
+            const propertyId = params.propertyId as string;
+            if (propertyId) {
+              // Animate to the specific property
+              const property = MAP_PROPERTIES.find((p) => p.id === propertyId);
+              if (property) {
+                setTimeout(() => {
+                  mapRef.current?.animateToRegion(
+                    {
+                      latitude: property.latitude,
+                      longitude: property.longitude,
+                      latitudeDelta: 0.008,
+                      longitudeDelta: 0.008,
+                    },
+                    800
+                  );
+                }, 100);
+              }
+              return;
+            }
+
+            // Fit map to show all markers (default behavior)
             if (filteredProperties.length > 0) {
               setTimeout(() => {
                 mapRef.current?.fitToCoordinates(
