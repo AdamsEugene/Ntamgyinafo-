@@ -248,6 +248,9 @@ export default function MyListingsScreen() {
               onPress={(e) => {
                 e.stopPropagation();
                 // Edit listing
+                router.push(
+                  `/(owner-tabs)/add-listing?edit=${listing.id}` as any
+                );
               }}
             >
               <Ionicons
@@ -262,6 +265,7 @@ export default function MyListingsScreen() {
               onPress={(e) => {
                 e.stopPropagation();
                 // View stats
+                router.push(`/owner-listing/${listing.id}/analytics` as any);
               }}
             >
               <Ionicons name="stats-chart" size={18} color="#3B82F6" />
@@ -271,7 +275,8 @@ export default function MyListingsScreen() {
               activeOpacity={0.7}
               onPress={(e) => {
                 e.stopPropagation();
-                // More options
+                // More options - navigate to listing detail for full options
+                router.push(`/owner-listing/${listing.id}` as any);
               }}
             >
               <Ionicons
