@@ -290,7 +290,7 @@ export default function BuyerHomeScreen() {
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Featured Properties</Text>
               <TouchableOpacity
-                onPress={() => router.push("/(tabs)/search")}
+                onPress={() => router.push("/featured-properties")}
                 activeOpacity={0.7}
               >
                 <Text style={styles.seeAll}>See All →</Text>
