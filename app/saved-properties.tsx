@@ -246,6 +246,12 @@ export default function SavedPropertiesScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Decorative Background Elements */}
+      <View style={styles.decorativeBackground}>
+        <View style={styles.bgCircle1} />
+        <View style={styles.bgCircle2} />
+      </View>
+
       {/* Floating Header */}
       <View
         style={[
@@ -443,6 +449,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  decorativeBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflow: "hidden",
+  },
+  bgCircle1: {
+    position: "absolute",
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: Colors.primaryGreen,
+    opacity: 0.05,
+    top: -100,
+    right: -100,
+  },
+  bgCircle2: {
+    position: "absolute",
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: Colors.primaryGreen,
+    opacity: 0.05,
+    bottom: 200,
+    left: -50,
   },
   headerLeft: {
     flexDirection: "row",

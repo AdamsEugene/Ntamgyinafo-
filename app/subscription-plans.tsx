@@ -214,6 +214,12 @@ export default function SubscriptionPlansScreen() {
     <View style={styles.container}>
       <StatusBar style="dark" />
 
+      {/* Decorative Background Elements */}
+      <View style={styles.decorativeBackground}>
+        <View style={styles.circle1} />
+        <View style={styles.circle2} />
+      </View>
+
       {/* Header */}
       <View
         style={[
@@ -329,6 +335,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  decorativeBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflow: "hidden",
+  },
+  circle1: {
+    position: "absolute",
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: Colors.primaryGreen,
+    opacity: 0.05,
+    top: -100,
+    right: -100,
+  },
+  circle2: {
+    position: "absolute",
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: Colors.primaryGreen,
+    opacity: 0.05,
+    bottom: 200,
+    left: -50,
   },
   headerTitle: {
     ...Typography.headlineMedium,
