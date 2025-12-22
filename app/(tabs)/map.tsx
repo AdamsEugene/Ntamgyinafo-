@@ -103,6 +103,12 @@ export default function MapScreen() {
     new Set(["2", "5"])
   );
   const [hasAnimatedToProperty, setHasAnimatedToProperty] = useState(false);
+  const [isMapReady, setIsMapReady] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<{
+    propertyId: string;
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   // Snap points for bottom sheet - max height is 50% of screen
   // Using absolute values to ensure it never exceeds 50% of screen height
@@ -111,42 +117,49 @@ export default function MapScreen() {
     return [screenHeight * 0.25, screenHeight * 0.5];
   }, []);
 
-  // Handle propertyId param - animate to and select the property
-  // This runs first and sets the flag so location effect doesn't override
+  // Store navigation params - don't show popup yet, wait for map
   React.useEffect(() => {
     const propertyId = params.propertyId as string;
     const lat = params.lat ? parseFloat(params.lat as string) : null;
     const lng = params.lng ? parseFloat(params.lng as string) : null;
 
     if (propertyId && lat && lng) {
-      // Find property in MAP_PROPERTIES or create a temporary one
-      let property = MAP_PROPERTIES.find((p) => p.id === propertyId);
-
-      if (property) {
-        setSelectedProperty(property);
-      }
-
-      setPopupExpanded(false);
+      // Store pending navigation - will be processed when map is ready
+      setPendingNavigation({ propertyId, lat, lng });
       setHasAnimatedToProperty(true);
-
-      // Animate to the passed coordinates
-      const timer = setTimeout(() => {
-        if (mapRef.current) {
-          mapRef.current.animateToRegion(
-            {
-              latitude: lat,
-              longitude: lng,
-              latitudeDelta: 0.005,
-              longitudeDelta: 0.005,
-            },
-            1000
-          );
-        }
-      }, 100);
-
-      return () => clearTimeout(timer);
+      setPopupExpanded(false);
     }
   }, [params.propertyId, params.lat, params.lng]);
+
+  // Process pending navigation after map is ready
+  React.useEffect(() => {
+    if (isMapReady && pendingNavigation && mapRef.current) {
+      const { propertyId, lat, lng } = pendingNavigation;
+
+      // Step 1: Animate to the location
+      setTimeout(() => {
+        mapRef.current?.animateToRegion(
+          {
+            latitude: lat,
+            longitude: lng,
+            latitudeDelta: 0.005,
+            longitudeDelta: 0.005,
+          },
+          1000
+        );
+
+        // Step 2: After animation completes, show the marker and popup
+        setTimeout(() => {
+          const property = MAP_PROPERTIES.find((p) => p.id === propertyId);
+          if (property) {
+            setSelectedProperty(property);
+          }
+          // Clear pending navigation
+          setPendingNavigation(null);
+        }, 1100); // Wait for animation to complete (1000ms) + small buffer
+      }, 300); // Small delay to ensure map is fully rendered
+    }
+  }, [isMapReady, pendingNavigation]);
 
   // Request location permission and get user location
   // Skip animation if we're navigating to a specific property
@@ -445,24 +458,12 @@ export default function MapScreen() {
             );
           }}
           onMapReady={() => {
+            setIsMapReady(true);
+
             // Skip default fit if navigating to specific property
             const propertyId = params.propertyId as string;
-            const lat = params.lat ? parseFloat(params.lat as string) : null;
-            const lng = params.lng ? parseFloat(params.lng as string) : null;
-
-            if (propertyId && lat && lng) {
-              // Animate to the passed coordinates
-              setTimeout(() => {
-                mapRef.current?.animateToRegion(
-                  {
-                    latitude: lat,
-                    longitude: lng,
-                    latitudeDelta: 0.005,
-                    longitudeDelta: 0.005,
-                  },
-                  800
-                );
-              }, 100);
+            if (propertyId) {
+              // Animation will be handled by the useEffect when isMapReady becomes true
               return;
             }
 
