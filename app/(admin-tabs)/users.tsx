@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,9 +7,12 @@ import {
   TouchableOpacity,
   Image,
   RefreshControl,
-  TextInput,
+  TextInput as RNTextInput,
   Platform,
   Alert,
+  Keyboard,
+  Animated,
+  Dimensions,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -19,9 +22,13 @@ import {
   BottomSheetModal,
   BottomSheetBackdrop,
   BottomSheetView,
+  BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
-import { FloatingHeaderStyles } from "@/components/FloatingHeader.styles";
+import {
+  FloatingHeaderStyles,
+  HEADER_ICON_SIZE,
+} from "@/components/FloatingHeader.styles";
 
 interface User {
   id: string;
@@ -38,6 +45,8 @@ interface User {
 }
 
 type FilterTab = "all" | "pending" | "owners" | "buyers" | "suspended";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const MOCK_USERS: User[] = [
   {
@@ -113,23 +122,81 @@ const MOCK_USERS: User[] = [
   },
 ];
 
-const FILTER_TABS: { id: FilterTab; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "pending", label: "Pending" },
-  { id: "owners", label: "Owners" },
-  { id: "buyers", label: "Buyers" },
-  { id: "suspended", label: "Suspended" },
+const FILTER_OPTIONS: {
+  id: FilterTab;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+}[] = [
+  { id: "all", label: "All Users", icon: "people" },
+  { id: "pending", label: "Pending Verification", icon: "time" },
+  { id: "owners", label: "Property Owners", icon: "home" },
+  { id: "buyers", label: "Buyers", icon: "search" },
+  { id: "suspended", label: "Suspended", icon: "ban" },
 ];
 
 export default function UserManagementScreen() {
   useRouter();
   const insets = useSafeAreaInsets();
+  const searchInputRef = useRef<RNTextInput>(null);
   const [users, setUsers] = useState<User[]>(MOCK_USERS);
-  const [activeTab, setActiveTab] = useState<FilterTab>("all");
+  const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const actionSheetRef = useRef<BottomSheetModal>(null);
+  const filterSheetRef = useRef<BottomSheetModal>(null);
+  const searchInputWidth = useRef(new Animated.Value(200)).current;
+  const searchInputHeight = useRef(new Animated.Value(44)).current;
+
+  // Handle keyboard show/hide
+  useEffect(() => {
+    const keyboardWillShowListener = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      (e) => {
+        setKeyboardHeight(e.endCoordinates.height);
+        setIsKeyboardVisible(true);
+        Animated.parallel([
+          Animated.timing(searchInputWidth, {
+            toValue: SCREEN_WIDTH * 0.9 - Spacing.lg * 2,
+            duration: 250,
+            useNativeDriver: false,
+          }),
+          Animated.timing(searchInputHeight, {
+            toValue: 52,
+            duration: 250,
+            useNativeDriver: false,
+          }),
+        ]).start();
+      }
+    );
+
+    const keyboardWillHideListener = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      () => {
+        setKeyboardHeight(0);
+        setIsKeyboardVisible(false);
+        Animated.parallel([
+          Animated.timing(searchInputWidth, {
+            toValue: 200,
+            duration: 250,
+            useNativeDriver: false,
+          }),
+          Animated.timing(searchInputHeight, {
+            toValue: 44,
+            duration: 250,
+            useNativeDriver: false,
+          }),
+        ]).start();
+      }
+    );
+
+    return () => {
+      keyboardWillShowListener.remove();
+      keyboardWillHideListener.remove();
+    };
+  }, [searchInputWidth, searchInputHeight]);
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
@@ -149,7 +216,7 @@ export default function UserManagementScreen() {
     }
 
     // Tab filter
-    switch (activeTab) {
+    switch (activeFilter) {
       case "pending":
         return user.status === "pending";
       case "owners":
@@ -164,6 +231,8 @@ export default function UserManagementScreen() {
   });
 
   const pendingCount = users.filter((u) => u.status === "pending").length;
+  const activeFilterLabel =
+    FILTER_OPTIONS.find((f) => f.id === activeFilter)?.label || "All";
 
   const renderBackdrop = useCallback(
     (props: any) => (
@@ -294,10 +363,11 @@ export default function UserManagementScreen() {
               setSelectedUser(item);
               actionSheetRef.current?.present();
             }}
+            style={styles.moreButton}
           >
             <Ionicons
               name="ellipsis-vertical"
-              size={20}
+              size={18}
               color={Colors.textSecondary}
             />
           </TouchableOpacity>
@@ -306,6 +376,17 @@ export default function UserManagementScreen() {
         <View style={styles.userCardDetails}>
           <View style={styles.userBadges}>
             <View style={[styles.roleBadge, { backgroundColor: roleStyle.bg }]}>
+              <Ionicons
+                name={
+                  item.role === "owner"
+                    ? "home"
+                    : item.role === "buyer"
+                    ? "search"
+                    : "shield"
+                }
+                size={10}
+                color={roleStyle.text}
+              />
               <Text style={[styles.roleBadgeText, { color: roleStyle.text }]}>
                 {item.role.charAt(0).toUpperCase() + item.role.slice(1)}
               </Text>
@@ -313,6 +394,12 @@ export default function UserManagementScreen() {
             <View
               style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}
             >
+              <View
+                style={[
+                  styles.statusDot,
+                  { backgroundColor: statusStyle.text },
+                ]}
+              />
               <Text
                 style={[styles.statusBadgeText, { color: statusStyle.text }]}
               >
@@ -325,33 +412,37 @@ export default function UserManagementScreen() {
             <View style={styles.userMetaItem}>
               <Ionicons
                 name="calendar-outline"
-                size={12}
+                size={13}
                 color={Colors.textSecondary}
               />
-              <Text style={styles.userMetaText}>Joined {item.joinedDate}</Text>
+              <Text style={styles.userMetaText}>{item.joinedDate}</Text>
             </View>
             <View style={styles.userMetaItem}>
               <Ionicons
                 name="time-outline"
-                size={12}
+                size={13}
                 color={Colors.textSecondary}
               />
               <Text style={styles.userMetaText}>{item.lastActive}</Text>
             </View>
+            {item.role === "owner" && item.listingsCount !== undefined && (
+              <View style={styles.userMetaItem}>
+                <Ionicons
+                  name="home-outline"
+                  size={13}
+                  color={Colors.primaryGreen}
+                />
+                <Text
+                  style={[
+                    styles.userMetaText,
+                    { color: Colors.primaryGreen, fontWeight: "600" },
+                  ]}
+                >
+                  {item.listingsCount} listings
+                </Text>
+              </View>
+            )}
           </View>
-
-          {item.role === "owner" && item.listingsCount !== undefined && (
-            <View style={styles.listingsInfo}>
-              <Ionicons
-                name="home-outline"
-                size={14}
-                color={Colors.primaryGreen}
-              />
-              <Text style={styles.listingsText}>
-                {item.listingsCount} listings
-              </Text>
-            </View>
-          )}
         </View>
       </TouchableOpacity>
     );
@@ -378,66 +469,53 @@ export default function UserManagementScreen() {
             <Text style={styles.headerTitleText}>Users</Text>
             {pendingCount > 0 && (
               <View style={styles.headerBadge}>
-                <Text style={styles.headerBadgeText}>
-                  {pendingCount} pending
-                </Text>
+                <Text style={styles.headerBadgeText}>{pendingCount}</Text>
               </View>
             )}
           </View>
-        </View>
 
-        {/* Search Bar */}
-        <View style={[styles.searchContainer, { top: 70 + insets.top }]}>
-          <View style={styles.searchInputWrapper}>
-            <Ionicons name="search" size={18} color={Colors.textSecondary} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search users..."
-              placeholderTextColor={Colors.textSecondary}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery("")}>
+          {/* Filter Button */}
+          <View style={FloatingHeaderStyles.headerActions}>
+            <TouchableOpacity
+              style={FloatingHeaderStyles.actionButton}
+              onPress={() => filterSheetRef.current?.present()}
+              activeOpacity={0.7}
+            >
+              <View style={FloatingHeaderStyles.actionButtonBackground}>
                 <Ionicons
-                  name="close-circle"
-                  size={18}
-                  color={Colors.textSecondary}
+                  name="options-outline"
+                  size={HEADER_ICON_SIZE}
+                  color={Colors.textPrimary}
                 />
-              </TouchableOpacity>
-            )}
+                {activeFilter !== "all" && (
+                  <View style={FloatingHeaderStyles.filterBadge}>
+                    <Text style={FloatingHeaderStyles.filterBadgeText}>1</Text>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Filter Tabs */}
-        <View style={[styles.filterTabsContainer, { top: 120 + insets.top }]}>
-          <FlatList
-            horizontal
-            data={FILTER_TABS}
-            keyExtractor={(item) => item.id}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterTabs}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[
-                  styles.filterTab,
-                  activeTab === item.id && styles.filterTabActive,
-                ]}
-                onPress={() => setActiveTab(item.id)}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[
-                    styles.filterTabText,
-                    activeTab === item.id && styles.filterTabTextActive,
-                  ]}
-                >
-                  {item.label}
-                </Text>
+        {/* Active Filter Indicator */}
+        {activeFilter !== "all" && (
+          <View style={[styles.activeFilterBar, { top: 70 + insets.top }]}>
+            <View style={styles.activeFilterChip}>
+              <Text style={styles.activeFilterText}>{activeFilterLabel}</Text>
+              <TouchableOpacity onPress={() => setActiveFilter("all")}>
+                <Ionicons
+                  name="close-circle"
+                  size={18}
+                  color={Colors.primaryGreen}
+                />
               </TouchableOpacity>
-            )}
-          />
-        </View>
+            </View>
+            <Text style={styles.resultsCount}>
+              {filteredUsers.length}{" "}
+              {filteredUsers.length === 1 ? "user" : "users"}
+            </Text>
+          </View>
+        )}
 
         {/* Users List */}
         <FlatList
@@ -447,35 +525,190 @@ export default function UserManagementScreen() {
           contentContainerStyle={[
             styles.listContent,
             {
-              paddingTop: 170 + insets.top,
-              paddingBottom: 100 + insets.bottom,
+              paddingTop:
+                activeFilter !== "all" ? 120 + insets.top : 90 + insets.top,
+              paddingBottom: 140 + insets.bottom,
             },
           ]}
           showsVerticalScrollIndicator={false}
+          onScrollBeginDrag={Keyboard.dismiss}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
               tintColor={Colors.primaryGreen}
-              progressViewOffset={170 + insets.top}
+              progressViewOffset={90 + insets.top}
             />
+          }
+          ListHeaderComponent={
+            activeFilter === "all" ? (
+              <Text style={styles.listHeaderText}>
+                {filteredUsers.length}{" "}
+                {filteredUsers.length === 1 ? "user" : "users"}
+              </Text>
+            ) : null
           }
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Ionicons
-                name="people-outline"
-                size={48}
-                color={Colors.textSecondary}
-              />
+              <View style={styles.emptyIconContainer}>
+                <Ionicons
+                  name="people-outline"
+                  size={48}
+                  color={Colors.textSecondary}
+                />
+              </View>
               <Text style={styles.emptyTitle}>No Users Found</Text>
               <Text style={styles.emptyMessage}>
                 {searchQuery
-                  ? "Try a different search"
-                  : "No users match this filter"}
+                  ? "Try a different search term"
+                  : "No users match the current filter"}
               </Text>
+              {activeFilter !== "all" && (
+                <TouchableOpacity
+                  style={styles.clearFilterButton}
+                  onPress={() => setActiveFilter("all")}
+                >
+                  <Text style={styles.clearFilterButtonText}>Clear Filter</Text>
+                </TouchableOpacity>
+              )}
             </View>
           }
         />
+
+        {/* Floating Search Input */}
+        <Animated.View
+          style={[
+            styles.floatingSearchContainer,
+            {
+              bottom: isKeyboardVisible
+                ? keyboardHeight + Spacing.md
+                : Math.max(insets.bottom, Spacing.md) + 70,
+            },
+          ]}
+        >
+          <Animated.View
+            style={[
+              styles.floatingSearchInputContainer,
+              {
+                width: searchInputWidth,
+                height: searchInputHeight,
+              },
+            ]}
+          >
+            <Ionicons
+              name="search"
+              size={isKeyboardVisible ? 18 : 16}
+              color={Colors.textSecondary}
+              style={styles.floatingSearchIcon}
+            />
+            <RNTextInput
+              ref={searchInputRef}
+              style={[
+                styles.floatingSearchInput,
+                { fontSize: isKeyboardVisible ? 15 : 13 },
+              ]}
+              placeholder="Search users..."
+              placeholderTextColor={Colors.textSecondary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              returnKeyType="search"
+              autoCapitalize="none"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setSearchQuery("")}
+                style={styles.floatingClearButton}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="close-circle"
+                  size={isKeyboardVisible ? 20 : 18}
+                  color={Colors.textSecondary}
+                />
+              </TouchableOpacity>
+            )}
+          </Animated.View>
+        </Animated.View>
+
+        {/* Filter Bottom Sheet */}
+        <BottomSheetModal
+          ref={filterSheetRef}
+          index={0}
+          snapPoints={["50%"]}
+          backdropComponent={renderBackdrop}
+          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+        >
+          <BottomSheetScrollView style={styles.filterSheetContent}>
+            <Text style={styles.filterSheetTitle}>Filter Users</Text>
+            <Text style={styles.filterSheetSubtitle}>
+              Select a category to filter users
+            </Text>
+
+            <View style={styles.filterOptions}>
+              {FILTER_OPTIONS.map((option) => (
+                <TouchableOpacity
+                  key={option.id}
+                  style={[
+                    styles.filterOption,
+                    activeFilter === option.id && styles.filterOptionActive,
+                  ]}
+                  onPress={() => {
+                    setActiveFilter(option.id);
+                    filterSheetRef.current?.dismiss();
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View
+                    style={[
+                      styles.filterOptionIcon,
+                      activeFilter === option.id &&
+                        styles.filterOptionIconActive,
+                    ]}
+                  >
+                    <Ionicons
+                      name={option.icon}
+                      size={20}
+                      color={
+                        activeFilter === option.id
+                          ? "#FFFFFF"
+                          : Colors.textSecondary
+                      }
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.filterOptionText,
+                      activeFilter === option.id &&
+                        styles.filterOptionTextActive,
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                  {activeFilter === option.id && (
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={22}
+                      color={Colors.primaryGreen}
+                    />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {activeFilter !== "all" && (
+              <TouchableOpacity
+                style={styles.resetFilterButton}
+                onPress={() => {
+                  setActiveFilter("all");
+                  filterSheetRef.current?.dismiss();
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.resetFilterButtonText}>Reset Filter</Text>
+              </TouchableOpacity>
+            )}
+          </BottomSheetScrollView>
+        </BottomSheetModal>
 
         {/* User Actions Bottom Sheet */}
         <BottomSheetModal
@@ -494,13 +727,33 @@ export default function UserManagementScreen() {
                     source={{ uri: selectedUser.avatar }}
                     style={styles.sheetAvatar}
                   />
-                  <View>
+                  <View style={styles.sheetUserDetails}>
                     <Text style={styles.sheetUserName}>
                       {selectedUser.name}
                     </Text>
                     <Text style={styles.sheetUserPhone}>
                       {selectedUser.phone}
                     </Text>
+                    <View style={styles.sheetUserBadges}>
+                      <View
+                        style={[
+                          styles.sheetUserBadge,
+                          {
+                            backgroundColor: getRoleStyle(selectedUser.role).bg,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.sheetUserBadgeText,
+                            { color: getRoleStyle(selectedUser.role).text },
+                          ]}
+                        >
+                          {selectedUser.role.charAt(0).toUpperCase() +
+                            selectedUser.role.slice(1)}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
                 </View>
 
@@ -519,6 +772,11 @@ export default function UserManagementScreen() {
                       <Ionicons name="eye" size={20} color="#3B82F6" />
                     </View>
                     <Text style={styles.sheetActionText}>View Profile</Text>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={18}
+                      color={Colors.textSecondary}
+                    />
                   </TouchableOpacity>
 
                   {selectedUser.status === "pending" && (
@@ -540,6 +798,11 @@ export default function UserManagementScreen() {
                         />
                       </View>
                       <Text style={styles.sheetActionText}>Verify User</Text>
+                      <Ionicons
+                        name="chevron-forward"
+                        size={18}
+                        color={Colors.textSecondary}
+                      />
                     </TouchableOpacity>
                   )}
 
@@ -564,6 +827,11 @@ export default function UserManagementScreen() {
                       <Text style={styles.sheetActionText}>
                         Reactivate User
                       </Text>
+                      <Ionicons
+                        name="chevron-forward"
+                        size={18}
+                        color={Colors.textSecondary}
+                      />
                     </TouchableOpacity>
                   ) : (
                     <TouchableOpacity
@@ -580,6 +848,11 @@ export default function UserManagementScreen() {
                         <Ionicons name="ban" size={20} color="#F59E0B" />
                       </View>
                       <Text style={styles.sheetActionText}>Suspend User</Text>
+                      <Ionicons
+                        name="chevron-forward"
+                        size={18}
+                        color={Colors.textSecondary}
+                      />
                     </TouchableOpacity>
                   )}
 
@@ -601,6 +874,11 @@ export default function UserManagementScreen() {
                     >
                       Delete User
                     </Text>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={18}
+                      color="#EF4444"
+                    />
                   </TouchableOpacity>
                 </View>
               </>
@@ -648,109 +926,91 @@ const styles = StyleSheet.create({
   headerLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.md,
+    gap: Spacing.sm,
     flex: 1,
   },
   headerTitleText: {
     ...Typography.titleLarge,
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "700",
     color: Colors.textPrimary,
   },
   headerBadge: {
-    backgroundColor: "#FEF3C7",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    backgroundColor: "#EF4444",
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 6,
   },
   headerBadgeText: {
     ...Typography.caption,
     fontSize: 11,
-    fontWeight: "600",
-    color: "#F59E0B",
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
-  // Search
-  searchContainer: {
+  // Active Filter Bar
+  activeFilterBar: {
     position: "absolute",
     left: 0,
     right: 0,
     zIndex: 9,
     paddingHorizontal: Spacing.lg,
-    backgroundColor: Colors.background,
-  },
-  searchInputWrapper: {
+    paddingVertical: Spacing.sm,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
+    justifyContent: "space-between",
+    backgroundColor: Colors.background,
+  },
+  activeFilterChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    backgroundColor: `${Colors.primaryGreen}15`,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.divider,
-    gap: Spacing.sm,
-  },
-  searchInput: {
-    flex: 1,
-    ...Typography.bodyMedium,
-    fontSize: 15,
-    color: Colors.textPrimary,
-  },
-  // Filter Tabs
-  filterTabsContainer: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    zIndex: 8,
-    backgroundColor: Colors.background,
-    paddingVertical: Spacing.sm,
-  },
-  filterTabs: {
-    paddingHorizontal: Spacing.lg,
-    gap: Spacing.sm,
-  },
-  filterTab: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
     borderRadius: 20,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.divider,
   },
-  filterTabActive: {
-    backgroundColor: Colors.primaryGreen,
-    borderColor: Colors.primaryGreen,
-  },
-  filterTabText: {
+  activeFilterText: {
     ...Typography.labelMedium,
     fontSize: 13,
     fontWeight: "600",
-    color: Colors.textSecondary,
+    color: Colors.primaryGreen,
   },
-  filterTabTextActive: {
-    color: "#FFFFFF",
+  resultsCount: {
+    ...Typography.bodyMedium,
+    fontSize: 13,
+    color: Colors.textSecondary,
   },
   // List
   listContent: {
     paddingHorizontal: Spacing.lg,
     flexGrow: 1,
   },
+  listHeaderText: {
+    ...Typography.bodyMedium,
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.md,
+  },
   // User Card
   userCard: {
     backgroundColor: Colors.surface,
-    borderRadius: 16,
-    padding: Spacing.md,
+    borderRadius: 20,
+    padding: Spacing.lg,
     marginBottom: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
       },
       android: {
-        elevation: 2,
+        elevation: 3,
       },
     }),
   },
@@ -764,17 +1024,19 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   userAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    borderWidth: 2,
+    borderColor: Colors.divider,
   },
   verifiedBadge: {
     position: "absolute",
     bottom: -2,
     right: -2,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: Colors.primaryGreen,
     alignItems: "center",
     justifyContent: "center",
@@ -785,89 +1047,241 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   userName: {
-    ...Typography.labelMedium,
-    fontSize: 15,
-    fontWeight: "600",
+    ...Typography.titleMedium,
+    fontSize: 16,
+    fontWeight: "700",
     color: Colors.textPrimary,
+    marginBottom: 2,
   },
   userPhone: {
-    ...Typography.caption,
-    fontSize: 12,
+    ...Typography.bodyMedium,
+    fontSize: 13,
     color: Colors.textSecondary,
   },
+  moreButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: Colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   userCardDetails: {
-    paddingTop: Spacing.sm,
+    paddingTop: Spacing.md,
     borderTopWidth: 1,
     borderTopColor: Colors.divider,
   },
   userBadges: {
     flexDirection: "row",
     gap: Spacing.sm,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   roleBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingVertical: 5,
+    borderRadius: 10,
   },
   roleBadgeText: {
     ...Typography.caption,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "600",
   },
   statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingVertical: 5,
+    borderRadius: 10,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   statusBadgeText: {
     ...Typography.caption,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "600",
   },
   userMeta: {
     flexDirection: "row",
-    gap: Spacing.lg,
-    marginBottom: Spacing.sm,
+    flexWrap: "wrap",
+    gap: Spacing.md,
   },
   userMetaItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 5,
   },
   userMetaText: {
     ...Typography.caption,
-    fontSize: 11,
+    fontSize: 12,
     color: Colors.textSecondary,
-  },
-  listingsInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  listingsText: {
-    ...Typography.caption,
-    fontSize: 11,
-    color: Colors.primaryGreen,
-    fontWeight: "500",
   },
   // Empty State
   emptyState: {
     alignItems: "center",
     paddingVertical: Spacing.xl * 2,
+    paddingHorizontal: Spacing.xl,
+  },
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.divider,
   },
   emptyTitle: {
     ...Typography.titleMedium,
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: "700",
     color: Colors.textPrimary,
-    marginTop: Spacing.md,
+    marginBottom: Spacing.xs,
   },
   emptyMessage: {
     ...Typography.bodyMedium,
     fontSize: 14,
     color: Colors.textSecondary,
-    marginTop: Spacing.xs,
+    textAlign: "center",
+  },
+  clearFilterButton: {
+    marginTop: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.primaryGreen,
+  },
+  clearFilterButtonText: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
+  },
+  // Floating Search
+  floatingSearchContainer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 999,
+    backgroundColor: "transparent",
+  },
+  floatingSearchInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    paddingHorizontal: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    gap: Spacing.xs / 2,
+    alignSelf: "center",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.12,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
+  },
+  floatingSearchIcon: {
+    marginRight: Spacing.xs / 2,
+  },
+  floatingSearchInput: {
+    flex: 1,
+    ...Typography.bodyMedium,
+    fontSize: 13,
+    color: Colors.textPrimary,
+    padding: 0,
+    minWidth: 120,
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        textAlignVertical: "center",
+      },
+    }),
+  },
+  floatingClearButton: {
+    padding: Spacing.xs / 2,
+  },
+  // Filter Sheet
+  filterSheetContent: {
+    padding: Spacing.xl,
+  },
+  filterSheetTitle: {
+    ...Typography.headlineMedium,
+    fontSize: 22,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+  },
+  filterSheetSubtitle: {
+    ...Typography.bodyMedium,
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.xl,
+  },
+  filterOptions: {
+    gap: Spacing.sm,
+  },
+  filterOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    padding: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+  },
+  filterOptionActive: {
+    borderColor: Colors.primaryGreen,
+    backgroundColor: `${Colors.primaryGreen}08`,
+  },
+  filterOptionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: Colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  filterOptionIconActive: {
+    backgroundColor: Colors.primaryGreen,
+  },
+  filterOptionText: {
+    ...Typography.bodyMedium,
+    fontSize: 15,
+    color: Colors.textSecondary,
+    flex: 1,
+  },
+  filterOptionTextActive: {
+    color: Colors.textPrimary,
+    fontWeight: "600",
+  },
+  resetFilterButton: {
+    marginTop: Spacing.xl,
+    paddingVertical: Spacing.md,
+    alignItems: "center",
+  },
+  resetFilterButtonText: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
   },
   // Bottom Sheet
   sheetContent: {
@@ -876,13 +1290,21 @@ const styles = StyleSheet.create({
   sheetUserInfo: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.md,
+    gap: Spacing.lg,
     marginBottom: Spacing.xl,
+    paddingBottom: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
   },
   sheetAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 3,
+    borderColor: Colors.primaryGreen,
+  },
+  sheetUserDetails: {
+    flex: 1,
   },
   sheetUserName: {
     ...Typography.titleMedium,
@@ -894,20 +1316,37 @@ const styles = StyleSheet.create({
     ...Typography.bodyMedium,
     fontSize: 14,
     color: Colors.textSecondary,
+    marginBottom: Spacing.xs,
+  },
+  sheetUserBadges: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+  },
+  sheetUserBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  sheetUserBadgeText: {
+    ...Typography.caption,
+    fontSize: 11,
+    fontWeight: "600",
   },
   sheetActions: {
-    gap: Spacing.sm,
+    gap: Spacing.xs,
   },
   sheetAction: {
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.md,
     paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: 12,
   },
   sheetActionIcon: {
     width: 44,
     height: 44,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -916,5 +1355,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "500",
     color: Colors.textPrimary,
+    flex: 1,
   },
 });
