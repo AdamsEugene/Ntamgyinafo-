@@ -388,12 +388,19 @@ export default function AdminPropertyReviewScreen() {
                 );
                 setActiveImageIndex(index);
               }}
-              renderItem={({ item }) => (
-                <Image
-                  source={{ uri: item }}
-                  style={styles.galleryImage}
-                  resizeMode="cover"
-                />
+              renderItem={({ item, index }) => (
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => {
+                    router.push(`/property/1/gallery?index=${index}`);
+                  }}
+                >
+                  <Image
+                    source={{ uri: item }}
+                    style={styles.galleryImage}
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
               )}
               keyExtractor={(item, index) => index.toString()}
             />
@@ -407,6 +414,45 @@ export default function AdminPropertyReviewScreen() {
                   ]}
                 />
               ))}
+            </View>
+            {/* Media Badges */}
+            <View style={styles.mediaBadges}>
+              <TouchableOpacity
+                style={styles.mediaBadge}
+                onPress={() => {
+                  router.push(`/property/1/gallery?tab=photos`);
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="images-outline" size={14} color="#FFFFFF" />
+                <Text style={styles.mediaBadgeText}>
+                  {property.images.length}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.mediaBadge}
+                onPress={() => {
+                  router.push(`/property/1/gallery?tab=videos`);
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="videocam-outline" size={14} color="#FFFFFF" />
+                <Text style={styles.mediaBadgeText}>
+                  {property.videos.length}
+                </Text>
+              </TouchableOpacity>
+              {property.virtualTour && (
+                <TouchableOpacity
+                  style={styles.mediaBadge}
+                  onPress={() => {
+                    router.push(`/property/1/360`);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="cube-outline" size={14} color="#FFFFFF" />
+                  <Text style={styles.mediaBadgeText}>360°</Text>
+                </TouchableOpacity>
+              )}
             </View>
             <View style={styles.imageCount}>
               <Ionicons name="images" size={14} color="#FFFFFF" />
@@ -537,10 +583,14 @@ export default function AdminPropertyReviewScreen() {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Videos</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {property.videos.map((video) => (
+                {property.videos.map((video, index) => (
                   <TouchableOpacity
                     key={video.id}
                     style={styles.videoThumbnail}
+                    onPress={() => {
+                      router.push(`/property/1/video?index=${index}`);
+                    }}
+                    activeOpacity={0.8}
                   >
                     <Image
                       source={{ uri: video.thumbnail }}
@@ -558,7 +608,13 @@ export default function AdminPropertyReviewScreen() {
                 ))}
               </ScrollView>
               {property.virtualTour && (
-                <TouchableOpacity style={styles.virtualTourButton}>
+                <TouchableOpacity
+                  style={styles.virtualTourButton}
+                  onPress={() => {
+                    router.push(`/property/1/360`);
+                  }}
+                  activeOpacity={0.7}
+                >
                   <Ionicons
                     name="cube-outline"
                     size={20}
@@ -1122,6 +1178,28 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   imageCountText: {
+    ...Typography.caption,
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  mediaBadges: {
+    position: "absolute",
+    bottom: 50,
+    left: 16,
+    flexDirection: "row",
+    gap: 8,
+  },
+  mediaBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  mediaBadgeText: {
     ...Typography.caption,
     fontSize: 12,
     fontWeight: "600",
