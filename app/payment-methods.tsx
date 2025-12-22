@@ -81,6 +81,35 @@ export default function PaymentMethodsScreen() {
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvv, setCardCvv] = useState("");
   const [cardName, setCardName] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
+
+  // Format card number with spaces
+  const formatCardNumber = (text: string) => {
+    const cleaned = text.replace(/\s/g, "").replace(/\D/g, "");
+    const groups = cleaned.match(/.{1,4}/g);
+    return groups ? groups.join(" ") : cleaned;
+  };
+
+  // Format expiry date with /
+  const formatExpiry = (text: string) => {
+    const cleaned = text.replace(/\D/g, "");
+    if (cleaned.length >= 2) {
+      return cleaned.slice(0, 2) + "/" + cleaned.slice(2, 4);
+    }
+    return cleaned;
+  };
+
+  // Format phone number
+  const formatPhoneNumber = (text: string) => {
+    const cleaned = text.replace(/\D/g, "");
+    if (cleaned.length <= 3) return cleaned;
+    if (cleaned.length <= 6)
+      return `${cleaned.slice(0, 3)} ${cleaned.slice(3)}`;
+    return `${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(
+      6,
+      10
+    )}`;
+  };
 
   const renderBackdrop = useCallback(
     (props: any) => (
@@ -93,6 +122,12 @@ export default function PaymentMethodsScreen() {
     ),
     []
   );
+
+  const handleSheetChange = useCallback((index: number) => {
+    if (index === -1) {
+      setSelectedType(null);
+    }
+  }, []);
 
   const handleSetDefault = (id: string) => {
     setPaymentMethods((prev) =>
@@ -127,59 +162,88 @@ export default function PaymentMethodsScreen() {
   };
 
   const handleAddMomo = () => {
-    if (!momoPhone || !momoNetwork) {
-      Alert.alert("Error", "Please fill in all fields.");
+    const cleanedPhone = momoPhone.replace(/\s/g, "");
+    if (!cleanedPhone || cleanedPhone.length < 10 || !momoNetwork) {
+      Alert.alert(
+        "Error",
+        "Please enter a valid phone number and select a network."
+      );
       return;
     }
 
-    const networkColors: Record<string, string> = {
-      MTN: "#FFCC00",
-      Vodafone: "#E60000",
-      AirtelTigo: "#E40046",
-    };
+    setIsAdding(true);
 
-    const newMethod: PaymentMethod = {
-      id: Date.now().toString(),
-      type: "momo",
-      name: `${momoNetwork} Mobile Money`,
-      details: momoPhone.replace(/(\d{3})(\d{4})(\d{3})/, "$1 **** $3"),
-      icon: "phone-portrait",
-      color: networkColors[momoNetwork] || Colors.primaryGreen,
-      isDefault: paymentMethods.length === 0,
-    };
+    // Simulate API call
+    setTimeout(() => {
+      const networkColors: Record<string, string> = {
+        MTN: "#FFCC00",
+        Vodafone: "#E60000",
+        AirtelTigo: "#E40046",
+      };
 
-    setPaymentMethods((prev) => [...prev, newMethod]);
-    setMomoPhone("");
-    setMomoNetwork(null);
-    setSelectedType(null);
-    addMethodSheetRef.current?.dismiss();
-    Alert.alert("Success", "Payment method added successfully!");
+      const newMethod: PaymentMethod = {
+        id: Date.now().toString(),
+        type: "momo",
+        name: `${momoNetwork} Mobile Money`,
+        details: `${cleanedPhone.slice(0, 3)} **** ${cleanedPhone.slice(-3)}`,
+        icon: "phone-portrait",
+        color: networkColors[momoNetwork] || Colors.primaryGreen,
+        isDefault: paymentMethods.length === 0,
+      };
+
+      setPaymentMethods((prev) => [...prev, newMethod]);
+      setMomoPhone("");
+      setMomoNetwork(null);
+      setSelectedType(null);
+      setIsAdding(false);
+      addMethodSheetRef.current?.dismiss();
+      Alert.alert("Success", "Mobile Money added successfully!");
+    }, 1500);
   };
 
   const handleAddCard = () => {
-    if (!cardNumber || !cardExpiry || !cardCvv || !cardName) {
-      Alert.alert("Error", "Please fill in all fields.");
+    const cleanedCardNumber = cardNumber.replace(/\s/g, "");
+    if (cleanedCardNumber.length < 16) {
+      Alert.alert("Error", "Please enter a valid card number.");
+      return;
+    }
+    if (!cardExpiry || cardExpiry.length < 5) {
+      Alert.alert("Error", "Please enter a valid expiry date.");
+      return;
+    }
+    if (!cardCvv || cardCvv.length < 3) {
+      Alert.alert("Error", "Please enter a valid CVV.");
+      return;
+    }
+    if (!cardName.trim()) {
+      Alert.alert("Error", "Please enter the cardholder name.");
       return;
     }
 
-    const newMethod: PaymentMethod = {
-      id: Date.now().toString(),
-      type: "card",
-      name: cardNumber.startsWith("4") ? "Visa Card" : "Mastercard",
-      details: `**** **** **** ${cardNumber.slice(-4)}`,
-      icon: "card",
-      color: cardNumber.startsWith("4") ? "#1A1F71" : "#EB001B",
-      isDefault: paymentMethods.length === 0,
-    };
+    setIsAdding(true);
 
-    setPaymentMethods((prev) => [...prev, newMethod]);
-    setCardNumber("");
-    setCardExpiry("");
-    setCardCvv("");
-    setCardName("");
-    setSelectedType(null);
-    addMethodSheetRef.current?.dismiss();
-    Alert.alert("Success", "Payment method added successfully!");
+    // Simulate API call
+    setTimeout(() => {
+      const newMethod: PaymentMethod = {
+        id: Date.now().toString(),
+        type: "card",
+        name: cleanedCardNumber.startsWith("4") ? "Visa Card" : "Mastercard",
+        details: `**** **** **** ${cleanedCardNumber.slice(-4)}`,
+        icon: "card",
+        color: cleanedCardNumber.startsWith("4") ? "#1A1F71" : "#EB001B",
+        isDefault: paymentMethods.length === 0,
+      };
+
+      setPaymentMethods((prev) => [...prev, newMethod]);
+      setCardNumber("");
+      setCardExpiry("");
+      setCardCvv("");
+      setCardName("");
+      setSelectedType(null);
+      setIsAdding(false);
+      addMethodSheetRef.current?.dismiss();
+      Alert.alert("Success", "Card added successfully!");
+    }, 1500);
   };
 
   const renderPaymentMethod = (method: PaymentMethod) => (
@@ -318,8 +382,9 @@ export default function PaymentMethodsScreen() {
         <View
           style={[
             styles.addButtonContainer,
-            { paddingBottom: insets.bottom + Spacing.lg },
+            { paddingBottom: insets.bottom + Spacing.lg, zIndex: 999 },
           ]}
+          pointerEvents="box-none"
         >
           <TouchableOpacity
             style={styles.addButton}
@@ -330,220 +395,258 @@ export default function PaymentMethodsScreen() {
             <Text style={styles.addButtonText}>Add Payment Method</Text>
           </TouchableOpacity>
         </View>
+      </View>
 
-        {/* Add Method Bottom Sheet */}
-        <BottomSheetModal
-          ref={addMethodSheetRef}
-          index={0}
-          snapPoints={selectedType ? ["70%"] : ["40%"]}
-          backdropComponent={renderBackdrop}
-          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
-        >
-          <BottomSheetView style={styles.sheetContent}>
-            {!selectedType ? (
-              <>
-                <Text style={styles.sheetTitle}>Add Payment Method</Text>
-                <Text style={styles.sheetSubtitle}>
-                  Choose how you&apos;d like to pay
-                </Text>
+      {/* Add Method Bottom Sheet - Outside main container */}
+      <BottomSheetModal
+        ref={addMethodSheetRef}
+        index={0}
+        snapPoints={["55%"]}
+        enableDynamicSizing={false}
+        backdropComponent={renderBackdrop}
+        handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+        onChange={handleSheetChange}
+        enablePanDownToClose
+      >
+        <BottomSheetView style={styles.sheetContent}>
+          {!selectedType ? (
+            <>
+              <Text style={styles.sheetTitle}>Add Payment Method</Text>
+              <Text style={styles.sheetSubtitle}>
+                Choose how you&apos;d like to pay
+              </Text>
 
-                <TouchableOpacity
-                  style={styles.methodOption}
-                  onPress={() => setSelectedType("momo")}
-                  activeOpacity={0.7}
+              <TouchableOpacity
+                style={styles.methodOption}
+                onPress={() => setSelectedType("momo")}
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[
+                    styles.methodOptionIcon,
+                    { backgroundColor: "#FFCC0020" },
+                  ]}
                 >
-                  <View
-                    style={[
-                      styles.methodOptionIcon,
-                      { backgroundColor: "#FFCC0020" },
-                    ]}
-                  >
-                    <Ionicons name="phone-portrait" size={28} color="#FFCC00" />
-                  </View>
-                  <View style={styles.methodOptionInfo}>
-                    <Text style={styles.methodOptionTitle}>Mobile Money</Text>
-                    <Text style={styles.methodOptionDesc}>
-                      MTN, Vodafone, AirtelTigo
-                    </Text>
-                  </View>
-                  <Ionicons
-                    name="chevron-forward"
-                    size={24}
-                    color={Colors.textSecondary}
-                  />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.methodOption}
-                  onPress={() => setSelectedType("card")}
-                  activeOpacity={0.7}
-                >
-                  <View
-                    style={[
-                      styles.methodOptionIcon,
-                      { backgroundColor: "#1A1F7120" },
-                    ]}
-                  >
-                    <Ionicons name="card" size={28} color="#1A1F71" />
-                  </View>
-                  <View style={styles.methodOptionInfo}>
-                    <Text style={styles.methodOptionTitle}>
-                      Debit/Credit Card
-                    </Text>
-                    <Text style={styles.methodOptionDesc}>
-                      Visa, Mastercard
-                    </Text>
-                  </View>
-                  <Ionicons
-                    name="chevron-forward"
-                    size={24}
-                    color={Colors.textSecondary}
-                  />
-                </TouchableOpacity>
-              </>
-            ) : selectedType === "momo" ? (
-              <>
-                <View style={styles.sheetHeader}>
-                  <TouchableOpacity onPress={() => setSelectedType(null)}>
-                    <Ionicons
-                      name="arrow-back"
-                      size={24}
-                      color={Colors.textPrimary}
-                    />
-                  </TouchableOpacity>
-                  <Text style={styles.sheetTitle}>Add Mobile Money</Text>
-                  <View style={{ width: 24 }} />
+                  <Ionicons name="phone-portrait" size={28} color="#FFCC00" />
                 </View>
+                <View style={styles.methodOptionInfo}>
+                  <Text style={styles.methodOptionTitle}>Mobile Money</Text>
+                  <Text style={styles.methodOptionDesc}>
+                    MTN, Vodafone, AirtelTigo
+                  </Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={24}
+                  color={Colors.textSecondary}
+                />
+              </TouchableOpacity>
 
-                <Text style={styles.inputLabel}>Select Network</Text>
-                <View style={styles.networkOptions}>
-                  {["MTN", "Vodafone", "AirtelTigo"].map((network) => (
-                    <TouchableOpacity
-                      key={network}
+              <TouchableOpacity
+                style={styles.methodOption}
+                onPress={() => setSelectedType("card")}
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[
+                    styles.methodOptionIcon,
+                    { backgroundColor: "#1A1F7120" },
+                  ]}
+                >
+                  <Ionicons name="card" size={28} color="#1A1F71" />
+                </View>
+                <View style={styles.methodOptionInfo}>
+                  <Text style={styles.methodOptionTitle}>
+                    Debit/Credit Card
+                  </Text>
+                  <Text style={styles.methodOptionDesc}>Visa, Mastercard</Text>
+                </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={24}
+                  color={Colors.textSecondary}
+                />
+              </TouchableOpacity>
+            </>
+          ) : selectedType === "momo" ? (
+            <>
+              <View style={styles.sheetHeader}>
+                <TouchableOpacity onPress={() => setSelectedType(null)}>
+                  <Ionicons
+                    name="arrow-back"
+                    size={24}
+                    color={Colors.textPrimary}
+                  />
+                </TouchableOpacity>
+                <Text style={styles.sheetTitle}>Add Mobile Money</Text>
+                <View style={{ width: 24 }} />
+              </View>
+
+              <Text style={styles.inputLabel}>Select Network</Text>
+              <View style={styles.networkOptions}>
+                {["MTN", "Vodafone", "AirtelTigo"].map((network) => (
+                  <TouchableOpacity
+                    key={network}
+                    style={[
+                      styles.networkOption,
+                      momoNetwork === network && styles.networkOptionActive,
+                    ]}
+                    onPress={() => setMomoNetwork(network)}
+                    activeOpacity={0.7}
+                  >
+                    <Text
                       style={[
-                        styles.networkOption,
-                        momoNetwork === network && styles.networkOptionActive,
+                        styles.networkOptionText,
+                        momoNetwork === network &&
+                          styles.networkOptionTextActive,
                       ]}
-                      onPress={() => setMomoNetwork(network)}
-                      activeOpacity={0.7}
                     >
-                      <Text
-                        style={[
-                          styles.networkOptionText,
-                          momoNetwork === network &&
-                            styles.networkOptionTextActive,
-                        ]}
-                      >
-                        {network}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                <Text style={styles.inputLabel}>Phone Number</Text>
-                <View style={styles.inputWrapper}>
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="024 XXX XXXX"
-                    placeholderTextColor={Colors.textSecondary}
-                    value={momoPhone}
-                    onChangeText={setMomoPhone}
-                    keyboardType="phone-pad"
-                    maxLength={10}
-                  />
-                </View>
-
-                <TouchableOpacity
-                  style={styles.submitButton}
-                  onPress={handleAddMomo}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.submitButtonText}>Add Mobile Money</Text>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <View style={styles.sheetHeader}>
-                  <TouchableOpacity onPress={() => setSelectedType(null)}>
-                    <Ionicons
-                      name="arrow-back"
-                      size={24}
-                      color={Colors.textPrimary}
-                    />
+                      {network}
+                    </Text>
                   </TouchableOpacity>
-                  <Text style={styles.sheetTitle}>Add Card</Text>
-                  <View style={{ width: 24 }} />
-                </View>
+                ))}
+              </View>
 
-                <Text style={styles.inputLabel}>Card Number</Text>
-                <View style={styles.inputWrapper}>
+              <Text style={styles.inputLabel}>Phone Number</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="024 XXX XXXX"
+                  placeholderTextColor={Colors.textSecondary}
+                  value={momoPhone}
+                  onChangeText={(text) => setMomoPhone(formatPhoneNumber(text))}
+                  keyboardType="phone-pad"
+                  maxLength={12}
+                />
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.submitButton,
+                  isAdding && styles.submitButtonDisabled,
+                ]}
+                onPress={handleAddMomo}
+                activeOpacity={0.8}
+                disabled={isAdding}
+              >
+                {isAdding ? (
+                  <Text style={styles.submitButtonText}>Adding...</Text>
+                ) : (
+                  <Text style={styles.submitButtonText}>Add Mobile Money</Text>
+                )}
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <View style={styles.sheetHeader}>
+                <TouchableOpacity onPress={() => setSelectedType(null)}>
+                  <Ionicons
+                    name="arrow-back"
+                    size={24}
+                    color={Colors.textPrimary}
+                  />
+                </TouchableOpacity>
+                <Text style={styles.sheetTitle}>Add Card</Text>
+                <View style={{ width: 24 }} />
+              </View>
+
+              <Text style={styles.inputLabel}>Card Number</Text>
+              <View style={styles.inputWrapper}>
+                <View style={styles.inputWithIcon}>
+                  <Ionicons
+                    name={
+                      cardNumber.replace(/\s/g, "").startsWith("4")
+                        ? "card"
+                        : "card-outline"
+                    }
+                    size={20}
+                    color={
+                      cardNumber.length > 0
+                        ? cardNumber.replace(/\s/g, "").startsWith("4")
+                          ? "#1A1F71"
+                          : "#EB001B"
+                        : Colors.textSecondary
+                    }
+                  />
                   <TextInput
-                    style={styles.textInput}
+                    style={[styles.textInput, { flex: 1 }]}
                     placeholder="1234 5678 9012 3456"
                     placeholderTextColor={Colors.textSecondary}
                     value={cardNumber}
-                    onChangeText={setCardNumber}
+                    onChangeText={(text) =>
+                      setCardNumber(formatCardNumber(text))
+                    }
                     keyboardType="number-pad"
-                    maxLength={16}
+                    maxLength={19}
                   />
                 </View>
+              </View>
 
-                <View style={styles.inputRow}>
-                  <View style={styles.inputHalf}>
-                    <Text style={styles.inputLabel}>Expiry</Text>
-                    <View style={styles.inputWrapper}>
-                      <TextInput
-                        style={styles.textInput}
-                        placeholder="MM/YY"
-                        placeholderTextColor={Colors.textSecondary}
-                        value={cardExpiry}
-                        onChangeText={setCardExpiry}
-                        keyboardType="number-pad"
-                        maxLength={5}
-                      />
-                    </View>
-                  </View>
-                  <View style={styles.inputHalf}>
-                    <Text style={styles.inputLabel}>CVV</Text>
-                    <View style={styles.inputWrapper}>
-                      <TextInput
-                        style={styles.textInput}
-                        placeholder="123"
-                        placeholderTextColor={Colors.textSecondary}
-                        value={cardCvv}
-                        onChangeText={setCardCvv}
-                        keyboardType="number-pad"
-                        maxLength={4}
-                        secureTextEntry
-                      />
-                    </View>
+              <View style={styles.inputRow}>
+                <View style={styles.inputHalf}>
+                  <Text style={styles.inputLabel}>Expiry</Text>
+                  <View style={styles.inputWrapper}>
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="MM/YY"
+                      placeholderTextColor={Colors.textSecondary}
+                      value={cardExpiry}
+                      onChangeText={(text) => setCardExpiry(formatExpiry(text))}
+                      keyboardType="number-pad"
+                      maxLength={5}
+                    />
                   </View>
                 </View>
-
-                <Text style={styles.inputLabel}>Cardholder Name</Text>
-                <View style={styles.inputWrapper}>
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Name on card"
-                    placeholderTextColor={Colors.textSecondary}
-                    value={cardName}
-                    onChangeText={setCardName}
-                    autoCapitalize="words"
-                  />
+                <View style={styles.inputHalf}>
+                  <Text style={styles.inputLabel}>CVV</Text>
+                  <View style={styles.inputWrapper}>
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="123"
+                      placeholderTextColor={Colors.textSecondary}
+                      value={cardCvv}
+                      onChangeText={(text) =>
+                        setCardCvv(text.replace(/\D/g, ""))
+                      }
+                      keyboardType="number-pad"
+                      maxLength={4}
+                      secureTextEntry
+                    />
+                  </View>
                 </View>
+              </View>
 
-                <TouchableOpacity
-                  style={styles.submitButton}
-                  onPress={handleAddCard}
-                  activeOpacity={0.8}
-                >
+              <Text style={styles.inputLabel}>Cardholder Name</Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Name on card"
+                  placeholderTextColor={Colors.textSecondary}
+                  value={cardName}
+                  onChangeText={setCardName}
+                  autoCapitalize="words"
+                />
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.submitButton,
+                  isAdding && styles.submitButtonDisabled,
+                ]}
+                onPress={handleAddCard}
+                activeOpacity={0.8}
+                disabled={isAdding}
+              >
+                {isAdding ? (
+                  <Text style={styles.submitButtonText}>Adding...</Text>
+                ) : (
                   <Text style={styles.submitButtonText}>Add Card</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </BottomSheetView>
-        </BottomSheetModal>
-      </View>
+                )}
+              </TouchableOpacity>
+            </>
+          )}
+        </BottomSheetView>
+      </BottomSheetModal>
     </>
   );
 }
@@ -903,10 +1006,19 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xl,
     alignItems: "center",
   },
+  submitButtonDisabled: {
+    backgroundColor: Colors.textSecondary,
+    opacity: 0.7,
+  },
   submitButtonText: {
     ...Typography.labelLarge,
     fontSize: 16,
     fontWeight: "700",
     color: "#FFFFFF",
+  },
+  inputWithIcon: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
   },
 });
