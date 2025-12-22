@@ -25,34 +25,32 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.md) / 2;
 
 // Filter options
+const DISTANCE_FILTERS = [
+  { id: "all", label: "All" },
+  { id: "1km", label: "< 1 km" },
+  { id: "5km", label: "< 5 km" },
+  { id: "10km", label: "< 10 km" },
+];
+
 const PROPERTY_TYPES = [
   { id: "all", label: "All" },
   { id: "house", label: "House" },
   { id: "apartment", label: "Apartment" },
   { id: "land", label: "Land" },
-  { id: "commercial", label: "Commercial" },
 ];
 
-const TRANSACTION_TYPES = [
-  { id: "all", label: "All" },
-  { id: "buy", label: "For Sale" },
-  { id: "rent", label: "For Rent" },
-];
+// Mock near you properties
+const NEAR_YOU_PROPERTIES: MapProperty[] = MAP_PROPERTIES.slice(0, 8);
 
-// Mock featured properties (in real app, this would be fetched)
-const FEATURED_PROPERTIES: MapProperty[] = MAP_PROPERTIES.filter(
-  (_, index) => index % 2 === 0
-);
-
-export default function FeaturedPropertiesScreen() {
+export default function NearYouPropertiesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [savedProperties, setSavedProperties] = useState<Set<string>>(
     new Set(["2", "5"])
   );
+  const [distanceFilter, setDistanceFilter] = useState("all");
   const [propertyTypeFilter, setPropertyTypeFilter] = useState("all");
-  const [transactionTypeFilter, setTransactionTypeFilter] = useState("all");
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -81,18 +79,17 @@ export default function FeaturedPropertiesScreen() {
     return `GHS ${price.toLocaleString()}`;
   };
 
-  const filteredProperties = FEATURED_PROPERTIES.filter((property) => {
+  const filteredProperties = NEAR_YOU_PROPERTIES.filter((property) => {
     const matchesType =
       propertyTypeFilter === "all" ||
       property.propertyType === propertyTypeFilter;
-    const matchesTransaction =
-      transactionTypeFilter === "all" ||
-      property.transactionType === transactionTypeFilter;
-    return matchesType && matchesTransaction;
+    return matchesType;
   });
 
   const renderPropertyCard = ({ item }: { item: MapProperty }) => {
     const isSaved = savedProperties.has(item.id);
+    // Mock distance for display
+    const distance = (Math.random() * 5 + 0.5).toFixed(1);
 
     return (
       <TouchableOpacity
@@ -111,7 +108,6 @@ export default function FeaturedPropertiesScreen() {
           />
           <View style={styles.imageOverlay} />
 
-          {/* Save Button */}
           <TouchableOpacity
             style={styles.saveButton}
             onPress={() => toggleSave(item.id)}
@@ -124,10 +120,10 @@ export default function FeaturedPropertiesScreen() {
             />
           </TouchableOpacity>
 
-          {/* Featured Badge */}
-          <View style={styles.featuredBadge}>
-            <Ionicons name="star" size={10} color="#F59E0B" />
-            <Text style={styles.featuredBadgeText}>Featured</Text>
+          {/* Distance Badge */}
+          <View style={styles.distanceBadge}>
+            <Ionicons name="location" size={10} color={Colors.primaryGreen} />
+            <Text style={styles.distanceBadgeText}>{distance} km</Text>
           </View>
 
           {/* Transaction Type Badge */}
@@ -163,7 +159,6 @@ export default function FeaturedPropertiesScreen() {
             </Text>
           </View>
 
-          {/* Property Details */}
           {item.bedrooms && item.bathrooms && (
             <View style={styles.detailsRow}>
               <View style={styles.detailItem}>
@@ -193,57 +188,65 @@ export default function FeaturedPropertiesScreen() {
 
   const renderHeader = () => (
     <>
-      {/* Property Type Filter */}
+      {/* Location Info */}
+      <View style={styles.locationInfo}>
+        <View style={styles.locationIcon}>
+          <Ionicons name="navigate" size={20} color={Colors.primaryGreen} />
+        </View>
+        <View style={styles.locationDetails}>
+          <Text style={styles.locationLabel}>Your Location</Text>
+          <Text style={styles.locationValue}>East Legon, Accra</Text>
+        </View>
+        <TouchableOpacity style={styles.changeLocation} activeOpacity={0.7}>
+          <Text style={styles.changeLocationText}>Change</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Distance Filter */}
       <View style={styles.filterSection}>
-        <Text style={styles.filterLabel}>Property Type</Text>
-        <FlatList
-          data={PROPERTY_TYPES}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.filterList}
-          renderItem={({ item }) => (
+        <Text style={styles.filterLabel}>Distance</Text>
+        <View style={styles.distanceFilters}>
+          {DISTANCE_FILTERS.map((filter) => (
             <TouchableOpacity
+              key={filter.id}
               style={[
                 styles.filterChip,
-                propertyTypeFilter === item.id && styles.filterChipActive,
+                distanceFilter === filter.id && styles.filterChipActive,
               ]}
-              onPress={() => setPropertyTypeFilter(item.id)}
+              onPress={() => setDistanceFilter(filter.id)}
               activeOpacity={0.7}
             >
               <Text
                 style={[
                   styles.filterChipText,
-                  propertyTypeFilter === item.id && styles.filterChipTextActive,
+                  distanceFilter === filter.id && styles.filterChipTextActive,
                 ]}
               >
-                {item.label}
+                {filter.label}
               </Text>
             </TouchableOpacity>
-          )}
-        />
+          ))}
+        </View>
       </View>
 
-      {/* Transaction Type Filter */}
+      {/* Property Type Filter */}
       <View style={styles.filterSection}>
-        <Text style={styles.filterLabel}>Transaction Type</Text>
-        <View style={styles.transactionFilters}>
-          {TRANSACTION_TYPES.map((type) => (
+        <Text style={styles.filterLabel}>Property Type</Text>
+        <View style={styles.distanceFilters}>
+          {PROPERTY_TYPES.map((type) => (
             <TouchableOpacity
               key={type.id}
               style={[
-                styles.transactionChip,
-                transactionTypeFilter === type.id &&
-                  styles.transactionChipActive,
+                styles.filterChip,
+                propertyTypeFilter === type.id && styles.filterChipActive,
               ]}
-              onPress={() => setTransactionTypeFilter(type.id)}
+              onPress={() => setPropertyTypeFilter(type.id)}
               activeOpacity={0.7}
             >
               <Text
                 style={[
-                  styles.transactionChipText,
-                  transactionTypeFilter === type.id &&
-                    styles.transactionChipTextActive,
+                  styles.filterChipText,
+                  propertyTypeFilter === type.id && styles.filterChipTextActive,
                 ]}
               >
                 {type.label}
@@ -256,45 +259,21 @@ export default function FeaturedPropertiesScreen() {
       {/* Results Count */}
       <View style={styles.resultsHeader}>
         <Text style={styles.resultsCount}>
-          {filteredProperties.length} Featured Properties
+          {filteredProperties.length} Properties Near You
         </Text>
       </View>
     </>
-  );
-
-  const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <View style={styles.emptyIconContainer}>
-        <Ionicons name="home-outline" size={48} color={Colors.textSecondary} />
-      </View>
-      <Text style={styles.emptyTitle}>No Properties Found</Text>
-      <Text style={styles.emptyMessage}>
-        Try adjusting your filters to see more results
-      </Text>
-      <TouchableOpacity
-        style={styles.resetButton}
-        onPress={() => {
-          setPropertyTypeFilter("all");
-          setTransactionTypeFilter("all");
-        }}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.resetButtonText}>Reset Filters</Text>
-      </TouchableOpacity>
-    </View>
   );
 
   return (
     <>
       <StatusBar style="dark" />
       <View style={styles.container}>
-        {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
           <View style={styles.circle1} />
           <View style={styles.circle2} />
         </View>
 
-        {/* Floating Sticky Header */}
         <View
           style={[
             FloatingHeaderStyles.floatingHeader,
@@ -315,10 +294,9 @@ export default function FeaturedPropertiesScreen() {
                 />
               </View>
             </TouchableOpacity>
-            <Text style={styles.headerTitleText}>Featured Properties</Text>
+            <Text style={styles.headerTitleText}>Near You</Text>
           </View>
 
-          {/* Search Button */}
           <View style={FloatingHeaderStyles.headerActions}>
             <TouchableOpacity
               style={FloatingHeaderStyles.actionButton}
@@ -327,7 +305,7 @@ export default function FeaturedPropertiesScreen() {
             >
               <View style={FloatingHeaderStyles.actionButtonBackground}>
                 <Ionicons
-                  name="search-outline"
+                  name="map-outline"
                   size={HEADER_ICON_SIZE}
                   color={Colors.textPrimary}
                 />
@@ -351,7 +329,6 @@ export default function FeaturedPropertiesScreen() {
           ]}
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={renderHeader}
-          ListEmptyComponent={renderEmptyState}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -371,7 +348,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  // Decorative Background
   decorativeBackground: {
     position: "absolute",
     top: 0,
@@ -400,7 +376,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primaryGreen,
     opacity: 0.05,
   },
-  // Header
   headerLeft: {
     flexDirection: "row",
     alignItems: "center",
@@ -413,7 +388,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: Colors.textPrimary,
   },
-  // List
   listContent: {
     paddingHorizontal: Spacing.lg,
   },
@@ -421,7 +395,50 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     marginBottom: Spacing.md,
   },
-  // Filter Section
+  // Location Info
+  locationInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: Spacing.md,
+    marginBottom: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+  },
+  locationIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: `${Colors.primaryGreen}15`,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  locationDetails: {
+    flex: 1,
+    marginLeft: Spacing.md,
+  },
+  locationLabel: {
+    ...Typography.caption,
+    fontSize: 11,
+    color: Colors.textSecondary,
+  },
+  locationValue: {
+    ...Typography.bodyMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+  },
+  changeLocation: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  changeLocationText: {
+    ...Typography.labelMedium,
+    fontSize: 13,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
+  },
   filterSection: {
     marginBottom: Spacing.lg,
   },
@@ -432,7 +449,9 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginBottom: Spacing.sm,
   },
-  filterList: {
+  distanceFilters: {
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: Spacing.sm,
   },
   filterChip: {
@@ -456,33 +475,6 @@ const styles = StyleSheet.create({
   filterChipTextActive: {
     color: "#FFFFFF",
   },
-  transactionFilters: {
-    flexDirection: "row",
-    gap: Spacing.sm,
-  },
-  transactionChip: {
-    flex: 1,
-    paddingVertical: Spacing.sm,
-    borderRadius: 12,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.divider,
-    alignItems: "center",
-  },
-  transactionChipActive: {
-    backgroundColor: Colors.primaryGreen,
-    borderColor: Colors.primaryGreen,
-  },
-  transactionChipText: {
-    ...Typography.labelMedium,
-    fontSize: 13,
-    fontWeight: "600",
-    color: Colors.textSecondary,
-  },
-  transactionChipTextActive: {
-    color: "#FFFFFF",
-  },
-  // Results Header
   resultsHeader: {
     marginBottom: Spacing.md,
   },
@@ -492,7 +484,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: Colors.textPrimary,
   },
-  // Property Card
   propertyCard: {
     width: CARD_WIDTH,
     backgroundColor: Colors.surface,
@@ -540,7 +531,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  featuredBadge: {
+  distanceBadge: {
     position: "absolute",
     top: Spacing.sm,
     left: Spacing.sm,
@@ -552,11 +543,11 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 8,
   },
-  featuredBadgeText: {
+  distanceBadgeText: {
     ...Typography.caption,
     fontSize: 10,
     fontWeight: "700",
-    color: "#F59E0B",
+    color: Colors.primaryGreen,
   },
   transactionBadge: {
     position: "absolute",
@@ -616,47 +607,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     color: Colors.primaryGreen,
-  },
-  // Empty State
-  emptyState: {
-    alignItems: "center",
-    paddingVertical: Spacing.xl * 2,
-  },
-  emptyIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Colors.surface,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.divider,
-  },
-  emptyTitle: {
-    ...Typography.titleMedium,
-    fontSize: 18,
-    fontWeight: "600",
-    color: Colors.textPrimary,
-    marginBottom: Spacing.xs,
-  },
-  emptyMessage: {
-    ...Typography.bodyMedium,
-    fontSize: 14,
-    color: Colors.textSecondary,
-    textAlign: "center",
-    marginBottom: Spacing.lg,
-  },
-  resetButton: {
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    backgroundColor: Colors.primaryGreen,
-    borderRadius: 12,
-  },
-  resetButtonText: {
-    ...Typography.labelMedium,
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#FFFFFF",
   },
 });

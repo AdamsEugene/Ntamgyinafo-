@@ -24,35 +24,43 @@ import { MAP_PROPERTIES, MapProperty } from "@/constants/mockData";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.md) / 2;
 
-// Filter options
-const PROPERTY_TYPES = [
-  { id: "all", label: "All" },
-  { id: "house", label: "House" },
-  { id: "apartment", label: "Apartment" },
-  { id: "land", label: "Land" },
-  { id: "commercial", label: "Commercial" },
+// Time filter options
+const TIME_FILTERS = [
+  { id: "today", label: "Today" },
+  { id: "week", label: "This Week" },
+  { id: "month", label: "This Month" },
+  { id: "all", label: "All Time" },
 ];
 
-const TRANSACTION_TYPES = [
-  { id: "all", label: "All" },
-  { id: "buy", label: "For Sale" },
-  { id: "rent", label: "For Rent" },
+const SORT_OPTIONS = [
+  { id: "newest", label: "Newest First" },
+  { id: "price-low", label: "Price: Low to High" },
+  { id: "price-high", label: "Price: High to Low" },
 ];
 
-// Mock featured properties (in real app, this would be fetched)
-const FEATURED_PROPERTIES: MapProperty[] = MAP_PROPERTIES.filter(
-  (_, index) => index % 2 === 0
-);
+// Mock new listings with dates
+const NEW_LISTINGS_DATA: (MapProperty & { listedAt: string })[] =
+  MAP_PROPERTIES.map((property, index) => ({
+    ...property,
+    listedAt:
+      index < 3
+        ? "Today"
+        : index < 6
+        ? "2 days ago"
+        : index < 9
+        ? "5 days ago"
+        : "2 weeks ago",
+  }));
 
-export default function FeaturedPropertiesScreen() {
+export default function NewListingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [savedProperties, setSavedProperties] = useState<Set<string>>(
     new Set(["2", "5"])
   );
-  const [propertyTypeFilter, setPropertyTypeFilter] = useState("all");
-  const [transactionTypeFilter, setTransactionTypeFilter] = useState("all");
+  const [timeFilter, setTimeFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -81,17 +89,28 @@ export default function FeaturedPropertiesScreen() {
     return `GHS ${price.toLocaleString()}`;
   };
 
-  const filteredProperties = FEATURED_PROPERTIES.filter((property) => {
-    const matchesType =
-      propertyTypeFilter === "all" ||
-      property.propertyType === propertyTypeFilter;
-    const matchesTransaction =
-      transactionTypeFilter === "all" ||
-      property.transactionType === transactionTypeFilter;
-    return matchesType && matchesTransaction;
+  const filteredProperties = NEW_LISTINGS_DATA.filter((property) => {
+    if (timeFilter === "all") return true;
+    if (timeFilter === "today") return property.listedAt === "Today";
+    if (timeFilter === "week")
+      return (
+        property.listedAt === "Today" || property.listedAt === "2 days ago"
+      );
+    if (timeFilter === "month") return !property.listedAt.includes("weeks");
+    return true;
   });
 
-  const renderPropertyCard = ({ item }: { item: MapProperty }) => {
+  const sortedProperties = [...filteredProperties].sort((a, b) => {
+    if (sortBy === "price-low") return a.price - b.price;
+    if (sortBy === "price-high") return b.price - a.price;
+    return 0; // newest first is default order
+  });
+
+  const renderPropertyCard = ({
+    item,
+  }: {
+    item: MapProperty & { listedAt: string };
+  }) => {
     const isSaved = savedProperties.has(item.id);
 
     return (
@@ -111,7 +130,6 @@ export default function FeaturedPropertiesScreen() {
           />
           <View style={styles.imageOverlay} />
 
-          {/* Save Button */}
           <TouchableOpacity
             style={styles.saveButton}
             onPress={() => toggleSave(item.id)}
@@ -124,27 +142,20 @@ export default function FeaturedPropertiesScreen() {
             />
           </TouchableOpacity>
 
-          {/* Featured Badge */}
-          <View style={styles.featuredBadge}>
-            <Ionicons name="star" size={10} color="#F59E0B" />
-            <Text style={styles.featuredBadgeText}>Featured</Text>
+          {/* New Badge */}
+          <View style={styles.newBadge}>
+            <Ionicons name="sparkles" size={10} color="#FFFFFF" />
+            <Text style={styles.newBadgeText}>NEW</Text>
           </View>
 
-          {/* Transaction Type Badge */}
-          <View
-            style={[
-              styles.transactionBadge,
-              {
-                backgroundColor:
-                  item.transactionType === "rent"
-                    ? Colors.accentOrange
-                    : Colors.primaryGreen,
-              },
-            ]}
-          >
-            <Text style={styles.transactionBadgeText}>
-              {item.transactionType === "rent" ? "Rent" : "Sale"}
-            </Text>
+          {/* Listed Time Badge */}
+          <View style={styles.timeBadge}>
+            <Ionicons
+              name="time-outline"
+              size={10}
+              color={Colors.textPrimary}
+            />
+            <Text style={styles.timeBadgeText}>{item.listedAt}</Text>
           </View>
         </View>
 
@@ -163,7 +174,6 @@ export default function FeaturedPropertiesScreen() {
             </Text>
           </View>
 
-          {/* Property Details */}
           {item.bedrooms && item.bathrooms && (
             <View style={styles.detailsRow}>
               <View style={styles.detailItem}>
@@ -185,7 +195,34 @@ export default function FeaturedPropertiesScreen() {
             </View>
           )}
 
-          <Text style={styles.priceText}>{formatPrice(item.price)}</Text>
+          <View style={styles.priceRow}>
+            <Text style={styles.priceText}>{formatPrice(item.price)}</Text>
+            <View
+              style={[
+                styles.typeBadge,
+                {
+                  backgroundColor:
+                    item.transactionType === "rent"
+                      ? `${Colors.accentOrange}20`
+                      : `${Colors.primaryGreen}20`,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.typeBadgeText,
+                  {
+                    color:
+                      item.transactionType === "rent"
+                        ? Colors.accentOrange
+                        : Colors.primaryGreen,
+                  },
+                ]}
+              >
+                {item.transactionType === "rent" ? "Rent" : "Sale"}
+              </Text>
+            </View>
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -193,11 +230,46 @@ export default function FeaturedPropertiesScreen() {
 
   const renderHeader = () => (
     <>
-      {/* Property Type Filter */}
+      {/* Stats Banner */}
+      <View style={styles.statsBanner}>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{NEW_LISTINGS_DATA.length}</Text>
+          <Text style={styles.statLabel}>Total New</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>
+            {NEW_LISTINGS_DATA.filter((p) => p.listedAt === "Today").length}
+          </Text>
+          <Text style={styles.statLabel}>Today</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>
+            {
+              NEW_LISTINGS_DATA.filter((p) => p.transactionType === "rent")
+                .length
+            }
+          </Text>
+          <Text style={styles.statLabel}>For Rent</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>
+            {
+              NEW_LISTINGS_DATA.filter((p) => p.transactionType === "buy")
+                .length
+            }
+          </Text>
+          <Text style={styles.statLabel}>For Sale</Text>
+        </View>
+      </View>
+
+      {/* Time Filter */}
       <View style={styles.filterSection}>
-        <Text style={styles.filterLabel}>Property Type</Text>
+        <Text style={styles.filterLabel}>Listed</Text>
         <FlatList
-          data={PROPERTY_TYPES}
+          data={TIME_FILTERS}
           horizontal
           showsHorizontalScrollIndicator={false}
           keyExtractor={(item) => item.id}
@@ -206,15 +278,15 @@ export default function FeaturedPropertiesScreen() {
             <TouchableOpacity
               style={[
                 styles.filterChip,
-                propertyTypeFilter === item.id && styles.filterChipActive,
+                timeFilter === item.id && styles.filterChipActive,
               ]}
-              onPress={() => setPropertyTypeFilter(item.id)}
+              onPress={() => setTimeFilter(item.id)}
               activeOpacity={0.7}
             >
               <Text
                 style={[
                   styles.filterChipText,
-                  propertyTypeFilter === item.id && styles.filterChipTextActive,
+                  timeFilter === item.id && styles.filterChipTextActive,
                 ]}
               >
                 {item.label}
@@ -224,39 +296,41 @@ export default function FeaturedPropertiesScreen() {
         />
       </View>
 
-      {/* Transaction Type Filter */}
+      {/* Sort Options */}
       <View style={styles.filterSection}>
-        <Text style={styles.filterLabel}>Transaction Type</Text>
-        <View style={styles.transactionFilters}>
-          {TRANSACTION_TYPES.map((type) => (
+        <Text style={styles.filterLabel}>Sort By</Text>
+        <FlatList
+          data={SORT_OPTIONS}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.filterList}
+          renderItem={({ item }) => (
             <TouchableOpacity
-              key={type.id}
               style={[
-                styles.transactionChip,
-                transactionTypeFilter === type.id &&
-                  styles.transactionChipActive,
+                styles.filterChip,
+                sortBy === item.id && styles.filterChipActive,
               ]}
-              onPress={() => setTransactionTypeFilter(type.id)}
+              onPress={() => setSortBy(item.id)}
               activeOpacity={0.7}
             >
               <Text
                 style={[
-                  styles.transactionChipText,
-                  transactionTypeFilter === type.id &&
-                    styles.transactionChipTextActive,
+                  styles.filterChipText,
+                  sortBy === item.id && styles.filterChipTextActive,
                 ]}
               >
-                {type.label}
+                {item.label}
               </Text>
             </TouchableOpacity>
-          ))}
-        </View>
+          )}
+        />
       </View>
 
       {/* Results Count */}
       <View style={styles.resultsHeader}>
         <Text style={styles.resultsCount}>
-          {filteredProperties.length} Featured Properties
+          {sortedProperties.length} New Listings
         </Text>
       </View>
     </>
@@ -265,22 +339,16 @@ export default function FeaturedPropertiesScreen() {
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
       <View style={styles.emptyIconContainer}>
-        <Ionicons name="home-outline" size={48} color={Colors.textSecondary} />
+        <Ionicons
+          name="sparkles-outline"
+          size={48}
+          color={Colors.textSecondary}
+        />
       </View>
-      <Text style={styles.emptyTitle}>No Properties Found</Text>
+      <Text style={styles.emptyTitle}>No New Listings</Text>
       <Text style={styles.emptyMessage}>
-        Try adjusting your filters to see more results
+        Check back later for fresh properties
       </Text>
-      <TouchableOpacity
-        style={styles.resetButton}
-        onPress={() => {
-          setPropertyTypeFilter("all");
-          setTransactionTypeFilter("all");
-        }}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.resetButtonText}>Reset Filters</Text>
-      </TouchableOpacity>
     </View>
   );
 
@@ -288,13 +356,11 @@ export default function FeaturedPropertiesScreen() {
     <>
       <StatusBar style="dark" />
       <View style={styles.container}>
-        {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
           <View style={styles.circle1} />
           <View style={styles.circle2} />
         </View>
 
-        {/* Floating Sticky Header */}
         <View
           style={[
             FloatingHeaderStyles.floatingHeader,
@@ -315,19 +381,18 @@ export default function FeaturedPropertiesScreen() {
                 />
               </View>
             </TouchableOpacity>
-            <Text style={styles.headerTitleText}>Featured Properties</Text>
+            <Text style={styles.headerTitleText}>New Listings</Text>
           </View>
 
-          {/* Search Button */}
           <View style={FloatingHeaderStyles.headerActions}>
             <TouchableOpacity
               style={FloatingHeaderStyles.actionButton}
               activeOpacity={0.7}
-              onPress={() => router.push("/(tabs)/search")}
+              onPress={() => router.push("/notifications")}
             >
               <View style={FloatingHeaderStyles.actionButtonBackground}>
                 <Ionicons
-                  name="search-outline"
+                  name="notifications-outline"
                   size={HEADER_ICON_SIZE}
                   color={Colors.textPrimary}
                 />
@@ -337,7 +402,7 @@ export default function FeaturedPropertiesScreen() {
         </View>
 
         <FlatList
-          data={filteredProperties}
+          data={sortedProperties}
           renderItem={renderPropertyCard}
           keyExtractor={(item) => item.id}
           numColumns={2}
@@ -371,7 +436,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  // Decorative Background
   decorativeBackground: {
     position: "absolute",
     top: 0,
@@ -400,7 +464,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primaryGreen,
     opacity: 0.05,
   },
-  // Header
   headerLeft: {
     flexDirection: "row",
     alignItems: "center",
@@ -413,7 +476,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: Colors.textPrimary,
   },
-  // List
   listContent: {
     paddingHorizontal: Spacing.lg,
   },
@@ -421,9 +483,39 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     marginBottom: Spacing.md,
   },
-  // Filter Section
-  filterSection: {
+  // Stats Banner
+  statsBanner: {
+    flexDirection: "row",
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: Spacing.md,
     marginBottom: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: "center",
+  },
+  statValue: {
+    ...Typography.titleMedium,
+    fontSize: 18,
+    fontWeight: "700",
+    color: Colors.primaryGreen,
+  },
+  statLabel: {
+    ...Typography.caption,
+    fontSize: 10,
+    color: Colors.textSecondary,
+  },
+  statDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: Colors.divider,
+    alignSelf: "center",
+  },
+  filterSection: {
+    marginBottom: Spacing.md,
   },
   filterLabel: {
     ...Typography.labelMedium,
@@ -456,33 +548,6 @@ const styles = StyleSheet.create({
   filterChipTextActive: {
     color: "#FFFFFF",
   },
-  transactionFilters: {
-    flexDirection: "row",
-    gap: Spacing.sm,
-  },
-  transactionChip: {
-    flex: 1,
-    paddingVertical: Spacing.sm,
-    borderRadius: 12,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.divider,
-    alignItems: "center",
-  },
-  transactionChipActive: {
-    backgroundColor: Colors.primaryGreen,
-    borderColor: Colors.primaryGreen,
-  },
-  transactionChipText: {
-    ...Typography.labelMedium,
-    fontSize: 13,
-    fontWeight: "600",
-    color: Colors.textSecondary,
-  },
-  transactionChipTextActive: {
-    color: "#FFFFFF",
-  },
-  // Results Header
   resultsHeader: {
     marginBottom: Spacing.md,
   },
@@ -492,7 +557,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: Colors.textPrimary,
   },
-  // Property Card
   propertyCard: {
     width: CARD_WIDTH,
     backgroundColor: Colors.surface,
@@ -540,10 +604,29 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  featuredBadge: {
+  newBadge: {
     position: "absolute",
     top: Spacing.sm,
     left: Spacing.sm,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: Colors.primaryGreen,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  newBadgeText: {
+    ...Typography.caption,
+    fontSize: 9,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    letterSpacing: 0.5,
+  },
+  timeBadge: {
+    position: "absolute",
+    bottom: Spacing.sm,
+    right: Spacing.sm,
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
@@ -552,25 +635,11 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 8,
   },
-  featuredBadgeText: {
+  timeBadgeText: {
     ...Typography.caption,
     fontSize: 10,
-    fontWeight: "700",
-    color: "#F59E0B",
-  },
-  transactionBadge: {
-    position: "absolute",
-    bottom: Spacing.sm,
-    left: Spacing.sm,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  transactionBadgeText: {
-    ...Typography.caption,
-    fontSize: 10,
-    fontWeight: "700",
-    color: "#FFFFFF",
+    fontWeight: "600",
+    color: Colors.textPrimary,
   },
   cardContent: {
     padding: Spacing.md,
@@ -611,13 +680,27 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.textSecondary,
   },
+  priceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   priceText: {
     ...Typography.titleMedium,
     fontSize: 15,
     fontWeight: "700",
     color: Colors.primaryGreen,
   },
-  // Empty State
+  typeBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  typeBadgeText: {
+    ...Typography.caption,
+    fontSize: 10,
+    fontWeight: "700",
+  },
   emptyState: {
     alignItems: "center",
     paddingVertical: Spacing.xl * 2,
@@ -645,18 +728,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textSecondary,
     textAlign: "center",
-    marginBottom: Spacing.lg,
-  },
-  resetButton: {
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    backgroundColor: Colors.primaryGreen,
-    borderRadius: 12,
-  },
-  resetButtonText: {
-    ...Typography.labelMedium,
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#FFFFFF",
   },
 });

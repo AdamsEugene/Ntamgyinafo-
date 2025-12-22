@@ -387,7 +387,7 @@ export default function BuyerHomeScreen() {
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Near You</Text>
               <TouchableOpacity
-                onPress={() => router.push("/(tabs)/search")}
+                onPress={() => router.push("/near-you-properties")}
                 activeOpacity={0.7}
               >
                 <Text style={styles.seeAll}>See All →</Text>
@@ -485,7 +485,10 @@ export default function BuyerHomeScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Popular Areas</Text>
-              <TouchableOpacity activeOpacity={0.7}>
+              <TouchableOpacity
+                onPress={() => router.push("/popular-areas")}
+                activeOpacity={0.7}
+              >
                 <Text style={styles.seeAll}>See All →</Text>
               </TouchableOpacity>
             </View>
@@ -530,7 +533,7 @@ export default function BuyerHomeScreen() {
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>New Listings</Text>
               <TouchableOpacity
-                onPress={() => router.push("/(tabs)/search")}
+                onPress={() => router.push("/new-listings")}
                 activeOpacity={0.7}
               >
                 <Text style={styles.seeAll}>See All →</Text>
