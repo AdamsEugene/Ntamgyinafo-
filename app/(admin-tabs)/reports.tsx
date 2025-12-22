@@ -13,6 +13,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { BarChart, PieChart } from "react-native-gifted-charts";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import { FloatingHeaderStyles } from "@/components/FloatingHeader.styles";
@@ -98,6 +99,7 @@ const TIME_PERIODS: { id: TimePeriod; label: string }[] = [
 ];
 
 export default function PaymentReportsScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("month");
@@ -479,7 +481,11 @@ export default function PaymentReportsScreen() {
           </View>
 
           {/* View All Button */}
-          <TouchableOpacity style={styles.viewAllButton} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.viewAllButton}
+            activeOpacity={0.7}
+            onPress={() => router.push("/(admin-tabs)/transactions")}
+          >
             <Text style={styles.viewAllButtonText}>View All Transactions</Text>
             <Ionicons
               name="arrow-forward"
