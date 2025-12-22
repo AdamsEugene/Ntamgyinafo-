@@ -40,6 +40,12 @@ export default function OwnerTabLayout() {
       }}
       tabBar={(props) => {
         const currentRouteName = props.state.routes[props.state.index].name;
+
+        // Hide bottom nav for subscription screen
+        if (currentRouteName === "subscription") {
+          return null;
+        }
+
         // Map add-listing and pending-approval to my-listings for bottom nav highlighting
         const activeTab =
           currentRouteName === "add-listing" ||
