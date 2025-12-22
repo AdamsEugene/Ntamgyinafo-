@@ -942,39 +942,39 @@ export default function AddListingScreen() {
           {renderStepContent()}
         </ScrollView>
 
-        {/* Footer */}
-        <View
-          style={[styles.footer, { paddingBottom: insets.bottom + Spacing.md }]}
+        {/* Floating Continue Button */}
+        <TouchableOpacity
+          style={[
+            styles.floatingContinueButton,
+            { bottom: 100 + insets.bottom },
+            !isStepValid() && styles.floatingContinueButtonDisabled,
+          ]}
+          onPress={currentStep === TOTAL_STEPS ? handleSubmit : goToNextStep}
+          activeOpacity={0.8}
+          disabled={!isStepValid()}
         >
-          {currentStep === TOTAL_STEPS ? (
-            <TouchableOpacity
-              style={styles.submitButton}
-              onPress={handleSubmit}
-              activeOpacity={0.8}
-            >
-              <LinearGradient
-                colors={[Colors.primaryGreen, "#2E7D32"]}
-                style={styles.submitButtonGradient}
-              >
-                <Ionicons name="checkmark-circle" size={22} color="#FFFFFF" />
-                <Text style={styles.submitButtonText}>Submit for Review</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={[
-                styles.continueButton,
-                !isStepValid() && styles.continueButtonDisabled,
-              ]}
-              onPress={goToNextStep}
-              activeOpacity={0.8}
-              disabled={!isStepValid()}
-            >
-              <Text style={styles.continueButtonText}>Continue</Text>
-              <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
-          )}
-        </View>
+          <LinearGradient
+            colors={
+              isStepValid()
+                ? [Colors.primaryGreen, "#2E7D32"]
+                : [Colors.divider, Colors.divider]
+            }
+            style={styles.floatingContinueButtonGradient}
+          >
+            <Text style={styles.floatingContinueButtonText}>
+              {currentStep === TOTAL_STEPS ? "Submit for Review" : "Continue"}
+            </Text>
+            <Ionicons
+              name={
+                currentStep === TOTAL_STEPS
+                  ? "checkmark-circle"
+                  : "arrow-forward"
+              }
+              size={20}
+              color="#FFFFFF"
+            />
+          </LinearGradient>
+        </TouchableOpacity>
       </KeyboardAvoidingView>
     </>
   );
@@ -1063,7 +1063,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.xl,
+    paddingBottom: 180, // Space for floating button and bottom nav
   },
   // Step Content
   stepContent: {
@@ -1666,43 +1666,44 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   // Footer
-  footer: {
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.md,
-    backgroundColor: Colors.background,
-    borderTopWidth: 1,
-    borderTopColor: Colors.divider,
-  },
-  continueButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: Colors.primaryGreen,
-    paddingVertical: Spacing.lg,
-    borderRadius: 16,
-    gap: Spacing.sm,
-  },
-  continueButtonDisabled: {
-    backgroundColor: Colors.divider,
-  },
-  continueButtonText: {
-    ...Typography.labelLarge,
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-  submitButton: {
+  // Floating Continue Button
+  floatingContinueButton: {
+    position: "absolute",
+    left: Spacing.xl,
+    right: Spacing.xl,
     borderRadius: 16,
     overflow: "hidden",
+    zIndex: 100,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.primaryGreen,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
-  submitButtonGradient: {
+  floatingContinueButtonDisabled: {
+    ...Platform.select({
+      ios: {
+        shadowOpacity: 0,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  floatingContinueButtonGradient: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: Spacing.lg,
     gap: Spacing.sm,
   },
-  submitButtonText: {
+  floatingContinueButtonText: {
     ...Typography.labelLarge,
     fontSize: 16,
     fontWeight: "600",
