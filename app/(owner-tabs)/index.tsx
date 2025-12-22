@@ -16,14 +16,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Colors, Typography, Spacing } from "@/constants/design";
-
-// Get time-based greeting
-const getGreeting = () => {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good Morning";
-  if (hour < 17) return "Good Afternoon";
-  return "Good Evening";
-};
+import {
+  FloatingHeaderStyles,
+  HEADER_ICON_SIZE,
+} from "@/components/FloatingHeader.styles";
 
 // Quick actions
 const QUICK_ACTIONS = [
@@ -230,59 +226,72 @@ export default function OwnerDashboardScreen() {
 
   return (
     <>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <View style={styles.container}>
-        {/* Header with gradient background */}
-        <LinearGradient
-          colors={[Colors.primaryGreen, "#1B5E20"]}
-          style={[styles.headerGradient, { paddingTop: insets.top }]}
+        {/* Decorative Background Elements */}
+        <View style={styles.decorativeBackground}>
+          <View style={styles.circle1} />
+          <View style={styles.circle2} />
+        </View>
+
+        {/* Floating Sticky Header */}
+        <View
+          style={[
+            FloatingHeaderStyles.floatingHeader,
+            { paddingTop: insets.top + Spacing.md },
+          ]}
         >
-          <View style={styles.headerContent}>
-            <View style={styles.greetingContainer}>
-              <Text style={styles.greeting}>{getGreeting()}, Kofi 👋</Text>
-              <Text style={styles.subGreeting}>
-                Here&apos;s what&apos;s happening with your properties
-              </Text>
-            </View>
+          <View style={styles.greetingContainer}>
+            <Text style={styles.greeting}>Hi, Kofi 👋</Text>
+            <Text style={styles.subGreeting}>Manage your properties</Text>
+          </View>
+
+          {/* Action Buttons */}
+          <View style={styles.actionButtonsContainer}>
+            <TouchableOpacity
+              onPress={() => router.push("/(owner-tabs)/messages")}
+              style={FloatingHeaderStyles.actionButton}
+              activeOpacity={0.7}
+            >
+              <View style={FloatingHeaderStyles.actionButtonBackground}>
+                <Ionicons
+                  name="chatbubbles-outline"
+                  size={HEADER_ICON_SIZE}
+                  color={Colors.textPrimary}
+                />
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationBadgeText}>3</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => {
                 // TODO: Navigate to notifications
               }}
-              style={styles.notificationButton}
+              style={FloatingHeaderStyles.actionButton}
               activeOpacity={0.7}
             >
-              <Ionicons name="notifications" size={22} color="#FFFFFF" />
-              <View style={styles.notificationBadge}>
-                <Text style={styles.notificationBadgeText}>5</Text>
+              <View style={FloatingHeaderStyles.actionButtonBackground}>
+                <Ionicons
+                  name="notifications-outline"
+                  size={HEADER_ICON_SIZE}
+                  color={Colors.textPrimary}
+                />
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationBadgeText}>5</Text>
+                </View>
               </View>
             </TouchableOpacity>
           </View>
-
-          {/* Quick Stats Row */}
-          <View style={styles.quickStatsRow}>
-            <View style={styles.quickStat}>
-              <Text style={styles.quickStatValue}>GHS 2.5M</Text>
-              <Text style={styles.quickStatLabel}>Total Value</Text>
-            </View>
-            <View style={styles.quickStatDivider} />
-            <View style={styles.quickStat}>
-              <Text style={styles.quickStatValue}>5</Text>
-              <Text style={styles.quickStatLabel}>Properties</Text>
-            </View>
-            <View style={styles.quickStatDivider} />
-            <View style={styles.quickStat}>
-              <Text style={styles.quickStatValue}>48</Text>
-              <Text style={styles.quickStatLabel}>Inquiries</Text>
-            </View>
-          </View>
-        </LinearGradient>
+        </View>
 
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={[
             styles.content,
             {
+              paddingTop: 80 + insets.top,
               paddingBottom: 100 + insets.bottom,
             },
           ]}
@@ -295,6 +304,32 @@ export default function OwnerDashboardScreen() {
             />
           }
         >
+          {/* Owner Stats Banner */}
+          <View style={styles.statsBanner}>
+            <LinearGradient
+              colors={[Colors.primaryGreen, "#2E7D32"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.statsBannerGradient}
+            >
+              <View style={styles.quickStatsRow}>
+                <View style={styles.quickStat}>
+                  <Text style={styles.quickStatValue}>GHS 2.5M</Text>
+                  <Text style={styles.quickStatLabel}>Total Value</Text>
+                </View>
+                <View style={styles.quickStatDivider} />
+                <View style={styles.quickStat}>
+                  <Text style={styles.quickStatValue}>5</Text>
+                  <Text style={styles.quickStatLabel}>Properties</Text>
+                </View>
+                <View style={styles.quickStatDivider} />
+                <View style={styles.quickStat}>
+                  <Text style={styles.quickStatValue}>48</Text>
+                  <Text style={styles.quickStatLabel}>Inquiries</Text>
+                </View>
+              </View>
+            </LinearGradient>
+          </View>
           {/* Quick Actions */}
           <View style={styles.quickActionsContainer}>
             {QUICK_ACTIONS.map((action) => (
@@ -585,20 +620,36 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
+  // Decorative Background
+  decorativeBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+  },
+  circle1: {
+    position: "absolute",
+    top: -100,
+    right: -100,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: Colors.primaryLight,
+    opacity: 0.08,
+  },
+  circle2: {
+    position: "absolute",
+    bottom: -150,
+    left: -150,
+    width: 400,
+    height: 400,
+    borderRadius: 200,
+    backgroundColor: Colors.primaryGreen,
+    opacity: 0.05,
+  },
   // Header
-  headerGradient: {
-    paddingBottom: Spacing.xl,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
-  },
-  headerContent: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.md,
-  },
   greetingContainer: {
     flex: 1,
   },
@@ -606,48 +657,60 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 24,
     fontWeight: "700",
-    color: "#FFFFFF",
-    marginBottom: 4,
+    color: Colors.textPrimary,
+    marginBottom: 2,
   },
   subGreeting: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: "rgba(255, 255, 255, 0.8)",
+    color: Colors.textSecondary,
   },
-  notificationButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    justifyContent: "center",
-    alignItems: "center",
+  actionButtonsContainer: {
+    flexDirection: "row",
+    gap: Spacing.sm,
   },
   notificationBadge: {
     position: "absolute",
-    top: -4,
-    right: -4,
+    top: 4,
+    right: 4,
     backgroundColor: "#FF3B30",
     borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    minWidth: 18,
+    height: 18,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 6,
+    paddingHorizontal: 4,
     borderWidth: 2,
-    borderColor: Colors.primaryGreen,
+    borderColor: Colors.surface,
   },
   notificationBadgeText: {
     ...Typography.caption,
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "700",
     color: "#FFFFFF",
   },
+  // Stats Banner
+  statsBanner: {
+    marginBottom: Spacing.xl,
+    borderRadius: 20,
+    overflow: "hidden",
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.primaryGreen,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  statsBannerGradient: {
+    padding: Spacing.lg,
+  },
   quickStatsRow: {
     flexDirection: "row",
-    backgroundColor: "rgba(255, 255, 255, 0.15)",
-    marginHorizontal: Spacing.xl,
-    borderRadius: 16,
-    padding: Spacing.lg,
   },
   quickStat: {
     flex: 1,
@@ -673,17 +736,16 @@ const styles = StyleSheet.create({
   // Content
   scrollView: {
     flex: 1,
+    zIndex: 1,
   },
   content: {
     paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.xl,
   },
   // Quick Actions
   quickActionsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: Spacing.xl,
-    marginTop: -40,
   },
   quickActionCard: {
     alignItems: "center",
