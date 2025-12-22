@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Platform,
   Animated,
+  ScrollView,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -85,186 +86,199 @@ export default function PendingApprovalScreen() {
           <View style={styles.circle3} />
         </View>
 
-        {/* Content */}
-        <View style={styles.content}>
-          {/* Icon Container */}
-          <Animated.View
-            style={[
-              styles.iconContainer,
-              {
-                transform: [{ scale: scaleAnim }, { scale: pulseAnim }],
-              },
-            ]}
-          >
-            <LinearGradient
-              colors={[`${Colors.primaryGreen}20`, `${Colors.primaryGreen}10`]}
-              style={styles.iconGradient}
-            >
-              <View style={styles.iconInner}>
-                <Ionicons
-                  name="time-outline"
-                  size={64}
-                  color={Colors.primaryGreen}
-                />
-              </View>
-            </LinearGradient>
-          </Animated.View>
-
-          {/* Title and Message */}
-          <Animated.View
-            style={[
-              styles.textContainer,
-              {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
-              },
-            ]}
-          >
-            <Text style={styles.title}>Listing Under Review</Text>
-            <Text style={styles.message}>
-              Your listing is being reviewed by our team. We&apos;ll notify you
-              once it&apos;s approved and live on the platform.
-            </Text>
-
-            {/* Listing Info Card */}
-            {params.listingTitle && (
-              <View style={styles.listingCard}>
-                <View style={styles.listingIconContainer}>
-                  <Ionicons name="home" size={20} color={Colors.primaryGreen} />
-                </View>
-                <View style={styles.listingInfo}>
-                  <Text style={styles.listingLabel}>Submitted Listing</Text>
-                  <Text style={styles.listingTitle} numberOfLines={1}>
-                    {params.listingTitle}
-                  </Text>
-                </View>
-                <View style={styles.statusBadge}>
-                  <Text style={styles.statusText}>Pending</Text>
-                </View>
-              </View>
-            )}
-
-            {/* Timeline */}
-            <View style={styles.timelineCard}>
-              <View style={styles.timelineHeader}>
-                <Ionicons
-                  name="timer-outline"
-                  size={20}
-                  color={Colors.primaryGreen}
-                />
-                <Text style={styles.timelineTitle}>Estimated Time</Text>
-              </View>
-              <Text style={styles.timelineValue}>24 - 48 hours</Text>
-              <Text style={styles.timelineNote}>
-                We review listings to ensure quality and accuracy
-              </Text>
-            </View>
-
-            {/* What Happens Next */}
-            <View style={styles.stepsCard}>
-              <Text style={styles.stepsTitle}>What happens next?</Text>
-              <View style={styles.step}>
-                <View style={styles.stepNumber}>
-                  <Text style={styles.stepNumberText}>1</Text>
-                </View>
-                <View style={styles.stepContent}>
-                  <Text style={styles.stepLabel}>Review in Progress</Text>
-                  <Text style={styles.stepDescription}>
-                    Our team verifies property details and photos
-                  </Text>
-                </View>
-                <Ionicons
-                  name="checkmark-circle"
-                  size={20}
-                  color={Colors.primaryGreen}
-                />
-              </View>
-              <View style={styles.stepConnector} />
-              <View style={styles.step}>
-                <View style={[styles.stepNumber, styles.stepNumberPending]}>
-                  <Text
-                    style={[
-                      styles.stepNumberText,
-                      styles.stepNumberTextPending,
-                    ]}
-                  >
-                    2
-                  </Text>
-                </View>
-                <View style={styles.stepContent}>
-                  <Text style={styles.stepLabel}>Approval</Text>
-                  <Text style={styles.stepDescription}>
-                    You&apos;ll receive a notification once approved
-                  </Text>
-                </View>
-                <Ionicons
-                  name="ellipse-outline"
-                  size={20}
-                  color={Colors.textSecondary}
-                />
-              </View>
-              <View style={styles.stepConnector} />
-              <View style={styles.step}>
-                <View style={[styles.stepNumber, styles.stepNumberPending]}>
-                  <Text
-                    style={[
-                      styles.stepNumberText,
-                      styles.stepNumberTextPending,
-                    ]}
-                  >
-                    3
-                  </Text>
-                </View>
-                <View style={styles.stepContent}>
-                  <Text style={styles.stepLabel}>Go Live</Text>
-                  <Text style={styles.stepDescription}>
-                    Your property will be visible to buyers
-                  </Text>
-                </View>
-                <Ionicons
-                  name="ellipse-outline"
-                  size={20}
-                  color={Colors.textSecondary}
-                />
-              </View>
-            </View>
-          </Animated.View>
-        </View>
-
-        {/* Footer Buttons */}
-        <Animated.View
-          style={[
-            styles.footer,
-            { paddingBottom: insets.bottom + Spacing.lg, opacity: fadeAnim },
+        {/* Scrollable Content */}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: 100 + insets.bottom },
           ]}
+          showsVerticalScrollIndicator={false}
         >
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={handleViewMyListings}
-            activeOpacity={0.8}
-          >
-            <Ionicons
-              name="list-outline"
-              size={20}
-              color={Colors.primaryGreen}
-            />
-            <Text style={styles.secondaryButtonText}>View My Listings</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={handleBackToDashboard}
-            activeOpacity={0.8}
-          >
-            <LinearGradient
-              colors={[Colors.primaryGreen, "#2E7D32"]}
-              style={styles.primaryButtonGradient}
+          <View style={styles.content}>
+            {/* Icon Container */}
+            <Animated.View
+              style={[
+                styles.iconContainer,
+                {
+                  transform: [{ scale: scaleAnim }, { scale: pulseAnim }],
+                },
+              ]}
             >
-              <Text style={styles.primaryButtonText}>Back to Dashboard</Text>
-              <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-            </LinearGradient>
-          </TouchableOpacity>
-        </Animated.View>
+              <LinearGradient
+                colors={[
+                  `${Colors.primaryGreen}20`,
+                  `${Colors.primaryGreen}10`,
+                ]}
+                style={styles.iconGradient}
+              >
+                <View style={styles.iconInner}>
+                  <Ionicons
+                    name="time-outline"
+                    size={64}
+                    color={Colors.primaryGreen}
+                  />
+                </View>
+              </LinearGradient>
+            </Animated.View>
+
+            {/* Title and Message */}
+            <Animated.View
+              style={[
+                styles.textContainer,
+                {
+                  opacity: fadeAnim,
+                  transform: [{ translateY: slideAnim }],
+                },
+              ]}
+            >
+              <Text style={styles.title}>Listing Under Review</Text>
+              <Text style={styles.message}>
+                Your listing is being reviewed by our team. We&apos;ll notify
+                you once it&apos;s approved and live on the platform.
+              </Text>
+
+              {/* Listing Info Card */}
+              {params.listingTitle && (
+                <View style={styles.listingCard}>
+                  <View style={styles.listingIconContainer}>
+                    <Ionicons
+                      name="home"
+                      size={20}
+                      color={Colors.primaryGreen}
+                    />
+                  </View>
+                  <View style={styles.listingInfo}>
+                    <Text style={styles.listingLabel}>Submitted Listing</Text>
+                    <Text style={styles.listingTitle} numberOfLines={1}>
+                      {params.listingTitle}
+                    </Text>
+                  </View>
+                  <View style={styles.statusBadge}>
+                    <Text style={styles.statusText}>Pending</Text>
+                  </View>
+                </View>
+              )}
+
+              {/* Timeline */}
+              <View style={styles.timelineCard}>
+                <View style={styles.timelineHeader}>
+                  <Ionicons
+                    name="timer-outline"
+                    size={20}
+                    color={Colors.primaryGreen}
+                  />
+                  <Text style={styles.timelineTitle}>Estimated Time</Text>
+                </View>
+                <Text style={styles.timelineValue}>24 - 48 hours</Text>
+                <Text style={styles.timelineNote}>
+                  We review listings to ensure quality and accuracy
+                </Text>
+              </View>
+
+              {/* What Happens Next */}
+              <View style={styles.stepsCard}>
+                <Text style={styles.stepsTitle}>What happens next?</Text>
+                <View style={styles.step}>
+                  <View style={styles.stepNumber}>
+                    <Text style={styles.stepNumberText}>1</Text>
+                  </View>
+                  <View style={styles.stepContent}>
+                    <Text style={styles.stepLabel}>Review in Progress</Text>
+                    <Text style={styles.stepDescription}>
+                      Our team verifies property details and photos
+                    </Text>
+                  </View>
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={20}
+                    color={Colors.primaryGreen}
+                  />
+                </View>
+                <View style={styles.stepConnector} />
+                <View style={styles.step}>
+                  <View style={[styles.stepNumber, styles.stepNumberPending]}>
+                    <Text
+                      style={[
+                        styles.stepNumberText,
+                        styles.stepNumberTextPending,
+                      ]}
+                    >
+                      2
+                    </Text>
+                  </View>
+                  <View style={styles.stepContent}>
+                    <Text style={styles.stepLabel}>Approval</Text>
+                    <Text style={styles.stepDescription}>
+                      You&apos;ll receive a notification once approved
+                    </Text>
+                  </View>
+                  <Ionicons
+                    name="ellipse-outline"
+                    size={20}
+                    color={Colors.textSecondary}
+                  />
+                </View>
+                <View style={styles.stepConnector} />
+                <View style={styles.step}>
+                  <View style={[styles.stepNumber, styles.stepNumberPending]}>
+                    <Text
+                      style={[
+                        styles.stepNumberText,
+                        styles.stepNumberTextPending,
+                      ]}
+                    >
+                      3
+                    </Text>
+                  </View>
+                  <View style={styles.stepContent}>
+                    <Text style={styles.stepLabel}>Go Live</Text>
+                    <Text style={styles.stepDescription}>
+                      Your property will be visible to buyers
+                    </Text>
+                  </View>
+                  <Ionicons
+                    name="ellipse-outline"
+                    size={20}
+                    color={Colors.textSecondary}
+                  />
+                </View>
+              </View>
+            </Animated.View>
+
+            {/* Footer Buttons */}
+            <Animated.View style={[styles.footer, { opacity: fadeAnim }]}>
+              <TouchableOpacity
+                style={styles.secondaryButton}
+                onPress={handleViewMyListings}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name="list-outline"
+                  size={20}
+                  color={Colors.primaryGreen}
+                />
+                <Text style={styles.secondaryButtonText}>View My Listings</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={handleBackToDashboard}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={[Colors.primaryGreen, "#2E7D32"]}
+                  style={styles.primaryButtonGradient}
+                >
+                  <Text style={styles.primaryButtonText}>
+                    Back to Dashboard
+                  </Text>
+                  <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+                </LinearGradient>
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
+        </ScrollView>
       </View>
     </>
   );
@@ -274,6 +288,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: Spacing.xl,
   },
   decorativeBackground: {
     position: "absolute",
@@ -314,10 +335,8 @@ const styles = StyleSheet.create({
     opacity: 0.08,
   },
   content: {
-    flex: 1,
-    paddingHorizontal: Spacing.xl,
-    justifyContent: "center",
     alignItems: "center",
+    paddingTop: Spacing.xl,
   },
   iconContainer: {
     marginBottom: Spacing.xl,
@@ -523,13 +542,14 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   footer: {
-    paddingHorizontal: Spacing.xl,
     gap: Spacing.md,
+    marginTop: Spacing.xl,
   },
   secondaryButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    width: "100%",
     gap: Spacing.sm,
     backgroundColor: Colors.surface,
     paddingVertical: Spacing.md,
