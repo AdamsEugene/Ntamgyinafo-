@@ -135,7 +135,7 @@ const FILTER_OPTIONS: {
 ];
 
 export default function UserManagementScreen() {
-  useRouter();
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const searchInputRef = useRef<RNTextInput>(null);
   const [users, setUsers] = useState<User[]>(MOCK_USERS);
@@ -341,8 +341,7 @@ export default function UserManagementScreen() {
         style={styles.userCard}
         activeOpacity={0.7}
         onPress={() => {
-          setSelectedUser(item);
-          actionSheetRef.current?.present();
+          router.push(`/admin-user/${item.id}`);
         }}
       >
         <View style={styles.userCardHeader}>
@@ -762,6 +761,10 @@ export default function UserManagementScreen() {
                   <TouchableOpacity
                     style={styles.sheetAction}
                     activeOpacity={0.7}
+                    onPress={() => {
+                      actionSheetRef.current?.dismiss();
+                      router.push(`/admin-user/${selectedUser.id}`);
+                    }}
                   >
                     <View
                       style={[

@@ -454,8 +454,8 @@ export default function AdminDashboardScreen() {
                   if (item.type === "property") {
                     router.push(`/admin-review/${item.id}`);
                   } else {
-                    // For users, go to users tab with this user selected
-                    router.push("/(admin-tabs)/users");
+                    // For users, go to user profile screen
+                    router.push(`/admin-user/${item.id}`);
                   }
                 }}
               >
