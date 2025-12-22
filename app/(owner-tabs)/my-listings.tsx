@@ -170,7 +170,7 @@ export default function MyListingsScreen() {
       key={listing.id}
       style={styles.listingCard}
       activeOpacity={0.8}
-      onPress={() => router.push(`/(owner-tabs)/listing/${listing.id}` as any)}
+      onPress={() => router.push(`/owner-listing/${listing.id}` as any)}
     >
       {/* Image Section */}
       <View style={styles.imageContainer}>

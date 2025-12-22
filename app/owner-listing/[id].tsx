@@ -744,10 +744,7 @@ export default function OwnerListingDetailScreen() {
         <View
           style={[
             styles.ownerActionsContainer,
-            {
-              paddingBottom: insets.bottom + Spacing.md,
-              paddingTop: Spacing.md,
-            },
+            { paddingBottom: insets.bottom + Spacing.md, paddingTop: Spacing.md },
           ]}
         >
           <View style={styles.ownerActionsRow}>
