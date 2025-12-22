@@ -130,6 +130,7 @@ export default function ProfileScreen() {
             <TouchableOpacity
               style={FloatingHeaderStyles.actionButton}
               activeOpacity={0.7}
+              onPress={() => router.push("/settings")}
             >
               <View style={FloatingHeaderStyles.actionButtonBackground}>
                 <Ionicons
