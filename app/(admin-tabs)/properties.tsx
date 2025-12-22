@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,9 +7,12 @@ import {
   TouchableOpacity,
   Image,
   RefreshControl,
-  TextInput,
+  TextInput as RNTextInput,
   Platform,
   Alert,
+  Keyboard,
+  Animated,
+  Dimensions,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -22,7 +25,10 @@ import {
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
-import { FloatingHeaderStyles } from "@/components/FloatingHeader.styles";
+import {
+  FloatingHeaderStyles,
+  HEADER_ICON_SIZE,
+} from "@/components/FloatingHeader.styles";
 
 interface Property {
   id: string;
@@ -46,6 +52,8 @@ interface Property {
 }
 
 type FilterTab = "pending" | "approved" | "rejected" | "all";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const MOCK_PROPERTIES: Property[] = [
   {
@@ -152,11 +160,21 @@ const MOCK_PROPERTIES: Property[] = [
   },
 ];
 
-const FILTER_TABS: { id: FilterTab; label: string }[] = [
-  { id: "pending", label: "Pending" },
-  { id: "approved", label: "Approved" },
-  { id: "rejected", label: "Rejected" },
-  { id: "all", label: "All" },
+const FILTER_OPTIONS: {
+  id: FilterTab;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+}[] = [
+  { id: "all", label: "All Properties", icon: "apps", color: "#3B82F6" },
+  { id: "pending", label: "Pending Review", icon: "time", color: "#F59E0B" },
+  {
+    id: "approved",
+    label: "Approved",
+    icon: "checkmark-circle",
+    color: Colors.primaryGreen,
+  },
+  { id: "rejected", label: "Rejected", icon: "close-circle", color: "#EF4444" },
 ];
 
 const REJECTION_REASONS = [
@@ -172,16 +190,70 @@ const REJECTION_REASONS = [
 export default function PropertyQueueScreen() {
   useRouter();
   const insets = useSafeAreaInsets();
+  const searchInputRef = useRef<RNTextInput>(null);
   const [properties, setProperties] = useState<Property[]>(MOCK_PROPERTIES);
-  const [activeTab, setActiveTab] = useState<FilterTab>("pending");
+  const [activeFilter, setActiveFilter] = useState<FilterTab>("pending");
   const [searchQuery, setSearchQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(
     null
   );
   const [selectedReason, setSelectedReason] = useState<string>("");
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const actionSheetRef = useRef<BottomSheetModal>(null);
   const rejectSheetRef = useRef<BottomSheetModal>(null);
+  const filterSheetRef = useRef<BottomSheetModal>(null);
+  const searchInputWidth = useRef(new Animated.Value(200)).current;
+  const searchInputHeight = useRef(new Animated.Value(44)).current;
+
+  // Handle keyboard show/hide
+  useEffect(() => {
+    const keyboardWillShowListener = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      (e) => {
+        setKeyboardHeight(e.endCoordinates.height);
+        setIsKeyboardVisible(true);
+        Animated.parallel([
+          Animated.timing(searchInputWidth, {
+            toValue: SCREEN_WIDTH * 0.9 - Spacing.lg * 2,
+            duration: 250,
+            useNativeDriver: false,
+          }),
+          Animated.timing(searchInputHeight, {
+            toValue: 52,
+            duration: 250,
+            useNativeDriver: false,
+          }),
+        ]).start();
+      }
+    );
+
+    const keyboardWillHideListener = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      () => {
+        setKeyboardHeight(0);
+        setIsKeyboardVisible(false);
+        Animated.parallel([
+          Animated.timing(searchInputWidth, {
+            toValue: 200,
+            duration: 250,
+            useNativeDriver: false,
+          }),
+          Animated.timing(searchInputHeight, {
+            toValue: 44,
+            duration: 250,
+            useNativeDriver: false,
+          }),
+        ]).start();
+      }
+    );
+
+    return () => {
+      keyboardWillShowListener.remove();
+      keyboardWillHideListener.remove();
+    };
+  }, [searchInputWidth, searchInputHeight]);
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
@@ -199,11 +271,13 @@ export default function PropertyQueueScreen() {
       }
     }
 
-    if (activeTab === "all") return true;
-    return property.status === activeTab;
+    if (activeFilter === "all") return true;
+    return property.status === activeFilter;
   });
 
   const pendingCount = properties.filter((p) => p.status === "pending").length;
+  const activeFilterOption = FILTER_OPTIONS.find((f) => f.id === activeFilter);
+  const activeFilterLabel = activeFilterOption?.label || "All";
 
   const renderBackdrop = useCallback(
     (props: any) => (
@@ -279,11 +353,15 @@ export default function PropertyQueueScreen() {
   const getStatusStyle = (status: Property["status"]) => {
     switch (status) {
       case "pending":
-        return { bg: "#FEF3C7", text: "#F59E0B" };
+        return { bg: "#FEF3C7", text: "#F59E0B", icon: "time" };
       case "approved":
-        return { bg: `${Colors.primaryGreen}15`, text: Colors.primaryGreen };
+        return {
+          bg: `${Colors.primaryGreen}15`,
+          text: Colors.primaryGreen,
+          icon: "checkmark-circle",
+        };
       case "rejected":
-        return { bg: "#FEE2E2", text: "#EF4444" };
+        return { bg: "#FEE2E2", text: "#EF4444", icon: "close-circle" };
     }
   };
 
@@ -299,27 +377,44 @@ export default function PropertyQueueScreen() {
           actionSheetRef.current?.present();
         }}
       >
-        <Image source={{ uri: item.images[0] }} style={styles.propertyImage} />
-        <View style={styles.propertyContent}>
-          {/* Status Badge */}
-          <View
-            style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}
-          >
-            <Text style={[styles.statusBadgeText, { color: statusStyle.text }]}>
-              {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-            </Text>
+        {/* Property Image with Overlay */}
+        <View style={styles.propertyImageContainer}>
+          <Image
+            source={{ uri: item.images[0] }}
+            style={styles.propertyImage}
+          />
+          <View style={styles.propertyImageOverlay}>
+            {/* Transaction Type Badge */}
+            <View style={styles.transactionBadge}>
+              <Text style={styles.transactionBadgeText}>
+                For {item.transactionType === "sale" ? "Sale" : "Rent"}
+              </Text>
+            </View>
+            {/* Status Badge */}
+            <View
+              style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}
+            >
+              <Ionicons
+                name={statusStyle.icon as any}
+                size={12}
+                color={statusStyle.text}
+              />
+              <Text
+                style={[styles.statusBadgeText, { color: statusStyle.text }]}
+              >
+                {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+              </Text>
+            </View>
           </View>
+        </View>
 
+        <View style={styles.propertyContent}>
           {/* Property Info */}
           <Text style={styles.propertyTitle} numberOfLines={1}>
             {item.title}
           </Text>
           <View style={styles.propertyLocation}>
-            <Ionicons
-              name="location-outline"
-              size={12}
-              color={Colors.textSecondary}
-            />
+            <Ionicons name="location" size={14} color={Colors.primaryGreen} />
             <Text style={styles.propertyLocationText} numberOfLines={1}>
               {item.location}
             </Text>
@@ -331,7 +426,7 @@ export default function PropertyQueueScreen() {
             <View style={styles.propertyTypeTag}>
               <Ionicons
                 name={getTypeIcon(item.type) as any}
-                size={12}
+                size={14}
                 color={Colors.primaryGreen}
               />
               <Text style={styles.propertyTypeText}>
@@ -342,45 +437,62 @@ export default function PropertyQueueScreen() {
               <View style={styles.propertyMetaItem}>
                 <Ionicons
                   name="bed-outline"
-                  size={12}
+                  size={14}
                   color={Colors.textSecondary}
                 />
-                <Text style={styles.propertyMetaText}>{item.bedrooms}</Text>
+                <Text style={styles.propertyMetaText}>
+                  {item.bedrooms} Beds
+                </Text>
               </View>
             )}
             {item.bathrooms && (
               <View style={styles.propertyMetaItem}>
                 <Ionicons
                   name="water-outline"
-                  size={12}
+                  size={14}
                   color={Colors.textSecondary}
                 />
-                <Text style={styles.propertyMetaText}>{item.bathrooms}</Text>
+                <Text style={styles.propertyMetaText}>
+                  {item.bathrooms} Baths
+                </Text>
               </View>
             )}
           </View>
 
           {/* Owner Info */}
           <View style={styles.ownerInfo}>
-            <Image
-              source={{ uri: item.owner.avatar }}
-              style={styles.ownerAvatar}
-            />
-            <Text style={styles.ownerName}>{item.owner.name}</Text>
-            {item.owner.isVerified && (
-              <Ionicons
-                name="checkmark-circle"
-                size={14}
-                color={Colors.primaryGreen}
+            <View style={styles.ownerLeft}>
+              <Image
+                source={{ uri: item.owner.avatar }}
+                style={styles.ownerAvatar}
               />
-            )}
-            <Text style={styles.submittedTime}>• {item.submittedAt}</Text>
+              <View>
+                <View style={styles.ownerNameRow}>
+                  <Text style={styles.ownerName}>{item.owner.name}</Text>
+                  {item.owner.isVerified && (
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={14}
+                      color={Colors.primaryGreen}
+                    />
+                  )}
+                </View>
+                <Text style={styles.submittedTime}>{item.submittedAt}</Text>
+              </View>
+            </View>
+            <View style={styles.viewButton}>
+              <Ionicons
+                name="chevron-forward"
+                size={18}
+                color={Colors.textSecondary}
+              />
+            </View>
           </View>
 
           {/* Rejection Reason */}
           {item.status === "rejected" && item.reason && (
             <View style={styles.rejectionReason}>
-              <Ionicons name="alert-circle" size={14} color="#EF4444" />
+              <Ionicons name="alert-circle" size={16} color="#EF4444" />
               <Text style={styles.rejectionReasonText}>{item.reason}</Text>
             </View>
           )}
@@ -410,65 +522,69 @@ export default function PropertyQueueScreen() {
             <Text style={styles.headerTitleText}>Properties</Text>
             {pendingCount > 0 && (
               <View style={styles.headerBadge}>
-                <Text style={styles.headerBadgeText}>
-                  {pendingCount} pending
-                </Text>
+                <Text style={styles.headerBadgeText}>{pendingCount}</Text>
               </View>
             )}
           </View>
+
+          {/* Filter Button */}
+          <View style={FloatingHeaderStyles.headerActions}>
+            <TouchableOpacity
+              style={FloatingHeaderStyles.actionButton}
+              onPress={() => filterSheetRef.current?.present()}
+              activeOpacity={0.7}
+            >
+              <View style={FloatingHeaderStyles.actionButtonBackground}>
+                <Ionicons
+                  name="options-outline"
+                  size={HEADER_ICON_SIZE}
+                  color={Colors.textPrimary}
+                />
+                {activeFilter !== "pending" && (
+                  <View style={FloatingHeaderStyles.filterBadge}>
+                    <Text style={FloatingHeaderStyles.filterBadgeText}>1</Text>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Search Bar */}
-        <View style={[styles.searchContainer, { top: 70 + insets.top }]}>
-          <View style={styles.searchInputWrapper}>
-            <Ionicons name="search" size={18} color={Colors.textSecondary} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search properties..."
-              placeholderTextColor={Colors.textSecondary}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
+        {/* Active Filter Indicator */}
+        <View style={[styles.activeFilterBar, { top: 70 + insets.top }]}>
+          <View
+            style={[
+              styles.activeFilterChip,
+              { backgroundColor: `${activeFilterOption?.color}15` },
+            ]}
+          >
+            <Ionicons
+              name={activeFilterOption?.icon as any}
+              size={16}
+              color={activeFilterOption?.color}
             />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery("")}>
+            <Text
+              style={[
+                styles.activeFilterText,
+                { color: activeFilterOption?.color },
+              ]}
+            >
+              {activeFilterLabel}
+            </Text>
+            {activeFilter !== "pending" && (
+              <TouchableOpacity onPress={() => setActiveFilter("pending")}>
                 <Ionicons
                   name="close-circle"
                   size={18}
-                  color={Colors.textSecondary}
+                  color={activeFilterOption?.color}
                 />
               </TouchableOpacity>
             )}
           </View>
-        </View>
-
-        {/* Filter Tabs */}
-        <View style={[styles.filterTabsContainer, { top: 120 + insets.top }]}>
-          <FlatList
-            horizontal
-            data={FILTER_TABS}
-            keyExtractor={(item) => item.id}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterTabs}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[
-                  styles.filterTab,
-                  activeTab === item.id && styles.filterTabActive,
-                ]}
-                onPress={() => setActiveTab(item.id)}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[
-                    styles.filterTabText,
-                    activeTab === item.id && styles.filterTabTextActive,
-                  ]}
-                >
-                  {item.label}
-                </Text>
-              </TouchableOpacity>
-            )}
-          />
+          <Text style={styles.resultsCount}>
+            {filteredProperties.length}{" "}
+            {filteredProperties.length === 1 ? "property" : "properties"}
+          </Text>
         </View>
 
         {/* Properties List */}
@@ -479,35 +595,171 @@ export default function PropertyQueueScreen() {
           contentContainerStyle={[
             styles.listContent,
             {
-              paddingTop: 170 + insets.top,
-              paddingBottom: 100 + insets.bottom,
+              paddingTop: 120 + insets.top,
+              paddingBottom: 140 + insets.bottom,
             },
           ]}
           showsVerticalScrollIndicator={false}
+          onScrollBeginDrag={Keyboard.dismiss}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
               tintColor={Colors.primaryGreen}
-              progressViewOffset={170 + insets.top}
+              progressViewOffset={120 + insets.top}
             />
           }
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Ionicons
-                name="home-outline"
-                size={48}
-                color={Colors.textSecondary}
-              />
+              <View style={styles.emptyIconContainer}>
+                <Ionicons
+                  name="home-outline"
+                  size={48}
+                  color={Colors.textSecondary}
+                />
+              </View>
               <Text style={styles.emptyTitle}>No Properties Found</Text>
               <Text style={styles.emptyMessage}>
                 {searchQuery
-                  ? "Try a different search"
-                  : "No properties match this filter"}
+                  ? "Try a different search term"
+                  : "No properties match the current filter"}
               </Text>
+              {activeFilter !== "all" && (
+                <TouchableOpacity
+                  style={styles.clearFilterButton}
+                  onPress={() => setActiveFilter("all")}
+                >
+                  <Text style={styles.clearFilterButtonText}>
+                    View All Properties
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           }
         />
+
+        {/* Floating Search Input */}
+        <Animated.View
+          style={[
+            styles.floatingSearchContainer,
+            {
+              bottom: isKeyboardVisible
+                ? keyboardHeight + Spacing.md
+                : Math.max(insets.bottom, Spacing.md) + 70,
+            },
+          ]}
+        >
+          <Animated.View
+            style={[
+              styles.floatingSearchInputContainer,
+              {
+                width: searchInputWidth,
+                height: searchInputHeight,
+              },
+            ]}
+          >
+            <Ionicons
+              name="search"
+              size={isKeyboardVisible ? 18 : 16}
+              color={Colors.textSecondary}
+              style={styles.floatingSearchIcon}
+            />
+            <RNTextInput
+              ref={searchInputRef}
+              style={[
+                styles.floatingSearchInput,
+                { fontSize: isKeyboardVisible ? 15 : 13 },
+              ]}
+              placeholder="Search properties..."
+              placeholderTextColor={Colors.textSecondary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              returnKeyType="search"
+              autoCapitalize="none"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setSearchQuery("")}
+                style={styles.floatingClearButton}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="close-circle"
+                  size={isKeyboardVisible ? 20 : 18}
+                  color={Colors.textSecondary}
+                />
+              </TouchableOpacity>
+            )}
+          </Animated.View>
+        </Animated.View>
+
+        {/* Filter Bottom Sheet */}
+        <BottomSheetModal
+          ref={filterSheetRef}
+          index={0}
+          snapPoints={["45%"]}
+          backdropComponent={renderBackdrop}
+          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+        >
+          <BottomSheetScrollView style={styles.filterSheetContent}>
+            <Text style={styles.filterSheetTitle}>Filter Properties</Text>
+            <Text style={styles.filterSheetSubtitle}>
+              Select a status to filter listings
+            </Text>
+
+            <View style={styles.filterOptions}>
+              {FILTER_OPTIONS.map((option) => (
+                <TouchableOpacity
+                  key={option.id}
+                  style={[
+                    styles.filterOption,
+                    activeFilter === option.id && styles.filterOptionActive,
+                    activeFilter === option.id && { borderColor: option.color },
+                  ]}
+                  onPress={() => {
+                    setActiveFilter(option.id);
+                    filterSheetRef.current?.dismiss();
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View
+                    style={[
+                      styles.filterOptionIcon,
+                      { backgroundColor: `${option.color}15` },
+                      activeFilter === option.id && {
+                        backgroundColor: option.color,
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={option.icon}
+                      size={20}
+                      color={
+                        activeFilter === option.id ? "#FFFFFF" : option.color
+                      }
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.filterOptionText,
+                      activeFilter === option.id &&
+                        styles.filterOptionTextActive,
+                    ]}
+                  >
+                    {option.label}
+                  </Text>
+                  {activeFilter === option.id && (
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={22}
+                      color={option.color}
+                    />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </BottomSheetScrollView>
+        </BottomSheetModal>
 
         {/* Property Actions Bottom Sheet */}
         <BottomSheetModal
@@ -526,6 +778,28 @@ export default function PropertyQueueScreen() {
                     style={styles.sheetPropertyImage}
                   />
                   <View style={styles.sheetPropertyInfo}>
+                    <View
+                      style={[
+                        styles.sheetStatusBadge,
+                        {
+                          backgroundColor: getStatusStyle(
+                            selectedProperty.status
+                          ).bg,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.sheetStatusBadgeText,
+                          {
+                            color: getStatusStyle(selectedProperty.status).text,
+                          },
+                        ]}
+                      >
+                        {selectedProperty.status.charAt(0).toUpperCase() +
+                          selectedProperty.status.slice(1)}
+                      </Text>
+                    </View>
                     <Text style={styles.sheetPropertyTitle} numberOfLines={2}>
                       {selectedProperty.title}
                     </Text>
@@ -552,6 +826,11 @@ export default function PropertyQueueScreen() {
                       <Ionicons name="eye" size={20} color="#3B82F6" />
                     </View>
                     <Text style={styles.sheetActionText}>View Details</Text>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={18}
+                      color={Colors.textSecondary}
+                    />
                   </TouchableOpacity>
 
                   {selectedProperty.status === "pending" && (
@@ -576,6 +855,11 @@ export default function PropertyQueueScreen() {
                         <Text style={styles.sheetActionText}>
                           Approve Listing
                         </Text>
+                        <Ionicons
+                          name="chevron-forward"
+                          size={18}
+                          color={Colors.textSecondary}
+                        />
                       </TouchableOpacity>
 
                       <TouchableOpacity
@@ -600,6 +884,11 @@ export default function PropertyQueueScreen() {
                         >
                           Reject Listing
                         </Text>
+                        <Ionicons
+                          name="chevron-forward"
+                          size={18}
+                          color="#EF4444"
+                        />
                       </TouchableOpacity>
                     </>
                   )}
@@ -619,6 +908,11 @@ export default function PropertyQueueScreen() {
                     <Text style={styles.sheetActionText}>
                       View Owner Profile
                     </Text>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={18}
+                      color={Colors.textSecondary}
+                    />
                   </TouchableOpacity>
                 </View>
               </>
@@ -728,86 +1022,60 @@ const styles = StyleSheet.create({
   headerLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.md,
+    gap: Spacing.sm,
     flex: 1,
   },
   headerTitleText: {
     ...Typography.titleLarge,
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "700",
     color: Colors.textPrimary,
   },
   headerBadge: {
-    backgroundColor: "#FEF3C7",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    backgroundColor: "#EF4444",
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 6,
   },
   headerBadgeText: {
     ...Typography.caption,
     fontSize: 11,
-    fontWeight: "600",
-    color: "#F59E0B",
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
-  // Search
-  searchContainer: {
+  // Active Filter Bar
+  activeFilterBar: {
     position: "absolute",
     left: 0,
     right: 0,
     zIndex: 9,
     paddingHorizontal: Spacing.lg,
-    backgroundColor: Colors.background,
-  },
-  searchInputWrapper: {
+    paddingVertical: Spacing.sm,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
+    justifyContent: "space-between",
+    backgroundColor: Colors.background,
+  },
+  activeFilterChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.divider,
-    gap: Spacing.sm,
-  },
-  searchInput: {
-    flex: 1,
-    ...Typography.bodyMedium,
-    fontSize: 15,
-    color: Colors.textPrimary,
-  },
-  // Filter Tabs
-  filterTabsContainer: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    zIndex: 8,
-    backgroundColor: Colors.background,
-    paddingVertical: Spacing.sm,
-  },
-  filterTabs: {
-    paddingHorizontal: Spacing.lg,
-    gap: Spacing.sm,
-  },
-  filterTab: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
     borderRadius: 20,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.divider,
   },
-  filterTabActive: {
-    backgroundColor: Colors.primaryGreen,
-    borderColor: Colors.primaryGreen,
-  },
-  filterTabText: {
+  activeFilterText: {
     ...Typography.labelMedium,
     fontSize: 13,
     fontWeight: "600",
-    color: Colors.textSecondary,
   },
-  filterTabTextActive: {
-    color: "#FFFFFF",
+  resultsCount: {
+    ...Typography.bodyMedium,
+    fontSize: 13,
+    color: Colors.textSecondary,
   },
   // List
   listContent: {
@@ -817,7 +1085,7 @@ const styles = StyleSheet.create({
   // Property Card
   propertyCard: {
     backgroundColor: Colors.surface,
-    borderRadius: 16,
+    borderRadius: 20,
     overflow: "hidden",
     marginBottom: Spacing.md,
     borderWidth: 1,
@@ -825,77 +1093,103 @@ const styles = StyleSheet.create({
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
       },
       android: {
-        elevation: 2,
+        elevation: 3,
       },
     }),
   },
+  propertyImageContainer: {
+    position: "relative",
+  },
   propertyImage: {
     width: "100%",
-    height: 160,
+    height: 180,
   },
-  propertyContent: {
-    padding: Spacing.md,
+  propertyImageOverlay: {
+    position: "absolute",
+    top: Spacing.md,
+    left: Spacing.md,
+    right: Spacing.md,
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
-  statusBadge: {
-    alignSelf: "flex-start",
+  transactionBadge: {
+    backgroundColor: "rgba(0,0,0,0.6)",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
-    marginBottom: Spacing.sm,
+  },
+  transactionBadgeText: {
+    ...Typography.caption,
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   statusBadgeText: {
     ...Typography.caption,
     fontSize: 10,
     fontWeight: "600",
   },
+  propertyContent: {
+    padding: Spacing.lg,
+  },
   propertyTitle: {
-    ...Typography.labelMedium,
-    fontSize: 16,
-    fontWeight: "600",
+    ...Typography.titleMedium,
+    fontSize: 17,
+    fontWeight: "700",
     color: Colors.textPrimary,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   propertyLocation: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    marginBottom: 4,
+    marginBottom: 8,
   },
   propertyLocationText: {
-    ...Typography.caption,
-    fontSize: 12,
+    ...Typography.bodyMedium,
+    fontSize: 13,
     color: Colors.textSecondary,
+    flex: 1,
   },
   propertyPrice: {
     ...Typography.headlineMedium,
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: 20,
+    fontWeight: "800",
     color: Colors.primaryGreen,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   propertyMeta: {
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.md,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
+    flexWrap: "wrap",
   },
   propertyTypeTag: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 5,
     backgroundColor: `${Colors.primaryGreen}15`,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
   },
   propertyTypeText: {
     ...Typography.caption,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "600",
     color: Colors.primaryGreen,
   },
@@ -906,65 +1200,214 @@ const styles = StyleSheet.create({
   },
   propertyMetaText: {
     ...Typography.caption,
-    fontSize: 11,
+    fontSize: 12,
     color: Colors.textSecondary,
   },
   ownerInfo: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    paddingTop: Spacing.sm,
+    justifyContent: "space-between",
+    paddingTop: Spacing.md,
     borderTopWidth: 1,
     borderTopColor: Colors.divider,
   },
+  ownerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
   ownerAvatar: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: Colors.divider,
+  },
+  ownerNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   ownerName: {
-    ...Typography.caption,
-    fontSize: 12,
-    fontWeight: "500",
+    ...Typography.labelMedium,
+    fontSize: 13,
+    fontWeight: "600",
     color: Colors.textPrimary,
   },
   submittedTime: {
     ...Typography.caption,
     fontSize: 11,
     color: Colors.textSecondary,
+    marginTop: 1,
+  },
+  viewButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: Colors.background,
+    alignItems: "center",
+    justifyContent: "center",
   },
   rejectionReason: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: Spacing.sm,
-    padding: Spacing.sm,
+    alignItems: "flex-start",
+    gap: 8,
+    marginTop: Spacing.md,
+    padding: Spacing.md,
     backgroundColor: "#FEE2E2",
-    borderRadius: 8,
+    borderRadius: 12,
   },
   rejectionReasonText: {
-    ...Typography.caption,
-    fontSize: 11,
+    ...Typography.bodyMedium,
+    fontSize: 12,
     color: "#EF4444",
     flex: 1,
+    lineHeight: 18,
   },
   // Empty State
   emptyState: {
     alignItems: "center",
     paddingVertical: Spacing.xl * 2,
+    paddingHorizontal: Spacing.xl,
+  },
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.divider,
   },
   emptyTitle: {
     ...Typography.titleMedium,
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: "700",
     color: Colors.textPrimary,
-    marginTop: Spacing.md,
+    marginBottom: Spacing.xs,
   },
   emptyMessage: {
     ...Typography.bodyMedium,
     fontSize: 14,
     color: Colors.textSecondary,
-    marginTop: Spacing.xs,
+    textAlign: "center",
+  },
+  clearFilterButton: {
+    marginTop: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.primaryGreen,
+  },
+  clearFilterButtonText: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
+  },
+  // Floating Search
+  floatingSearchContainer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 999,
+    backgroundColor: "transparent",
+  },
+  floatingSearchInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    paddingHorizontal: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    gap: Spacing.xs / 2,
+    alignSelf: "center",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.12,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
+  },
+  floatingSearchIcon: {
+    marginRight: Spacing.xs / 2,
+  },
+  floatingSearchInput: {
+    flex: 1,
+    ...Typography.bodyMedium,
+    fontSize: 13,
+    color: Colors.textPrimary,
+    padding: 0,
+    minWidth: 120,
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        textAlignVertical: "center",
+      },
+    }),
+  },
+  floatingClearButton: {
+    padding: Spacing.xs / 2,
+  },
+  // Filter Sheet
+  filterSheetContent: {
+    padding: Spacing.xl,
+  },
+  filterSheetTitle: {
+    ...Typography.headlineMedium,
+    fontSize: 22,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+  },
+  filterSheetSubtitle: {
+    ...Typography.bodyMedium,
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.xl,
+  },
+  filterOptions: {
+    gap: Spacing.sm,
+  },
+  filterOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    padding: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+  },
+  filterOptionActive: {
+    backgroundColor: `${Colors.primaryGreen}08`,
+  },
+  filterOptionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  filterOptionText: {
+    ...Typography.bodyMedium,
+    fontSize: 15,
+    color: Colors.textSecondary,
+    flex: 1,
+  },
+  filterOptionTextActive: {
+    color: Colors.textPrimary,
+    fontWeight: "600",
   },
   // Bottom Sheet
   sheetContent: {
@@ -972,20 +1415,35 @@ const styles = StyleSheet.create({
   },
   sheetHeader: {
     flexDirection: "row",
-    gap: Spacing.md,
+    gap: Spacing.lg,
     marginBottom: Spacing.xl,
+    paddingBottom: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
   },
   sheetPropertyImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 12,
+    width: 90,
+    height: 90,
+    borderRadius: 16,
   },
   sheetPropertyInfo: {
     flex: 1,
   },
+  sheetStatusBadge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  sheetStatusBadgeText: {
+    ...Typography.caption,
+    fontSize: 10,
+    fontWeight: "600",
+  },
   sheetPropertyTitle: {
     ...Typography.labelMedium,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "600",
     color: Colors.textPrimary,
     marginBottom: 4,
@@ -1003,18 +1461,20 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   sheetActions: {
-    gap: Spacing.sm,
+    gap: Spacing.xs,
   },
   sheetAction: {
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.md,
     paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: 12,
   },
   sheetActionIcon: {
     width: 44,
     height: 44,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1023,6 +1483,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "500",
     color: Colors.textPrimary,
+    flex: 1,
   },
   // Reject Sheet
   rejectSheetContent: {
@@ -1030,7 +1491,7 @@ const styles = StyleSheet.create({
   },
   rejectSheetTitle: {
     ...Typography.headlineMedium,
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "700",
     color: Colors.textPrimary,
     marginBottom: Spacing.xs,
@@ -1048,7 +1509,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.md,
     backgroundColor: Colors.surface,
-    borderRadius: 12,
+    borderRadius: 14,
     marginBottom: Spacing.sm,
     borderWidth: 1,
     borderColor: Colors.divider,
