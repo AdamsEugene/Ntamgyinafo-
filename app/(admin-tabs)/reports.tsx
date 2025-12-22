@@ -8,14 +8,13 @@ import {
   RefreshControl,
   Platform,
   Alert,
+  Dimensions,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import { BarChart, PieChart } from "react-native-gifted-charts";
 import { Colors, Typography, Spacing } from "@/constants/design";
-import { FloatingHeaderStyles } from "@/components/FloatingHeader.styles";
 
 interface Transaction {
   id: string;
@@ -29,6 +28,9 @@ interface Transaction {
 
 type TimePeriod = "today" | "week" | "month" | "year";
 type PlanFilter = "all" | "basic" | "standard" | "premium";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const CHART_WIDTH = SCREEN_WIDTH - Spacing.lg * 2 - Spacing.lg * 2; // Account for padding
 
 const MOCK_TRANSACTIONS: Transaction[] = [
   {
@@ -95,7 +97,6 @@ const TIME_PERIODS: { id: TimePeriod; label: string }[] = [
 ];
 
 export default function PaymentReportsScreen() {
-  useRouter();
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("month");
@@ -169,38 +170,12 @@ export default function PaymentReportsScreen() {
           <View style={styles.circle2} />
         </View>
 
-        {/* Floating Sticky Header */}
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            <Text style={styles.headerTitleText}>Reports</Text>
-          </View>
-
-          {/* Export Button */}
-          <TouchableOpacity
-            style={styles.exportButton}
-            onPress={handleExport}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="download-outline"
-              size={18}
-              color={Colors.primaryGreen}
-            />
-            <Text style={styles.exportButtonText}>Export</Text>
-          </TouchableOpacity>
-        </View>
-
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={[
             styles.content,
             {
-              paddingTop: 80 + insets.top,
+              paddingTop: insets.top + Spacing.lg,
               paddingBottom: 100 + insets.bottom,
             },
           ]}
@@ -210,10 +185,27 @@ export default function PaymentReportsScreen() {
               refreshing={refreshing}
               onRefresh={handleRefresh}
               tintColor={Colors.primaryGreen}
-              progressViewOffset={80 + insets.top}
+              progressViewOffset={insets.top}
             />
           }
         >
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Reports</Text>
+            <TouchableOpacity
+              style={styles.exportButton}
+              onPress={handleExport}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="download-outline"
+                size={18}
+                color={Colors.primaryGreen}
+              />
+              <Text style={styles.exportButtonText}>Export</Text>
+            </TouchableOpacity>
+          </View>
+
           {/* Time Period Selector */}
           <View style={styles.timePeriodContainer}>
             {TIME_PERIODS.map((period) => (
@@ -244,11 +236,7 @@ export default function PaymentReportsScreen() {
               <Text style={styles.revenueLabel}>Total Revenue</Text>
               <Text style={styles.revenueValue}>₵45,280</Text>
               <View style={styles.revenueChange}>
-                <Ionicons
-                  name="arrow-up"
-                  size={14}
-                  color={Colors.primaryGreen}
-                />
+                <Ionicons name="trending-up" size={16} color="#FFFFFF" />
                 <Text style={styles.revenueChangeText}>+18% vs last month</Text>
               </View>
             </View>
@@ -266,22 +254,34 @@ export default function PaymentReportsScreen() {
 
           {/* Revenue Chart */}
           <View style={styles.chartSection}>
-            <Text style={styles.sectionTitle}>Revenue Trend</Text>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Revenue Trend</Text>
+              <View style={styles.legendItem}>
+                <View
+                  style={[styles.legendDot, { backgroundColor: "#3B82F6" }]}
+                />
+                <Text style={styles.legendText}>Current</Text>
+              </View>
+            </View>
             <View style={styles.chartCard}>
               <BarChart
                 data={revenueData}
-                width={280}
-                height={180}
-                barWidth={16}
-                spacing={8}
-                noOfSections={4}
-                barBorderRadius={4}
+                width={CHART_WIDTH}
+                height={200}
+                barWidth={18}
+                spacing={10}
+                noOfSections={5}
+                barBorderRadius={6}
                 yAxisThickness={0}
-                xAxisThickness={0}
+                xAxisThickness={1}
+                xAxisColor={Colors.divider}
                 yAxisTextStyle={styles.chartAxisText}
-                xAxisLabelTextStyle={styles.chartAxisText}
+                xAxisLabelTextStyle={styles.chartAxisTextSmall}
                 hideRules
                 isAnimated
+                initialSpacing={8}
+                endSpacing={8}
+                maxValue={60000}
               />
             </View>
           </View>
@@ -290,18 +290,25 @@ export default function PaymentReportsScreen() {
           <View style={styles.chartSection}>
             <Text style={styles.sectionTitle}>Subscription Distribution</Text>
             <View style={styles.pieChartCard}>
-              <PieChart
-                data={planDistribution}
-                donut
-                radius={80}
-                innerRadius={50}
-                centerLabelComponent={() => (
-                  <View style={styles.pieCenter}>
-                    <Text style={styles.pieCenterValue}>284</Text>
-                    <Text style={styles.pieCenterLabel}>Total</Text>
-                  </View>
-                )}
-              />
+              <View style={styles.pieChartWrapper}>
+                <PieChart
+                  data={planDistribution}
+                  donut
+                  radius={85}
+                  innerRadius={55}
+                  centerLabelComponent={() => (
+                    <View style={styles.pieCenter}>
+                      <Text style={styles.pieCenterValue}>284</Text>
+                      <Text style={styles.pieCenterLabel}>Total</Text>
+                    </View>
+                  )}
+                  showValuesAsLabels
+                  showTextBackground
+                  textBackgroundRadius={14}
+                  focusOnPress
+                  isAnimated
+                />
+              </View>
               <View style={styles.pieLegend}>
                 {planDistribution.map((item) => (
                   <View key={item.text} style={styles.pieLegendItem}>
@@ -316,6 +323,44 @@ export default function PaymentReportsScreen() {
                   </View>
                 ))}
               </View>
+            </View>
+          </View>
+
+          {/* Quick Stats */}
+          <View style={styles.quickStats}>
+            <View style={styles.quickStatCard}>
+              <View
+                style={[
+                  styles.quickStatIcon,
+                  { backgroundColor: `${Colors.primaryGreen}15` },
+                ]}
+              >
+                <Ionicons
+                  name="trending-up"
+                  size={20}
+                  color={Colors.primaryGreen}
+                />
+              </View>
+              <Text style={styles.quickStatValue}>+24%</Text>
+              <Text style={styles.quickStatLabel}>Growth Rate</Text>
+            </View>
+            <View style={styles.quickStatCard}>
+              <View
+                style={[styles.quickStatIcon, { backgroundColor: "#3B82F615" }]}
+              >
+                <Ionicons name="people" size={20} color="#3B82F6" />
+              </View>
+              <Text style={styles.quickStatValue}>156</Text>
+              <Text style={styles.quickStatLabel}>New Subscribers</Text>
+            </View>
+            <View style={styles.quickStatCard}>
+              <View
+                style={[styles.quickStatIcon, { backgroundColor: "#8B5CF615" }]}
+              >
+                <Ionicons name="repeat" size={20} color="#8B5CF6" />
+              </View>
+              <Text style={styles.quickStatValue}>89%</Text>
+              <Text style={styles.quickStatLabel}>Retention</Text>
             </View>
           </View>
 
@@ -352,10 +397,18 @@ export default function PaymentReportsScreen() {
 
           {/* Transactions List */}
           <View style={styles.transactionsList}>
-            {filteredTransactions.map((transaction) => {
+            {filteredTransactions.map((transaction, index) => {
               const statusStyle = getStatusStyle(transaction.status);
               return (
-                <View key={transaction.id} style={styles.transactionItem}>
+                <View
+                  key={transaction.id}
+                  style={[
+                    styles.transactionItem,
+                    index === filteredTransactions.length - 1 && {
+                      borderBottomWidth: 0,
+                    },
+                  ]}
+                >
                   <View style={styles.transactionIcon}>
                     <Ionicons
                       name={
@@ -370,11 +423,13 @@ export default function PaymentReportsScreen() {
                       {transaction.user}
                     </Text>
                     <View style={styles.transactionMeta}>
-                      <Text style={styles.transactionPlan}>
-                        {transaction.plan} Plan
-                      </Text>
+                      <View style={styles.planBadge}>
+                        <Text style={styles.planBadgeText}>
+                          {transaction.plan}
+                        </Text>
+                      </View>
                       <Text style={styles.transactionDate}>
-                        • {transaction.date}
+                        {transaction.date}
                       </Text>
                     </View>
                   </View>
@@ -452,34 +507,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primaryGreen,
     opacity: 0.05,
   },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.md,
-    flex: 1,
-  },
-  headerTitleText: {
-    ...Typography.titleLarge,
-    fontSize: 20,
-    fontWeight: "700",
-    color: Colors.textPrimary,
-  },
-  exportButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.primaryGreen,
-  },
-  exportButtonText: {
-    ...Typography.labelMedium,
-    fontSize: 13,
-    fontWeight: "600",
-    color: Colors.primaryGreen,
-  },
   scrollView: {
     flex: 1,
     zIndex: 1,
@@ -487,19 +514,60 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: Spacing.lg,
   },
+  // Header
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: Spacing.xl,
+  },
+  headerTitle: {
+    ...Typography.headlineLarge,
+    fontSize: 28,
+    fontWeight: "800",
+    color: Colors.textPrimary,
+  },
+  exportButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm + 2,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: Colors.primaryGreen,
+    backgroundColor: Colors.surface,
+  },
+  exportButtonText: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
+  },
   // Time Period
   timePeriodContainer: {
     flexDirection: "row",
     backgroundColor: Colors.surface,
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 4,
     marginBottom: Spacing.xl,
     borderWidth: 1,
     borderColor: Colors.divider,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   timePeriodTab: {
     flex: 1,
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.sm + 2,
     alignItems: "center",
     borderRadius: 10,
   },
@@ -522,37 +590,49 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
   },
   revenueCard: {
-    flex: 1.5,
+    flex: 1.4,
     backgroundColor: Colors.primaryGreen,
-    borderRadius: 16,
+    borderRadius: 20,
     padding: Spacing.lg,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.primaryGreen,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   revenueLabel: {
     ...Typography.caption,
-    fontSize: 12,
+    fontSize: 13,
     color: "rgba(255,255,255,0.8)",
     marginBottom: 4,
   },
   revenueValue: {
     ...Typography.headlineLarge,
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: "800",
     color: "#FFFFFF",
     marginBottom: Spacing.sm,
+    letterSpacing: -0.5,
   },
   revenueChange: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 6,
     backgroundColor: "rgba(255,255,255,0.2)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
     alignSelf: "flex-start",
   },
   revenueChangeText: {
     ...Typography.caption,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
     color: "#FFFFFF",
   },
@@ -563,41 +643,11 @@ const styles = StyleSheet.create({
   revenueStat: {
     flex: 1,
     backgroundColor: Colors.surface,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: Spacing.md,
     justifyContent: "center",
     borderWidth: 1,
     borderColor: Colors.divider,
-  },
-  revenueStatValue: {
-    ...Typography.headlineMedium,
-    fontSize: 20,
-    fontWeight: "700",
-    color: Colors.textPrimary,
-  },
-  revenueStatLabel: {
-    ...Typography.caption,
-    fontSize: 10,
-    color: Colors.textSecondary,
-  },
-  // Chart Section
-  chartSection: {
-    marginBottom: Spacing.xl,
-  },
-  sectionTitle: {
-    ...Typography.labelMedium,
-    fontSize: 14,
-    fontWeight: "700",
-    color: Colors.textPrimary,
-    marginBottom: Spacing.md,
-  },
-  chartCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.divider,
-    alignItems: "center",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -610,34 +660,117 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  revenueStatValue: {
+    ...Typography.headlineMedium,
+    fontSize: 22,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+  },
+  revenueStatLabel: {
+    ...Typography.caption,
+    fontSize: 11,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  // Chart Section
+  chartSection: {
+    marginBottom: Spacing.xl,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: Spacing.md,
+  },
+  sectionTitle: {
+    ...Typography.titleMedium,
+    fontSize: 16,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  legendText: {
+    ...Typography.caption,
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+  chartCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 20,
+    padding: Spacing.lg,
+    paddingRight: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    overflow: "hidden",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
+  },
   chartAxisText: {
     ...Typography.caption,
     fontSize: 10,
+    color: Colors.textSecondary,
+  },
+  chartAxisTextSmall: {
+    ...Typography.caption,
+    fontSize: 9,
     color: Colors.textSecondary,
   },
   // Pie Chart
   pieChartCard: {
     flexDirection: "row",
     backgroundColor: Colors.surface,
-    borderRadius: 16,
+    borderRadius: 20,
     padding: Spacing.lg,
     borderWidth: 1,
     borderColor: Colors.divider,
     alignItems: "center",
-    gap: Spacing.xl,
+    gap: Spacing.lg,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
+  },
+  pieChartWrapper: {
+    alignItems: "center",
+    justifyContent: "center",
   },
   pieCenter: {
     alignItems: "center",
   },
   pieCenterValue: {
     ...Typography.headlineMedium,
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "700",
     color: Colors.textPrimary,
   },
   pieCenterLabel: {
     ...Typography.caption,
-    fontSize: 10,
+    fontSize: 11,
     color: Colors.textSecondary,
   },
   pieLegend: {
@@ -650,21 +783,69 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   pieLegendDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
   },
   pieLegendText: {
     ...Typography.bodyMedium,
-    fontSize: 13,
+    fontSize: 14,
     color: Colors.textPrimary,
     flex: 1,
+    fontWeight: "500",
   },
   pieLegendValue: {
     ...Typography.labelMedium,
-    fontSize: 13,
-    fontWeight: "600",
+    fontSize: 14,
+    fontWeight: "700",
     color: Colors.textSecondary,
+  },
+  // Quick Stats
+  quickStats: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    marginBottom: Spacing.xl,
+  },
+  quickStatCard: {
+    flex: 1,
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: Spacing.md,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  quickStatIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: Spacing.sm,
+  },
+  quickStatValue: {
+    ...Typography.titleMedium,
+    fontSize: 18,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+  },
+  quickStatLabel: {
+    ...Typography.caption,
+    fontSize: 10,
+    color: Colors.textSecondary,
+    textAlign: "center",
+    marginTop: 2,
   },
   // Filter Section
   filterSection: {
@@ -698,11 +879,22 @@ const styles = StyleSheet.create({
   // Transactions List
   transactionsList: {
     backgroundColor: Colors.surface,
-    borderRadius: 16,
+    borderRadius: 20,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: Colors.divider,
     marginBottom: Spacing.lg,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
   transactionItem: {
     flexDirection: "row",
@@ -713,9 +905,9 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   transactionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     backgroundColor: `${Colors.primaryGreen}15`,
     alignItems: "center",
     justifyContent: "center",
@@ -725,19 +917,26 @@ const styles = StyleSheet.create({
   },
   transactionUser: {
     ...Typography.labelMedium,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "600",
     color: Colors.textPrimary,
+    marginBottom: 4,
   },
   transactionMeta: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    marginTop: 2,
+    gap: 8,
   },
-  transactionPlan: {
+  planBadge: {
+    backgroundColor: Colors.background,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  planBadgeText: {
     ...Typography.caption,
-    fontSize: 11,
+    fontSize: 10,
+    fontWeight: "600",
     color: Colors.textSecondary,
   },
   transactionDate: {
@@ -750,15 +949,15 @@ const styles = StyleSheet.create({
   },
   transactionAmount: {
     ...Typography.labelMedium,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "700",
     color: Colors.textPrimary,
     marginBottom: 4,
   },
   transactionStatus: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   transactionStatusText: {
     ...Typography.caption,
@@ -771,11 +970,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: Spacing.sm,
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.lg,
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.divider,
   },
   viewAllButtonText: {
     ...Typography.labelMedium,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "600",
     color: Colors.primaryGreen,
   },
