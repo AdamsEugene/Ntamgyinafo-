@@ -35,6 +35,16 @@ const ADMIN_TABS: TabItem[] = [
   },
 ];
 
+// Map certain screens to their parent tab for bottom nav highlighting
+const getActiveTabForRoute = (routeName: string): string => {
+  switch (routeName) {
+    case "transactions":
+      return "reports"; // Transactions is under Reports tab
+    default:
+      return routeName;
+  }
+};
+
 export default function AdminTabLayout() {
   return (
     <Tabs
@@ -46,10 +56,11 @@ export default function AdminTabLayout() {
       }}
       tabBar={(props) => {
         const currentRouteName = props.state.routes[props.state.index].name;
+        const activeTab = getActiveTabForRoute(currentRouteName);
         return (
           <BottomNavigation
             tabs={ADMIN_TABS}
-            activeTab={currentRouteName}
+            activeTab={activeTab}
             onTabPress={(tabId) => {
               const route = props.state.routes.find((r) => r.name === tabId);
               if (route) {
@@ -82,6 +93,12 @@ export default function AdminTabLayout() {
         name="reports"
         options={{
           title: "Reports",
+        }}
+      />
+      <Tabs.Screen
+        name="transactions"
+        options={{
+          title: "Transactions",
         }}
       />
       <Tabs.Screen

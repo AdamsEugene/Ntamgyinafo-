@@ -20,6 +20,7 @@ import {
   BottomSheetModal,
   BottomSheetBackdrop,
   BottomSheetScrollView,
+  BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import {
@@ -189,6 +190,7 @@ export default function AllTransactionsScreen() {
   const insets = useSafeAreaInsets();
   const searchInputRef = useRef<RNTextInput>(null);
   const filterSheetRef = useRef<BottomSheetModal>(null);
+  const detailSheetRef = useRef<BottomSheetModal>(null);
 
   const [transactions] = useState<Transaction[]>(MOCK_TRANSACTIONS);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -197,6 +199,8 @@ export default function AllTransactionsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
 
   const searchInputWidth = useRef(new Animated.Value(200)).current;
   const searchInputHeight = useRef(new Animated.Value(44)).current;
@@ -333,11 +337,20 @@ export default function AllTransactionsScreen() {
     }
   };
 
+  const handleTransactionPress = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    detailSheetRef.current?.present();
+  };
+
   const renderTransaction = ({ item }: { item: Transaction }) => {
     const statusStyle = getStatusStyle(item.status);
 
     return (
-      <TouchableOpacity style={styles.transactionCard} activeOpacity={0.7}>
+      <TouchableOpacity
+        style={styles.transactionCard}
+        activeOpacity={0.7}
+        onPress={() => handleTransactionPress(item)}
+      >
         {/* Left Icon */}
         <View
           style={[
@@ -433,44 +446,47 @@ export default function AllTransactionsScreen() {
             { paddingTop: insets.top + Spacing.md },
           ]}
         >
-          {/* Back Button */}
-          <TouchableOpacity
-            style={FloatingHeaderStyles.backButton}
-            onPress={() => router.back()}
-            activeOpacity={0.7}
-          >
-            <View style={FloatingHeaderStyles.backButtonCircle}>
-              <Ionicons
-                name="arrow-back"
-                size={HEADER_ICON_SIZE}
-                color={Colors.textPrimary}
-              />
-            </View>
-          </TouchableOpacity>
-
-          <Text style={styles.headerTitle}>Transactions</Text>
+          <View style={styles.headerLeft}>
+            {/* Back Button */}
+            <TouchableOpacity
+              style={FloatingHeaderStyles.backButton}
+              onPress={() => router.back()}
+              activeOpacity={0.7}
+            >
+              <View style={FloatingHeaderStyles.backButtonCircle}>
+                <Ionicons
+                  name="arrow-back"
+                  size={HEADER_ICON_SIZE}
+                  color={Colors.textPrimary}
+                />
+              </View>
+            </TouchableOpacity>
+            <Text style={styles.headerTitleText}>Transactions</Text>
+          </View>
 
           {/* Filter Button */}
-          <TouchableOpacity
-            style={FloatingHeaderStyles.actionButton}
-            onPress={() => filterSheetRef.current?.present()}
-            activeOpacity={0.7}
-          >
-            <View style={FloatingHeaderStyles.actionButtonBackground}>
-              <Ionicons
-                name="options-outline"
-                size={HEADER_ICON_SIZE}
-                color={Colors.textPrimary}
-              />
-              {activeFiltersCount > 0 && (
-                <View style={FloatingHeaderStyles.filterBadge}>
-                  <Text style={FloatingHeaderStyles.filterBadgeText}>
-                    {activeFiltersCount}
-                  </Text>
-                </View>
-              )}
-            </View>
-          </TouchableOpacity>
+          <View style={FloatingHeaderStyles.headerActions}>
+            <TouchableOpacity
+              style={FloatingHeaderStyles.actionButton}
+              onPress={() => filterSheetRef.current?.present()}
+              activeOpacity={0.7}
+            >
+              <View style={FloatingHeaderStyles.actionButtonBackground}>
+                <Ionicons
+                  name="options-outline"
+                  size={HEADER_ICON_SIZE}
+                  color={Colors.textPrimary}
+                />
+                {activeFiltersCount > 0 && (
+                  <View style={FloatingHeaderStyles.filterBadge}>
+                    <Text style={FloatingHeaderStyles.filterBadgeText}>
+                      {activeFiltersCount}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Summary Cards */}
@@ -780,6 +796,219 @@ export default function AllTransactionsScreen() {
             )}
           </BottomSheetScrollView>
         </BottomSheetModal>
+
+        {/* Transaction Detail Bottom Sheet */}
+        <BottomSheetModal
+          ref={detailSheetRef}
+          index={0}
+          snapPoints={["55%"]}
+          backdropComponent={renderBackdrop}
+          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+        >
+          <BottomSheetView style={styles.detailSheetContent}>
+            {selectedTransaction && (
+              <>
+                {/* Header */}
+                <View style={styles.detailHeader}>
+                  <View
+                    style={[
+                      styles.detailIconContainer,
+                      { backgroundColor: `${Colors.primaryGreen}15` },
+                    ]}
+                  >
+                    <Ionicons
+                      name={getTypeIcon(selectedTransaction.type) as any}
+                      size={28}
+                      color={Colors.primaryGreen}
+                    />
+                  </View>
+                  <View style={styles.detailHeaderInfo}>
+                    <Text style={styles.detailAmount}>
+                      {selectedTransaction.amount}
+                    </Text>
+                    <View
+                      style={[
+                        styles.detailStatusBadge,
+                        {
+                          backgroundColor: getStatusStyle(
+                            selectedTransaction.status
+                          ).bg,
+                        },
+                      ]}
+                    >
+                      <Ionicons
+                        name={
+                          getStatusStyle(selectedTransaction.status).icon as any
+                        }
+                        size={12}
+                        color={getStatusStyle(selectedTransaction.status).text}
+                      />
+                      <Text
+                        style={[
+                          styles.detailStatusText,
+                          {
+                            color: getStatusStyle(selectedTransaction.status)
+                              .text,
+                          },
+                        ]}
+                      >
+                        {selectedTransaction.status.charAt(0).toUpperCase() +
+                          selectedTransaction.status.slice(1)}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Details List */}
+                <View style={styles.detailsList}>
+                  <View style={styles.detailRow}>
+                    <View style={styles.detailRowLeft}>
+                      <View style={styles.detailRowIcon}>
+                        <Ionicons
+                          name="person-outline"
+                          size={18}
+                          color={Colors.textSecondary}
+                        />
+                      </View>
+                      <Text style={styles.detailRowLabel}>Customer</Text>
+                    </View>
+                    <Text style={styles.detailRowValue}>
+                      {selectedTransaction.user}
+                    </Text>
+                  </View>
+
+                  <View style={styles.detailRow}>
+                    <View style={styles.detailRowLeft}>
+                      <View style={styles.detailRowIcon}>
+                        <Ionicons
+                          name="ribbon-outline"
+                          size={18}
+                          color={Colors.textSecondary}
+                        />
+                      </View>
+                      <Text style={styles.detailRowLabel}>Plan</Text>
+                    </View>
+                    <Text style={styles.detailRowValue}>
+                      {selectedTransaction.plan || "N/A"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.detailRow}>
+                    <View style={styles.detailRowLeft}>
+                      <View style={styles.detailRowIcon}>
+                        <Ionicons
+                          name="pricetag-outline"
+                          size={18}
+                          color={Colors.textSecondary}
+                        />
+                      </View>
+                      <Text style={styles.detailRowLabel}>Type</Text>
+                    </View>
+                    <Text style={styles.detailRowValue}>
+                      {selectedTransaction.type.charAt(0).toUpperCase() +
+                        selectedTransaction.type.slice(1)}
+                    </Text>
+                  </View>
+
+                  <View style={styles.detailRow}>
+                    <View style={styles.detailRowLeft}>
+                      <View style={styles.detailRowIcon}>
+                        <Ionicons
+                          name={
+                            getPaymentMethodIcon(
+                              selectedTransaction.paymentMethod
+                            ) as any
+                          }
+                          size={18}
+                          color={Colors.textSecondary}
+                        />
+                      </View>
+                      <Text style={styles.detailRowLabel}>Payment Method</Text>
+                    </View>
+                    <Text style={styles.detailRowValue}>
+                      {selectedTransaction.paymentMethod === "momo"
+                        ? "Mobile Money"
+                        : selectedTransaction.paymentMethod === "card"
+                        ? "Card"
+                        : "Bank Transfer"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.detailRow}>
+                    <View style={styles.detailRowLeft}>
+                      <View style={styles.detailRowIcon}>
+                        <Ionicons
+                          name="calendar-outline"
+                          size={18}
+                          color={Colors.textSecondary}
+                        />
+                      </View>
+                      <Text style={styles.detailRowLabel}>Date & Time</Text>
+                    </View>
+                    <Text style={styles.detailRowValue}>
+                      {selectedTransaction.date} • {selectedTransaction.time}
+                    </Text>
+                  </View>
+
+                  <View style={[styles.detailRow, { borderBottomWidth: 0 }]}>
+                    <View style={styles.detailRowLeft}>
+                      <View style={styles.detailRowIcon}>
+                        <Ionicons
+                          name="receipt-outline"
+                          size={18}
+                          color={Colors.textSecondary}
+                        />
+                      </View>
+                      <Text style={styles.detailRowLabel}>Reference</Text>
+                    </View>
+                    <Text
+                      style={[styles.detailRowValue, styles.detailRefValue]}
+                    >
+                      {selectedTransaction.reference}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Action Buttons */}
+                <View style={styles.detailActions}>
+                  <TouchableOpacity
+                    style={styles.detailActionButton}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons
+                      name="download-outline"
+                      size={20}
+                      color={Colors.primaryGreen}
+                    />
+                    <Text style={styles.detailActionText}>
+                      Download Receipt
+                    </Text>
+                  </TouchableOpacity>
+                  {selectedTransaction.status === "pending" && (
+                    <TouchableOpacity
+                      style={[
+                        styles.detailActionButton,
+                        styles.detailActionButtonDanger,
+                      ]}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons
+                        name="close-circle-outline"
+                        size={20}
+                        color="#EF4444"
+                      />
+                      <Text
+                        style={[styles.detailActionText, { color: "#EF4444" }]}
+                      >
+                        Cancel Transaction
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </>
+            )}
+          </BottomSheetView>
+        </BottomSheetModal>
       </View>
     </>
   );
@@ -819,13 +1048,17 @@ const styles = StyleSheet.create({
     opacity: 0.05,
   },
   // Header
-  headerTitle: {
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    flex: 1,
+  },
+  headerTitleText: {
     ...Typography.titleLarge,
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "700",
     color: Colors.textPrimary,
-    flex: 1,
-    textAlign: "center",
   },
   // Summary
   summaryContainer: {
@@ -1187,5 +1420,118 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: Colors.textSecondary,
+  },
+  // Detail Sheet
+  detailSheetContent: {
+    padding: Spacing.xl,
+  },
+  detailHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.lg,
+    marginBottom: Spacing.xl,
+    paddingBottom: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
+  },
+  detailIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  detailHeaderInfo: {
+    flex: 1,
+    gap: Spacing.sm,
+  },
+  detailAmount: {
+    ...Typography.headlineLarge,
+    fontSize: 28,
+    fontWeight: "800",
+    color: Colors.textPrimary,
+  },
+  detailStatusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: "flex-start",
+  },
+  detailStatusText: {
+    ...Typography.caption,
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  detailsList: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    marginBottom: Spacing.lg,
+  },
+  detailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
+  },
+  detailRowLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+  },
+  detailRowIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: Colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  detailRowLabel: {
+    ...Typography.bodyMedium,
+    fontSize: 14,
+    color: Colors.textSecondary,
+  },
+  detailRowValue: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+  },
+  detailRefValue: {
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+    fontSize: 12,
+  },
+  detailActions: {
+    gap: Spacing.sm,
+  },
+  detailActionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+  },
+  detailActionButtonDanger: {
+    borderColor: "#FEE2E2",
+    backgroundColor: "#FEE2E210",
+  },
+  detailActionText: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
   },
 });
