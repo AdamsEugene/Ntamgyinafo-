@@ -1129,6 +1129,7 @@ const styles = StyleSheet.create({
     right: Spacing.xl,
     borderRadius: 28,
     overflow: "hidden",
+    zIndex: 100,
     ...Platform.select({
       ios: {
         shadowColor: Colors.primaryGreen,
