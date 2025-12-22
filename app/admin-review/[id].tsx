@@ -35,6 +35,9 @@ interface PropertyDocument {
   type: "pdf" | "image" | "certificate";
   url: string;
   verified: boolean;
+  previewImage: string;
+  uploadedAt: string;
+  fileSize: string;
 }
 
 interface PropertyOwner {
@@ -100,6 +103,10 @@ const MOCK_PROPERTY = {
       type: "certificate" as const,
       url: "#",
       verified: true,
+      previewImage:
+        "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&h=1000&fit=crop",
+      uploadedAt: "Dec 20, 2024",
+      fileSize: "2.4 MB",
     },
     {
       id: "d2",
@@ -107,6 +114,10 @@ const MOCK_PROPERTY = {
       type: "pdf" as const,
       url: "#",
       verified: true,
+      previewImage:
+        "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=800&h=1000&fit=crop",
+      uploadedAt: "Dec 20, 2024",
+      fileSize: "1.8 MB",
     },
     {
       id: "d3",
@@ -114,6 +125,10 @@ const MOCK_PROPERTY = {
       type: "pdf" as const,
       url: "#",
       verified: false,
+      previewImage:
+        "https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&h=1000&fit=crop",
+      uploadedAt: "Dec 21, 2024",
+      fileSize: "3.2 MB",
     },
     {
       id: "d4",
@@ -121,6 +136,10 @@ const MOCK_PROPERTY = {
       type: "certificate" as const,
       url: "#",
       verified: false,
+      previewImage:
+        "https://images.unsplash.com/photo-1554224154-26032ffc0d07?w=800&h=1000&fit=crop",
+      uploadedAt: "Dec 21, 2024",
+      fileSize: "1.1 MB",
     },
   ] as PropertyDocument[],
   owner: {
@@ -154,12 +173,16 @@ export default function AdminPropertyReviewScreen() {
   useLocalSearchParams(); // id available for API call
   const insets = useSafeAreaInsets();
   const rejectSheetRef = useRef<BottomSheetModal>(null);
+  const documentPreviewRef = useRef<BottomSheetModal>(null);
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [selectedReason, setSelectedReason] = useState<string>("");
   const [customReason, setCustomReason] = useState("");
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
+  const [selectedDocument, setSelectedDocument] =
+    useState<PropertyDocument | null>(null);
+  const [isVerifyingDoc, setIsVerifyingDoc] = useState(false);
 
   const property = MOCK_PROPERTY;
 
@@ -244,6 +267,58 @@ export default function AdminPropertyReviewScreen() {
       default:
         return "document";
     }
+  };
+
+  const handleDocumentPress = (doc: PropertyDocument) => {
+    setSelectedDocument(doc);
+    documentPreviewRef.current?.present();
+  };
+
+  const handleVerifyDocument = () => {
+    if (!selectedDocument) return;
+
+    Alert.alert(
+      "Verify Document",
+      `Are you sure you want to mark "${selectedDocument.name}" as verified?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Verify",
+          onPress: () => {
+            setIsVerifyingDoc(true);
+            // Simulate API call
+            setTimeout(() => {
+              setIsVerifyingDoc(false);
+              documentPreviewRef.current?.dismiss();
+              Alert.alert("Success", "Document has been verified.");
+            }, 1000);
+          },
+        },
+      ]
+    );
+  };
+
+  const handleRejectDocument = () => {
+    if (!selectedDocument) return;
+
+    Alert.alert(
+      "Reject Document",
+      `Are you sure you want to reject "${selectedDocument.name}"? The owner will be notified to upload a new document.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reject",
+          style: "destructive",
+          onPress: () => {
+            documentPreviewRef.current?.dismiss();
+            Alert.alert(
+              "Document Rejected",
+              "The property owner has been notified."
+            );
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -523,6 +598,8 @@ export default function AdminPropertyReviewScreen() {
                       borderBottomWidth: 0,
                     },
                   ]}
+                  onPress={() => handleDocumentPress(doc)}
+                  activeOpacity={0.7}
                 >
                   <View style={styles.documentIcon}>
                     <Ionicons
@@ -741,6 +818,191 @@ export default function AdminPropertyReviewScreen() {
                 {isRejecting ? "Rejecting..." : "Confirm Rejection"}
               </Text>
             </TouchableOpacity>
+          </BottomSheetView>
+        </BottomSheetModal>
+
+        {/* Document Preview Bottom Sheet */}
+        <BottomSheetModal
+          ref={documentPreviewRef}
+          index={0}
+          snapPoints={["90%"]}
+          backdropComponent={renderBackdrop}
+          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+        >
+          <BottomSheetView style={styles.docPreviewContainer}>
+            {selectedDocument && (
+              <>
+                {/* Document Header */}
+                <View style={styles.docPreviewHeader}>
+                  <View style={styles.docPreviewTitleRow}>
+                    <View style={styles.docPreviewIconContainer}>
+                      <Ionicons
+                        name={getDocIcon(selectedDocument.type) as any}
+                        size={24}
+                        color={Colors.primaryGreen}
+                      />
+                    </View>
+                    <View style={styles.docPreviewTitleInfo}>
+                      <Text style={styles.docPreviewTitle}>
+                        {selectedDocument.name}
+                      </Text>
+                      <View style={styles.docPreviewMeta}>
+                        <Text style={styles.docPreviewMetaText}>
+                          {selectedDocument.fileSize}
+                        </Text>
+                        <View style={styles.docPreviewMetaDot} />
+                        <Text style={styles.docPreviewMetaText}>
+                          {selectedDocument.uploadedAt}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                  <View
+                    style={[
+                      styles.docPreviewStatusBadge,
+                      {
+                        backgroundColor: selectedDocument.verified
+                          ? `${Colors.primaryGreen}15`
+                          : "#FEF3C7",
+                      },
+                    ]}
+                  >
+                    <Ionicons
+                      name={
+                        selectedDocument.verified ? "checkmark-circle" : "time"
+                      }
+                      size={16}
+                      color={
+                        selectedDocument.verified
+                          ? Colors.primaryGreen
+                          : "#F59E0B"
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles.docPreviewStatusText,
+                        {
+                          color: selectedDocument.verified
+                            ? Colors.primaryGreen
+                            : "#F59E0B",
+                        },
+                      ]}
+                    >
+                      {selectedDocument.verified ? "Verified" : "Pending"}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Document Preview Image */}
+                <View style={styles.docPreviewImageContainer}>
+                  <Image
+                    source={{ uri: selectedDocument.previewImage }}
+                    style={styles.docPreviewImage}
+                    resizeMode="contain"
+                  />
+                  <View style={styles.docPreviewOverlay}>
+                    <TouchableOpacity style={styles.docPreviewZoomButton}>
+                      <Ionicons
+                        name="expand-outline"
+                        size={24}
+                        color="#FFFFFF"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Document Info */}
+                <View style={styles.docPreviewInfoCard}>
+                  <View style={styles.docPreviewInfoRow}>
+                    <Text style={styles.docPreviewInfoLabel}>
+                      Document Type
+                    </Text>
+                    <Text style={styles.docPreviewInfoValue}>
+                      {selectedDocument.type === "pdf"
+                        ? "PDF Document"
+                        : selectedDocument.type === "certificate"
+                        ? "Certificate"
+                        : "Image"}
+                    </Text>
+                  </View>
+                  <View style={styles.docPreviewInfoRow}>
+                    <Text style={styles.docPreviewInfoLabel}>File Size</Text>
+                    <Text style={styles.docPreviewInfoValue}>
+                      {selectedDocument.fileSize}
+                    </Text>
+                  </View>
+                  <View
+                    style={[styles.docPreviewInfoRow, { borderBottomWidth: 0 }]}
+                  >
+                    <Text style={styles.docPreviewInfoLabel}>Uploaded</Text>
+                    <Text style={styles.docPreviewInfoValue}>
+                      {selectedDocument.uploadedAt}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Action Buttons */}
+                <View style={styles.docPreviewActions}>
+                  <TouchableOpacity
+                    style={styles.docPreviewDownloadButton}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons
+                      name="download-outline"
+                      size={20}
+                      color={Colors.primaryGreen}
+                    />
+                    <Text style={styles.docPreviewDownloadText}>Download</Text>
+                  </TouchableOpacity>
+
+                  {!selectedDocument.verified ? (
+                    <View style={styles.docPreviewVerifyActions}>
+                      <TouchableOpacity
+                        style={styles.docPreviewRejectButton}
+                        onPress={handleRejectDocument}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons
+                          name="close-circle"
+                          size={20}
+                          color="#EF4444"
+                        />
+                        <Text style={styles.docPreviewRejectText}>Reject</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[
+                          styles.docPreviewVerifyButton,
+                          isVerifyingDoc && styles.buttonDisabled,
+                        ]}
+                        onPress={handleVerifyDocument}
+                        disabled={isVerifyingDoc}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons
+                          name="checkmark-circle"
+                          size={20}
+                          color="#FFFFFF"
+                        />
+                        <Text style={styles.docPreviewVerifyText}>
+                          {isVerifyingDoc ? "Verifying..." : "Verify Document"}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <View style={styles.docVerifiedBanner}>
+                      <Ionicons
+                        name="shield-checkmark"
+                        size={22}
+                        color={Colors.primaryGreen}
+                      />
+                      <Text style={styles.docVerifiedText}>
+                        This document has been verified
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </>
+            )}
           </BottomSheetView>
         </BottomSheetModal>
       </View>
@@ -1351,5 +1613,194 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: "#FFFFFF",
+  },
+  // Document Preview
+  docPreviewContainer: {
+    flex: 1,
+    padding: Spacing.xl,
+  },
+  docPreviewHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    marginBottom: Spacing.lg,
+  },
+  docPreviewTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    flex: 1,
+  },
+  docPreviewIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: `${Colors.primaryGreen}15`,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  docPreviewTitleInfo: {
+    flex: 1,
+  },
+  docPreviewTitle: {
+    ...Typography.titleMedium,
+    fontSize: 18,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+    marginBottom: 4,
+  },
+  docPreviewMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  docPreviewMetaText: {
+    ...Typography.caption,
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+  docPreviewMetaDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.textSecondary,
+  },
+  docPreviewStatusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+  },
+  docPreviewStatusText: {
+    ...Typography.caption,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  docPreviewImageContainer: {
+    flex: 1,
+    borderRadius: 16,
+    overflow: "hidden",
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    marginBottom: Spacing.lg,
+    position: "relative",
+  },
+  docPreviewImage: {
+    width: "100%",
+    height: "100%",
+  },
+  docPreviewOverlay: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+  },
+  docPreviewZoomButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  docPreviewInfoCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    marginBottom: Spacing.lg,
+  },
+  docPreviewInfoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
+  },
+  docPreviewInfoLabel: {
+    ...Typography.bodyMedium,
+    fontSize: 14,
+    color: Colors.textSecondary,
+  },
+  docPreviewInfoValue: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+  },
+  docPreviewActions: {
+    gap: Spacing.md,
+  },
+  docPreviewDownloadButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    paddingVertical: Spacing.md,
+    borderRadius: 14,
+    backgroundColor: `${Colors.primaryGreen}15`,
+  },
+  docPreviewDownloadText: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
+  },
+  docPreviewVerifyActions: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  docPreviewRejectButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    paddingVertical: Spacing.lg,
+    borderRadius: 14,
+    backgroundColor: "#FEE2E2",
+  },
+  docPreviewRejectText: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#EF4444",
+  },
+  docPreviewVerifyButton: {
+    flex: 2,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    paddingVertical: Spacing.lg,
+    borderRadius: 14,
+    backgroundColor: Colors.primaryGreen,
+  },
+  docPreviewVerifyText: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  docVerifiedBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    paddingVertical: Spacing.lg,
+    borderRadius: 14,
+    backgroundColor: `${Colors.primaryGreen}10`,
+    borderWidth: 1,
+    borderColor: `${Colors.primaryGreen}30`,
+  },
+  docVerifiedText: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
   },
 });
