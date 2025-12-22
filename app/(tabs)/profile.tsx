@@ -63,7 +63,7 @@ export default function ProfileScreen() {
       id: "payment",
       icon: "card-outline",
       label: "Payment Methods",
-      route: null,
+      route: "/payment-methods",
     },
     {
       id: "notifications",
@@ -75,19 +75,19 @@ export default function ProfileScreen() {
       id: "help",
       icon: "help-circle-outline",
       label: "Help & Support",
-      route: null,
+      route: "/help-support",
     },
     {
       id: "about",
       icon: "information-circle-outline",
       label: "About",
-      route: null,
+      route: "/about",
     },
     {
       id: "terms",
       icon: "document-text-outline",
       label: "Terms & Privacy",
-      route: null,
+      route: "/terms-privacy",
     },
   ];
 

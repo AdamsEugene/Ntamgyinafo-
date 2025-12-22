@@ -59,13 +59,13 @@ const MENU_ITEMS = [
     id: "analytics",
     icon: "stats-chart-outline" as const,
     label: "Analytics",
-    route: null,
+    route: "/(owner-tabs)/index",
   },
   {
     id: "payment-methods",
     icon: "card-outline" as const,
     label: "Payment Methods",
-    route: null,
+    route: "/payment-methods",
   },
   {
     id: "notifications",
@@ -77,19 +77,19 @@ const MENU_ITEMS = [
     id: "help",
     icon: "help-circle-outline" as const,
     label: "Help & Support",
-    route: null,
+    route: "/help-support",
   },
   {
     id: "about",
     icon: "information-circle-outline" as const,
     label: "About",
-    route: null,
+    route: "/about",
   },
   {
     id: "terms",
     icon: "document-text-outline" as const,
     label: "Terms & Privacy",
-    route: null,
+    route: "/terms-privacy",
   },
 ];
 
