@@ -179,7 +179,11 @@ export default function OwnerProfileScreen() {
               Member since {USER.memberSince}
             </Text>
 
-            <TouchableOpacity style={styles.editButton} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={styles.editButton}
+              activeOpacity={0.7}
+              onPress={() => router.push("/edit-profile" as any)}
+            >
               <Ionicons
                 name="create-outline"
                 size={18}

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   Platform,
+  Alert,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -14,6 +15,20 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import { getSavedProperties } from "@/constants/mockData";
+import {
+  FloatingHeaderStyles,
+  HEADER_ICON_SIZE,
+} from "@/components/FloatingHeader.styles";
+
+// Mock user data
+const USER = {
+  name: "Kofi Mensah",
+  phone: "+233 24 123 4567",
+  email: "kofi.mensah@email.com",
+  avatar: "https://i.pravatar.cc/150?img=12",
+  verified: true,
+  memberSince: "Jan 2023",
+};
 
 interface MenuItem {
   id: string;
@@ -21,7 +36,7 @@ interface MenuItem {
   label: string;
   value?: string;
   badge?: number;
-  onPress: () => void;
+  route: string | null;
 }
 
 export default function ProfileScreen() {
@@ -32,140 +47,207 @@ export default function ProfileScreen() {
   const menuItems: MenuItem[] = [
     {
       id: "saved",
-      icon: "heart",
+      icon: "heart-outline",
       label: "Saved Properties",
       badge: savedCount,
-      onPress: () => router.push("/saved-properties"),
+      route: "/saved-properties",
     },
     {
       id: "subscription",
-      icon: "card",
+      icon: "diamond-outline",
       label: "Subscription",
       value: "Basic Plan",
-      onPress: () => router.push("/subscription-plans"),
+      route: "/subscription-plans",
     },
     {
       id: "payment",
-      icon: "wallet",
+      icon: "card-outline",
       label: "Payment Methods",
-      onPress: () => {},
+      route: null,
     },
     {
       id: "notifications",
-      icon: "notifications",
+      icon: "notifications-outline",
       label: "Notifications",
-      onPress: () => {},
+      route: null,
     },
     {
       id: "help",
-      icon: "help-circle",
+      icon: "help-circle-outline",
       label: "Help & Support",
-      onPress: () => {},
+      route: null,
     },
     {
       id: "about",
-      icon: "information-circle",
+      icon: "information-circle-outline",
       label: "About",
-      onPress: () => {},
+      route: null,
     },
     {
       id: "terms",
-      icon: "document-text",
+      icon: "document-text-outline",
       label: "Terms & Privacy",
-      onPress: () => {},
+      route: null,
     },
   ];
+
+  const handleLogout = () => {
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: () => {
+          router.replace("/(auth)/welcome");
+        },
+      },
+    ]);
+  };
 
   return (
     <>
       <StatusBar style="dark" />
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={[
-          styles.content,
-          { paddingTop: insets.top + Spacing.lg },
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Profile Header */}
-        <View style={styles.profileHeader}>
-          <View style={styles.avatarContainer}>
-            <Image
-              source={{ uri: "https://i.pravatar.cc/150?img=12" }}
-              style={styles.avatar}
-            />
-            <View style={styles.verifiedBadge}>
-              <Ionicons name="checkmark" size={12} color="#FFFFFF" />
-            </View>
-          </View>
-          <Text style={styles.profileName}>Kofi Mensah</Text>
-          <View style={styles.roleContainer}>
-            <Ionicons name="person" size={14} color={Colors.primaryGreen} />
-            <Text style={styles.roleText}>Buyer</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.editProfileButton}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="pencil" size={16} color={Colors.primaryGreen} />
-            <Text style={styles.editProfileText}>Edit Profile</Text>
-          </TouchableOpacity>
+      <View style={styles.container}>
+        {/* Decorative Background Elements */}
+        <View style={styles.decorativeBackground}>
+          <View style={styles.circle1} />
+          <View style={styles.circle2} />
         </View>
 
-        {/* Menu Items */}
-        <View style={styles.menuContainer}>
-          {menuItems.map((item, index) => (
+        {/* Floating Sticky Header */}
+        <View
+          style={[
+            FloatingHeaderStyles.floatingHeader,
+            { paddingTop: insets.top + Spacing.md },
+          ]}
+        >
+          <View style={styles.headerLeft}>
+            <Text style={styles.headerTitleText}>Profile</Text>
+          </View>
+
+          {/* Action Buttons */}
+          <View style={FloatingHeaderStyles.headerActions}>
             <TouchableOpacity
-              key={item.id}
-              style={[
-                styles.menuItem,
-                index === 0 && styles.menuItemFirst,
-                index === menuItems.length - 1 && styles.menuItemLast,
-              ]}
-              onPress={item.onPress}
+              style={FloatingHeaderStyles.actionButton}
               activeOpacity={0.7}
             >
-              <View style={styles.menuItemLeft}>
-                <View style={styles.menuIconContainer}>
-                  <Ionicons
-                    name={item.icon}
-                    size={20}
-                    color={Colors.primaryGreen}
-                  />
-                </View>
-                <Text style={styles.menuItemLabel}>{item.label}</Text>
-              </View>
-              <View style={styles.menuItemRight}>
-                {item.badge !== undefined && item.badge > 0 && (
-                  <View style={styles.menuBadge}>
-                    <Text style={styles.menuBadgeText}>{item.badge}</Text>
-                  </View>
-                )}
-                {item.value && (
-                  <Text style={styles.menuItemValue}>{item.value}</Text>
-                )}
+              <View style={FloatingHeaderStyles.actionButtonBackground}>
                 <Ionicons
-                  name="chevron-forward"
-                  size={18}
-                  color={Colors.textSecondary}
+                  name="settings-outline"
+                  size={HEADER_ICON_SIZE}
+                  color={Colors.textPrimary}
                 />
               </View>
             </TouchableOpacity>
-          ))}
+          </View>
         </View>
 
-        {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutButton} activeOpacity={0.7}>
-          <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={[
+            styles.content,
+            {
+              paddingTop: 80 + insets.top,
+              paddingBottom: 100 + insets.bottom,
+            },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Profile Header */}
+          <View style={styles.profileHeader}>
+            <View style={styles.avatarContainer}>
+              <Image source={{ uri: USER.avatar }} style={styles.avatar} />
+              {USER.verified && (
+                <View style={styles.verifiedBadge}>
+                  <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                </View>
+              )}
+            </View>
 
-        {/* Version */}
-        <Text style={styles.versionText}>Version 1.0.0</Text>
+            <Text style={styles.userName}>{USER.name}</Text>
+            <View style={styles.roleBadge}>
+              <Ionicons name="person" size={12} color={Colors.primaryGreen} />
+              <Text style={styles.roleBadgeText}>Buyer</Text>
+            </View>
+            <Text style={styles.memberSince}>
+              Member since {USER.memberSince}
+            </Text>
 
-        {/* Bottom padding */}
-        <View style={{ height: 120 }} />
-      </ScrollView>
+            <TouchableOpacity
+              style={styles.editButton}
+              activeOpacity={0.7}
+              onPress={() => router.push("/edit-profile" as any)}
+            >
+              <Ionicons
+                name="create-outline"
+                size={18}
+                color={Colors.primaryGreen}
+              />
+              <Text style={styles.editButtonText}>Edit Profile</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Menu Items */}
+          <View style={styles.menuContainer}>
+            {menuItems.map((item, index) => (
+              <TouchableOpacity
+                key={item.id}
+                style={[
+                  styles.menuItem,
+                  index === menuItems.length - 1 && styles.menuItemLast,
+                ]}
+                onPress={() => {
+                  if (item.route) {
+                    router.push(item.route as any);
+                  }
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={styles.menuItemLeft}>
+                  <View style={styles.menuIconContainer}>
+                    <Ionicons
+                      name={item.icon}
+                      size={22}
+                      color={Colors.textPrimary}
+                    />
+                  </View>
+                  <Text style={styles.menuItemLabel}>{item.label}</Text>
+                </View>
+                <View style={styles.menuItemRight}>
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <View style={styles.menuBadge}>
+                      <Text style={styles.menuBadgeText}>{item.badge}</Text>
+                    </View>
+                  )}
+                  {item.value && (
+                    <View style={styles.menuValueBadge}>
+                      <Text style={styles.menuValueText}>{item.value}</Text>
+                    </View>
+                  )}
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={Colors.textSecondary}
+                  />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Logout Button */}
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={handleLogout}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="log-out-outline" size={22} color="#FF3B30" />
+            <Text style={styles.logoutButtonText}>Logout</Text>
+          </TouchableOpacity>
+
+          {/* Version */}
+          <Text style={styles.versionText}>Version 1.0.0</Text>
+        </ScrollView>
+      </View>
     </>
   );
 }
@@ -175,9 +257,56 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  content: {
-    paddingHorizontal: Spacing.lg,
+  // Decorative Background
+  decorativeBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
   },
+  circle1: {
+    position: "absolute",
+    top: -100,
+    right: -100,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: Colors.primaryLight,
+    opacity: 0.08,
+  },
+  circle2: {
+    position: "absolute",
+    bottom: -150,
+    left: -150,
+    width: 400,
+    height: 400,
+    borderRadius: 200,
+    backgroundColor: Colors.primaryGreen,
+    opacity: 0.05,
+  },
+  // Header
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    flex: 1,
+  },
+  headerTitleText: {
+    ...Typography.titleLarge,
+    fontSize: 20,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+  },
+  scrollView: {
+    flex: 1,
+    zIndex: 1,
+  },
+  content: {
+    paddingHorizontal: Spacing.xl,
+  },
+  // Profile Header
   profileHeader: {
     alignItems: "center",
     marginBottom: Spacing.xl,
@@ -195,59 +324,69 @@ const styles = StyleSheet.create({
   },
   verifiedBadge: {
     position: "absolute",
-    bottom: 4,
-    right: 4,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    bottom: 0,
+    right: 0,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: Colors.primaryGreen,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: Colors.background,
   },
-  profileName: {
+  userName: {
     ...Typography.headlineMedium,
     fontSize: 24,
     fontWeight: "700",
     color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
-  roleContainer: {
+  roleBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.xs,
-    backgroundColor: "rgba(34, 197, 94, 0.1)",
+    gap: 6,
+    backgroundColor: `${Colors.primaryGreen}15`,
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
+    paddingVertical: 6,
     borderRadius: 20,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.xs,
   },
-  roleText: {
+  roleBadgeText: {
     ...Typography.labelMedium,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "600",
     color: Colors.primaryGreen,
   },
-  editProfileButton: {
+  memberSince: {
+    ...Typography.bodyMedium,
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.md,
+  },
+  editButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.xs,
+    gap: 6,
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: 20,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: Colors.primaryGreen,
   },
-  editProfileText: {
+  editButtonText: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
     color: Colors.primaryGreen,
   },
+  // Menu
   menuContainer: {
     backgroundColor: Colors.surface,
     borderRadius: 20,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: Colors.divider,
     marginBottom: Spacing.xl,
     ...Platform.select({
       ios: {
@@ -270,13 +409,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.divider,
   },
-  menuItemFirst: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
   menuItemLast: {
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
     borderBottomWidth: 0,
   },
   menuItemLeft: {
@@ -288,7 +421,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: "rgba(34, 197, 94, 0.1)",
+    backgroundColor: Colors.background,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -317,24 +450,33 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#FFFFFF",
   },
-  menuItemValue: {
-    ...Typography.bodyMedium,
-    fontSize: 13,
-    color: Colors.textSecondary,
+  menuValueBadge: {
+    backgroundColor: `${Colors.primaryGreen}15`,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
+  menuValueText: {
+    ...Typography.caption,
+    fontSize: 11,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
+  },
+  // Logout
   logoutButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: Spacing.sm,
-    paddingVertical: Spacing.md,
+    backgroundColor: Colors.surface,
+    paddingVertical: Spacing.lg,
     borderRadius: 16,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: "#FF3B30",
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.xl,
   },
-  logoutText: {
-    ...Typography.labelMedium,
+  logoutButtonText: {
+    ...Typography.labelLarge,
     fontSize: 15,
     fontWeight: "600",
     color: "#FF3B30",
