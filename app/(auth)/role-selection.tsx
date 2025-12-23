@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -9,14 +9,18 @@ import {
   Platform,
   Image,
   TextInput as RNTextInput,
+  Animated,
+  Easing,
+  Dimensions,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
-import { Button } from "@/components/ui/Button";
 import { LocationSelector } from "@/components/LocationSelector";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 const PROPERTY_TYPES = [
   { name: "House", icon: "home-outline" as const },
@@ -60,6 +64,99 @@ export default function RoleSelectionScreen() {
     null
   );
 
+  // Animation values
+  const headerOpacity = useRef(new Animated.Value(0)).current;
+  const titleOpacity = useRef(new Animated.Value(0)).current;
+  const titleTranslateY = useRef(new Animated.Value(20)).current;
+  const formOpacity = useRef(new Animated.Value(0)).current;
+  const formTranslateY = useRef(new Animated.Value(30)).current;
+  const stepContentOpacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    // Header fade in
+    Animated.timing(headerOpacity, {
+      toValue: 1,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
+
+    // Title entrance
+    Animated.sequence([
+      Animated.delay(100),
+      Animated.parallel([
+        Animated.timing(titleOpacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.spring(titleTranslateY, {
+          toValue: 0,
+          tension: 40,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+
+    // Form entrance
+    Animated.sequence([
+      Animated.delay(250),
+      Animated.parallel([
+        Animated.timing(formOpacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.spring(formTranslateY, {
+          toValue: 0,
+          tension: 40,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+
+    return () => {
+      headerOpacity.stopAnimation();
+      titleOpacity.stopAnimation();
+      titleTranslateY.stopAnimation();
+      formOpacity.stopAnimation();
+      formTranslateY.stopAnimation();
+      stepContentOpacity.stopAnimation();
+    };
+  }, [
+    headerOpacity,
+    titleOpacity,
+    titleTranslateY,
+    formOpacity,
+    formTranslateY,
+    stepContentOpacity,
+  ]);
+
+  // Animate step content when step changes
+  const animateStepChange = (callback: () => void) => {
+    Animated.sequence([
+      Animated.timing(stepContentOpacity, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(stepContentOpacity, {
+        toValue: 0,
+        duration: 50,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      callback();
+      Animated.timing(stepContentOpacity, {
+        toValue: 1,
+        duration: 200,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
   const togglePropertyType = (type: string) => {
     setSelectedPropertyTypes((prev) =>
       prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
@@ -72,13 +169,13 @@ export default function RoleSelectionScreen() {
 
   const handleNext = () => {
     if (currentStep < BUYER_STEPS.length) {
-      setCurrentStep(currentStep + 1);
+      animateStepChange(() => setCurrentStep(currentStep + 1));
     }
   };
 
   const handleBack = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      animateStepChange(() => setCurrentStep(currentStep - 1));
     } else {
       router.back();
     }
@@ -105,7 +202,6 @@ export default function RoleSelectionScreen() {
 
   const handleSubmitVerification = () => {
     if (!idDocument || !selfie) {
-      // Show error - both required
       return;
     }
     router.push("/(auth)/pending-verification");
@@ -125,14 +221,22 @@ export default function RoleSelectionScreen() {
         <View style={styles.decorativeBackground}>
           <View style={styles.circle1} />
           <View style={styles.circle2} />
+          <View style={styles.circle3} />
         </View>
 
-        <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+        {/* Header */}
+        <Animated.View
+          style={[
+            styles.header,
+            { paddingTop: insets.top + Spacing.md, opacity: headerOpacity },
+          ]}
+        >
           {isBuyer && currentStep > 1 ? (
             <TouchableOpacity
               onPress={handleBack}
               style={styles.backButton}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              activeOpacity={0.8}
             >
               <View style={styles.backButtonCircle}>
                 <Ionicons
@@ -147,6 +251,7 @@ export default function RoleSelectionScreen() {
               onPress={() => router.back()}
               style={styles.backButton}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              activeOpacity={0.8}
             >
               <View style={styles.backButtonCircle}>
                 <Ionicons
@@ -170,6 +275,7 @@ export default function RoleSelectionScreen() {
                 !canProceedToNext() && styles.nextButtonHeaderDisabled,
               ]}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              activeOpacity={0.9}
             >
               <Text
                 style={[
@@ -177,11 +283,20 @@ export default function RoleSelectionScreen() {
                   !canProceedToNext() && styles.nextButtonHeaderTextDisabled,
                 ]}
               >
-                {currentStep === BUYER_STEPS.length ? "Create Account" : "Next"}
+                {currentStep === BUYER_STEPS.length ? "Finish" : "Next"}
               </Text>
+              <Ionicons
+                name={
+                  currentStep === BUYER_STEPS.length
+                    ? "checkmark"
+                    : "arrow-forward"
+                }
+                size={16}
+                color={canProceedToNext() ? "#FFFFFF" : "#9E9E9E"}
+              />
             </TouchableOpacity>
           )}
-        </View>
+        </Animated.View>
 
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -190,21 +305,58 @@ export default function RoleSelectionScreen() {
         >
           <View style={styles.content}>
             {/* Title Section */}
-            <View style={styles.titleSection}>
+            <Animated.View
+              style={[
+                styles.titleSection,
+                {
+                  opacity: titleOpacity,
+                  transform: [{ translateY: titleTranslateY }],
+                },
+              ]}
+            >
+              <View style={styles.titleIconContainer}>
+                <View style={styles.titleIconInner}>
+                  <Ionicons
+                    name={isBuyer ? "person-outline" : "briefcase-outline"}
+                    size={28}
+                    color={Colors.primaryGreen}
+                  />
+                </View>
+              </View>
               <Text style={styles.title}>Complete Your Profile</Text>
-              <Text style={styles.roleBadge}>
-                {isBuyer ? "Buyer/Tenant" : "Property Owner"}
-              </Text>
-            </View>
+              <View style={styles.roleBadgeContainer}>
+                <Ionicons
+                  name={isBuyer ? "search-outline" : "home-outline"}
+                  size={14}
+                  color={Colors.primaryGreen}
+                />
+                <Text style={styles.roleBadge}>
+                  {isBuyer ? "Buyer/Tenant" : "Property Owner"}
+                </Text>
+              </View>
+            </Animated.View>
 
             {isBuyer ? (
               /* Buyer Step-Based Form */
-              <View style={styles.formCard}>
+              <Animated.View
+                style={[
+                  styles.formCard,
+                  {
+                    opacity: formOpacity,
+                    transform: [{ translateY: formTranslateY }],
+                  },
+                ]}
+              >
                 {/* Progress Indicator */}
                 <View style={styles.progressContainer}>
-                  <Text style={styles.progressText}>
-                    Step {currentStep} of {BUYER_STEPS.length}
-                  </Text>
+                  <View style={styles.progressHeader}>
+                    <Text style={styles.progressText}>
+                      Step {currentStep} of {BUYER_STEPS.length}
+                    </Text>
+                    <Text style={styles.progressLabel}>
+                      {BUYER_STEPS[currentStep - 1].title}
+                    </Text>
+                  </View>
                   <View style={styles.progressBar}>
                     {BUYER_STEPS.map((step) => (
                       <View
@@ -212,6 +364,7 @@ export default function RoleSelectionScreen() {
                         style={[
                           styles.progressStep,
                           currentStep >= step.id && styles.progressStepActive,
+                          currentStep === step.id && styles.progressStepCurrent,
                         ]}
                       />
                     ))}
@@ -219,16 +372,29 @@ export default function RoleSelectionScreen() {
                 </View>
 
                 {/* Step Content */}
-                <View style={styles.stepContent}>
+                <Animated.View
+                  style={[styles.stepContent, { opacity: stepContentOpacity }]}
+                >
                   {currentStep === 1 && (
                     <View style={styles.stepView}>
-                      <Text style={styles.stepTitle}>
-                        Select Preferred Locations
-                      </Text>
-                      <Text style={styles.stepDescription}>
-                        Choose locations where you&apos;d like to find
-                        properties
-                      </Text>
+                      <View style={styles.stepHeader}>
+                        <View style={styles.stepIconContainer}>
+                          <Ionicons
+                            name="location"
+                            size={24}
+                            color={Colors.primaryGreen}
+                          />
+                        </View>
+                        <View style={styles.stepHeaderText}>
+                          <Text style={styles.stepTitle}>
+                            Select Preferred Locations
+                          </Text>
+                          <Text style={styles.stepDescription}>
+                            Choose locations where you&apos;d like to find
+                            properties
+                          </Text>
+                        </View>
+                      </View>
                       <View style={styles.locationSelectorContainer}>
                         <LocationSelector
                           selectedLocations={selectedLocations}
@@ -240,10 +406,21 @@ export default function RoleSelectionScreen() {
 
                   {currentStep === 2 && (
                     <View style={styles.stepView}>
-                      <Text style={styles.stepTitle}>Set Your Budget</Text>
-                      <Text style={styles.stepDescription}>
-                        Enter your budget range (optional)
-                      </Text>
+                      <View style={styles.stepHeader}>
+                        <View style={styles.stepIconContainer}>
+                          <Ionicons
+                            name="wallet"
+                            size={24}
+                            color={Colors.primaryGreen}
+                          />
+                        </View>
+                        <View style={styles.stepHeaderText}>
+                          <Text style={styles.stepTitle}>Set Your Budget</Text>
+                          <Text style={styles.stepDescription}>
+                            Enter your budget range (optional)
+                          </Text>
+                        </View>
+                      </View>
 
                       {/* Budget Presets */}
                       <View style={styles.budgetPresetsContainer}>
@@ -280,6 +457,7 @@ export default function RoleSelectionScreen() {
                                   setMinBudget(preset.min);
                                   setMaxBudget(preset.max);
                                 }}
+                                activeOpacity={0.8}
                               >
                                 <Text
                                   style={[
@@ -300,8 +478,8 @@ export default function RoleSelectionScreen() {
                       <View style={styles.budgetCard}>
                         <View style={styles.budgetCardHeader}>
                           <Ionicons
-                            name="wallet-outline"
-                            size={24}
+                            name="options-outline"
+                            size={20}
                             color={Colors.primaryGreen}
                           />
                           <Text style={styles.budgetCardTitle}>
@@ -310,16 +488,9 @@ export default function RoleSelectionScreen() {
                         </View>
                         <View style={styles.budgetInputsContainer}>
                           <View style={styles.budgetInput}>
-                            <View style={styles.budgetInputLabel}>
-                              <Ionicons
-                                name="arrow-down-circle-outline"
-                                size={16}
-                                color={Colors.textSecondary}
-                              />
-                              <Text style={styles.budgetInputLabelText}>
-                                Minimum
-                              </Text>
-                            </View>
+                            <Text style={styles.budgetInputLabelText}>
+                              Minimum
+                            </Text>
                             <View style={styles.budgetInputWrapper}>
                               <Text style={styles.currencySymbol}>GHS</Text>
                               <RNTextInput
@@ -332,17 +503,13 @@ export default function RoleSelectionScreen() {
                               />
                             </View>
                           </View>
+                          <View style={styles.budgetDivider}>
+                            <Text style={styles.budgetDividerText}>to</Text>
+                          </View>
                           <View style={styles.budgetInput}>
-                            <View style={styles.budgetInputLabel}>
-                              <Ionicons
-                                name="arrow-up-circle-outline"
-                                size={16}
-                                color={Colors.textSecondary}
-                              />
-                              <Text style={styles.budgetInputLabelText}>
-                                Maximum
-                              </Text>
-                            </View>
+                            <Text style={styles.budgetInputLabelText}>
+                              Maximum
+                            </Text>
                             <View style={styles.budgetInputWrapper}>
                               <Text style={styles.currencySymbol}>GHS</Text>
                               <RNTextInput
@@ -362,12 +529,24 @@ export default function RoleSelectionScreen() {
 
                   {currentStep === 3 && (
                     <View style={styles.stepView}>
-                      <Text style={styles.stepTitle}>
-                        Property Type Interest
-                      </Text>
-                      <Text style={styles.stepDescription}>
-                        Select the types of properties you&apos;re interested in
-                      </Text>
+                      <View style={styles.stepHeader}>
+                        <View style={styles.stepIconContainer}>
+                          <Ionicons
+                            name="grid"
+                            size={24}
+                            color={Colors.primaryGreen}
+                          />
+                        </View>
+                        <View style={styles.stepHeaderText}>
+                          <Text style={styles.stepTitle}>
+                            Property Type Interest
+                          </Text>
+                          <Text style={styles.stepDescription}>
+                            Select the types of properties you&apos;re
+                            interested in
+                          </Text>
+                        </View>
+                      </View>
                       <View style={styles.propertyTypesGrid}>
                         {PROPERTY_TYPES.map((propertyType) => {
                           const isSelected = isPropertyTypeSelected(
@@ -429,12 +608,23 @@ export default function RoleSelectionScreen() {
 
                   {currentStep === 4 && (
                     <View style={styles.stepView}>
-                      <Text style={styles.stepTitle}>
-                        Profile Photo <Text style={styles.required}>*</Text>
-                      </Text>
-                      <Text style={styles.stepDescription}>
-                        Add a profile photo to help others recognize you
-                      </Text>
+                      <View style={styles.stepHeader}>
+                        <View style={styles.stepIconContainer}>
+                          <Ionicons
+                            name="camera"
+                            size={24}
+                            color={Colors.primaryGreen}
+                          />
+                        </View>
+                        <View style={styles.stepHeaderText}>
+                          <Text style={styles.stepTitle}>
+                            Profile Photo <Text style={styles.required}>*</Text>
+                          </Text>
+                          <Text style={styles.stepDescription}>
+                            Add a profile photo to help others recognize you
+                          </Text>
+                        </View>
+                      </View>
 
                       {/* Photo Upload Card */}
                       <View style={styles.photoUploadCard}>
@@ -447,7 +637,6 @@ export default function RoleSelectionScreen() {
                             <TouchableOpacity
                               style={styles.photoChangeButton}
                               onPress={() => {
-                                // TODO: Open image picker
                                 console.log("Change photo");
                                 setProfilePhoto(null);
                               }}
@@ -475,7 +664,6 @@ export default function RoleSelectionScreen() {
                           <TouchableOpacity
                             style={styles.photoUploadArea}
                             onPress={() => {
-                              // TODO: Open image picker
                               console.log("Open image picker");
                               setProfilePhoto("demo-photo");
                             }}
@@ -511,7 +699,6 @@ export default function RoleSelectionScreen() {
                           <TouchableOpacity
                             style={styles.photoOptionButton}
                             onPress={() => {
-                              // TODO: Open camera
                               console.log("Open camera");
                               setProfilePhoto("demo-photo");
                             }}
@@ -531,7 +718,6 @@ export default function RoleSelectionScreen() {
                           <TouchableOpacity
                             style={styles.photoOptionButton}
                             onPress={() => {
-                              // TODO: Open gallery
                               console.log("Open gallery");
                               setProfilePhoto("demo-photo");
                             }}
@@ -555,7 +741,7 @@ export default function RoleSelectionScreen() {
                       <View style={styles.photoTipsContainer}>
                         <View style={styles.photoTipsHeader}>
                           <Ionicons
-                            name="information-circle-outline"
+                            name="bulb-outline"
                             size={18}
                             color={Colors.primaryGreen}
                           />
@@ -568,26 +754,45 @@ export default function RoleSelectionScreen() {
                       </View>
                     </View>
                   )}
-                </View>
-              </View>
+                </Animated.View>
+              </Animated.View>
             ) : (
               /* Owner Form */
-              <View style={styles.formCard}>
+              <Animated.View
+                style={[
+                  styles.formCard,
+                  {
+                    opacity: formOpacity,
+                    transform: [{ translateY: formTranslateY }],
+                  },
+                ]}
+              >
                 {/* Upload ID Document */}
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>
-                    Upload ID Document <Text style={styles.required}>*</Text>
-                  </Text>
-                  <Text style={styles.sectionDescription}>
-                    Upload Ghana Card or Voter ID for verification
-                  </Text>
+                  <View style={styles.sectionHeader}>
+                    <View style={styles.sectionIconContainer}>
+                      <Ionicons
+                        name="document-text"
+                        size={20}
+                        color={Colors.primaryGreen}
+                      />
+                    </View>
+                    <View>
+                      <Text style={styles.sectionTitle}>
+                        Upload ID Document{" "}
+                        <Text style={styles.required}>*</Text>
+                      </Text>
+                      <Text style={styles.sectionDescription}>
+                        Ghana Card or Voter ID for verification
+                      </Text>
+                    </View>
+                  </View>
                   <TouchableOpacity
                     style={[
                       styles.ownerUploadCard,
                       idDocument && styles.ownerUploadCardFilled,
                     ]}
                     onPress={() => {
-                      // TODO: Open document picker
                       console.log("Open document picker");
                       setIdDocument("demo-id-document");
                     }}
@@ -637,20 +842,30 @@ export default function RoleSelectionScreen() {
 
                 {/* Take Selfie */}
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>
-                    Take Selfie for Verification{" "}
-                    <Text style={styles.required}>*</Text>
-                  </Text>
-                  <Text style={styles.sectionDescription}>
-                    Take a clear selfie for identity verification
-                  </Text>
+                  <View style={styles.sectionHeader}>
+                    <View style={styles.sectionIconContainer}>
+                      <Ionicons
+                        name="person-circle"
+                        size={20}
+                        color={Colors.primaryGreen}
+                      />
+                    </View>
+                    <View>
+                      <Text style={styles.sectionTitle}>
+                        Take Selfie for Verification{" "}
+                        <Text style={styles.required}>*</Text>
+                      </Text>
+                      <Text style={styles.sectionDescription}>
+                        Take a clear selfie for identity verification
+                      </Text>
+                    </View>
+                  </View>
                   <TouchableOpacity
                     style={[
                       styles.ownerUploadCard,
                       selfie && styles.ownerUploadCardFilled,
                     ]}
                     onPress={() => {
-                      // TODO: Open camera
                       console.log("Open camera");
                       setSelfie("demo-selfie");
                     }}
@@ -700,12 +915,23 @@ export default function RoleSelectionScreen() {
 
                 {/* Profile Photo */}
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>
-                    Profile Photo (Optional)
-                  </Text>
-                  <Text style={styles.sectionDescription}>
-                    Add a profile photo to help others recognize you
-                  </Text>
+                  <View style={styles.sectionHeader}>
+                    <View style={styles.sectionIconContainer}>
+                      <Ionicons
+                        name="image"
+                        size={20}
+                        color={Colors.primaryGreen}
+                      />
+                    </View>
+                    <View>
+                      <Text style={styles.sectionTitle}>
+                        Profile Photo (Optional)
+                      </Text>
+                      <Text style={styles.sectionDescription}>
+                        Add a profile photo to help others recognize you
+                      </Text>
+                    </View>
+                  </View>
                   <View style={styles.photoUploadCard}>
                     {ownerProfilePhoto ? (
                       <View style={styles.photoPreviewContainer}>
@@ -716,7 +942,6 @@ export default function RoleSelectionScreen() {
                         <TouchableOpacity
                           style={styles.photoChangeButton}
                           onPress={() => {
-                            // TODO: Open image picker
                             console.log("Change photo");
                             setOwnerProfilePhoto(null);
                           }}
@@ -740,7 +965,6 @@ export default function RoleSelectionScreen() {
                       <TouchableOpacity
                         style={styles.photoUploadArea}
                         onPress={() => {
-                          // TODO: Open image picker
                           console.log("Open image picker");
                           setOwnerProfilePhoto("demo-photo");
                         }}
@@ -765,60 +989,25 @@ export default function RoleSelectionScreen() {
                       </TouchableOpacity>
                     )}
                   </View>
-
-                  {/* Upload Options */}
-                  {!ownerProfilePhoto && (
-                    <View style={styles.photoOptionsContainer}>
-                      <TouchableOpacity
-                        style={styles.photoOptionButton}
-                        onPress={() => {
-                          // TODO: Open camera
-                          console.log("Open camera");
-                          setOwnerProfilePhoto("demo-photo");
-                        }}
-                        activeOpacity={0.7}
-                      >
-                        <View style={styles.photoOptionIcon}>
-                          <Ionicons
-                            name="camera"
-                            size={24}
-                            color={Colors.primaryGreen}
-                          />
-                        </View>
-                        <Text style={styles.photoOptionText}>Take Photo</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.photoOptionButton}
-                        onPress={() => {
-                          // TODO: Open gallery
-                          console.log("Open gallery");
-                          setOwnerProfilePhoto("demo-photo");
-                        }}
-                        activeOpacity={0.7}
-                      >
-                        <View style={styles.photoOptionIcon}>
-                          <Ionicons
-                            name="images-outline"
-                            size={24}
-                            color={Colors.primaryGreen}
-                          />
-                        </View>
-                        <Text style={styles.photoOptionText}>
-                          Choose from Gallery
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
                 </View>
 
-                <Button
-                  title="Submit for Verification"
+                <TouchableOpacity
+                  style={[
+                    styles.submitButton,
+                    (!idDocument || !selfie) && styles.submitButtonDisabled,
+                  ]}
                   onPress={handleSubmitVerification}
-                  variant="primary"
+                  activeOpacity={0.9}
                   disabled={!idDocument || !selfie}
-                  style={styles.submitButton}
-                />
-              </View>
+                >
+                  <Text style={styles.submitButtonText}>
+                    Submit for Verification
+                  </Text>
+                  <View style={styles.submitButtonIcon}>
+                    <Ionicons name="checkmark" size={18} color="#FFFFFF" />
+                  </View>
+                </TouchableOpacity>
+              </Animated.View>
             )}
           </View>
         </ScrollView>
@@ -842,23 +1031,33 @@ const styles = StyleSheet.create({
   },
   circle1: {
     position: "absolute",
-    top: -100,
-    right: -100,
-    width: 300,
-    height: 300,
-    borderRadius: 150,
+    top: -120,
+    right: -80,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
     backgroundColor: Colors.primaryLight,
     opacity: 0.08,
   },
   circle2: {
     position: "absolute",
-    bottom: -150,
-    left: -150,
+    bottom: -180,
+    left: -120,
     width: 400,
     height: 400,
     borderRadius: 200,
     backgroundColor: Colors.primaryGreen,
     opacity: 0.05,
+  },
+  circle3: {
+    position: "absolute",
+    top: SCREEN_HEIGHT * 0.45,
+    right: -60,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: Colors.primaryGreen,
+    opacity: 0.03,
   },
   header: {
     paddingHorizontal: Spacing.lg,
@@ -873,32 +1072,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   nextButtonHeader: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
-    borderRadius: 20,
+    borderRadius: 24,
     backgroundColor: Colors.primaryGreen,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
+    gap: Spacing.xs,
+    shadowColor: Colors.primaryGreen,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   nextButtonHeaderDisabled: {
     backgroundColor: Colors.divider,
-    ...Platform.select({
-      ios: {
-        shadowOpacity: 0,
-      },
-      android: {
-        elevation: 0,
-      },
-    }),
+    shadowOpacity: 0,
+    elevation: 0,
   },
   nextButtonHeaderText: {
     ...Typography.labelLarge,
@@ -910,23 +1100,17 @@ const styles = StyleSheet.create({
     color: "#9E9E9E",
   },
   backButtonCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: Colors.surface,
     justifyContent: "center",
     alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   scrollContent: {
     flexGrow: 1,
@@ -936,28 +1120,57 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingTop: Spacing.lg,
+    paddingTop: Spacing.md,
   },
   titleSection: {
     marginBottom: Spacing.xl,
     alignItems: "center",
   },
+  titleIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: Colors.surface,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+    shadowColor: Colors.primaryGreen,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  titleIconInner: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   title: {
     ...Typography.headlineMedium,
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: "700",
     color: Colors.textPrimary,
     marginBottom: Spacing.sm,
     textAlign: "center",
   },
-  roleBadge: {
-    ...Typography.labelLarge,
-    fontSize: 14,
-    color: Colors.primaryGreen,
-    backgroundColor: "#F1F8F4",
+  roleBadgeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: 20,
+    gap: Spacing.xs,
+    borderWidth: 1,
+    borderColor: "rgba(34, 197, 94, 0.2)",
+  },
+  roleBadge: {
+    ...Typography.labelMedium,
+    fontSize: 13,
+    color: Colors.primaryGreen,
     fontWeight: "600",
   },
   formCard: {
@@ -965,32 +1178,37 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderRadius: 24,
     padding: Spacing.xl,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 16,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.03)",
   },
   progressContainer: {
     marginBottom: Spacing.xl,
   },
+  progressHeader: {
+    marginBottom: Spacing.md,
+  },
   progressText: {
-    ...Typography.labelMedium,
-    fontSize: 14,
+    ...Typography.caption,
+    fontSize: 12,
     color: Colors.textSecondary,
-    marginBottom: Spacing.sm,
-    textAlign: "center",
+    marginBottom: 2,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  progressLabel: {
+    ...Typography.labelLarge,
+    fontSize: 16,
+    color: Colors.textPrimary,
+    fontWeight: "600",
   },
   progressBar: {
     flexDirection: "row",
     gap: Spacing.xs,
-    justifyContent: "center",
   },
   progressStep: {
     flex: 1,
@@ -1001,90 +1219,86 @@ const styles = StyleSheet.create({
   progressStepActive: {
     backgroundColor: Colors.primaryGreen,
   },
+  progressStepCurrent: {
+    backgroundColor: Colors.primaryGreen,
+  },
   stepContent: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.md,
   },
   stepView: {
     width: "100%",
   },
+  stepHeader: {
+    flexDirection: "row",
+    marginBottom: Spacing.xl,
+    gap: Spacing.md,
+  },
+  stepIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  stepHeaderText: {
+    flex: 1,
+    justifyContent: "center",
+  },
   stepTitle: {
-    ...Typography.headlineMedium,
-    fontSize: 22,
+    ...Typography.titleLarge,
+    fontSize: 18,
     fontWeight: "700",
     color: Colors.textPrimary,
-    marginBottom: Spacing.sm,
+    marginBottom: 2,
   },
   stepDescription: {
     ...Typography.bodyMedium,
-    fontSize: 14,
+    fontSize: 13,
     color: Colors.textSecondary,
-    marginBottom: Spacing.xl,
   },
   locationSelectorContainer: {
-    height: 500,
+    height: 450,
     width: "100%",
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: "hidden",
   },
   propertyTypesGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: Spacing.md,
-    marginTop: Spacing.md,
   },
   propertyTypeCard: {
     width: "47%",
     aspectRatio: 1.1,
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
+    backgroundColor: Colors.background,
+    borderRadius: 20,
     padding: Spacing.lg,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
     borderColor: Colors.divider,
     position: "relative",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
   },
   propertyTypeCardSelected: {
     borderColor: Colors.primaryGreen,
-    backgroundColor: "#F1F8F4",
-    ...Platform.select({
-      ios: {
-        shadowColor: Colors.primaryGreen,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+    backgroundColor: "rgba(34, 197, 94, 0.05)",
   },
   propertyTypeIconContainer: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "rgba(0, 0, 0, 0.03)",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: Spacing.md,
   },
   propertyTypeIconContainerSelected: {
-    backgroundColor: "#E8F5E9",
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
   },
   propertyTypeLabel: {
-    ...Typography.labelLarge,
-    fontSize: 15,
+    ...Typography.labelMedium,
+    fontSize: 14,
     fontWeight: "600",
     color: Colors.textPrimary,
     textAlign: "center",
@@ -1096,48 +1310,49 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: Spacing.sm,
     right: Spacing.sm,
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
   },
   section: {
     marginBottom: Spacing.xl,
   },
+  sectionHeader: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  sectionIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   sectionTitle: {
     ...Typography.labelLarge,
-    fontSize: 16,
+    fontSize: 15,
     color: Colors.textPrimary,
     fontWeight: "600",
-    marginBottom: Spacing.md,
+    marginBottom: 2,
   },
   sectionDescription: {
     ...Typography.bodyMedium,
-    fontSize: 14,
+    fontSize: 13,
     color: Colors.textSecondary,
-    marginBottom: Spacing.md,
   },
   required: {
-    color: "#D32F2F",
+    color: "#EF4444",
   },
   budgetPresetsContainer: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   budgetPresetsTitle: {
-    ...Typography.labelMedium,
-    fontSize: 14,
+    ...Typography.caption,
+    fontSize: 12,
     color: Colors.textSecondary,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
     fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   budgetPresets: {
     flexDirection: "row",
@@ -1145,23 +1360,12 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   budgetPresetButton: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
     borderRadius: 20,
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.background,
     borderWidth: 1.5,
     borderColor: Colors.divider,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
   },
   budgetPresetButtonSelected: {
     backgroundColor: Colors.primaryGreen,
@@ -1177,22 +1381,11 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   budgetCard: {
-    backgroundColor: "#F8F9FA",
+    backgroundColor: Colors.background,
     borderRadius: 16,
-    padding: Spacing.xl,
-    borderWidth: 1.5,
+    padding: Spacing.lg,
+    borderWidth: 1,
     borderColor: Colors.divider,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
   },
   budgetCardHeader: {
     flexDirection: "row",
@@ -1201,98 +1394,77 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   budgetCardTitle: {
-    ...Typography.labelLarge,
-    fontSize: 16,
+    ...Typography.labelMedium,
+    fontSize: 14,
     color: Colors.textPrimary,
-    fontWeight: "700",
+    fontWeight: "600",
   },
   budgetInputsContainer: {
-    gap: Spacing.lg,
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: Spacing.sm,
   },
   budgetInput: {
-    width: "100%",
-  },
-  budgetInputLabel: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: Spacing.sm,
-    gap: Spacing.xs,
+    flex: 1,
   },
   budgetInputLabelText: {
-    ...Typography.labelMedium,
-    fontSize: 13,
+    ...Typography.caption,
+    fontSize: 11,
     color: Colors.textSecondary,
     fontWeight: "600",
+    marginBottom: Spacing.xs,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   budgetInputWrapper: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: Colors.surface,
     borderRadius: 12,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: Colors.divider,
     paddingHorizontal: Spacing.md,
-    minHeight: 56,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
+    minHeight: 48,
+  },
+  budgetDivider: {
+    paddingBottom: Spacing.md,
+  },
+  budgetDividerText: {
+    ...Typography.caption,
+    fontSize: 12,
+    color: Colors.textSecondary,
   },
   currencySymbol: {
-    ...Typography.labelLarge,
-    fontSize: 14,
+    ...Typography.labelMedium,
+    fontSize: 13,
     color: Colors.primaryGreen,
     fontWeight: "700",
     marginRight: Spacing.xs,
   },
   budgetInputField: {
     flex: 1,
-    ...Typography.headlineMedium,
-    fontSize: 18,
-    fontWeight: "700",
+    ...Typography.bodyMedium,
+    fontSize: 15,
+    fontWeight: "600",
     color: Colors.textPrimary,
-    paddingVertical: Spacing.md,
-    ...Platform.select({
-      android: {
-        includeFontPadding: false,
-        textAlignVertical: "center",
-      },
-    }),
+    paddingVertical: Spacing.sm,
   },
   photoUploadCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.background,
     borderRadius: 20,
     padding: Spacing.xl,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
     borderWidth: 2,
     borderColor: Colors.divider,
     borderStyle: "dashed",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
   },
   photoUploadArea: {
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: Spacing["2xl"],
+    paddingVertical: Spacing.xl,
   },
   photoUploadIconContainer: {
     position: "relative",
@@ -1309,23 +1481,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 3,
-    borderColor: Colors.surface,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+    borderColor: Colors.background,
   },
   photoUploadText: {
     ...Typography.labelLarge,
-    fontSize: 16,
-    fontWeight: "700",
+    fontSize: 15,
+    fontWeight: "600",
     color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
@@ -1336,39 +1497,28 @@ const styles = StyleSheet.create({
   },
   photoPreviewContainer: {
     position: "relative",
-    width: 200,
-    height: 200,
+    width: 160,
+    height: 160,
   },
   photoPreviewImage: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    borderWidth: 4,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    borderWidth: 3,
     borderColor: Colors.primaryGreen,
   },
   photoChangeButton: {
     position: "absolute",
     bottom: 0,
     right: 0,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: Colors.primaryGreen,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 4,
-    borderColor: Colors.surface,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
+    borderWidth: 3,
+    borderColor: Colors.background,
   },
   photoRemoveButton: {
     position: "absolute",
@@ -1376,65 +1526,43 @@ const styles = StyleSheet.create({
     right: -8,
     backgroundColor: Colors.surface,
     borderRadius: 12,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
   },
   photoOptionsContainer: {
-    flexDirection: "column",
+    flexDirection: "row",
     gap: Spacing.md,
     marginBottom: Spacing.lg,
   },
   photoOptionButton: {
-    width: "100%",
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    padding: Spacing.lg,
-    backgroundColor: "#F8F9FA",
-    borderRadius: 16,
-    borderWidth: 1.5,
+    padding: Spacing.md,
+    backgroundColor: Colors.background,
+    borderRadius: 14,
+    borderWidth: 1,
     borderColor: Colors.divider,
     gap: Spacing.sm,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
   },
   photoOptionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#E8F5E9",
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
     justifyContent: "center",
     alignItems: "center",
   },
   photoOptionText: {
     ...Typography.labelMedium,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
     color: Colors.textPrimary,
   },
   photoTipsContainer: {
-    backgroundColor: "#F1F8F4",
-    borderRadius: 12,
+    backgroundColor: "rgba(34, 197, 94, 0.05)",
+    borderRadius: 14,
     padding: Spacing.lg,
-    borderLeftWidth: 4,
+    borderLeftWidth: 3,
     borderLeftColor: Colors.primaryGreen,
   },
   photoTipsHeader: {
@@ -1445,18 +1573,18 @@ const styles = StyleSheet.create({
   },
   photoTipsTitle: {
     ...Typography.labelMedium,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
     color: Colors.primaryGreen,
   },
   photoTipsText: {
     ...Typography.bodyMedium,
-    fontSize: 13,
+    fontSize: 12,
     color: Colors.textSecondary,
     lineHeight: 20,
   },
   ownerUploadCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.background,
     borderRadius: 20,
     padding: Spacing.xl,
     alignItems: "center",
@@ -1464,68 +1592,46 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: Colors.divider,
     borderStyle: "dashed",
-    minHeight: 180,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
+    minHeight: 160,
   },
   ownerUploadCardFilled: {
     borderStyle: "solid",
     borderColor: Colors.primaryGreen,
-    backgroundColor: "#F1F8F4",
+    backgroundColor: "rgba(34, 197, 94, 0.05)",
   },
   ownerUploadArea: {
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: Spacing.lg,
+    paddingVertical: Spacing.md,
   },
   ownerUploadIconContainer: {
     position: "relative",
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
   },
   ownerUploadIconBadge: {
     position: "absolute",
     bottom: -4,
     right: -4,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: Colors.primaryGreen,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 3,
-    borderColor: Colors.surface,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+    borderWidth: 2,
+    borderColor: Colors.background,
   },
   ownerUploadText: {
-    ...Typography.labelLarge,
-    fontSize: 16,
-    fontWeight: "700",
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
     color: Colors.textPrimary,
-    marginBottom: Spacing.xs,
+    marginBottom: 2,
   },
   ownerUploadHint: {
     ...Typography.bodyMedium,
-    fontSize: 13,
+    fontSize: 12,
     color: Colors.textSecondary,
   },
   ownerUploadPreviewContainer: {
@@ -1534,18 +1640,18 @@ const styles = StyleSheet.create({
   },
   ownerDocumentPreview: {
     width: "100%",
-    height: 200,
+    height: 180,
     borderRadius: 12,
     resizeMode: "cover",
     borderWidth: 2,
     borderColor: Colors.primaryGreen,
   },
   ownerSelfiePreview: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
     resizeMode: "cover",
-    borderWidth: 4,
+    borderWidth: 3,
     borderColor: Colors.primaryGreen,
     alignSelf: "center",
   },
@@ -1555,20 +1661,41 @@ const styles = StyleSheet.create({
     right: -8,
     backgroundColor: Colors.surface,
     borderRadius: 12,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
   },
   submitButton: {
-    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.primaryGreen,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: 16,
+    gap: Spacing.md,
+    shadowColor: Colors.primaryGreen,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
     marginTop: Spacing.md,
+  },
+  submitButtonDisabled: {
+    backgroundColor: Colors.divider,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  submitButtonText: {
+    ...Typography.labelLarge,
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#FFFFFF",
+    letterSpacing: 0.3,
+  },
+  submitButtonIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
