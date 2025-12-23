@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -6,19 +6,226 @@ import {
   ScrollView,
   TouchableOpacity,
   Linking,
-  Platform,
+  Animated,
+  Easing,
+  Dimensions,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
-import { Button } from "@/components/ui/Button";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function PendingVerificationScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+
+  // Animation values
+  const iconScale = useRef(new Animated.Value(0)).current;
+  const iconRotate = useRef(new Animated.Value(0)).current;
+  const ring1Scale = useRef(new Animated.Value(0)).current;
+  const ring2Scale = useRef(new Animated.Value(0)).current;
+  const ring3Scale = useRef(new Animated.Value(0)).current;
+  const titleOpacity = useRef(new Animated.Value(0)).current;
+  const titleTranslateY = useRef(new Animated.Value(20)).current;
+  const messageOpacity = useRef(new Animated.Value(0)).current;
+  const card1Opacity = useRef(new Animated.Value(0)).current;
+  const card1TranslateY = useRef(new Animated.Value(30)).current;
+  const card2Opacity = useRef(new Animated.Value(0)).current;
+  const card2TranslateY = useRef(new Animated.Value(30)).current;
+  const buttonsOpacity = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const clockRotate = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Icon entrance with rotation
+    Animated.parallel([
+      Animated.spring(iconScale, {
+        toValue: 1,
+        tension: 40,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+      Animated.timing(iconRotate, {
+        toValue: 1,
+        duration: 800,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Rings entrance with stagger
+    Animated.stagger(100, [
+      Animated.spring(ring1Scale, {
+        toValue: 1,
+        tension: 30,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+      Animated.spring(ring2Scale, {
+        toValue: 1,
+        tension: 30,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+      Animated.spring(ring3Scale, {
+        toValue: 1,
+        tension: 30,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Title entrance
+    Animated.sequence([
+      Animated.delay(300),
+      Animated.parallel([
+        Animated.timing(titleOpacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.spring(titleTranslateY, {
+          toValue: 0,
+          tension: 40,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+
+    // Message entrance
+    Animated.sequence([
+      Animated.delay(450),
+      Animated.timing(messageOpacity, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Card 1 entrance
+    Animated.sequence([
+      Animated.delay(550),
+      Animated.parallel([
+        Animated.timing(card1Opacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.spring(card1TranslateY, {
+          toValue: 0,
+          tension: 40,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+
+    // Card 2 entrance
+    Animated.sequence([
+      Animated.delay(700),
+      Animated.parallel([
+        Animated.timing(card2Opacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.spring(card2TranslateY, {
+          toValue: 0,
+          tension: 40,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+
+    // Buttons entrance
+    Animated.sequence([
+      Animated.delay(850),
+      Animated.timing(buttonsOpacity, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Continuous pulse animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.1,
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Clock hand rotation animation
+    Animated.loop(
+      Animated.timing(clockRotate, {
+        toValue: 1,
+        duration: 3000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+
+    return () => {
+      iconScale.stopAnimation();
+      iconRotate.stopAnimation();
+      ring1Scale.stopAnimation();
+      ring2Scale.stopAnimation();
+      ring3Scale.stopAnimation();
+      titleOpacity.stopAnimation();
+      titleTranslateY.stopAnimation();
+      messageOpacity.stopAnimation();
+      card1Opacity.stopAnimation();
+      card1TranslateY.stopAnimation();
+      card2Opacity.stopAnimation();
+      card2TranslateY.stopAnimation();
+      buttonsOpacity.stopAnimation();
+      pulseAnim.stopAnimation();
+      clockRotate.stopAnimation();
+    };
+  }, [
+    iconScale,
+    iconRotate,
+    ring1Scale,
+    ring2Scale,
+    ring3Scale,
+    titleOpacity,
+    titleTranslateY,
+    messageOpacity,
+    card1Opacity,
+    card1TranslateY,
+    card2Opacity,
+    card2TranslateY,
+    buttonsOpacity,
+    pulseAnim,
+    clockRotate,
+  ]);
+
+  const iconRotation = iconRotate.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["-180deg", "0deg"],
+  });
 
   const handleContactSupport = () => {
     Linking.openURL("mailto:support@ntamgyinafo.app");
+  };
+
+  const handleLogout = () => {
+    router.replace("/(auth)/welcome");
   };
 
   return (
@@ -29,119 +236,211 @@ export default function PendingVerificationScreen() {
         <View style={styles.decorativeBackground}>
           <View style={styles.circle1} />
           <View style={styles.circle2} />
+          <View style={styles.circle3} />
         </View>
 
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingTop: insets.top + Spacing.xl },
+          ]}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.content}>
-            {/* Icon */}
-            <View style={styles.iconContainer}>
-              <View style={styles.iconCircle}>
-                <Ionicons
-                  name="time-outline"
-                  size={64}
-                  color={Colors.primaryGreen}
-                />
-              </View>
-              {/* Animated pulse effect */}
-              <View style={styles.iconPulse1} />
-              <View style={styles.iconPulse2} />
+            {/* Animated Icon Section */}
+            <View style={styles.iconSection}>
+              {/* Animated Rings */}
+              <Animated.View
+                style={[
+                  styles.ring,
+                  styles.ring3,
+                  {
+                    transform: [{ scale: ring3Scale }, { scale: pulseAnim }],
+                  },
+                ]}
+              />
+              <Animated.View
+                style={[
+                  styles.ring,
+                  styles.ring2,
+                  {
+                    transform: [{ scale: ring2Scale }],
+                  },
+                ]}
+              />
+              <Animated.View
+                style={[
+                  styles.ring,
+                  styles.ring1,
+                  {
+                    transform: [{ scale: ring1Scale }],
+                  },
+                ]}
+              />
+
+              {/* Main Icon */}
+              <Animated.View
+                style={[
+                  styles.iconCircle,
+                  {
+                    transform: [{ scale: iconScale }, { rotate: iconRotation }],
+                  },
+                ]}
+              >
+                <View style={styles.iconInner}>
+                  <Ionicons
+                    name="hourglass-outline"
+                    size={40}
+                    color={Colors.primaryGreen}
+                  />
+                </View>
+              </Animated.View>
             </View>
 
             {/* Title */}
-            <Text style={styles.title}>Verification Pending</Text>
+            <Animated.View
+              style={[
+                styles.titleContainer,
+                {
+                  opacity: titleOpacity,
+                  transform: [{ translateY: titleTranslateY }],
+                },
+              ]}
+            >
+              <Text style={styles.title}>Verification Pending</Text>
+              <View style={styles.statusBadge}>
+                <View style={styles.statusDot} />
+                <Text style={styles.statusText}>Under Review</Text>
+              </View>
+            </Animated.View>
 
             {/* Message */}
-            <Text style={styles.message}>
-              Your account is being reviewed. We&apos;ll notify you once
-              verified.
-            </Text>
+            <Animated.Text
+              style={[styles.message, { opacity: messageOpacity }]}
+            >
+              Your account is being reviewed by our team. We&apos;ll notify you
+              once the verification is complete.
+            </Animated.Text>
 
             {/* Estimated Time Card */}
-            <View style={styles.timeCard}>
-              <Ionicons
-                name="information-circle-outline"
-                size={24}
-                color={Colors.primaryGreen}
-              />
+            <Animated.View
+              style={[
+                styles.timeCard,
+                {
+                  opacity: card1Opacity,
+                  transform: [{ translateY: card1TranslateY }],
+                },
+              ]}
+            >
+              <View style={styles.timeCardIcon}>
+                <Ionicons name="time" size={24} color={Colors.primaryGreen} />
+              </View>
               <View style={styles.timeCardContent}>
                 <Text style={styles.timeCardTitle}>Estimated Time</Text>
-                <Text style={styles.timeCardText}>
-                  Usually takes 24-48 hours
-                </Text>
+                <Text style={styles.timeCardText}>24-48 hours</Text>
               </View>
-            </View>
+              <View style={styles.timeCardBadge}>
+                <Ionicons name="flash" size={14} color={Colors.primaryGreen} />
+                <Text style={styles.timeCardBadgeText}>Fast</Text>
+              </View>
+            </Animated.View>
 
-            {/* What Happens Next */}
-            <View style={styles.infoCard}>
-              <Text style={styles.infoCardTitle}>What Happens Next?</Text>
+            {/* What Happens Next Card */}
+            <Animated.View
+              style={[
+                styles.infoCard,
+                {
+                  opacity: card2Opacity,
+                  transform: [{ translateY: card2TranslateY }],
+                },
+              ]}
+            >
+              <View style={styles.infoCardHeader}>
+                <View style={styles.infoCardIconContainer}>
+                  <Ionicons
+                    name="list-outline"
+                    size={20}
+                    color={Colors.primaryGreen}
+                  />
+                </View>
+                <Text style={styles.infoCardTitle}>What Happens Next?</Text>
+              </View>
               <View style={styles.infoList}>
                 <View style={styles.infoItem}>
-                  <View style={styles.infoIcon}>
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={20}
-                      color={Colors.primaryGreen}
-                    />
+                  <View style={styles.infoStepNumber}>
+                    <Text style={styles.infoStepText}>1</Text>
                   </View>
-                  <Text style={styles.infoText}>
-                    Our team reviews your documents
-                  </Text>
+                  <View style={styles.infoItemContent}>
+                    <Text style={styles.infoItemTitle}>Document Review</Text>
+                    <Text style={styles.infoItemText}>
+                      Our team verifies your documents
+                    </Text>
+                  </View>
                 </View>
+                <View style={styles.infoConnector} />
                 <View style={styles.infoItem}>
-                  <View style={styles.infoIcon}>
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={20}
-                      color={Colors.primaryGreen}
-                    />
+                  <View style={styles.infoStepNumber}>
+                    <Text style={styles.infoStepText}>2</Text>
                   </View>
-                  <Text style={styles.infoText}>
-                    You&apos;ll receive a notification when approved
-                  </Text>
+                  <View style={styles.infoItemContent}>
+                    <Text style={styles.infoItemTitle}>Get Notified</Text>
+                    <Text style={styles.infoItemText}>
+                      Receive notification when approved
+                    </Text>
+                  </View>
                 </View>
+                <View style={styles.infoConnector} />
                 <View style={styles.infoItem}>
-                  <View style={styles.infoIcon}>
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={20}
-                      color={Colors.primaryGreen}
-                    />
+                  <View style={styles.infoStepNumber}>
+                    <Text style={styles.infoStepText}>3</Text>
                   </View>
-                  <Text style={styles.infoText}>
-                    Start listing properties once verified
-                  </Text>
+                  <View style={styles.infoItemContent}>
+                    <Text style={styles.infoItemTitle}>Start Listing</Text>
+                    <Text style={styles.infoItemText}>
+                      List your properties and find tenants
+                    </Text>
+                  </View>
                 </View>
               </View>
-            </View>
+            </Animated.View>
 
             {/* Action Buttons */}
-            <View style={styles.actionsContainer}>
-              <Button
-                title="Go to Dashboard"
-                onPress={() => {
-                  // TODO: Navigate to owner dashboard (disabled until verified)
-                  console.log("Navigate to Owner Dashboard");
-                }}
-                variant="secondary"
-                disabled={true}
-                style={styles.dashboardButton}
-              />
+            <Animated.View
+              style={[styles.actionsContainer, { opacity: buttonsOpacity }]}
+            >
               <TouchableOpacity
-                onPress={handleContactSupport}
                 style={styles.supportButton}
-                activeOpacity={0.7}
+                onPress={handleContactSupport}
+                activeOpacity={0.8}
               >
+                <View style={styles.supportButtonIcon}>
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={20}
+                    color={Colors.primaryGreen}
+                  />
+                </View>
+                <Text style={styles.supportButtonText}>Contact Support</Text>
                 <Ionicons
-                  name="chatbubble-outline"
+                  name="chevron-forward"
                   size={18}
                   color={Colors.primaryGreen}
                 />
-                <Text style={styles.supportButtonText}>Contact Support</Text>
               </TouchableOpacity>
-            </View>
+
+              <TouchableOpacity
+                style={styles.logoutButton}
+                onPress={handleLogout}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="log-out-outline"
+                  size={18}
+                  color={Colors.textSecondary}
+                />
+                <Text style={styles.logoutButtonText}>Sign Out</Text>
+              </TouchableOpacity>
+            </Animated.View>
           </View>
         </ScrollView>
       </View>
@@ -164,23 +463,33 @@ const styles = StyleSheet.create({
   },
   circle1: {
     position: "absolute",
-    top: -100,
-    right: -100,
-    width: 300,
-    height: 300,
-    borderRadius: 150,
+    top: -120,
+    right: -80,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
     backgroundColor: Colors.primaryLight,
     opacity: 0.08,
   },
   circle2: {
     position: "absolute",
-    bottom: -150,
-    left: -150,
+    bottom: -180,
+    left: -120,
     width: 400,
     height: 400,
     borderRadius: 200,
     backgroundColor: Colors.primaryGreen,
     opacity: 0.05,
+  },
+  circle3: {
+    position: "absolute",
+    top: SCREEN_HEIGHT * 0.45,
+    right: -60,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: Colors.primaryGreen,
+    opacity: 0.03,
   },
   scrollContent: {
     flexGrow: 1,
@@ -191,152 +500,288 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "center",
-    paddingTop: Spacing["3xl"],
-    minHeight: 600,
   },
-  iconContainer: {
-    width: 160,
-    height: 160,
-    justifyContent: "center",
+  iconSection: {
     alignItems: "center",
-    marginBottom: Spacing["2xl"],
-    position: "relative",
+    justifyContent: "center",
+    width: 180,
+    height: 180,
+    marginBottom: Spacing.xl,
+  },
+  ring: {
+    position: "absolute",
+    borderRadius: 999,
+  },
+  ring1: {
+    width: 130,
+    height: 130,
+    borderWidth: 1.5,
+    borderColor: "rgba(34, 197, 94, 0.2)",
+  },
+  ring2: {
+    width: 155,
+    height: 155,
+    borderWidth: 1,
+    borderColor: "rgba(34, 197, 94, 0.12)",
+    borderStyle: "dashed",
+  },
+  ring3: {
+    width: 180,
+    height: 180,
+    borderWidth: 1,
+    borderColor: "rgba(34, 197, 94, 0.06)",
   },
   iconCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: "#F1F8F4",
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: Colors.surface,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 3,
-    borderColor: Colors.primaryGreen,
-    zIndex: 10,
+    shadowColor: Colors.primaryGreen,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 10,
   },
-  iconPulse1: {
-    position: "absolute",
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.1,
-    zIndex: 1,
+  iconInner: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "rgba(34, 197, 94, 0.2)",
   },
-  iconPulse2: {
-    position: "absolute",
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
-    zIndex: 0,
+  titleContainer: {
+    alignItems: "center",
+    marginBottom: Spacing.md,
   },
   title: {
     ...Typography.headlineMedium,
     fontSize: 28,
     fontWeight: "700",
     color: Colors.textPrimary,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.sm,
     textAlign: "center",
+    letterSpacing: -0.5,
+  },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(251, 191, 36, 0.1)",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: 20,
+    gap: Spacing.xs,
+    borderWidth: 1,
+    borderColor: "rgba(251, 191, 36, 0.3)",
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FBBF24",
+  },
+  statusText: {
+    ...Typography.labelMedium,
+    fontSize: 13,
+    color: "#B45309",
+    fontWeight: "600",
   },
   message: {
-    ...Typography.bodyLarge,
-    fontSize: 16,
+    ...Typography.bodyMedium,
+    fontSize: 15,
     color: Colors.textSecondary,
     textAlign: "center",
     lineHeight: 24,
-    marginBottom: Spacing["2xl"],
-    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing.xl,
+    paddingHorizontal: Spacing.md,
   },
   timeCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F1F8F4",
+    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.lg,
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
     width: "100%",
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.primaryGreen,
-    gap: Spacing.md,
+    borderWidth: 1,
+    borderColor: "rgba(34, 197, 94, 0.15)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  timeCardIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   timeCardContent: {
     flex: 1,
+    marginLeft: Spacing.md,
   },
   timeCardTitle: {
-    ...Typography.labelLarge,
-    fontSize: 14,
-    fontWeight: "700",
-    color: Colors.primaryGreen,
-    marginBottom: Spacing.xs,
+    ...Typography.caption,
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginBottom: 2,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   timeCardText: {
-    ...Typography.bodyMedium,
-    fontSize: 14,
-    color: Colors.textSecondary,
+    ...Typography.labelLarge,
+    fontSize: 18,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+  },
+  timeCardBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  timeCardBadgeText: {
+    ...Typography.caption,
+    fontSize: 11,
+    color: Colors.primaryGreen,
+    fontWeight: "600",
   },
   infoCard: {
     backgroundColor: Colors.surface,
     borderRadius: 20,
     padding: Spacing.xl,
     width: "100%",
-    marginBottom: Spacing["2xl"],
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 16,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+    marginBottom: Spacing.xl,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.03)",
+  },
+  infoCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.xl,
+    gap: Spacing.sm,
+  },
+  infoCardIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   infoCardTitle: {
-    ...Typography.headlineMedium,
-    fontSize: 18,
+    ...Typography.labelLarge,
+    fontSize: 17,
     fontWeight: "700",
     color: Colors.textPrimary,
-    marginBottom: Spacing.lg,
   },
   infoList: {
-    gap: Spacing.md,
+    gap: Spacing.xs,
   },
   infoItem: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: Spacing.md,
   },
-  infoIcon: {
-    marginTop: 2,
+  infoStepNumber: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Colors.primaryGreen,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  infoText: {
+  infoStepText: {
+    ...Typography.labelMedium,
+    fontSize: 13,
+    color: "#FFFFFF",
+    fontWeight: "700",
+  },
+  infoItemContent: {
     flex: 1,
-    ...Typography.bodyMedium,
+    paddingTop: 2,
+  },
+  infoItemTitle: {
+    ...Typography.labelMedium,
     fontSize: 15,
+    fontWeight: "600",
     color: Colors.textPrimary,
-    lineHeight: 22,
+    marginBottom: 2,
+  },
+  infoItemText: {
+    ...Typography.bodyMedium,
+    fontSize: 13,
+    color: Colors.textSecondary,
+    lineHeight: 18,
+  },
+  infoConnector: {
+    width: 2,
+    height: 16,
+    backgroundColor: "rgba(34, 197, 94, 0.2)",
+    marginLeft: 13,
+    borderRadius: 1,
   },
   actionsContainer: {
     width: "100%",
     gap: Spacing.md,
   },
-  dashboardButton: {
-    width: "100%",
-  },
   supportButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.surface,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: Colors.primaryGreen,
+    gap: Spacing.md,
+    shadowColor: Colors.primaryGreen,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  supportButtonIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  supportButtonText: {
+    flex: 1,
+    ...Typography.labelLarge,
+    fontSize: 16,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
+  },
+  logoutButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: Spacing.md,
     gap: Spacing.sm,
   },
-  supportButtonText: {
-    ...Typography.labelLarge,
-    fontSize: 15,
-    fontWeight: "600",
-    color: Colors.primaryGreen,
+  logoutButtonText: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    color: Colors.textSecondary,
+    fontWeight: "500",
   },
 });
