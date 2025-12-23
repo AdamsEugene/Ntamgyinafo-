@@ -273,7 +273,7 @@ export default function RoleSelectionScreen() {
   };
 
   const handleSubmitVerification = () => {
-    if (!idDocument || !selfie) {
+    if (!idDocument || !selfie || !ownerProfilePhoto) {
       return;
     }
     router.push("/(auth)/pending-verification");
@@ -859,13 +859,13 @@ export default function RoleSelectionScreen() {
                         color={Colors.primaryGreen}
                       />
                     </View>
-                    <View>
+                    <View style={styles.sectionTextContainer}>
                       <Text style={styles.sectionTitle}>
                         Upload ID Document{" "}
                         <Text style={styles.required}>*</Text>
                       </Text>
-                      <Text style={styles.sectionDescription}>
-                        Ghana Card or Voter ID for verification
+                      <Text style={styles.sectionDescription} numberOfLines={2}>
+                        Ghana Card or Voter ID
                       </Text>
                     </View>
                   </View>
@@ -929,13 +929,13 @@ export default function RoleSelectionScreen() {
                         color={Colors.primaryGreen}
                       />
                     </View>
-                    <View>
+                    <View style={styles.sectionTextContainer}>
                       <Text style={styles.sectionTitle}>
-                        Take Selfie for Verification{" "}
+                        Selfie for Verification{" "}
                         <Text style={styles.required}>*</Text>
                       </Text>
-                      <Text style={styles.sectionDescription}>
-                        Take a clear selfie for identity verification
+                      <Text style={styles.sectionDescription} numberOfLines={2}>
+                        Take a clear selfie
                       </Text>
                     </View>
                   </View>
@@ -999,12 +999,12 @@ export default function RoleSelectionScreen() {
                         color={Colors.primaryGreen}
                       />
                     </View>
-                    <View>
+                    <View style={styles.sectionTextContainer}>
                       <Text style={styles.sectionTitle}>
-                        Profile Photo (Optional)
+                        Profile Photo <Text style={styles.required}>*</Text>
                       </Text>
-                      <Text style={styles.sectionDescription}>
-                        Add a profile photo to help others recognize you
+                      <Text style={styles.sectionDescription} numberOfLines={2}>
+                        Help others recognize you
                       </Text>
                     </View>
                   </View>
@@ -1068,11 +1068,12 @@ export default function RoleSelectionScreen() {
                 <TouchableOpacity
                   style={[
                     styles.submitButton,
-                    (!idDocument || !selfie) && styles.submitButtonDisabled,
+                    (!idDocument || !selfie || !ownerProfilePhoto) &&
+                      styles.submitButtonDisabled,
                   ]}
                   onPress={handleSubmitVerification}
                   activeOpacity={0.9}
-                  disabled={!idDocument || !selfie}
+                  disabled={!idDocument || !selfie || !ownerProfilePhoto}
                 >
                   <Text style={styles.submitButtonText}>
                     Submit for Verification
@@ -1404,6 +1405,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: Spacing.md,
     marginBottom: Spacing.md,
+  },
+  sectionTextContainer: {
+    flex: 1,
   },
   sectionIconContainer: {
     width: 40,
