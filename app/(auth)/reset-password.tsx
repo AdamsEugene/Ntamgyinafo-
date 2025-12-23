@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -7,14 +7,18 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Animated,
+  Easing,
+  Dimensions,
+  TextInput,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
-import { Button } from "@/components/ui/Button";
-import { TextInput } from "@/components/ui/TextInput";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
@@ -24,6 +28,144 @@ export default function ResetPasswordScreen() {
   const [newPasswordError, setNewPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Animation values
+  const headerOpacity = useRef(new Animated.Value(0)).current;
+  const logoScale = useRef(new Animated.Value(0)).current;
+  const logoRotate = useRef(new Animated.Value(0)).current;
+  const titleOpacity = useRef(new Animated.Value(0)).current;
+  const titleTranslateY = useRef(new Animated.Value(20)).current;
+  const formOpacity = useRef(new Animated.Value(0)).current;
+  const formTranslateY = useRef(new Animated.Value(30)).current;
+  const ring1Scale = useRef(new Animated.Value(0)).current;
+  const ring2Scale = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    // Header fade in
+    Animated.timing(headerOpacity, {
+      toValue: 1,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
+
+    // Logo entrance
+    Animated.parallel([
+      Animated.spring(logoScale, {
+        toValue: 1,
+        tension: 40,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+      Animated.timing(logoRotate, {
+        toValue: 1,
+        duration: 600,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Rings entrance
+    Animated.stagger(80, [
+      Animated.spring(ring1Scale, {
+        toValue: 1,
+        tension: 30,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+      Animated.spring(ring2Scale, {
+        toValue: 1,
+        tension: 30,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Title entrance
+    Animated.sequence([
+      Animated.delay(200),
+      Animated.parallel([
+        Animated.timing(titleOpacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.spring(titleTranslateY, {
+          toValue: 0,
+          tension: 40,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+
+    // Form entrance
+    Animated.sequence([
+      Animated.delay(350),
+      Animated.parallel([
+        Animated.timing(formOpacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.spring(formTranslateY, {
+          toValue: 0,
+          tension: 40,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+
+    // Continuous pulse animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.08,
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    return () => {
+      headerOpacity.stopAnimation();
+      logoScale.stopAnimation();
+      logoRotate.stopAnimation();
+      titleOpacity.stopAnimation();
+      titleTranslateY.stopAnimation();
+      formOpacity.stopAnimation();
+      formTranslateY.stopAnimation();
+      ring1Scale.stopAnimation();
+      ring2Scale.stopAnimation();
+      pulseAnim.stopAnimation();
+    };
+  }, [
+    headerOpacity,
+    logoScale,
+    logoRotate,
+    titleOpacity,
+    titleTranslateY,
+    formOpacity,
+    formTranslateY,
+    ring1Scale,
+    ring2Scale,
+    pulseAnim,
+  ]);
+
+  const logoRotation = logoRotate.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["-180deg", "0deg"],
+  });
 
   const validatePassword = (password: string): boolean => {
     if (!password) {
@@ -88,7 +230,6 @@ export default function ResetPasswordScreen() {
 
     setIsLoading(true);
     try {
-      // TODO: Reset password with backend
       console.log("Resetting password:", { newPassword, confirmPassword });
       router.replace("/(auth)/login");
     } catch (error) {
@@ -97,6 +238,15 @@ export default function ResetPasswordScreen() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const isFormValid = () => {
+    return (
+      newPassword.trim().length >= 6 &&
+      confirmPassword === newPassword &&
+      !newPasswordError &&
+      !confirmPasswordError
+    );
   };
 
   return (
@@ -111,13 +261,21 @@ export default function ResetPasswordScreen() {
         <View style={styles.decorativeBackground}>
           <View style={styles.circle1} />
           <View style={styles.circle2} />
+          <View style={styles.circle3} />
         </View>
 
-        <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+        {/* Header */}
+        <Animated.View
+          style={[
+            styles.header,
+            { paddingTop: insets.top + Spacing.md, opacity: headerOpacity },
+          ]}
+        >
           <TouchableOpacity
             onPress={() => router.back()}
             style={styles.backButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            activeOpacity={0.8}
           >
             <View style={styles.backButtonCircle}>
               <Ionicons
@@ -127,7 +285,13 @@ export default function ResetPasswordScreen() {
               />
             </View>
           </TouchableOpacity>
-        </View>
+
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>New Password</Text>
+          </View>
+
+          <View style={styles.headerSpacer} />
+        </Animated.View>
 
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -135,65 +299,224 @@ export default function ResetPasswordScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.content}>
-            {/* Logo/Branding */}
-            <View style={styles.logoContainer}>
-              <View style={styles.logoCircle}>
-                <Ionicons
-                  name="key-outline"
-                  size={32}
-                  color={Colors.primaryGreen}
-                />
-              </View>
+            {/* Logo Section */}
+            <View style={styles.logoSection}>
+              {/* Animated Rings */}
+              <Animated.View
+                style={[
+                  styles.ring,
+                  styles.ring2,
+                  {
+                    transform: [{ scale: ring2Scale }, { scale: pulseAnim }],
+                  },
+                ]}
+              />
+              <Animated.View
+                style={[
+                  styles.ring,
+                  styles.ring1,
+                  {
+                    transform: [{ scale: ring1Scale }],
+                  },
+                ]}
+              />
+
+              {/* Logo */}
+              <Animated.View
+                style={[
+                  styles.logoCircle,
+                  {
+                    transform: [{ scale: logoScale }, { rotate: logoRotation }],
+                  },
+                ]}
+              >
+                <View style={styles.logoInner}>
+                  <Ionicons
+                    name="key-outline"
+                    size={28}
+                    color={Colors.primaryGreen}
+                  />
+                </View>
+              </Animated.View>
             </View>
 
             {/* Title Section */}
-            <View style={styles.titleSection}>
-              <Text style={styles.title}>New Password</Text>
+            <Animated.View
+              style={[
+                styles.titleSection,
+                {
+                  opacity: titleOpacity,
+                  transform: [{ translateY: titleTranslateY }],
+                },
+              ]}
+            >
+              <Text style={styles.title}>Create New Password</Text>
               <Text style={styles.subtitle}>
-                Create a new password for your account
+                Your new password must be different from previous passwords
               </Text>
-            </View>
+            </Animated.View>
 
             {/* Form Card */}
-            <View style={styles.formCard}>
-              <TextInput
-                label="New Password"
-                placeholder="Enter new password (min 6 characters)"
-                value={newPassword}
-                onChangeText={handleNewPasswordChange}
-                secureTextEntry={true}
-                showPasswordToggle={true}
-                error={newPasswordError}
-                leftIcon="lock-closed-outline"
-                autoFocus
-              />
+            <Animated.View
+              style={[
+                styles.formCard,
+                {
+                  opacity: formOpacity,
+                  transform: [{ translateY: formTranslateY }],
+                },
+              ]}
+            >
+              {/* New Password Input */}
+              <Text style={styles.inputLabel}>New Password</Text>
+              <View
+                style={[
+                  styles.inputContainer,
+                  newPasswordError ? styles.inputContainerError : null,
+                ]}
+              >
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={20}
+                  color={Colors.textSecondary}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter new password (min 6 characters)"
+                  placeholderTextColor={Colors.textSecondary}
+                  value={newPassword}
+                  onChangeText={handleNewPasswordChange}
+                  secureTextEntry={!showNewPassword}
+                  autoCapitalize="none"
+                  autoFocus
+                />
+                <TouchableOpacity
+                  onPress={() => setShowNewPassword(!showNewPassword)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons
+                    name={showNewPassword ? "eye-off-outline" : "eye-outline"}
+                    size={20}
+                    color={Colors.textSecondary}
+                  />
+                </TouchableOpacity>
+              </View>
+              {newPasswordError ? (
+                <Text style={styles.errorText}>{newPasswordError}</Text>
+              ) : null}
 
-              <TextInput
-                label="Confirm Password"
-                placeholder="Re-enter new password"
-                value={confirmPassword}
-                onChangeText={handleConfirmPasswordChange}
-                secureTextEntry={true}
-                showPasswordToggle={true}
-                error={confirmPasswordError}
-                leftIcon="lock-closed-outline"
-              />
+              {/* Confirm Password Input */}
+              <Text style={styles.inputLabel}>Confirm Password</Text>
+              <View
+                style={[
+                  styles.inputContainer,
+                  confirmPasswordError ? styles.inputContainerError : null,
+                ]}
+              >
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={20}
+                  color={Colors.textSecondary}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Re-enter new password"
+                  placeholderTextColor={Colors.textSecondary}
+                  value={confirmPassword}
+                  onChangeText={handleConfirmPasswordChange}
+                  secureTextEntry={!showConfirmPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons
+                    name={
+                      showConfirmPassword ? "eye-off-outline" : "eye-outline"
+                    }
+                    size={20}
+                    color={Colors.textSecondary}
+                  />
+                </TouchableOpacity>
+              </View>
+              {confirmPasswordError ? (
+                <Text style={styles.errorText}>{confirmPasswordError}</Text>
+              ) : null}
 
-              <Button
-                title="Reset Password"
+              {/* Password Requirements */}
+              <View style={styles.requirementsContainer}>
+                <View style={styles.requirementRow}>
+                  <Ionicons
+                    name={
+                      newPassword.length >= 6
+                        ? "checkmark-circle"
+                        : "ellipse-outline"
+                    }
+                    size={16}
+                    color={
+                      newPassword.length >= 6
+                        ? Colors.primaryGreen
+                        : Colors.textSecondary
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.requirementText,
+                      newPassword.length >= 6 && styles.requirementTextMet,
+                    ]}
+                  >
+                    At least 6 characters
+                  </Text>
+                </View>
+                <View style={styles.requirementRow}>
+                  <Ionicons
+                    name={
+                      confirmPassword === newPassword &&
+                      confirmPassword.length > 0
+                        ? "checkmark-circle"
+                        : "ellipse-outline"
+                    }
+                    size={16}
+                    color={
+                      confirmPassword === newPassword &&
+                      confirmPassword.length > 0
+                        ? Colors.primaryGreen
+                        : Colors.textSecondary
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.requirementText,
+                      confirmPassword === newPassword &&
+                        confirmPassword.length > 0 &&
+                        styles.requirementTextMet,
+                    ]}
+                  >
+                    Passwords match
+                  </Text>
+                </View>
+              </View>
+
+              {/* Submit Button */}
+              <TouchableOpacity
+                style={[
+                  styles.submitButton,
+                  (!isFormValid() || isLoading) && styles.submitButtonDisabled,
+                ]}
                 onPress={handleResetPassword}
-                variant="primary"
-                disabled={
-                  isLoading ||
-                  !newPassword.trim() ||
-                  !confirmPassword.trim() ||
-                  !!newPasswordError ||
-                  !!confirmPasswordError
-                }
-                loading={isLoading}
-                style={styles.submitButton}
-              />
-            </View>
+                activeOpacity={0.9}
+                disabled={!isFormValid() || isLoading}
+              >
+                <Text style={styles.submitButtonText}>
+                  {isLoading ? "Resetting..." : "Reset Password"}
+                </Text>
+                {!isLoading && (
+                  <View style={styles.buttonIcon}>
+                    <Ionicons name="checkmark" size={18} color="#FFFFFF" />
+                  </View>
+                )}
+              </TouchableOpacity>
+            </Animated.View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -216,55 +539,71 @@ const styles = StyleSheet.create({
   },
   circle1: {
     position: "absolute",
-    top: -100,
-    right: -100,
-    width: 300,
-    height: 300,
-    borderRadius: 150,
+    top: -120,
+    right: -80,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
     backgroundColor: Colors.primaryLight,
     opacity: 0.08,
   },
   circle2: {
     position: "absolute",
-    bottom: -150,
-    left: -150,
+    bottom: -180,
+    left: -120,
     width: 400,
     height: 400,
     borderRadius: 200,
     backgroundColor: Colors.primaryGreen,
     opacity: 0.05,
   },
+  circle3: {
+    position: "absolute",
+    top: SCREEN_HEIGHT * 0.45,
+    right: -60,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: Colors.primaryGreen,
+    opacity: 0.03,
+  },
   header: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.md,
-    zIndex: 1,
+    justifyContent: "space-between",
+    zIndex: 10,
   },
   backButton: {
-    width: 40,
-    height: 40,
     justifyContent: "center",
     alignItems: "center",
   },
   backButtonCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: Colors.surface,
     justifyContent: "center",
     alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  headerTitleContainer: {
+    flex: 1,
+    alignItems: "center",
+  },
+  headerTitle: {
+    ...Typography.labelLarge,
+    fontSize: 17,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+  },
+  headerSpacer: {
+    width: 44,
   },
   scrollContent: {
     flexGrow: 1,
@@ -277,38 +616,60 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     minHeight: 500,
   },
-  logoContainer: {
+  logoSection: {
     alignItems: "center",
+    justifyContent: "center",
     marginBottom: Spacing.xl,
+    width: 120,
+    height: 120,
+    alignSelf: "center",
+  },
+  ring: {
+    position: "absolute",
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  ring1: {
+    width: 100,
+    height: 100,
+    borderColor: "rgba(34, 197, 94, 0.15)",
+  },
+  ring2: {
+    width: 120,
+    height: 120,
+    borderColor: "rgba(34, 197, 94, 0.08)",
+    borderStyle: "dashed",
   },
   logoCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     backgroundColor: Colors.surface,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 2,
-    borderColor: Colors.primaryGreen,
-    ...Platform.select({
-      ios: {
-        shadowColor: Colors.primaryGreen,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
+    shadowColor: Colors.primaryGreen,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  logoInner: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "rgba(34, 197, 94, 0.08)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1.5,
+    borderColor: "rgba(34, 197, 94, 0.2)",
   },
   titleSection: {
-    marginBottom: Spacing["2xl"],
+    marginBottom: Spacing.xl,
     alignItems: "center",
   },
   title: {
     ...Typography.headlineMedium,
-    fontSize: 32,
+    fontSize: 26,
     fontWeight: "700",
     color: Colors.textPrimary,
     marginBottom: Spacing.sm,
@@ -317,30 +678,110 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     ...Typography.bodyMedium,
-    fontSize: 16,
+    fontSize: 14,
     color: Colors.textSecondary,
     textAlign: "center",
-    lineHeight: 24,
+    lineHeight: 20,
+    paddingHorizontal: Spacing.md,
   },
   formCard: {
     width: "100%",
     backgroundColor: Colors.surface,
     borderRadius: 24,
     padding: Spacing.xl,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 16,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.03)",
+  },
+  inputLabel: {
+    ...Typography.labelMedium,
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.sm,
+    marginTop: Spacing.md,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.background,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    paddingHorizontal: Spacing.md,
+    gap: Spacing.sm,
+  },
+  inputContainerError: {
+    borderColor: "#EF4444",
+  },
+  input: {
+    flex: 1,
+    ...Typography.bodyMedium,
+    fontSize: 15,
+    color: Colors.textPrimary,
+    paddingVertical: Spacing.md,
+  },
+  errorText: {
+    ...Typography.caption,
+    fontSize: 12,
+    color: "#EF4444",
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.xs,
+  },
+  requirementsContainer: {
+    marginTop: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  requirementRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  requirementText: {
+    ...Typography.caption,
+    fontSize: 13,
+    color: Colors.textSecondary,
+  },
+  requirementTextMet: {
+    color: Colors.primaryGreen,
   },
   submitButton: {
-    width: "100%",
-    marginTop: Spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.primaryGreen,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: 16,
+    gap: Spacing.md,
+    shadowColor: Colors.primaryGreen,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
+    marginTop: Spacing.xl,
+  },
+  submitButtonDisabled: {
+    backgroundColor: Colors.divider,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  submitButtonText: {
+    ...Typography.labelLarge,
+    fontSize: 17,
+    fontWeight: "600",
+    color: "#FFFFFF",
+    letterSpacing: 0.3,
+  },
+  buttonIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

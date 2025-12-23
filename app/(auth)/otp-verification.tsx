@@ -6,14 +6,18 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Animated,
+  Easing,
+  Dimensions,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
-import { Button } from "@/components/ui/Button";
 import { OTPInput } from "@/components/ui/OTPInput";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function OTPVerificationScreen() {
   const router = useRouter();
@@ -29,12 +33,160 @@ export default function OTPVerificationScreen() {
   const [resendCooldown, setResendCooldown] = useState(30);
   const [canResend, setCanResend] = useState(false);
   const cooldownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const hasNavigatedRef = useRef(false); // Prevent multiple navigations
+  const hasNavigatedRef = useRef(false);
 
   const phoneNumber = params.phone || "";
 
+  // Animation values
+  const headerOpacity = useRef(new Animated.Value(0)).current;
+  const logoScale = useRef(new Animated.Value(0)).current;
+  const logoRotate = useRef(new Animated.Value(0)).current;
+  const titleOpacity = useRef(new Animated.Value(0)).current;
+  const titleTranslateY = useRef(new Animated.Value(20)).current;
+  const formOpacity = useRef(new Animated.Value(0)).current;
+  const formTranslateY = useRef(new Animated.Value(30)).current;
+  const footerOpacity = useRef(new Animated.Value(0)).current;
+  const ring1Scale = useRef(new Animated.Value(0)).current;
+  const ring2Scale = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
   useEffect(() => {
-    // Start cooldown timer on mount
+    // Header fade in
+    Animated.timing(headerOpacity, {
+      toValue: 1,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
+
+    // Logo entrance
+    Animated.parallel([
+      Animated.spring(logoScale, {
+        toValue: 1,
+        tension: 40,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+      Animated.timing(logoRotate, {
+        toValue: 1,
+        duration: 600,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Rings entrance
+    Animated.stagger(80, [
+      Animated.spring(ring1Scale, {
+        toValue: 1,
+        tension: 30,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+      Animated.spring(ring2Scale, {
+        toValue: 1,
+        tension: 30,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Title entrance
+    Animated.sequence([
+      Animated.delay(200),
+      Animated.parallel([
+        Animated.timing(titleOpacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.spring(titleTranslateY, {
+          toValue: 0,
+          tension: 40,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+
+    // Form entrance
+    Animated.sequence([
+      Animated.delay(350),
+      Animated.parallel([
+        Animated.timing(formOpacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.spring(formTranslateY, {
+          toValue: 0,
+          tension: 40,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+
+    // Footer entrance
+    Animated.sequence([
+      Animated.delay(500),
+      Animated.timing(footerOpacity, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Continuous pulse animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.08,
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    return () => {
+      headerOpacity.stopAnimation();
+      logoScale.stopAnimation();
+      logoRotate.stopAnimation();
+      titleOpacity.stopAnimation();
+      titleTranslateY.stopAnimation();
+      formOpacity.stopAnimation();
+      formTranslateY.stopAnimation();
+      footerOpacity.stopAnimation();
+      ring1Scale.stopAnimation();
+      ring2Scale.stopAnimation();
+      pulseAnim.stopAnimation();
+    };
+  }, [
+    headerOpacity,
+    logoScale,
+    logoRotate,
+    titleOpacity,
+    titleTranslateY,
+    formOpacity,
+    formTranslateY,
+    footerOpacity,
+    ring1Scale,
+    ring2Scale,
+    pulseAnim,
+  ]);
+
+  const logoRotation = logoRotate.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["-180deg", "0deg"],
+  });
+
+  useEffect(() => {
     if (resendCooldown > 0) {
       cooldownTimerRef.current = setInterval(() => {
         setResendCooldown((prev) => {
@@ -71,7 +223,6 @@ export default function OTPVerificationScreen() {
   };
 
   const handleOTPComplete = async (code: string) => {
-    // Prevent multiple navigations
     if (hasNavigatedRef.current || isLoading || code.length !== 4) {
       return;
     }
@@ -80,9 +231,7 @@ export default function OTPVerificationScreen() {
     setIsLoading(true);
     setError("");
     try {
-      // TODO: Verify OTP with backend
       console.log("Verifying OTP:", code);
-      // Navigate to role selection after verification
       router.replace({
         pathname: "/(auth)/role-selection",
         params: {
@@ -100,7 +249,6 @@ export default function OTPVerificationScreen() {
   };
 
   const handleVerify = async () => {
-    // Prevent multiple navigations
     if (hasNavigatedRef.current || isLoading) {
       return;
     }
@@ -114,7 +262,6 @@ export default function OTPVerificationScreen() {
     setIsLoading(true);
     setError("");
     try {
-      // TODO: Verify OTP with backend
       console.log("Verifying OTP:", otp);
       router.replace({
         pathname: "/(auth)/role-selection",
@@ -139,7 +286,6 @@ export default function OTPVerificationScreen() {
     setCanResend(false);
     setOtp("");
     setError("");
-    // TODO: Resend OTP
     console.log("Resending OTP to:", phoneNumber);
   };
 
@@ -163,13 +309,21 @@ export default function OTPVerificationScreen() {
         <View style={styles.decorativeBackground}>
           <View style={styles.circle1} />
           <View style={styles.circle2} />
+          <View style={styles.circle3} />
         </View>
 
-        <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+        {/* Header */}
+        <Animated.View
+          style={[
+            styles.header,
+            { paddingTop: insets.top + Spacing.md, opacity: headerOpacity },
+          ]}
+        >
           <TouchableOpacity
             onPress={() => router.back()}
             style={styles.backButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            activeOpacity={0.8}
           >
             <View style={styles.backButtonCircle}>
               <Ionicons
@@ -179,31 +333,83 @@ export default function OTPVerificationScreen() {
               />
             </View>
           </TouchableOpacity>
-        </View>
+
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>Verification</Text>
+          </View>
+
+          <View style={styles.headerSpacer} />
+        </Animated.View>
 
         <View style={styles.scrollContent}>
           <View style={styles.content}>
-            {/* Logo/Branding */}
-            <View style={styles.logoContainer}>
-              <View style={styles.logoCircle}>
-                <Ionicons
-                  name="shield-checkmark"
-                  size={40}
-                  color={Colors.primaryGreen}
-                />
-              </View>
+            {/* Logo Section */}
+            <View style={styles.logoSection}>
+              {/* Animated Rings */}
+              <Animated.View
+                style={[
+                  styles.ring,
+                  styles.ring2,
+                  {
+                    transform: [{ scale: ring2Scale }, { scale: pulseAnim }],
+                  },
+                ]}
+              />
+              <Animated.View
+                style={[
+                  styles.ring,
+                  styles.ring1,
+                  {
+                    transform: [{ scale: ring1Scale }],
+                  },
+                ]}
+              />
+
+              {/* Logo */}
+              <Animated.View
+                style={[
+                  styles.logoCircle,
+                  {
+                    transform: [{ scale: logoScale }, { rotate: logoRotation }],
+                  },
+                ]}
+              >
+                <View style={styles.logoInner}>
+                  <Ionicons
+                    name="shield-checkmark"
+                    size={32}
+                    color={Colors.primaryGreen}
+                  />
+                </View>
+              </Animated.View>
             </View>
 
             {/* Title Section */}
-            <View style={styles.titleSection}>
+            <Animated.View
+              style={[
+                styles.titleSection,
+                {
+                  opacity: titleOpacity,
+                  transform: [{ translateY: titleTranslateY }],
+                },
+              ]}
+            >
               <Text style={styles.title}>Verify Phone</Text>
               <Text style={styles.subtitle}>
                 We sent a code to {formatPhoneNumber(phoneNumber)}
               </Text>
-            </View>
+            </Animated.View>
 
             {/* Form Card */}
-            <View style={styles.formCard}>
+            <Animated.View
+              style={[
+                styles.formCard,
+                {
+                  opacity: formOpacity,
+                  transform: [{ translateY: formTranslateY }],
+                },
+              ]}
+            >
               {/* OTP Input */}
               <View style={styles.otpContainer}>
                 <OTPInput
@@ -216,7 +422,7 @@ export default function OTPVerificationScreen() {
               </View>
 
               {/* Error Message */}
-              {error && <Text style={styles.errorText}>{error}</Text>}
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
               {/* Resend Section */}
               <View style={styles.resendContainer}>
@@ -235,24 +441,42 @@ export default function OTPVerificationScreen() {
               </View>
 
               {/* Verify Button */}
-              <Button
-                title="Verify"
+              <TouchableOpacity
+                style={[
+                  styles.verifyButton,
+                  (otp.length !== 4 || isLoading) &&
+                    styles.verifyButtonDisabled,
+                ]}
                 onPress={handleVerify}
-                variant="primary"
-                loading={isLoading}
-                disabled={otp.length !== 4}
-                style={styles.verifyButton}
-              />
-            </View>
+                activeOpacity={0.9}
+                disabled={otp.length !== 4 || isLoading}
+              >
+                <Text style={styles.verifyButtonText}>
+                  {isLoading ? "Verifying..." : "Verify"}
+                </Text>
+                {!isLoading && (
+                  <View style={styles.buttonIcon}>
+                    <Ionicons name="checkmark" size={18} color="#FFFFFF" />
+                  </View>
+                )}
+              </TouchableOpacity>
+            </Animated.View>
 
             {/* Change Phone Number */}
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.changePhoneContainer}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.changePhoneText}>Change Phone Number</Text>
-            </TouchableOpacity>
+            <Animated.View style={{ opacity: footerOpacity }}>
+              <TouchableOpacity
+                onPress={() => router.back()}
+                style={styles.changePhoneContainer}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="pencil-outline"
+                  size={16}
+                  color={Colors.primaryGreen}
+                />
+                <Text style={styles.changePhoneText}>Change Phone Number</Text>
+              </TouchableOpacity>
+            </Animated.View>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -275,29 +499,40 @@ const styles = StyleSheet.create({
   },
   circle1: {
     position: "absolute",
-    top: -100,
-    right: -100,
-    width: 300,
-    height: 300,
-    borderRadius: 150,
+    top: -120,
+    right: -80,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
     backgroundColor: Colors.primaryLight,
     opacity: 0.08,
   },
   circle2: {
     position: "absolute",
-    bottom: -150,
-    left: -150,
+    bottom: -180,
+    left: -120,
     width: 400,
     height: 400,
     borderRadius: 200,
     backgroundColor: Colors.primaryGreen,
     opacity: 0.05,
   },
+  circle3: {
+    position: "absolute",
+    top: SCREEN_HEIGHT * 0.45,
+    right: -60,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: Colors.primaryGreen,
+    opacity: 0.03,
+  },
   header: {
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.md,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     zIndex: 10,
   },
   backButton: {
@@ -305,23 +540,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   backButtonCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: Colors.surface,
     justifyContent: "center",
     alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  headerTitleContainer: {
+    flex: 1,
+    alignItems: "center",
+  },
+  headerTitle: {
+    ...Typography.labelLarge,
+    fontSize: 17,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+  },
+  headerSpacer: {
+    width: 44,
   },
   scrollContent: {
     flex: 1,
@@ -334,79 +576,97 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
   },
-  logoContainer: {
+  logoSection: {
     alignItems: "center",
-    marginBottom: Spacing["2xl"],
+    justifyContent: "center",
+    marginBottom: Spacing.xl,
+    width: 130,
+    height: 130,
+  },
+  ring: {
+    position: "absolute",
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  ring1: {
+    width: 110,
+    height: 110,
+    borderColor: "rgba(34, 197, 94, 0.15)",
+  },
+  ring2: {
+    width: 130,
+    height: 130,
+    borderColor: "rgba(34, 197, 94, 0.08)",
+    borderStyle: "dashed",
   },
   logoCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: Colors.surface,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 3,
-    borderColor: Colors.primaryGreen,
-    ...Platform.select({
-      ios: {
-        shadowColor: Colors.primaryGreen,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
+    shadowColor: Colors.primaryGreen,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  logoInner: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "rgba(34, 197, 94, 0.08)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1.5,
+    borderColor: "rgba(34, 197, 94, 0.2)",
   },
   titleSection: {
-    marginBottom: Spacing["2xl"],
+    marginBottom: Spacing.xl,
     alignItems: "center",
     width: "100%",
   },
   title: {
     ...Typography.headlineMedium,
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "700",
     color: Colors.textPrimary,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
     textAlign: "center",
     letterSpacing: -0.5,
   },
   subtitle: {
     ...Typography.bodyMedium,
-    fontSize: 16,
+    fontSize: 15,
     color: Colors.textSecondary,
     textAlign: "center",
-    lineHeight: 24,
+    lineHeight: 22,
   },
   formCard: {
     width: "100%",
     backgroundColor: Colors.surface,
     borderRadius: 24,
     padding: Spacing.xl,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 16,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.03)",
   },
   otpContainer: {
     width: "100%",
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: Spacing.sm,
     marginBottom: Spacing.lg,
   },
   errorText: {
     ...Typography.caption,
-    color: "#D32F2F",
+    color: "#EF4444",
     marginBottom: Spacing.md,
     textAlign: "center",
+    fontSize: 13,
   },
   resendContainer: {
     flexDirection: "row",
@@ -432,13 +692,46 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   verifyButton: {
-    width: "100%",
-    marginTop: Spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.primaryGreen,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: 16,
+    gap: Spacing.md,
+    shadowColor: Colors.primaryGreen,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  verifyButtonDisabled: {
+    backgroundColor: Colors.divider,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  verifyButtonText: {
+    ...Typography.labelLarge,
+    fontSize: 17,
+    fontWeight: "600",
+    color: "#FFFFFF",
+    letterSpacing: 0.3,
+  },
+  buttonIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   changePhoneContainer: {
-    marginTop: Spacing["2xl"],
-    paddingTop: Spacing.xl,
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: Spacing.xl,
     paddingVertical: Spacing.md,
+    gap: Spacing.sm,
   },
   changePhoneText: {
     ...Typography.labelMedium,
