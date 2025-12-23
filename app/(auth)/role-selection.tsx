@@ -12,11 +12,13 @@ import {
   Animated,
   Easing,
   Dimensions,
+  Alert,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import { LocationSelector } from "@/components/LocationSelector";
 
@@ -63,6 +65,76 @@ export default function RoleSelectionScreen() {
   const [ownerProfilePhoto, setOwnerProfilePhoto] = useState<string | null>(
     null
   );
+
+  // Image picker functions
+  const pickImageFromCamera = async (
+    setImage: (uri: string | null) => void
+  ) => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission Required",
+        "Camera permission is needed to take photos."
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const pickImageFromGallery = async (
+    setImage: (uri: string | null) => void
+  ) => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission Required",
+        "Photo library permission is needed to select photos."
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const pickDocument = async (setImage: (uri: string | null) => void) => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission Required",
+        "Photo library permission is needed to select documents."
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: false,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setImage(result.assets[0].uri);
+    }
+  };
 
   // Animation values
   const headerOpacity = useRef(new Animated.Value(0)).current;
@@ -646,10 +718,9 @@ export default function RoleSelectionScreen() {
                             />
                             <TouchableOpacity
                               style={styles.photoChangeButton}
-                              onPress={() => {
-                                console.log("Change photo");
-                                setProfilePhoto(null);
-                              }}
+                              onPress={() =>
+                                pickImageFromGallery(setProfilePhoto)
+                              }
                             >
                               <Ionicons
                                 name="camera"
@@ -673,10 +744,9 @@ export default function RoleSelectionScreen() {
                         ) : (
                           <TouchableOpacity
                             style={styles.photoUploadArea}
-                            onPress={() => {
-                              console.log("Open image picker");
-                              setProfilePhoto("demo-photo");
-                            }}
+                            onPress={() =>
+                              pickImageFromGallery(setProfilePhoto)
+                            }
                             activeOpacity={0.7}
                           >
                             <View style={styles.photoUploadIconContainer}>
@@ -708,40 +778,42 @@ export default function RoleSelectionScreen() {
                         <View style={styles.photoOptionsContainer}>
                           <TouchableOpacity
                             style={styles.photoOptionButton}
-                            onPress={() => {
-                              console.log("Open camera");
-                              setProfilePhoto("demo-photo");
-                            }}
+                            onPress={() => pickImageFromCamera(setProfilePhoto)}
                             activeOpacity={0.7}
                           >
                             <View style={styles.photoOptionIcon}>
                               <Ionicons
                                 name="camera"
-                                size={24}
+                                size={22}
                                 color={Colors.primaryGreen}
                               />
                             </View>
-                            <Text style={styles.photoOptionText}>
-                              Take Photo
+                            <Text
+                              style={styles.photoOptionText}
+                              numberOfLines={1}
+                            >
+                              Camera
                             </Text>
                           </TouchableOpacity>
                           <TouchableOpacity
                             style={styles.photoOptionButton}
-                            onPress={() => {
-                              console.log("Open gallery");
-                              setProfilePhoto("demo-photo");
-                            }}
+                            onPress={() =>
+                              pickImageFromGallery(setProfilePhoto)
+                            }
                             activeOpacity={0.7}
                           >
                             <View style={styles.photoOptionIcon}>
                               <Ionicons
                                 name="images-outline"
-                                size={24}
+                                size={22}
                                 color={Colors.primaryGreen}
                               />
                             </View>
-                            <Text style={styles.photoOptionText}>
-                              Choose from Gallery
+                            <Text
+                              style={styles.photoOptionText}
+                              numberOfLines={1}
+                            >
+                              Gallery
                             </Text>
                           </TouchableOpacity>
                         </View>
@@ -802,10 +874,7 @@ export default function RoleSelectionScreen() {
                       styles.ownerUploadCard,
                       idDocument && styles.ownerUploadCardFilled,
                     ]}
-                    onPress={() => {
-                      console.log("Open document picker");
-                      setIdDocument("demo-id-document");
-                    }}
+                    onPress={() => pickDocument(setIdDocument)}
                     activeOpacity={0.7}
                   >
                     {idDocument ? (
@@ -875,10 +944,7 @@ export default function RoleSelectionScreen() {
                       styles.ownerUploadCard,
                       selfie && styles.ownerUploadCardFilled,
                     ]}
-                    onPress={() => {
-                      console.log("Open camera");
-                      setSelfie("demo-selfie");
-                    }}
+                    onPress={() => pickImageFromCamera(setSelfie)}
                     activeOpacity={0.7}
                   >
                     {selfie ? (
@@ -951,10 +1017,9 @@ export default function RoleSelectionScreen() {
                         />
                         <TouchableOpacity
                           style={styles.photoChangeButton}
-                          onPress={() => {
-                            console.log("Change photo");
-                            setOwnerProfilePhoto(null);
-                          }}
+                          onPress={() =>
+                            pickImageFromGallery(setOwnerProfilePhoto)
+                          }
                         >
                           <Ionicons name="camera" size={20} color="#FFFFFF" />
                         </TouchableOpacity>
@@ -974,10 +1039,9 @@ export default function RoleSelectionScreen() {
                     ) : (
                       <TouchableOpacity
                         style={styles.photoUploadArea}
-                        onPress={() => {
-                          console.log("Open image picker");
-                          setOwnerProfilePhoto("demo-photo");
-                        }}
+                        onPress={() =>
+                          pickImageFromGallery(setOwnerProfilePhoto)
+                        }
                         activeOpacity={0.7}
                       >
                         <View style={styles.photoUploadIconContainer}>
@@ -1551,7 +1615,7 @@ const styles = StyleSheet.create({
   },
   photoOptionsContainer: {
     flexDirection: "row",
-    gap: Spacing.md,
+    gap: Spacing.sm,
     marginBottom: Spacing.lg,
   },
   photoOptionButton: {
@@ -1559,17 +1623,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    padding: Spacing.md,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.sm,
     backgroundColor: Colors.background,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: Colors.divider,
-    gap: Spacing.sm,
+    gap: Spacing.xs,
+    minHeight: 52,
   },
   photoOptionIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: "rgba(34, 197, 94, 0.1)",
     justifyContent: "center",
     alignItems: "center",
@@ -1579,6 +1645,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: Colors.textPrimary,
+    flexShrink: 1,
   },
   photoTipsContainer: {
     backgroundColor: "rgba(34, 197, 94, 0.05)",
