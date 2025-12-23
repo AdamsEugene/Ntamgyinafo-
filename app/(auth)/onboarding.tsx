@@ -21,6 +21,7 @@ import Animated, {
   withRepeat,
   withSequence,
   Easing,
+  FadeIn,
 } from "react-native-reanimated";
 import { Colors, Typography, Spacing } from "@/constants/design";
 
@@ -200,6 +201,10 @@ export default function OnboardingScreen() {
     }
   };
 
+  const handleSkip = () => {
+    router.replace("/(auth)/welcome");
+  };
+
   const buttonStyle = useAnimatedStyle(() => ({
     transform: [{ scale: buttonScale.value }],
   }));
@@ -219,6 +224,27 @@ export default function OnboardingScreen() {
           <View style={styles.circle2} />
           <View style={styles.circle3} />
         </View>
+
+        {/* Floating Skip Button */}
+        <Animated.View
+          entering={FadeIn.delay(600).duration(400)}
+          style={[styles.skipButtonContainer, { top: insets.top + Spacing.lg }]}
+        >
+          <TouchableOpacity
+            onPress={handleSkip}
+            style={styles.skipButton}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.skipText}>Skip</Text>
+            <View style={styles.skipIconContainer}>
+              <Ionicons
+                name="chevron-forward"
+                size={14}
+                color={Colors.primaryGreen}
+              />
+            </View>
+          </TouchableOpacity>
+        </Animated.View>
 
         {/* Slides */}
         <ScrollView
@@ -345,6 +371,42 @@ const styles = StyleSheet.create({
     borderRadius: 75,
     backgroundColor: Colors.primaryGreen,
     opacity: 0.03,
+  },
+  skipButtonContainer: {
+    position: "absolute",
+    right: Spacing.lg,
+    zIndex: 100,
+  },
+  skipButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    paddingVertical: Spacing.sm,
+    paddingLeft: Spacing.md,
+    paddingRight: Spacing.sm,
+    borderRadius: 24,
+    gap: Spacing.xs,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "rgba(34, 197, 94, 0.15)",
+  },
+  skipText: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    color: Colors.textSecondary,
+    fontWeight: "500",
+  },
+  skipIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   slide: {
     width: SCREEN_WIDTH,
