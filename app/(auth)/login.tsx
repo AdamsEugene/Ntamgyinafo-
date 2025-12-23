@@ -10,13 +10,13 @@ import {
   Animated,
   Easing,
   Dimensions,
+  TextInput,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
-import { TextInput } from "@/components/ui/TextInput";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -28,6 +28,7 @@ export default function LoginScreen() {
   const [phoneError, setPhoneError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Animation values
   const headerOpacity = useRef(new Animated.Value(0)).current;
@@ -385,34 +386,75 @@ export default function LoginScreen() {
                 },
               ]}
             >
-              <TextInput
-                label="Phone Number"
-                placeholder="+233 XX XXX XXXX"
-                value={phone}
-                onChangeText={formatPhoneNumber}
-                keyboardType="phone-pad"
-                autoCapitalize="none"
-                error={phoneError}
-                maxLength={17}
-                leftIcon="call-outline"
-              />
+              {/* Phone Number Input */}
+              <Text style={styles.inputLabel}>Phone Number</Text>
+              <View
+                style={[
+                  styles.inputContainer,
+                  phoneError ? styles.inputContainerError : null,
+                ]}
+              >
+                <Ionicons
+                  name="call-outline"
+                  size={20}
+                  color={Colors.textSecondary}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="+233 XX XXX XXXX"
+                  placeholderTextColor={Colors.textSecondary}
+                  value={phone}
+                  onChangeText={formatPhoneNumber}
+                  keyboardType="phone-pad"
+                  autoCapitalize="none"
+                  maxLength={17}
+                />
+              </View>
+              {phoneError ? (
+                <Text style={styles.errorText}>{phoneError}</Text>
+              ) : null}
 
-              <TextInput
-                label="Password"
-                placeholder="Enter your password"
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  if (passwordError) {
-                    validatePassword(text);
-                  }
-                }}
-                secureTextEntry
-                showPasswordToggle
-                error={passwordError}
-                autoCapitalize="none"
-                leftIcon="lock-closed-outline"
-              />
+              {/* Password Input */}
+              <Text style={styles.inputLabel}>Password</Text>
+              <View
+                style={[
+                  styles.inputContainer,
+                  passwordError ? styles.inputContainerError : null,
+                ]}
+              >
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={20}
+                  color={Colors.textSecondary}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your password"
+                  placeholderTextColor={Colors.textSecondary}
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    if (passwordError) {
+                      validatePassword(text);
+                    }
+                  }}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                    size={20}
+                    color={Colors.textSecondary}
+                  />
+                </TouchableOpacity>
+              </View>
+              {passwordError ? (
+                <Text style={styles.errorText}>{passwordError}</Text>
+              ) : null}
 
               {/* Forgot Password */}
               <TouchableOpacity
@@ -688,6 +730,40 @@ const styles = StyleSheet.create({
     elevation: 4,
     borderWidth: 1,
     borderColor: "rgba(0, 0, 0, 0.03)",
+  },
+  inputLabel: {
+    ...Typography.labelMedium,
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.sm,
+    marginTop: Spacing.md,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.background,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    paddingHorizontal: Spacing.md,
+    gap: Spacing.sm,
+  },
+  inputContainerError: {
+    borderColor: "#EF4444",
+  },
+  input: {
+    flex: 1,
+    ...Typography.bodyMedium,
+    fontSize: 15,
+    color: Colors.textPrimary,
+    paddingVertical: Spacing.md,
+  },
+  errorText: {
+    ...Typography.caption,
+    fontSize: 12,
+    color: "#EF4444",
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.xs,
   },
   forgotPasswordContainer: {
     alignItems: "flex-end",
