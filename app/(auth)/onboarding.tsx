@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,13 +6,24 @@ import {
   ScrollView,
   Dimensions,
   TouchableOpacity,
+  Platform,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  withDelay,
+  withRepeat,
+  withSequence,
+  Easing,
+  FadeIn,
+} from "react-native-reanimated";
 import { Colors, Typography, Spacing } from "@/constants/design";
-import { Button } from "@/components/ui/Button";
 import { MapSlide } from "@/components/MapSlide";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -27,12 +38,14 @@ interface Slide {
 const slides: Slide[] = [
   {
     title: "Find Your Dream Property",
-    description: "Browse thousands of verified properties across Ghana",
+    description:
+      "Browse thousands of verified properties across Ghana with detailed listings and photos",
     iconName: "search-outline",
   },
   {
     title: "Visual Tours",
-    description: "Experience properties with 360° views and video tours",
+    description:
+      "Experience properties with immersive 360° views and professional video tours",
     iconName: "videocam-outline",
   },
   {
@@ -44,10 +57,107 @@ const slides: Slide[] = [
   },
   {
     title: "Direct Contact",
-    description: "Chat directly with property owners and schedule visits",
+    description:
+      "Chat directly with property owners and schedule visits at your convenience",
     iconName: "chatbubbles-outline",
   },
 ];
+
+// Animated icon component with floating effect
+const AnimatedIcon = ({
+  iconName,
+  isActive,
+}: {
+  iconName: keyof typeof Ionicons.glyphMap;
+  isActive: boolean;
+}) => {
+  const floatY = useSharedValue(0);
+  const scale = useSharedValue(1);
+  const rotate = useSharedValue(0);
+
+  useEffect(() => {
+    if (isActive) {
+      // Floating animation
+      floatY.value = withRepeat(
+        withSequence(
+          withTiming(-10, {
+            duration: 1500,
+            easing: Easing.inOut(Easing.ease),
+          }),
+          withTiming(0, { duration: 1500, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      );
+      // Subtle scale pulse
+      scale.value = withRepeat(
+        withSequence(
+          withTiming(1.05, { duration: 2000 }),
+          withTiming(1, { duration: 2000 })
+        ),
+        -1,
+        true
+      );
+      // Subtle rotation
+      rotate.value = withRepeat(
+        withSequence(
+          withTiming(3, { duration: 3000 }),
+          withTiming(-3, { duration: 3000 })
+        ),
+        -1,
+        true
+      );
+    }
+  }, [isActive, floatY, scale, rotate]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: floatY.value },
+      { scale: scale.value },
+      { rotate: `${rotate.value}deg` },
+    ],
+  }));
+
+  return (
+    <Animated.View style={[styles.iconWrapper, animatedStyle]}>
+      <View style={styles.iconGlow} />
+      <View style={styles.iconCircle}>
+        <Ionicons name={iconName} size={80} color={Colors.primaryGreen} />
+      </View>
+    </Animated.View>
+  );
+};
+
+// Animated page indicator
+const PageIndicator = ({
+  total,
+  current,
+}: {
+  total: number;
+  current: number;
+}) => {
+  return (
+    <View style={styles.pageIndicator}>
+      {Array.from({ length: total }).map((_, index) => {
+        const isActive = current === index;
+        return (
+          <Animated.View
+            key={index}
+            style={[
+              styles.dot,
+              {
+                width: isActive ? 32 : 10,
+                backgroundColor: isActive
+                  ? Colors.primaryGreen
+                  : "rgba(0, 0, 0, 0.15)",
+              },
+            ]}
+          />
+        );
+      })}
+    </View>
+  );
+};
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -55,14 +165,35 @@ export default function OnboardingScreen() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const insets = useSafeAreaInsets();
 
+  // Animation values
+  const buttonScale = useSharedValue(1);
+  const contentOpacity = useSharedValue(0);
+  const contentTranslateY = useSharedValue(30);
+
+  useEffect(() => {
+    contentOpacity.value = withDelay(300, withTiming(1, { duration: 600 }));
+    contentTranslateY.value = withDelay(
+      300,
+      withSpring(0, { damping: 12, stiffness: 100 })
+    );
+  }, [contentOpacity, contentTranslateY]);
+
   const handleScroll = (event: any) => {
     const slideIndex = Math.round(
       event.nativeEvent.contentOffset.x / SCREEN_WIDTH
     );
-    setCurrentSlide(slideIndex);
+    if (slideIndex !== currentSlide) {
+      setCurrentSlide(slideIndex);
+    }
   };
 
   const goToNext = () => {
+    // Button press animation
+    buttonScale.value = withSequence(
+      withTiming(0.95, { duration: 100 }),
+      withSpring(1, { damping: 10, stiffness: 200 })
+    );
+
     if (currentSlide < slides.length - 1) {
       scrollViewRef.current?.scrollTo({
         x: (currentSlide + 1) * SCREEN_WIDTH,
@@ -77,18 +208,14 @@ export default function OnboardingScreen() {
     router.replace("/(auth)/welcome");
   };
 
-  const renderPageIndicator = () => {
-    return (
-      <View style={styles.pageIndicator}>
-        {slides.map((_, index) => (
-          <View
-            key={index}
-            style={[styles.dot, currentSlide === index && styles.activeDot]}
-          />
-        ))}
-      </View>
-    );
-  };
+  const buttonStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: buttonScale.value }],
+  }));
+
+  const contentStyle = useAnimatedStyle(() => ({
+    opacity: contentOpacity.value,
+    transform: [{ translateY: contentTranslateY.value }],
+  }));
 
   return (
     <>
@@ -98,15 +225,37 @@ export default function OnboardingScreen() {
         <View style={styles.decorativeBackground}>
           <View style={styles.circle1} />
           <View style={styles.circle2} />
+          <View style={styles.circle3} />
         </View>
 
-        {/* Floating Skip Button */}
-        <TouchableOpacity
-          style={[styles.skipButton, { top: Spacing["2xl"] + insets.top }]}
-          onPress={handleSkip}
+        {/* Progress bar at top */}
+        <View style={[styles.progressBar, { top: insets.top + Spacing.md }]}>
+          <View
+            style={[
+              styles.progressFill,
+              { width: `${((currentSlide + 1) / slides.length) * 100}%` },
+            ]}
+          />
+        </View>
+
+        {/* Skip Button */}
+        <Animated.View
+          entering={FadeIn.delay(500).duration(400)}
+          style={[styles.skipButton, { top: insets.top + Spacing.xl + 10 }]}
         >
-          <Text style={styles.skipText}>Skip</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleSkip}
+            style={styles.skipButtonInner}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.skipText}>Skip</Text>
+            <Ionicons
+              name="arrow-forward"
+              size={16}
+              color={Colors.textSecondary}
+            />
+          </TouchableOpacity>
+        </Animated.View>
 
         {/* Slides */}
         <ScrollView
@@ -116,52 +265,88 @@ export default function OnboardingScreen() {
           showsHorizontalScrollIndicator={false}
           onScroll={handleScroll}
           scrollEventThrottle={16}
+          decelerationRate="fast"
         >
           {slides.map((slide, index) => (
             <View key={index} style={styles.slide}>
-              {slide.isMap ? (
-                // Map slide
-                <MapSlide title={slide.title} description={slide.description} />
-              ) : (
-                // Regular slide
-                <>
-                  <View style={styles.illustrationContainer}>
-                    {slide.iconName && (
-                      <Ionicons
-                        name={slide.iconName}
-                        size={120}
-                        color={Colors.primaryGreen}
-                      />
-                    )}
-                  </View>
-                  <Text style={styles.title}>{slide.title}</Text>
-                  <Text style={styles.description}>{slide.description}</Text>
-                </>
-              )}
+              <Animated.View style={[styles.slideContent, contentStyle]}>
+                {slide.isMap ? (
+                  <MapSlide
+                    title={slide.title}
+                    description={slide.description}
+                  />
+                ) : (
+                  <>
+                    {/* Illustration Container */}
+                    <View style={styles.illustrationContainer}>
+                      <View style={styles.illustrationBackground}>
+                        <View style={styles.illustrationRing1} />
+                        <View style={styles.illustrationRing2} />
+                        {slide.iconName && (
+                          <AnimatedIcon
+                            iconName={slide.iconName}
+                            isActive={currentSlide === index}
+                          />
+                        )}
+                      </View>
+                    </View>
+
+                    {/* Text Content */}
+                    <View style={styles.textContent}>
+                      <View style={styles.slideNumberBadge}>
+                        <Text style={styles.slideNumberText}>
+                          {index + 1} of {slides.length}
+                        </Text>
+                      </View>
+
+                      <Text style={styles.title}>{slide.title}</Text>
+
+                      <Text style={styles.description}>
+                        {slide.description}
+                      </Text>
+                    </View>
+                  </>
+                )}
+              </Animated.View>
             </View>
           ))}
         </ScrollView>
 
-        {/* Floating Page Indicator */}
-        <View
-          style={[styles.floatingIndicator, { bottom: 120 + insets.bottom }]}
-        >
-          {renderPageIndicator()}
-        </View>
-
-        {/* Floating Action Button */}
+        {/* Bottom Section */}
         <View
           style={[
-            styles.floatingButton,
-            { bottom: Spacing["2xl"] + insets.bottom },
+            styles.bottomSection,
+            { paddingBottom: insets.bottom + Spacing.lg },
           ]}
         >
-          <Button
-            title={currentSlide === slides.length - 1 ? "Get Started" : "Next"}
-            onPress={goToNext}
-            variant="primary"
-            style={styles.button}
-          />
+          {/* Page Indicator */}
+          <PageIndicator total={slides.length} current={currentSlide} />
+
+          {/* Next Button */}
+          <Animated.View style={[styles.buttonContainer, buttonStyle]}>
+            <TouchableOpacity
+              style={styles.nextButton}
+              onPress={goToNext}
+              activeOpacity={0.9}
+            >
+              <Text style={styles.nextButtonText}>
+                {currentSlide === slides.length - 1
+                  ? "Get Started"
+                  : "Continue"}
+              </Text>
+              <View style={styles.buttonIconContainer}>
+                <Ionicons
+                  name={
+                    currentSlide === slides.length - 1
+                      ? "checkmark"
+                      : "arrow-forward"
+                  }
+                  size={20}
+                  color={Colors.primaryGreen}
+                />
+              </View>
+            </TouchableOpacity>
+          </Animated.View>
         </View>
       </View>
     </>
@@ -201,84 +386,211 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primaryGreen,
     opacity: 0.05,
   },
+  circle3: {
+    position: "absolute",
+    top: SCREEN_HEIGHT * 0.4,
+    right: -50,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: Colors.primaryGreen,
+    opacity: 0.03,
+  },
+  progressBar: {
+    position: "absolute",
+    left: Spacing.xl,
+    right: Spacing.xl,
+    height: 4,
+    backgroundColor: "rgba(0, 0, 0, 0.08)",
+    borderRadius: 2,
+    zIndex: 10,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    backgroundColor: Colors.primaryGreen,
+    borderRadius: 2,
+  },
   skipButton: {
     position: "absolute",
-    right: Spacing.xl,
+    right: Spacing.lg,
     zIndex: 20,
-    padding: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    borderRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
+  },
+  skipButtonInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
   },
   skipText: {
-    ...Typography.labelLarge,
-    color: Colors.primaryGreen,
+    ...Typography.labelMedium,
+    fontSize: 14,
+    color: Colors.textSecondary,
   },
   slide: {
     width: SCREEN_WIDTH,
     height: SCREEN_HEIGHT,
+    paddingTop: SCREEN_HEIGHT * 0.12,
+  },
+  slideContent: {
+    flex: 1,
     alignItems: "center",
-    justifyContent: "center",
     paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing["3xl"],
-    position: "relative",
   },
   illustrationContainer: {
-    width: SCREEN_WIDTH * 0.6,
-    height: SCREEN_WIDTH * 0.6,
+    width: SCREEN_WIDTH * 0.7,
+    height: SCREEN_WIDTH * 0.7,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: Spacing["2xl"],
+    marginBottom: Spacing.xl,
+  },
+  illustrationBackground: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+  illustrationRing1: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    borderRadius: SCREEN_WIDTH * 0.35,
+    borderWidth: 1,
+    borderColor: "rgba(34, 197, 94, 0.1)",
+  },
+  illustrationRing2: {
+    position: "absolute",
+    width: "80%",
+    height: "80%",
+    borderRadius: SCREEN_WIDTH * 0.28,
+    borderWidth: 1,
+    borderColor: "rgba(34, 197, 94, 0.15)",
+    borderStyle: "dashed",
+  },
+  iconWrapper: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  iconGlow: {
+    position: "absolute",
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
+  },
+  iconCircle: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: Colors.surface,
+    justifyContent: "center",
+    alignItems: "center",
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.primaryGreen,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.15,
+        shadowRadius: 20,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  textContent: {
+    alignItems: "center",
+    paddingHorizontal: Spacing.md,
+  },
+  slideNumberBadge: {
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    borderRadius: 20,
+    marginBottom: Spacing.lg,
+  },
+  slideNumberText: {
+    ...Typography.caption,
+    fontSize: 12,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
+    textTransform: "uppercase",
+    letterSpacing: 1,
   },
   title: {
     ...Typography.headlineLarge,
+    fontSize: 28,
+    fontWeight: "700",
     color: Colors.textPrimary,
     textAlign: "center",
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
+    lineHeight: 36,
   },
   description: {
     ...Typography.bodyMedium,
+    fontSize: 16,
     color: Colors.textSecondary,
     textAlign: "center",
-    paddingHorizontal: Spacing.xl,
+    lineHeight: 26,
+    maxWidth: 320,
   },
-  floatingIndicator: {
+  bottomSection: {
     position: "absolute",
+    bottom: 0,
     left: 0,
     right: 0,
-    zIndex: 20,
-    alignItems: "center",
-    justifyContent: "center",
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.lg,
+    backgroundColor: "transparent",
   },
   pageIndicator: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    marginBottom: Spacing.xl,
+    gap: Spacing.sm,
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.divider,
-    marginHorizontal: Spacing.xs,
+    height: 10,
+    borderRadius: 5,
   },
-  activeDot: {
-    width: 24,
-    backgroundColor: Colors.primaryGreen,
-  },
-  floatingButton: {
-    position: "absolute",
-    bottom: Spacing["2xl"],
-    left: Spacing.xl,
-    right: Spacing.xl,
-    zIndex: 20,
-  },
-  button: {
+  buttonContainer: {
     width: "100%",
+  },
+  nextButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.primaryGreen,
+    paddingVertical: Spacing.md + 4,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: 16,
+    gap: Spacing.md,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.primaryGreen,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  nextButtonText: {
+    ...Typography.labelLarge,
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  buttonIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
