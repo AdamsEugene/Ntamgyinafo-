@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
   },
   mapInstructions: {
     position: "absolute",
-    bottom: Spacing.md,
+    bottom: Spacing.lg,
     left: Spacing.md,
     right: Spacing.md,
     flexDirection: "row",
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    paddingBottom: Spacing.md,
+    paddingBottom: Spacing["3xl"],
   },
   locationItem: {
     flexDirection: "row",
