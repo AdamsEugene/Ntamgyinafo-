@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -7,14 +7,18 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Animated,
+  Easing,
+  Dimensions,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
-import { Button } from "@/components/ui/Button";
 import { TextInput } from "@/components/ui/TextInput";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -25,8 +29,169 @@ export default function LoginScreen() {
   const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Animation values
+  const headerOpacity = useRef(new Animated.Value(0)).current;
+  const logoScale = useRef(new Animated.Value(0)).current;
+  const logoRotate = useRef(new Animated.Value(0)).current;
+  const titleOpacity = useRef(new Animated.Value(0)).current;
+  const titleTranslateY = useRef(new Animated.Value(20)).current;
+  const formOpacity = useRef(new Animated.Value(0)).current;
+  const formTranslateY = useRef(new Animated.Value(30)).current;
+  const footerOpacity = useRef(new Animated.Value(0)).current;
+  const demoOpacity = useRef(new Animated.Value(0)).current;
+  const ring1Scale = useRef(new Animated.Value(0)).current;
+  const ring2Scale = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    // Header fade in
+    Animated.timing(headerOpacity, {
+      toValue: 1,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
+
+    // Logo entrance
+    Animated.parallel([
+      Animated.spring(logoScale, {
+        toValue: 1,
+        tension: 40,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+      Animated.timing(logoRotate, {
+        toValue: 1,
+        duration: 600,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Rings entrance
+    Animated.stagger(80, [
+      Animated.spring(ring1Scale, {
+        toValue: 1,
+        tension: 30,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+      Animated.spring(ring2Scale, {
+        toValue: 1,
+        tension: 30,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Title entrance
+    Animated.sequence([
+      Animated.delay(200),
+      Animated.parallel([
+        Animated.timing(titleOpacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.spring(titleTranslateY, {
+          toValue: 0,
+          tension: 40,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+
+    // Form entrance
+    Animated.sequence([
+      Animated.delay(350),
+      Animated.parallel([
+        Animated.timing(formOpacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.spring(formTranslateY, {
+          toValue: 0,
+          tension: 40,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+
+    // Footer entrance
+    Animated.sequence([
+      Animated.delay(500),
+      Animated.timing(footerOpacity, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Demo buttons entrance
+    Animated.sequence([
+      Animated.delay(650),
+      Animated.timing(demoOpacity, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Continuous pulse animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.08,
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    return () => {
+      headerOpacity.stopAnimation();
+      logoScale.stopAnimation();
+      logoRotate.stopAnimation();
+      titleOpacity.stopAnimation();
+      titleTranslateY.stopAnimation();
+      formOpacity.stopAnimation();
+      formTranslateY.stopAnimation();
+      footerOpacity.stopAnimation();
+      demoOpacity.stopAnimation();
+      ring1Scale.stopAnimation();
+      ring2Scale.stopAnimation();
+      pulseAnim.stopAnimation();
+    };
+  }, [
+    headerOpacity,
+    logoScale,
+    logoRotate,
+    titleOpacity,
+    titleTranslateY,
+    formOpacity,
+    formTranslateY,
+    footerOpacity,
+    demoOpacity,
+    ring1Scale,
+    ring2Scale,
+    pulseAnim,
+  ]);
+
+  const logoRotation = logoRotate.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["-180deg", "0deg"],
+  });
+
   const validatePhone = (phoneNumber: string): boolean => {
-    // Ghana phone format: +233 XX XXX XXXX or 0XX XXX XXXX
     const ghanaPhoneRegex = /^(\+233|0)[2-9]\d{8}$/;
     const cleaned = phoneNumber.replace(/\s+/g, "");
 
@@ -69,10 +234,8 @@ export default function LoginScreen() {
 
     setIsLoading(true);
     try {
-      // TODO: Implement login logic
       const formattedPhone = phone.replace(/\s+/g, "");
       console.log("Login:", { phone: formattedPhone, password });
-      // Navigate to home after successful login
       router.replace("/(tabs)");
     } catch (error) {
       console.error("Login error:", error);
@@ -82,10 +245,8 @@ export default function LoginScreen() {
   };
 
   const formatPhoneNumber = (text: string) => {
-    // Remove all non-digits
     const cleaned = text.replace(/\D/g, "");
 
-    // Format as +233 XX XXX XXXX
     let formatted = cleaned;
     if (cleaned.startsWith("233")) {
       formatted = "+" + cleaned;
@@ -95,7 +256,6 @@ export default function LoginScreen() {
       formatted = "+233" + cleaned;
     }
 
-    // Add spacing: +233 XX XXX XXXX
     if (formatted.length > 4) {
       formatted = formatted.substring(0, 4) + " " + formatted.substring(4);
     }
@@ -124,13 +284,21 @@ export default function LoginScreen() {
         <View style={styles.decorativeBackground}>
           <View style={styles.circle1} />
           <View style={styles.circle2} />
+          <View style={styles.circle3} />
         </View>
 
-        <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+        {/* Header */}
+        <Animated.View
+          style={[
+            styles.header,
+            { paddingTop: insets.top + Spacing.md, opacity: headerOpacity },
+          ]}
+        >
           <TouchableOpacity
             onPress={() => router.back()}
             style={styles.backButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            activeOpacity={0.8}
           >
             <View style={styles.backButtonCircle}>
               <Ionicons
@@ -140,7 +308,13 @@ export default function LoginScreen() {
               />
             </View>
           </TouchableOpacity>
-        </View>
+
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>Sign In</Text>
+          </View>
+
+          <View style={styles.headerSpacer} />
+        </Animated.View>
 
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -148,23 +322,69 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.content}>
-            {/* Logo/Branding */}
-            <View style={styles.logoContainer}>
-              <View style={styles.logoCircle}>
-                <Ionicons name="home" size={32} color={Colors.primaryGreen} />
-              </View>
+            {/* Logo Section */}
+            <View style={styles.logoSection}>
+              {/* Animated Rings */}
+              <Animated.View
+                style={[
+                  styles.ring,
+                  styles.ring2,
+                  {
+                    transform: [{ scale: ring2Scale }, { scale: pulseAnim }],
+                  },
+                ]}
+              />
+              <Animated.View
+                style={[
+                  styles.ring,
+                  styles.ring1,
+                  {
+                    transform: [{ scale: ring1Scale }],
+                  },
+                ]}
+              />
+
+              {/* Logo */}
+              <Animated.View
+                style={[
+                  styles.logoCircle,
+                  {
+                    transform: [{ scale: logoScale }, { rotate: logoRotation }],
+                  },
+                ]}
+              >
+                <View style={styles.logoInner}>
+                  <Ionicons name="home" size={28} color={Colors.primaryGreen} />
+                </View>
+              </Animated.View>
             </View>
 
             {/* Title Section */}
-            <View style={styles.titleSection}>
+            <Animated.View
+              style={[
+                styles.titleSection,
+                {
+                  opacity: titleOpacity,
+                  transform: [{ translateY: titleTranslateY }],
+                },
+              ]}
+            >
               <Text style={styles.title}>Welcome Back</Text>
               <Text style={styles.subtitle}>
                 Sign in to continue your journey
               </Text>
-            </View>
+            </Animated.View>
 
             {/* Form Card */}
-            <View style={styles.formCard}>
+            <Animated.View
+              style={[
+                styles.formCard,
+                {
+                  opacity: formOpacity,
+                  transform: [{ translateY: formTranslateY }],
+                },
+              ]}
+            >
               <TextInput
                 label="Phone Number"
                 placeholder="+233 XX XXX XXXX"
@@ -173,7 +393,7 @@ export default function LoginScreen() {
                 keyboardType="phone-pad"
                 autoCapitalize="none"
                 error={phoneError}
-                maxLength={17} // +233 XX XXX XXXX
+                maxLength={17}
                 leftIcon="call-outline"
               />
 
@@ -198,22 +418,37 @@ export default function LoginScreen() {
               <TouchableOpacity
                 onPress={() => router.push("/(auth)/forgot-password")}
                 style={styles.forgotPasswordContainer}
+                activeOpacity={0.7}
               >
                 <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
               </TouchableOpacity>
 
               {/* Sign In Button */}
-              <Button
-                title="Sign In"
-                onPress={handleLogin}
-                variant="primary"
-                loading={isLoading}
+              <TouchableOpacity
                 style={styles.signInButton}
-              />
-            </View>
+                onPress={handleLogin}
+                activeOpacity={0.9}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <Text style={styles.signInButtonText}>Signing in...</Text>
+                ) : (
+                  <>
+                    <Text style={styles.signInButtonText}>Sign In</Text>
+                    <View style={styles.buttonIcon}>
+                      <Ionicons
+                        name="arrow-forward"
+                        size={18}
+                        color="#FFFFFF"
+                      />
+                    </View>
+                  </>
+                )}
+              </TouchableOpacity>
+            </Animated.View>
 
             {/* Footer */}
-            <View style={styles.footer}>
+            <Animated.View style={[styles.footer, { opacity: footerOpacity }]}>
               <Text style={styles.footerText}>
                 Don&apos;t have an account?{" "}
               </Text>
@@ -223,42 +458,57 @@ export default function LoginScreen() {
               >
                 <Text style={styles.registerLink}>Register</Text>
               </TouchableOpacity>
-            </View>
+            </Animated.View>
 
             {/* Demo Buttons */}
-            <View style={styles.demoSection}>
-              <Text style={styles.demoTitle}>Quick Demo Access</Text>
+            <Animated.View
+              style={[styles.demoSection, { opacity: demoOpacity }]}
+            >
+              <View style={styles.demoHeader}>
+                <View style={styles.demoLine} />
+                <Text style={styles.demoTitle}>Quick Demo Access</Text>
+                <View style={styles.demoLine} />
+              </View>
+
               <View style={styles.demoButtons}>
                 <TouchableOpacity
                   style={styles.demoBuyerButton}
                   onPress={() => router.replace("/(tabs)")}
                   activeOpacity={0.8}
                 >
-                  <Ionicons
-                    name="search"
-                    size={18}
-                    color={Colors.primaryGreen}
-                  />
+                  <View style={styles.demoIconContainer}>
+                    <Ionicons
+                      name="search"
+                      size={18}
+                      color={Colors.primaryGreen}
+                    />
+                  </View>
                   <Text style={styles.demoBuyerText}>Buyer</Text>
                 </TouchableOpacity>
+
                 <TouchableOpacity
                   style={styles.demoOwnerButton}
                   onPress={() => router.replace("/(owner-tabs)")}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="home" size={18} color="#FFFFFF" />
+                  <View style={styles.demoIconContainerFilled}>
+                    <Ionicons name="home" size={18} color="#FFFFFF" />
+                  </View>
                   <Text style={styles.demoOwnerText}>Owner</Text>
                 </TouchableOpacity>
+
                 <TouchableOpacity
                   style={styles.demoAdminButton}
                   onPress={() => router.replace("/(admin-tabs)")}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="shield" size={18} color="#FFFFFF" />
+                  <View style={styles.demoIconContainerAdmin}>
+                    <Ionicons name="shield" size={18} color="#FFFFFF" />
+                  </View>
                   <Text style={styles.demoAdminText}>Admin</Text>
                 </TouchableOpacity>
               </View>
-            </View>
+            </Animated.View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -281,29 +531,40 @@ const styles = StyleSheet.create({
   },
   circle1: {
     position: "absolute",
-    top: -100,
-    right: -100,
-    width: 300,
-    height: 300,
-    borderRadius: 150,
+    top: -120,
+    right: -80,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
     backgroundColor: Colors.primaryLight,
     opacity: 0.08,
   },
   circle2: {
     position: "absolute",
-    bottom: -150,
-    left: -150,
+    bottom: -180,
+    left: -120,
     width: 400,
     height: 400,
     borderRadius: 200,
     backgroundColor: Colors.primaryGreen,
     opacity: 0.05,
   },
+  circle3: {
+    position: "absolute",
+    top: SCREEN_HEIGHT * 0.45,
+    right: -60,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: Colors.primaryGreen,
+    opacity: 0.03,
+  },
   header: {
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.md,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     zIndex: 10,
   },
   backButton: {
@@ -311,23 +572,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   backButtonCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: Colors.surface,
     justifyContent: "center",
     alignItems: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  headerTitleContainer: {
+    flex: 1,
+    alignItems: "center",
+  },
+  headerTitle: {
+    ...Typography.labelLarge,
+    fontSize: 17,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+  },
+  headerSpacer: {
+    width: 44,
   },
   scrollContent: {
     flexGrow: 1,
@@ -339,73 +607,91 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     minHeight: 500,
-    paddingTop: Spacing["2xl"],
+    paddingTop: Spacing.lg,
   },
-  logoContainer: {
+  logoSection: {
     alignItems: "center",
-    marginBottom: Spacing["2xl"],
+    justifyContent: "center",
+    marginBottom: Spacing.xl,
+    width: 120,
+    height: 120,
+    alignSelf: "center",
+  },
+  ring: {
+    position: "absolute",
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  ring1: {
+    width: 100,
+    height: 100,
+    borderColor: "rgba(34, 197, 94, 0.15)",
+  },
+  ring2: {
+    width: 120,
+    height: 120,
+    borderColor: "rgba(34, 197, 94, 0.08)",
+    borderStyle: "dashed",
   },
   logoCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     backgroundColor: Colors.surface,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 2,
-    borderColor: Colors.primaryGreen,
-    ...Platform.select({
-      ios: {
-        shadowColor: Colors.primaryGreen,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
+    shadowColor: Colors.primaryGreen,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  logoInner: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "rgba(34, 197, 94, 0.08)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1.5,
+    borderColor: "rgba(34, 197, 94, 0.2)",
   },
   titleSection: {
-    marginBottom: Spacing["3xl"],
+    marginBottom: Spacing.xl,
     alignItems: "center",
   },
   title: {
     ...Typography.headlineMedium,
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "700",
     color: Colors.textPrimary,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
     textAlign: "center",
     letterSpacing: -0.5,
   },
   subtitle: {
     ...Typography.bodyMedium,
-    fontSize: 16,
+    fontSize: 15,
     color: Colors.textSecondary,
     textAlign: "center",
-    lineHeight: 24,
+    lineHeight: 22,
   },
   formCard: {
     width: "100%",
     backgroundColor: Colors.surface,
     borderRadius: 24,
     padding: Spacing.xl,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 16,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.03)",
   },
   forgotPasswordContainer: {
     alignItems: "flex-end",
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
     marginTop: Spacing.sm,
   },
   forgotPasswordText: {
@@ -415,15 +701,42 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   signInButton: {
-    width: "100%",
-    marginTop: Spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.primaryGreen,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: 16,
+    gap: Spacing.md,
+    shadowColor: Colors.primaryGreen,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
+    marginTop: Spacing.sm,
+  },
+  signInButtonText: {
+    ...Typography.labelLarge,
+    fontSize: 17,
+    fontWeight: "600",
+    color: "#FFFFFF",
+    letterSpacing: 0.3,
+  },
+  buttonIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   footer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: Spacing["2xl"],
-    paddingTop: Spacing.xl,
+    marginTop: Spacing.xl,
+    paddingTop: Spacing.lg,
   },
   footerText: {
     ...Typography.bodyMedium,
@@ -436,70 +749,111 @@ const styles = StyleSheet.create({
     color: Colors.primaryGreen,
     fontWeight: "700",
   },
-  // Demo Section
   demoSection: {
-    marginTop: Spacing["2xl"],
-    paddingTop: Spacing.xl,
-    borderTopWidth: 1,
-    borderTopColor: Colors.divider,
+    marginTop: Spacing.xl,
+    paddingTop: Spacing.lg,
     alignItems: "center",
+  },
+  demoHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  demoLine: {
+    width: 40,
+    height: 1,
+    backgroundColor: Colors.divider,
   },
   demoTitle: {
     ...Typography.caption,
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.textSecondary,
-    marginBottom: Spacing.md,
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 1.5,
   },
   demoButtons: {
     flexDirection: "row",
     gap: Spacing.md,
   },
   demoBuyerButton: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: Spacing.sm,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.primaryGreen,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: "rgba(34, 197, 94, 0.25)",
     backgroundColor: Colors.surface,
+    minWidth: 80,
+  },
+  demoIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   demoBuyerText: {
-    ...Typography.labelMedium,
-    fontSize: 14,
+    ...Typography.caption,
+    fontSize: 12,
     fontWeight: "600",
     color: Colors.primaryGreen,
   },
   demoOwnerButton: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: Spacing.sm,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
-    borderRadius: 12,
+    borderRadius: 16,
     backgroundColor: Colors.primaryGreen,
+    minWidth: 80,
+    shadowColor: Colors.primaryGreen,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  demoIconContainerFilled: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   demoOwnerText: {
-    ...Typography.labelMedium,
-    fontSize: 14,
+    ...Typography.caption,
+    fontSize: 12,
     fontWeight: "600",
     color: "#FFFFFF",
   },
   demoAdminButton: {
-    flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: Spacing.sm,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
-    borderRadius: 12,
+    borderRadius: 16,
     backgroundColor: "#8B5CF6",
+    minWidth: 80,
+    shadowColor: "#8B5CF6",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  demoIconContainerAdmin: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   demoAdminText: {
-    ...Typography.labelMedium,
-    fontSize: 14,
+    ...Typography.caption,
+    fontSize: 12,
     fontWeight: "600",
     color: "#FFFFFF",
   },
