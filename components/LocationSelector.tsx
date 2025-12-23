@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   TextInput,
   Platform,
+  ScrollView,
 } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
@@ -49,13 +50,13 @@ const calculateRegion = (): Region => {
   const minLng = Math.min(...longitudes);
   const maxLng = Math.max(...longitudes);
 
-  const latDelta = (maxLat - minLat) * 1.5; // Add padding
+  const latDelta = (maxLat - minLat) * 1.5;
   const lngDelta = (maxLng - minLng) * 1.5;
 
   return {
     latitude: (minLat + maxLat) / 2,
     longitude: (minLng + maxLng) / 2,
-    latitudeDelta: Math.max(latDelta, 2), // Minimum delta for better view
+    latitudeDelta: Math.max(latDelta, 2),
     longitudeDelta: Math.max(lngDelta, 2),
   };
 };
@@ -103,7 +104,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
         <View style={styles.searchContainer}>
           <Ionicons
             name="search-outline"
-            size={20}
+            size={18}
             color={Colors.textSecondary}
             style={styles.searchIcon}
           />
@@ -114,14 +115,27 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
             onChangeText={setSearchQuery}
             placeholderTextColor={Colors.textSecondary}
           />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setSearchQuery("")}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons
+                name="close-circle"
+                size={18}
+                color={Colors.textSecondary}
+              />
+            </TouchableOpacity>
+          )}
         </View>
         <TouchableOpacity
           style={[styles.mapButton, showMap && styles.mapButtonActive]}
           onPress={() => setShowMap(!showMap)}
+          activeOpacity={0.8}
         >
           <Ionicons
-            name="map-outline"
-            size={20}
+            name={showMap ? "list-outline" : "map-outline"}
+            size={18}
             color={showMap ? "#FFFFFF" : Colors.primaryGreen}
           />
           <Text
@@ -130,14 +144,28 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
               showMap && styles.mapButtonTextActive,
             ]}
           >
-            Map
+            {showMap ? "List" : "Map"}
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* Select All */}
       <View style={styles.selectAllContainer}>
-        <TouchableOpacity onPress={selectAll}>
+        <TouchableOpacity
+          onPress={selectAll}
+          style={styles.selectAllButton}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name={
+              selectedLocations.length === filteredLocations.length &&
+              filteredLocations.length > 0
+                ? "checkbox"
+                : "square-outline"
+            }
+            size={18}
+            color={Colors.primaryGreen}
+          />
           <Text style={styles.selectAllText}>
             {selectedLocations.length === filteredLocations.length &&
             filteredLocations.length > 0
@@ -145,9 +173,10 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
               : "Select All"}
           </Text>
         </TouchableOpacity>
-        <Text style={styles.selectedCount}>
-          {selectedLocations.length} selected
-        </Text>
+        <View style={styles.selectedBadge}>
+          <Text style={styles.selectedCount}>{selectedLocations.length}</Text>
+          <Text style={styles.selectedLabel}>selected</Text>
+        </View>
       </View>
 
       {/* Map View */}
@@ -163,7 +192,6 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
             showsTraffic={false}
             mapType="standard"
             onMapReady={() => {
-              // Fit map to show all markers
               mapRef.current?.fitToCoordinates(
                 filteredLocationsData.map((loc) => ({
                   latitude: loc.latitude,
@@ -200,6 +228,11 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
           </MapView>
           {/* Map Instructions Overlay */}
           <View style={styles.mapInstructions}>
+            <Ionicons
+              name="finger-print-outline"
+              size={16}
+              color={Colors.primaryGreen}
+            />
             <Text style={styles.mapInstructionsText}>
               Tap markers to select locations
             </Text>
@@ -209,55 +242,79 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
 
       {/* Location List */}
       {!showMap && (
-        <View style={styles.list}>
+        <ScrollView
+          style={styles.listScrollView}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={true}
+          nestedScrollEnabled={true}
+          keyboardShouldPersistTaps="handled"
+        >
           {filteredLocations.length === 0 ? (
             <View style={styles.emptyContainer}>
+              <View style={styles.emptyIconContainer}>
+                <Ionicons
+                  name="location-outline"
+                  size={48}
+                  color={Colors.textSecondary}
+                />
+              </View>
               <Text style={styles.emptyText}>No locations found</Text>
+              <Text style={styles.emptySubtext}>
+                Try searching for a different city
+              </Text>
             </View>
           ) : (
-            filteredLocations.map((item) => (
-              <TouchableOpacity
-                key={item}
-                style={[
-                  styles.locationItem,
-                  selectedLocations.includes(item) &&
-                    styles.locationItemSelected,
-                ]}
-                onPress={() => toggleLocation(item)}
-              >
-                <Ionicons
-                  name={
-                    selectedLocations.includes(item)
-                      ? "location"
-                      : "location-outline"
-                  }
-                  size={20}
-                  color={
-                    selectedLocations.includes(item)
-                      ? Colors.primaryGreen
-                      : Colors.textSecondary
-                  }
-                />
-                <Text
+            filteredLocations.map((item, index) => {
+              const isSelected = selectedLocations.includes(item);
+              return (
+                <TouchableOpacity
+                  key={item}
                   style={[
-                    styles.locationText,
-                    selectedLocations.includes(item) &&
-                      styles.locationTextSelected,
+                    styles.locationItem,
+                    isSelected && styles.locationItemSelected,
+                    index === filteredLocations.length - 1 &&
+                      styles.locationItemLast,
                   ]}
+                  onPress={() => toggleLocation(item)}
+                  activeOpacity={0.7}
                 >
-                  {item}
-                </Text>
-                {selectedLocations.includes(item) && (
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={24}
-                    color={Colors.primaryGreen}
-                  />
-                )}
-              </TouchableOpacity>
-            ))
+                  <View
+                    style={[
+                      styles.locationIconContainer,
+                      isSelected && styles.locationIconContainerSelected,
+                    ]}
+                  >
+                    <Ionicons
+                      name={isSelected ? "location" : "location-outline"}
+                      size={18}
+                      color={
+                        isSelected ? Colors.primaryGreen : Colors.textSecondary
+                      }
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.locationText,
+                      isSelected && styles.locationTextSelected,
+                    ]}
+                  >
+                    {item}
+                  </Text>
+                  <View
+                    style={[
+                      styles.checkbox,
+                      isSelected && styles.checkboxSelected,
+                    ]}
+                  >
+                    {isSelected && (
+                      <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                    )}
+                  </View>
+                </TouchableOpacity>
+              );
+            })
           )}
-        </View>
+        </ScrollView>
       )}
     </View>
   );
@@ -265,23 +322,24 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     width: "100%",
   },
   header: {
     flexDirection: "row",
-    gap: Spacing.md,
-    marginBottom: Spacing.lg,
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   searchContainer: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    borderWidth: 1.5,
+    backgroundColor: Colors.background,
+    borderRadius: 14,
+    borderWidth: 1,
     borderColor: Colors.divider,
     paddingHorizontal: Spacing.md,
-    minHeight: 48,
+    minHeight: 44,
   },
   searchIcon: {
     marginRight: Spacing.sm,
@@ -289,8 +347,9 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     ...Typography.bodyMedium,
-    fontSize: 16,
+    fontSize: 14,
     color: Colors.textPrimary,
+    paddingVertical: Platform.OS === "ios" ? Spacing.sm : 0,
     ...Platform.select({
       android: {
         includeFontPadding: false,
@@ -301,20 +360,22 @@ const styles = StyleSheet.create({
   mapButton: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderRadius: 12,
-    borderWidth: 2,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: 14,
+    borderWidth: 1.5,
     borderColor: Colors.primaryGreen,
     backgroundColor: Colors.surface,
     gap: Spacing.xs,
+    minHeight: 44,
   },
   mapButtonActive: {
     backgroundColor: Colors.primaryGreen,
+    borderColor: Colors.primaryGreen,
   },
   mapButtonText: {
     ...Typography.labelMedium,
-    fontSize: 14,
+    fontSize: 13,
     color: Colors.primaryGreen,
     fontWeight: "600",
   },
@@ -326,35 +387,45 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.xs,
+  },
+  selectAllButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
   },
   selectAllText: {
     ...Typography.labelMedium,
-    fontSize: 14,
+    fontSize: 13,
     color: Colors.primaryGreen,
     fontWeight: "600",
   },
+  selectedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
   selectedCount: {
-    ...Typography.bodyMedium,
-    fontSize: 14,
+    ...Typography.labelMedium,
+    fontSize: 13,
+    color: Colors.primaryGreen,
+    fontWeight: "700",
+  },
+  selectedLabel: {
+    ...Typography.caption,
+    fontSize: 12,
     color: Colors.textSecondary,
   },
   mapContainer: {
-    height: 400,
+    flex: 1,
     borderRadius: 16,
     overflow: "hidden",
-    marginBottom: Spacing.lg,
     width: "100%",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+    minHeight: 300,
   },
   map: {
     width: "100%",
@@ -365,37 +436,36 @@ const styles = StyleSheet.create({
     bottom: Spacing.md,
     left: Spacing.md,
     right: Spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: "rgba(255, 255, 255, 0.95)",
-    padding: Spacing.md,
+    padding: Spacing.sm,
     borderRadius: 12,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+    gap: Spacing.xs,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
   },
   mapInstructionsText: {
-    ...Typography.bodyMedium,
+    ...Typography.caption,
     fontSize: 12,
     color: Colors.textSecondary,
-    textAlign: "center",
   },
-  list: {
-    maxHeight: 400,
-    overflow: "hidden",
+  listScrollView: {
+    flex: 1,
+  },
+  listContent: {
+    paddingBottom: Spacing.md,
   },
   locationItem: {
     flexDirection: "row",
     alignItems: "center",
     padding: Spacing.md,
-    borderRadius: 12,
-    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    backgroundColor: Colors.background,
     marginBottom: Spacing.sm,
     borderWidth: 1.5,
     borderColor: Colors.divider,
@@ -403,25 +473,69 @@ const styles = StyleSheet.create({
   },
   locationItemSelected: {
     borderColor: Colors.primaryGreen,
-    backgroundColor: "#F1F8F4",
+    backgroundColor: "rgba(34, 197, 94, 0.05)",
+  },
+  locationItemLast: {
+    marginBottom: 0,
+  },
+  locationIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(0, 0, 0, 0.03)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  locationIconContainerSelected: {
+    backgroundColor: "rgba(34, 197, 94, 0.1)",
   },
   locationText: {
     flex: 1,
     ...Typography.bodyMedium,
-    fontSize: 16,
+    fontSize: 15,
     color: Colors.textPrimary,
   },
   locationTextSelected: {
     color: Colors.primaryGreen,
     fontWeight: "600",
   },
-  emptyContainer: {
-    padding: Spacing["2xl"],
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.divider,
+    backgroundColor: Colors.surface,
+    justifyContent: "center",
     alignItems: "center",
   },
+  checkboxSelected: {
+    backgroundColor: Colors.primaryGreen,
+    borderColor: Colors.primaryGreen,
+  },
+  emptyContainer: {
+    paddingVertical: Spacing["3xl"],
+    alignItems: "center",
+  },
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "rgba(0, 0, 0, 0.03)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
   emptyText: {
-    ...Typography.bodyMedium,
+    ...Typography.labelLarge,
     fontSize: 16,
+    color: Colors.textPrimary,
+    fontWeight: "600",
+    marginBottom: Spacing.xs,
+  },
+  emptySubtext: {
+    ...Typography.bodyMedium,
+    fontSize: 13,
     color: Colors.textSecondary,
   },
 });

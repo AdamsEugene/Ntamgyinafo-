@@ -401,6 +401,16 @@ export default function RoleSelectionScreen() {
                           onLocationsChange={setSelectedLocations}
                         />
                       </View>
+                      <View style={styles.locationHint}>
+                        <Ionicons
+                          name="information-circle-outline"
+                          size={14}
+                          color={Colors.textSecondary}
+                        />
+                        <Text style={styles.locationHintText}>
+                          Scroll to see more locations
+                        </Text>
+                      </View>
                     </View>
                   )}
 
@@ -1258,10 +1268,22 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   locationSelectorContainer: {
-    height: 450,
+    height: 380,
     width: "100%",
     borderRadius: 16,
     overflow: "hidden",
+  },
+  locationHint: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: Spacing.md,
+    gap: Spacing.xs,
+  },
+  locationHintText: {
+    ...Typography.caption,
+    fontSize: 12,
+    color: Colors.textSecondary,
   },
   propertyTypesGrid: {
     flexDirection: "row",
