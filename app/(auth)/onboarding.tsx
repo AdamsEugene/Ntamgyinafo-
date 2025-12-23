@@ -21,18 +21,15 @@ import Animated, {
   withRepeat,
   withSequence,
   Easing,
-  FadeIn,
 } from "react-native-reanimated";
 import { Colors, Typography, Spacing } from "@/constants/design";
-import { MapSlide } from "@/components/MapSlide";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 interface Slide {
   title: string;
   description: string;
-  iconName?: keyof typeof Ionicons.glyphMap;
-  isMap?: boolean;
+  iconName: keyof typeof Ionicons.glyphMap;
 }
 
 const slides: Slide[] = [
@@ -53,7 +50,6 @@ const slides: Slide[] = [
     description:
       "See precise locations with GPS coordinates on interactive maps",
     iconName: "location-outline",
-    isMap: true,
   },
   {
     title: "Direct Contact",
@@ -204,10 +200,6 @@ export default function OnboardingScreen() {
     }
   };
 
-  const handleSkip = () => {
-    router.replace("/(auth)/welcome");
-  };
-
   const buttonStyle = useAnimatedStyle(() => ({
     transform: [{ scale: buttonScale.value }],
   }));
@@ -228,35 +220,6 @@ export default function OnboardingScreen() {
           <View style={styles.circle3} />
         </View>
 
-        {/* Progress bar at top */}
-        <View style={[styles.progressBar, { top: insets.top + Spacing.md }]}>
-          <View
-            style={[
-              styles.progressFill,
-              { width: `${((currentSlide + 1) / slides.length) * 100}%` },
-            ]}
-          />
-        </View>
-
-        {/* Skip Button */}
-        <Animated.View
-          entering={FadeIn.delay(500).duration(400)}
-          style={[styles.skipButton, { top: insets.top + Spacing.xl + 10 }]}
-        >
-          <TouchableOpacity
-            onPress={handleSkip}
-            style={styles.skipButtonInner}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.skipText}>Skip</Text>
-            <Ionicons
-              name="arrow-forward"
-              size={16}
-              color={Colors.textSecondary}
-            />
-          </TouchableOpacity>
-        </Animated.View>
-
         {/* Slides */}
         <ScrollView
           ref={scrollViewRef}
@@ -270,43 +233,30 @@ export default function OnboardingScreen() {
           {slides.map((slide, index) => (
             <View key={index} style={styles.slide}>
               <Animated.View style={[styles.slideContent, contentStyle]}>
-                {slide.isMap ? (
-                  <MapSlide
-                    title={slide.title}
-                    description={slide.description}
-                  />
-                ) : (
-                  <>
-                    {/* Illustration Container */}
-                    <View style={styles.illustrationContainer}>
-                      <View style={styles.illustrationBackground}>
-                        <View style={styles.illustrationRing1} />
-                        <View style={styles.illustrationRing2} />
-                        {slide.iconName && (
-                          <AnimatedIcon
-                            iconName={slide.iconName}
-                            isActive={currentSlide === index}
-                          />
-                        )}
-                      </View>
-                    </View>
+                {/* Illustration Container */}
+                <View style={styles.illustrationContainer}>
+                  <View style={styles.illustrationBackground}>
+                    <View style={styles.illustrationRing1} />
+                    <View style={styles.illustrationRing2} />
+                    <AnimatedIcon
+                      iconName={slide.iconName}
+                      isActive={currentSlide === index}
+                    />
+                  </View>
+                </View>
 
-                    {/* Text Content */}
-                    <View style={styles.textContent}>
-                      <View style={styles.slideNumberBadge}>
-                        <Text style={styles.slideNumberText}>
-                          {index + 1} of {slides.length}
-                        </Text>
-                      </View>
+                {/* Text Content */}
+                <View style={styles.textContent}>
+                  <View style={styles.slideNumberBadge}>
+                    <Text style={styles.slideNumberText}>
+                      {index + 1} of {slides.length}
+                    </Text>
+                  </View>
 
-                      <Text style={styles.title}>{slide.title}</Text>
+                  <Text style={styles.title}>{slide.title}</Text>
 
-                      <Text style={styles.description}>
-                        {slide.description}
-                      </Text>
-                    </View>
-                  </>
-                )}
+                  <Text style={styles.description}>{slide.description}</Text>
+                </View>
               </Animated.View>
             </View>
           ))}
@@ -395,38 +345,6 @@ const styles = StyleSheet.create({
     borderRadius: 75,
     backgroundColor: Colors.primaryGreen,
     opacity: 0.03,
-  },
-  progressBar: {
-    position: "absolute",
-    left: Spacing.xl,
-    right: Spacing.xl,
-    height: 4,
-    backgroundColor: "rgba(0, 0, 0, 0.08)",
-    borderRadius: 2,
-    zIndex: 10,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    backgroundColor: Colors.primaryGreen,
-    borderRadius: 2,
-  },
-  skipButton: {
-    position: "absolute",
-    right: Spacing.lg,
-    zIndex: 20,
-  },
-  skipButtonInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-  },
-  skipText: {
-    ...Typography.labelMedium,
-    fontSize: 14,
-    color: Colors.textSecondary,
   },
   slide: {
     width: SCREEN_WIDTH,
