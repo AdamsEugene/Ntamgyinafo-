@@ -39,7 +39,7 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
   return (
     <View style={[styles.headerContainer, style]}>
       <BlurView
-        intensity={isDark ? 15 : 20}
+        intensity={isDark ? 8 : 12}
         tint={isDark ? "dark" : "light"}
         style={styles.blurContainer}
       >
@@ -157,10 +157,10 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   glassOverlayLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.4)",
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
   },
   glassOverlayDark: {
-    backgroundColor: "rgba(30, 30, 30, 0.4)",
+    backgroundColor: "rgba(30, 30, 30, 0.25)",
   },
   headerContent: {
     flexDirection: "row",
