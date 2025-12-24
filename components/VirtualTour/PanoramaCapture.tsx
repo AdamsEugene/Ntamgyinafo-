@@ -122,7 +122,6 @@ export function PanoramaCapture({
 
   // Auto-capture countdown
   const [countdown, setCountdown] = useState<number | null>(null);
-  const countdownStartedRef = useRef(false); // Prevent countdown from being cancelled by sensor noise
 
   // First photo only needs level (any heading is fine - it sets the starting point)
   // Subsequent photos need both level AND correct heading
@@ -326,37 +325,40 @@ export function PanoramaCapture({
 
   // Auto-capture countdown when ready
   useEffect(() => {
-    if (
-      isReadyForCapture &&
-      countdown === null &&
-      !isCapturing &&
-      !countdownStartedRef.current
-    ) {
-      // Start countdown
-      countdownStartedRef.current = true;
+    // Start countdown when ready and not already counting
+    if (isReadyForCapture && countdown === null && !isCapturing) {
       setCountdown(3);
       Vibration.vibrate(30);
     }
-    // Note: We don't cancel countdown on sensor fluctuations anymore
-    // The countdown will complete once started
   }, [isReadyForCapture, countdown, isCapturing]);
 
-  // Handle countdown timer - runs independently once started
+  // Handle countdown progression
   useEffect(() => {
-    if (countdown === null) return;
+    if (countdown === null || countdown < 0) return;
 
     if (countdown > 0) {
+      // Schedule next tick
       const timer = setTimeout(() => {
-        Vibration.vibrate(30);
-        setCountdown(countdown - 1);
+        setCountdown((c) => {
+          if (c !== null && c > 0) {
+            Vibration.vibrate(30);
+            return c - 1;
+          }
+          return c;
+        });
       }, 700);
 
       return () => clearTimeout(timer);
-    } else if (countdown === 0) {
-      // Countdown finished - take the picture!
-      countdownStartedRef.current = false;
+    }
+
+    if (countdown === 0) {
+      // Take the picture immediately
       setCountdown(null);
-      handleCapture();
+
+      // Capture after a tiny delay to ensure state is updated
+      setTimeout(() => {
+        handleCapture();
+      }, 50);
     }
   }, [countdown, handleCapture]);
 
@@ -394,7 +396,6 @@ export function PanoramaCapture({
     setLastCapturedUri(null);
     setStartHeading(null);
     setCountdown(null);
-    countdownStartedRef.current = false;
   }, []);
 
   // Skip remaining segments
