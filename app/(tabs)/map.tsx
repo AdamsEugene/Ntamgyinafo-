@@ -142,6 +142,9 @@ export default function MapScreen() {
     return [screenHeight * 0.25, screenHeight * 0.5];
   }, []);
 
+  // Check if coming from near-you-properties with distance filter
+  const showDistanceFilter = params.showDistanceFilter === "true";
+
   // Store navigation params - don't show popup yet, wait for map
   React.useEffect(() => {
     const propertyId = params.propertyId as string;
@@ -878,57 +881,60 @@ export default function MapScreen() {
           </View>
         )}
 
-        {/* Distance Filter Chips */}
-        <View style={styles.distanceFilterContainer}>
-          {DISTANCE_FILTERS.map((filter) => (
-            <TouchableOpacity
-              key={filter.id || "all"}
-              style={[
-                styles.distanceFilterChip,
-                distanceFilter === filter.id && styles.distanceFilterChipActive,
-              ]}
-              onPress={() => {
-                setDistanceFilter(filter.id);
-                if (!filter.id) {
-                  // Clear the circle when "All" is selected
-                  setCircleCenter(null);
-                } else if (userLocation) {
-                  // Draw circle around user's current location
-                  setCircleCenter(userLocation);
-
-                  // Calculate the zoom level to show the entire circle
-                  const radiusInMeters = getDistanceInMeters(filter.id);
-                  // Convert meters to degrees (approximate)
-                  // 1 degree latitude ≈ 111,320 meters
-                  const latDelta = (radiusInMeters / 111320) * 2.5; // 2.5x to show padding
-                  const lngDelta = latDelta * 1.2; // Adjust for aspect ratio
-
-                  // Animate map to show the circle
-                  mapRef.current?.animateToRegion(
-                    {
-                      latitude: userLocation.latitude,
-                      longitude: userLocation.longitude,
-                      latitudeDelta: latDelta,
-                      longitudeDelta: lngDelta,
-                    },
-                    500
-                  );
-                }
-              }}
-              activeOpacity={0.7}
-            >
-              <Text
+        {/* Distance Filter Chips - Only shown when coming from near-you-properties */}
+        {showDistanceFilter && (
+          <View style={styles.distanceFilterContainer}>
+            {DISTANCE_FILTERS.map((filter) => (
+              <TouchableOpacity
+                key={filter.id || "all"}
                 style={[
-                  styles.distanceFilterText,
+                  styles.distanceFilterChip,
                   distanceFilter === filter.id &&
-                    styles.distanceFilterTextActive,
+                    styles.distanceFilterChipActive,
                 ]}
+                onPress={() => {
+                  setDistanceFilter(filter.id);
+                  if (!filter.id) {
+                    // Clear the circle when "All" is selected
+                    setCircleCenter(null);
+                  } else if (userLocation) {
+                    // Draw circle around user's current location
+                    setCircleCenter(userLocation);
+
+                    // Calculate the zoom level to show the entire circle
+                    const radiusInMeters = getDistanceInMeters(filter.id);
+                    // Convert meters to degrees (approximate)
+                    // 1 degree latitude ≈ 111,320 meters
+                    const latDelta = (radiusInMeters / 111320) * 2.5; // 2.5x to show padding
+                    const lngDelta = latDelta * 1.2; // Adjust for aspect ratio
+
+                    // Animate map to show the circle
+                    mapRef.current?.animateToRegion(
+                      {
+                        latitude: userLocation.latitude,
+                        longitude: userLocation.longitude,
+                        latitudeDelta: latDelta,
+                        longitudeDelta: lngDelta,
+                      },
+                      500
+                    );
+                  }
+                }}
+                activeOpacity={0.7}
               >
-                {filter.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+                <Text
+                  style={[
+                    styles.distanceFilterText,
+                    distanceFilter === filter.id &&
+                      styles.distanceFilterTextActive,
+                  ]}
+                >
+                  {filter.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         {/* Fit to Properties Floating Button */}
         {filteredProperties.length > 0 && (
