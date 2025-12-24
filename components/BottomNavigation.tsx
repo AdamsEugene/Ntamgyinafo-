@@ -37,7 +37,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   // Calculate the height needed for blur background
   const navHeight = 64;
   const bottomPadding = Math.max(insets.bottom, Spacing.md);
-  const totalBlurHeight = navHeight + bottomPadding; // extra for margin
+  const totalBlurHeight = navHeight + bottomPadding + Spacing.xs; // extra for margin
 
   return (
     <View style={styles.wrapper}>
