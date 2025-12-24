@@ -15,10 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
-import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+import { FloatingHeader } from "@/components/FloatingHeader";
 import { FloatingSearchBar } from "@/components/FloatingSearchBar";
 import { MAP_PROPERTIES, MapProperty } from "@/constants/mockData";
 
@@ -209,29 +206,12 @@ export default function PopularAreasScreen() {
           <View style={styles.circle2} />
         </View>
 
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={FloatingHeaderStyles.actionButton}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name="arrow-back"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-            <Text style={styles.headerTitleText}>Popular Areas</Text>
-          </View>
-        </View>
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          title="Popular Areas"
+          showBackButton
+          onBackPress={() => router.back()}
+        />
 
         <FlatList
           data={selectedArea ? areaProperties : []}
@@ -342,18 +322,6 @@ const styles = StyleSheet.create({
     borderRadius: 200,
     backgroundColor: Colors.primaryGreen,
     opacity: 0.05,
-  },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.md,
-    flex: 1,
-  },
-  headerTitleText: {
-    ...Typography.titleLarge,
-    fontSize: 20,
-    fontWeight: "700",
-    color: Colors.textPrimary,
   },
   listContent: {
     paddingHorizontal: Spacing.lg,

@@ -17,9 +17,9 @@ import {
   type FilterOptions,
 } from "@/components/FilterBottomSheet";
 import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+  FloatingHeader,
+  HeaderActionButton,
+} from "@/components/FloatingHeader";
 import {
   PropertyListCard,
   PropertyGridCard,
@@ -141,70 +141,27 @@ export default function SearchScreen() {
           <View style={styles.circle2} />
         </View>
 
-        {/* Floating Sticky Header */}
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={FloatingHeaderStyles.backButton}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.backButtonCircle}>
-                <Ionicons
-                  name="arrow-back"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-            <Text style={styles.headerTitleText}>Search</Text>
-          </View>
-
-          {/* Filter and View Mode Toggle Buttons */}
-          <View style={FloatingHeaderStyles.headerActions}>
-            <TouchableOpacity
-              style={FloatingHeaderStyles.actionButton}
-              onPress={() => setShowFilterSheet(true)}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name="options-outline"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-                {hasActiveFilters && (
-                  <View style={FloatingHeaderStyles.filterBadge}>
-                    <Text style={FloatingHeaderStyles.filterBadgeText}>
-                      {activeFiltersCount}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={FloatingHeaderStyles.actionButton}
-              onPress={() =>
-                setViewMode((prev) => (prev === "list" ? "grid" : "list"))
-              }
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name={viewMode === "list" ? "grid-outline" : "list-outline"}
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          title="Search"
+          showBackButton
+          onBackPress={() => router.back()}
+          rightContent={
+            <>
+              <HeaderActionButton
+                icon="options-outline"
+                onPress={() => setShowFilterSheet(true)}
+                badge={hasActiveFilters ? activeFiltersCount : undefined}
+              />
+              <HeaderActionButton
+                icon={viewMode === "list" ? "grid-outline" : "list-outline"}
+                onPress={() =>
+                  setViewMode((prev) => (prev === "list" ? "grid" : "list"))
+                }
+              />
+            </>
+          }
+        />
 
         <ScrollView
           style={styles.scrollView}
@@ -448,18 +405,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
-  },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.md,
-    flex: 1,
-  },
-  headerTitleText: {
-    ...Typography.titleLarge,
-    fontSize: 20,
-    fontWeight: "700",
-    color: Colors.textPrimary,
   },
   decorativeBackground: {
     position: "absolute",
