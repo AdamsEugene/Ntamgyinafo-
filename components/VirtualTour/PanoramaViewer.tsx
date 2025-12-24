@@ -2,27 +2,19 @@ import React, { useRef, useState, useCallback, useEffect } from "react";
 import {
   View,
   StyleSheet,
-  Dimensions,
-  PanResponder,
-  Animated,
   TouchableOpacity,
   Text,
   Image,
   Platform,
+  ActivityIndicator,
+  ScrollView,
+  Animated,
 } from "react-native";
+import { WebView } from "react-native-webview";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 import { Colors, Typography, Spacing } from "@/constants/design";
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-
-// Field of view settings
-const DEFAULT_FOV = 75;
-const MIN_FOV = 30; // Max zoom in
-const MAX_FOV = 100; // Max zoom out
-
-// Rotation speed multiplier
-const ROTATION_SENSITIVITY = 0.15;
 
 export interface Hotspot {
   id: string;
@@ -33,6 +25,9 @@ export interface Hotspot {
   targetSceneId?: string;
   type: "navigation" | "info";
   infoText?: string;
+  // For Pannellum hotspots
+  pitch?: number;
+  yaw?: number;
 }
 
 export interface Scene {
@@ -54,6 +49,95 @@ export interface PanoramaViewerProps {
   autoRotateSpeed?: number;
 }
 
+// HTML template for 360° viewer using Pannellum
+const getPanoramaHTML = (
+  scene: Scene,
+  autoRotate: boolean,
+  hotspots: Hotspot[]
+) => {
+  // Convert hotspots to Pannellum format
+  const pannellumHotspots = hotspots
+    .filter((h) => h.pitch !== undefined && h.yaw !== undefined)
+    .map((h) => ({
+      pitch: h.pitch,
+      yaw: h.yaw,
+      type: "info",
+      text: h.label || "",
+      id: h.id,
+    }));
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+    #panorama {
+      width: 100%;
+      height: 100%;
+    }
+    .pnlm-hotspot-base {
+      border-radius: 50%;
+    }
+    .pnlm-hotspot.pnlm-info {
+      background: rgba(34, 197, 94, 0.9);
+      border: 2px solid white;
+    }
+  </style>
+</head>
+<body>
+  <div id="panorama"></div>
+  <script>
+    var viewer = pannellum.viewer('panorama', {
+      "type": "equirectangular",
+      "panorama": "${scene.imageUrl}",
+      "autoLoad": true,
+      "autoRotate": ${autoRotate ? 2 : 0},
+      "autoRotateInactivityDelay": 3000,
+      "autoRotateStopDelay": 5000,
+      "compass": false,
+      "showControls": false,
+      "showFullscreenCtrl": false,
+      "keyboardZoom": false,
+      "mouseZoom": true,
+      "hfov": 100,
+      "minHfov": 50,
+      "maxHfov": 120,
+      "hotSpots": ${JSON.stringify(pannellumHotspots)}
+    });
+    
+    window.pannellumViewer = viewer;
+    
+    viewer.on('load', function() {
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'loaded' }));
+      }
+    });
+    
+    viewer.on('error', function(err) {
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'error', message: err }));
+      }
+    });
+  </script>
+</body>
+</html>
+`;
+};
+
 export function PanoramaViewer({
   scenes,
   initialSceneId,
@@ -61,393 +145,394 @@ export function PanoramaViewer({
   showControls = true,
   showThumbnails = true,
   autoRotate = false,
-  autoRotateSpeed = 0.1,
 }: PanoramaViewerProps) {
   const insets = useSafeAreaInsets();
+  const webViewRef = useRef<WebView>(null);
+  const roomScrollRef = useRef<ScrollView>(null);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
   const [currentSceneId, setCurrentSceneId] = useState(
     initialSceneId || scenes[0]?.id
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  const [showRoomSelector, setShowRoomSelector] = useState(true);
+  const [isAutoRotating, setIsAutoRotating] = useState(autoRotate);
   const [showInfo, setShowInfo] = useState<Hotspot | null>(null);
-  const [showSceneList, setShowSceneList] = useState(false);
 
-  // Rotation state using Animated values for smooth performance
-  const rotationX = useRef(new Animated.Value(0)).current;
-  const rotationY = useRef(new Animated.Value(0)).current;
-  const fov = useRef(new Animated.Value(DEFAULT_FOV)).current;
+  const currentSceneIndex = scenes.findIndex((s) => s.id === currentSceneId);
+  const currentScene = scenes[currentSceneIndex] || scenes[0];
 
-  // Track current values for pan calculations
-  const currentRotationX = useRef(0);
-  const currentRotationY = useRef(0);
-  const currentFov = useRef(DEFAULT_FOV);
-
-  // Touch tracking
-  const lastTouchDistance = useRef(0);
-  const isZooming = useRef(false);
-
-  const currentScene = scenes.find((s) => s.id === currentSceneId) || scenes[0];
-
-  // Auto-rotate effect
+  // Pulse animation for the 360° indicator
   useEffect(() => {
-    if (!autoRotate || isLoading) return;
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.2,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [pulseAnim]);
 
-    const autoRotateInterval = setInterval(() => {
-      const newRotation = currentRotationY.current + autoRotateSpeed;
-      currentRotationY.current = newRotation;
-      rotationY.setValue(newRotation);
-    }, 16); // ~60fps
-
-    return () => clearInterval(autoRotateInterval);
-  }, [autoRotate, autoRotateSpeed, isLoading, rotationY]);
-
-  // Calculate distance between two touch points
-  const getDistance = (touches: { pageX: number; pageY: number }[]): number => {
-    if (touches.length < 2) return 0;
-    const dx = touches[0].pageX - touches[1].pageX;
-    const dy = touches[0].pageY - touches[1].pageY;
-    return Math.sqrt(dx * dx + dy * dy);
-  };
-
-  // Pan responder for touch handling
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: (evt) => {
-        const touches = evt.nativeEvent.touches;
-        if (touches.length === 2) {
-          isZooming.current = true;
-          lastTouchDistance.current = getDistance(touches as any);
-        }
-      },
-      onPanResponderMove: (evt, gestureState) => {
-        const touches = evt.nativeEvent.touches;
-
-        if (touches.length === 2 && isZooming.current) {
-          // Pinch zoom
-          const distance = getDistance(touches as any);
-          if (lastTouchDistance.current > 0) {
-            const scale = distance / lastTouchDistance.current;
-            const newFov = Math.max(
-              MIN_FOV,
-              Math.min(MAX_FOV, currentFov.current / scale)
-            );
-            currentFov.current = newFov;
-            fov.setValue(newFov);
-          }
-          lastTouchDistance.current = distance;
-        } else if (touches.length === 1 && !isZooming.current) {
-          // Pan rotation
-          const dx = gestureState.dx * ROTATION_SENSITIVITY;
-          const dy = gestureState.dy * ROTATION_SENSITIVITY;
-
-          // Horizontal rotation (Y axis) - unlimited
-          const newRotationY = currentRotationY.current - dx;
-          rotationY.setValue(newRotationY);
-
-          // Vertical rotation (X axis) - limited to prevent flip
-          const newRotationX = Math.max(
-            -80,
-            Math.min(80, currentRotationX.current + dy)
-          );
-          rotationX.setValue(newRotationX);
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        // Update current values
-        currentRotationY.current -= gestureState.dx * ROTATION_SENSITIVITY;
-        currentRotationX.current = Math.max(
-          -80,
-          Math.min(
-            80,
-            currentRotationX.current + gestureState.dy * ROTATION_SENSITIVITY
-          )
-        );
-
-        isZooming.current = false;
-        lastTouchDistance.current = 0;
-      },
-    })
-  ).current;
-
-  // Handle scene navigation via hotspot
-  const handleHotspotPress = useCallback(
-    (hotspot: Hotspot) => {
-      if (hotspot.type === "navigation" && hotspot.targetSceneId) {
-        setIsLoading(true);
-        // Reset rotation for new scene
-        const targetScene = scenes.find((s) => s.id === hotspot.targetSceneId);
-        if (targetScene?.initialRotation) {
-          currentRotationX.current = targetScene.initialRotation.x;
-          currentRotationY.current = targetScene.initialRotation.y;
-          rotationX.setValue(targetScene.initialRotation.x);
-          rotationY.setValue(targetScene.initialRotation.y);
-        } else {
-          currentRotationX.current = 0;
-          currentRotationY.current = 0;
-          rotationX.setValue(0);
-          rotationY.setValue(0);
-        }
-        setCurrentSceneId(hotspot.targetSceneId);
-      } else if (hotspot.type === "info") {
-        setShowInfo(hotspot);
-      }
-    },
-    [scenes, rotationX, rotationY]
-  );
-
-  // Handle scene selection from thumbnail list
-  const handleSceneSelect = useCallback(
+  // Handle scene change
+  const goToScene = useCallback(
     (sceneId: string) => {
       if (sceneId === currentSceneId) return;
       setIsLoading(true);
-      setShowSceneList(false);
-
-      const targetScene = scenes.find((s) => s.id === sceneId);
-      if (targetScene?.initialRotation) {
-        currentRotationX.current = targetScene.initialRotation.x;
-        currentRotationY.current = targetScene.initialRotation.y;
-        rotationX.setValue(targetScene.initialRotation.x);
-        rotationY.setValue(targetScene.initialRotation.y);
-      } else {
-        currentRotationX.current = 0;
-        currentRotationY.current = 0;
-        rotationX.setValue(0);
-        rotationY.setValue(0);
-      }
+      setHasError(false);
       setCurrentSceneId(sceneId);
+
+      // Scroll to center the selected thumbnail
+      const index = scenes.findIndex((s) => s.id === sceneId);
+      roomScrollRef.current?.scrollTo({
+        x: index * 90 - 100,
+        animated: true,
+      });
     },
-    [currentSceneId, scenes, rotationX, rotationY]
+    [currentSceneId, scenes]
   );
 
-  // Zoom controls
-  const handleZoom = useCallback(
-    (zoomIn: boolean) => {
-      const step = 10;
-      const newFov = zoomIn
-        ? Math.max(MIN_FOV, currentFov.current - step)
-        : Math.min(MAX_FOV, currentFov.current + step);
+  const goToPreviousScene = useCallback(() => {
+    if (currentSceneIndex > 0) {
+      goToScene(scenes[currentSceneIndex - 1].id);
+    }
+  }, [currentSceneIndex, goToScene, scenes]);
 
-      currentFov.current = newFov;
-      Animated.spring(fov, {
-        toValue: newFov,
-        useNativeDriver: false,
-        tension: 100,
-        friction: 12,
-      }).start();
-    },
-    [fov]
-  );
+  const goToNextScene = useCallback(() => {
+    if (currentSceneIndex < scenes.length - 1) {
+      goToScene(scenes[currentSceneIndex + 1].id);
+    }
+  }, [currentSceneIndex, goToScene, scenes]);
 
-  // Reset view
-  const handleResetView = useCallback(() => {
-    Animated.parallel([
-      Animated.spring(rotationX, {
-        toValue: 0,
-        useNativeDriver: false,
-        tension: 80,
-        friction: 12,
-      }),
-      Animated.spring(rotationY, {
-        toValue: 0,
-        useNativeDriver: false,
-        tension: 80,
-        friction: 12,
-      }),
-      Animated.spring(fov, {
-        toValue: DEFAULT_FOV,
-        useNativeDriver: false,
-        tension: 80,
-        friction: 12,
-      }),
-    ]).start(() => {
-      currentRotationX.current = 0;
-      currentRotationY.current = 0;
-      currentFov.current = DEFAULT_FOV;
-    });
-  }, [rotationX, rotationY, fov]);
+  // Toggle auto-rotate
+  const toggleAutoRotate = useCallback(() => {
+    const newValue = !isAutoRotating;
+    setIsAutoRotating(newValue);
+
+    if (webViewRef.current) {
+      const script = `
+        (function() {
+          if (window.pannellumViewer) {
+            try {
+              if (${newValue}) {
+                window.pannellumViewer.startAutoRotate(2, 3000);
+              } else {
+                window.pannellumViewer.stopAutoRotate();
+              }
+            } catch(e) {}
+          }
+        })();
+        true;
+      `;
+      webViewRef.current.injectJavaScript(script);
+    }
+  }, [isAutoRotating]);
+
+  // Handle WebView messages
+  const handleWebViewMessage = useCallback((event: any) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data.type === "loaded") {
+        setIsLoading(false);
+        setHasError(false);
+      } else if (data.type === "error") {
+        setIsLoading(false);
+        setHasError(true);
+      }
+    } catch (error) {
+      console.error("Error parsing WebView message:", error);
+    }
+  }, []);
+
+  const handleWebViewError = useCallback(() => {
+    setIsLoading(false);
+    setHasError(true);
+  }, []);
+
+  const handleRetry = useCallback(() => {
+    setHasError(false);
+    setIsLoading(true);
+    webViewRef.current?.reload();
+  }, []);
+
+  if (!currentScene) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>No scenes available</Text>
+        <TouchableOpacity onPress={onClose} style={styles.closeButtonCenter}>
+          <Text style={styles.closeButtonText}>Close</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      {/* Panorama Image Container */}
-      <Animated.View
-        style={[styles.panoramaContainer]}
-        {...panResponder.panHandlers}
-      >
-        {/* Using CSS 3D transforms to create panorama effect */}
-        <Animated.View
-          style={[
-            styles.panoramaWrapper,
-            {
-              transform: [
-                { perspective: 1000 },
-                {
-                  rotateX: rotationX.interpolate({
-                    inputRange: [-80, 80],
-                    outputRange: ["-80deg", "80deg"],
-                  }),
-                },
-                {
-                  rotateY: rotationY.interpolate({
-                    inputRange: [-360, 360],
-                    outputRange: ["-360deg", "360deg"],
-                  }),
-                },
-                {
-                  scale: fov.interpolate({
-                    inputRange: [MIN_FOV, MAX_FOV],
-                    outputRange: [1.5, 0.8],
-                  }),
-                },
-              ],
-            },
-          ]}
-        >
-          <Image
-            source={{ uri: currentScene?.imageUrl }}
-            style={styles.panoramaImage}
-            resizeMode="cover"
-            onLoadStart={() => setIsLoading(true)}
-            onLoadEnd={() => setIsLoading(false)}
-          />
-        </Animated.View>
+      {/* Top Gradient */}
+      <LinearGradient
+        colors={["rgba(0,0,0,0.8)", "transparent"]}
+        style={[styles.topGradient, { paddingTop: insets.top }]}
+        pointerEvents="box-none"
+      />
 
-        {/* Loading Overlay */}
-        {isLoading && (
-          <View style={styles.loadingOverlay}>
-            <View style={styles.loadingIndicator}>
-              <Ionicons
-                name="reload"
-                size={32}
-                color={Colors.primaryGreen}
-                style={styles.loadingIcon}
-              />
-              <Text style={styles.loadingText}>Loading panorama...</Text>
-            </View>
-          </View>
-        )}
-
-        {/* Hotspots */}
-        {!isLoading &&
-          currentScene?.hotspots.map((hotspot) => (
-            <TouchableOpacity
-              key={hotspot.id}
-              style={[
-                styles.hotspot,
-                {
-                  left: `${hotspot.x * 100}%`,
-                  top: `${hotspot.y * 100}%`,
-                },
-                hotspot.type === "navigation"
-                  ? styles.navigationHotspot
-                  : styles.infoHotspot,
-              ]}
-              onPress={() => handleHotspotPress(hotspot)}
-              activeOpacity={0.8}
-            >
-              <View style={styles.hotspotInner}>
-                <Ionicons
-                  name={
-                    hotspot.icon ||
-                    (hotspot.type === "navigation"
-                      ? "arrow-forward-circle"
-                      : "information-circle")
-                  }
-                  size={24}
-                  color="#FFFFFF"
-                />
-              </View>
-              {hotspot.label && (
-                <View style={styles.hotspotLabel}>
-                  <Text style={styles.hotspotLabelText}>{hotspot.label}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          ))}
-      </Animated.View>
-
-      {/* Header Controls */}
+      {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
         <TouchableOpacity
-          style={styles.headerButton}
           onPress={onClose}
-          activeOpacity={0.8}
+          style={styles.headerButton}
+          activeOpacity={0.7}
         >
-          <Ionicons name="close" size={24} color="#FFFFFF" />
+          <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
         </TouchableOpacity>
 
         <View style={styles.headerCenter}>
-          <Text style={styles.sceneTitle}>{currentScene?.name}</Text>
-          <Text style={styles.sceneCount}>
-            {scenes.findIndex((s) => s.id === currentSceneId) + 1} of{" "}
-            {scenes.length}
+          <View style={styles.badge360}>
+            <Animated.View
+              style={[
+                styles.badge360Pulse,
+                { transform: [{ scale: pulseAnim }] },
+              ]}
+            />
+            <Text style={styles.badge360Text}>360°</Text>
+          </View>
+          <Text style={styles.headerTitle}>Virtual Tour</Text>
+          <Text style={styles.headerSubtitle}>
+            {scenes.length} room{scenes.length !== 1 ? "s" : ""} available
           </Text>
         </View>
 
-        <TouchableOpacity
-          style={styles.headerButton}
-          onPress={() => setShowSceneList(!showSceneList)}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="layers" size={22} color="#FFFFFF" />
-        </TouchableOpacity>
+        {showControls && (
+          <TouchableOpacity
+            onPress={toggleAutoRotate}
+            style={[
+              styles.headerButton,
+              isAutoRotating && styles.headerButtonActive,
+            ]}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={isAutoRotating ? "sync" : "sync-outline"}
+              size={18}
+              color={isAutoRotating ? "#FFFFFF" : "rgba(255,255,255,0.8)"}
+            />
+          </TouchableOpacity>
+        )}
       </View>
 
-      {/* Zoom Controls */}
-      {showControls && (
-        <View style={[styles.zoomControls, { bottom: insets.bottom + 100 }]}>
+      {/* 360° Viewer */}
+      <View style={styles.viewerContainer}>
+        {hasError ? (
+          <View style={styles.errorContainer}>
+            <View style={styles.errorIconContainer}>
+              <Ionicons name="alert-circle-outline" size={56} color="#FF3B30" />
+            </View>
+            <Text style={styles.errorTitle}>Failed to Load</Text>
+            <Text style={styles.errorTextDescription}>
+              Unable to load the panorama view
+            </Text>
+            <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
+              <Ionicons
+                name="refresh"
+                size={18}
+                color="#FFFFFF"
+                style={{ marginRight: 8 }}
+              />
+              <Text style={styles.retryButtonText}>Try Again</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <>
+            <WebView
+              ref={webViewRef}
+              source={{
+                html: getPanoramaHTML(
+                  currentScene,
+                  isAutoRotating,
+                  currentScene.hotspots
+                ),
+              }}
+              style={styles.webView}
+              onMessage={handleWebViewMessage}
+              onError={handleWebViewError}
+              javaScriptEnabled={true}
+              domStorageEnabled={true}
+              startInLoadingState={true}
+              scalesPageToFit={true}
+              allowsInlineMediaPlayback={true}
+              mediaPlaybackRequiresUserAction={false}
+            />
+
+            {isLoading && (
+              <View style={styles.loadingOverlay}>
+                <View style={styles.loadingContent}>
+                  <View style={styles.loadingSpinner}>
+                    <ActivityIndicator size="large" color="#FFFFFF" />
+                  </View>
+                  <Text style={styles.loadingText}>
+                    Loading {currentScene.name}...
+                  </Text>
+                  <View style={styles.loadingBadge}>
+                    <Ionicons name="cube" size={14} color="#FFFFFF" />
+                    <Text style={styles.loadingBadgeText}>360° View</Text>
+                  </View>
+                </View>
+              </View>
+            )}
+          </>
+        )}
+
+        {/* Navigation Arrows */}
+        {currentSceneIndex > 0 && (
           <TouchableOpacity
-            style={styles.zoomButton}
-            onPress={() => handleZoom(true)}
-            activeOpacity={0.8}
+            style={styles.navArrowLeft}
+            onPress={goToPreviousScene}
+            activeOpacity={0.7}
           >
-            <Ionicons name="add" size={24} color="#FFFFFF" />
+            <View style={styles.navArrowContent}>
+              <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+            </View>
           </TouchableOpacity>
+        )}
+        {currentSceneIndex < scenes.length - 1 && (
           <TouchableOpacity
-            style={styles.zoomButton}
-            onPress={handleResetView}
-            activeOpacity={0.8}
+            style={styles.navArrowRight}
+            onPress={goToNextScene}
+            activeOpacity={0.7}
           >
-            <Ionicons name="locate" size={20} color="#FFFFFF" />
+            <View style={styles.navArrowContent}>
+              <Ionicons name="chevron-forward" size={24} color="#FFFFFF" />
+            </View>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.zoomButton}
-            onPress={() => handleZoom(false)}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="remove" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
+        )}
+
+        {/* Room Info Overlay */}
+        <View style={styles.roomInfoOverlay}>
+          <View style={styles.roomInfoCard}>
+            <View style={styles.roomInfoIcon}>
+              <Ionicons name="cube" size={20} color={Colors.primaryGreen} />
+            </View>
+            <View style={styles.roomInfoText}>
+              <Text style={styles.roomInfoName}>{currentScene.name}</Text>
+              <Text style={styles.roomInfoDescription}>
+                {currentScene.hotspots.length} hotspots
+              </Text>
+            </View>
+            <View style={styles.roomCounter}>
+              <Text style={styles.roomCounterText}>
+                {currentSceneIndex + 1}/{scenes.length}
+              </Text>
+            </View>
+          </View>
         </View>
-      )}
 
-      {/* Compass Indicator */}
-      <Animated.View
-        style={[
-          styles.compass,
-          {
-            top: insets.top + 70,
-            transform: [
-              {
-                rotate: rotationY.interpolate({
-                  inputRange: [-360, 360],
-                  outputRange: ["360deg", "-360deg"],
-                }),
-              },
-            ],
-          },
-        ]}
-      >
-        <Ionicons name="navigate" size={24} color={Colors.primaryGreen} />
-      </Animated.View>
+        {/* Touch Hint */}
+        {!isLoading && !isAutoRotating && (
+          <View style={styles.touchHint}>
+            <View style={styles.touchHintContent}>
+              <Ionicons
+                name="hand-left-outline"
+                size={16}
+                color="rgba(255,255,255,0.8)"
+              />
+              <Text style={styles.touchHintText}>Drag to explore</Text>
+            </View>
+          </View>
+        )}
+      </View>
 
-      {/* Scene Thumbnails */}
-      {showThumbnails && showSceneList && (
-        <View style={[styles.sceneList, { bottom: insets.bottom + 20 }]}>
-          <ScrollableSceneList
-            scenes={scenes}
-            currentSceneId={currentSceneId}
-            onSelect={handleSceneSelect}
-          />
+      {/* Bottom Gradient */}
+      <LinearGradient
+        colors={["transparent", "rgba(0,0,0,0.9)"]}
+        style={styles.bottomGradient}
+        pointerEvents="box-none"
+      />
+
+      {/* Room Selector */}
+      {showThumbnails && scenes.length > 1 && (
+        <View
+          style={[styles.roomSelectorContainer, { bottom: insets.bottom + 20 }]}
+        >
+          <TouchableOpacity
+            style={styles.roomSelectorToggle}
+            onPress={() => setShowRoomSelector(!showRoomSelector)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.roomSelectorTitle}>Select Room</Text>
+            <Ionicons
+              name={showRoomSelector ? "chevron-down" : "chevron-up"}
+              size={18}
+              color="#FFFFFF"
+            />
+          </TouchableOpacity>
+
+          {showRoomSelector && (
+            <ScrollView
+              ref={roomScrollRef}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.roomSelectorList}
+            >
+              {scenes.map((scene, index) => (
+                <TouchableOpacity
+                  key={scene.id}
+                  style={[
+                    styles.roomThumbnailCard,
+                    index === currentSceneIndex &&
+                      styles.roomThumbnailCardActive,
+                  ]}
+                  onPress={() => goToScene(scene.id)}
+                  activeOpacity={0.8}
+                >
+                  <Image
+                    source={{ uri: scene.thumbnail || scene.imageUrl }}
+                    style={styles.roomThumbnailImage}
+                  />
+                  <View style={styles.roomThumbnailOverlay} />
+                  <View style={styles.roomThumbnailContent}>
+                    <View
+                      style={[
+                        styles.roomThumbnailIcon,
+                        index === currentSceneIndex &&
+                          styles.roomThumbnailIconActive,
+                      ]}
+                    >
+                      <Ionicons
+                        name="cube"
+                        size={14}
+                        color={
+                          index === currentSceneIndex
+                            ? "#FFFFFF"
+                            : "rgba(255,255,255,0.8)"
+                        }
+                      />
+                    </View>
+                    <Text
+                      style={[
+                        styles.roomThumbnailName,
+                        index === currentSceneIndex &&
+                          styles.roomThumbnailNameActive,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {scene.name}
+                    </Text>
+                  </View>
+                  {index === currentSceneIndex && (
+                    <View style={styles.roomThumbnailActiveBorder} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
         </View>
       )}
 
@@ -474,60 +559,11 @@ export function PanoramaViewer({
               style={styles.infoCloseButton}
               onPress={() => setShowInfo(null)}
             >
-              <Text style={styles.infoCloseText}>Got it</Text>
+              <Text style={styles.infoCloseButtonText}>Got it</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
       )}
-
-      {/* Usage Hint - shows briefly */}
-      <View style={styles.usageHint}>
-        <Text style={styles.usageHintText}>
-          Drag to look around • Pinch to zoom
-        </Text>
-      </View>
-    </View>
-  );
-}
-
-// Scrollable scene list component
-function ScrollableSceneList({
-  scenes,
-  currentSceneId,
-  onSelect,
-}: {
-  scenes: Scene[];
-  currentSceneId: string;
-  onSelect: (id: string) => void;
-}) {
-  return (
-    <View style={styles.sceneListContainer}>
-      {scenes.map((scene) => (
-        <TouchableOpacity
-          key={scene.id}
-          style={[
-            styles.sceneThumbnail,
-            currentSceneId === scene.id && styles.sceneThumbnailActive,
-          ]}
-          onPress={() => onSelect(scene.id)}
-          activeOpacity={0.8}
-        >
-          <Image
-            source={{ uri: scene.thumbnail || scene.imageUrl }}
-            style={styles.sceneThumbnailImage}
-          />
-          <View style={styles.sceneThumbnailOverlay}>
-            <Text style={styles.sceneThumbnailText} numberOfLines={1}>
-              {scene.name}
-            </Text>
-          </View>
-          {currentSceneId === scene.id && (
-            <View style={styles.sceneThumbnailCheck}>
-              <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
-            </View>
-          )}
-        </TouchableOpacity>
-      ))}
     </View>
   );
 }
@@ -537,199 +573,404 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#000000",
   },
-  panoramaContainer: {
-    flex: 1,
-    overflow: "hidden",
-    justifyContent: "center",
-    alignItems: "center",
+  topGradient: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 150,
+    zIndex: 50,
   },
-  panoramaWrapper: {
-    width: SCREEN_WIDTH * 2,
-    height: SCREEN_HEIGHT * 1.5,
-    justifyContent: "center",
-    alignItems: "center",
+  bottomGradient: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 250,
+    zIndex: 50,
   },
-  panoramaImage: {
-    width: "100%",
-    height: "100%",
-  },
-  loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingIndicator: {
-    alignItems: "center",
-    gap: Spacing.md,
-  },
-  loadingIcon: {
-    transform: [{ rotate: "0deg" }],
-  },
-  loadingText: {
-    ...Typography.bodyMedium,
-    fontSize: 14,
-    color: "#FFFFFF",
-  },
-  // Header
   header: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.md,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    zIndex: 100,
   },
   headerButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+  },
+  headerButtonActive: {
+    backgroundColor: Colors.primaryGreen,
+    borderColor: Colors.primaryGreen,
   },
   headerCenter: {
     alignItems: "center",
     flex: 1,
+    marginHorizontal: Spacing.md,
   },
-  sceneTitle: {
+  badge360: {
+    position: "relative",
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.primaryGreen,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: Spacing.xs,
+  },
+  badge360Pulse: {
+    position: "absolute",
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.primaryGreen,
+    opacity: 0.3,
+  },
+  badge360Text: {
+    ...Typography.labelMedium,
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#FFFFFF",
+  },
+  headerTitle: {
     ...Typography.titleMedium,
     fontSize: 16,
     fontWeight: "700",
     color: "#FFFFFF",
+    textAlign: "center",
   },
-  sceneCount: {
+  headerSubtitle: {
     ...Typography.caption,
     fontSize: 12,
-    color: "rgba(255, 255, 255, 0.7)",
+    color: "rgba(255, 255, 255, 0.6)",
+    marginTop: 2,
   },
-  // Hotspots
-  hotspot: {
-    position: "absolute",
-    transform: [{ translateX: -20 }, { translateY: -20 }],
+  viewerContainer: {
+    flex: 1,
+    position: "relative",
+  },
+  webView: {
+    flex: 1,
+    backgroundColor: "#000000",
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 10,
+  },
+  loadingContent: {
     alignItems: "center",
   },
-  hotspotInner: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  loadingSpinner: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     justifyContent: "center",
+    alignItems: "center",
+    marginBottom: Spacing.lg,
+    borderWidth: 2,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  loadingText: {
+    ...Typography.bodyMedium,
+    fontSize: 16,
+    color: "#FFFFFF",
+    fontWeight: "600",
+  },
+  loadingBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: Spacing.md,
+    backgroundColor: Colors.primaryGreen,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: 16,
+  },
+  loadingBadgeText: {
+    ...Typography.caption,
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: Spacing.xl,
+  },
+  errorIconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "rgba(255, 59, 48, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: Spacing.lg,
+  },
+  errorTitle: {
+    ...Typography.titleLarge,
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    marginBottom: Spacing.sm,
+  },
+  errorText: {
+    ...Typography.bodyMedium,
+    fontSize: 16,
+    color: "#FFFFFF",
+    textAlign: "center",
+  },
+  errorTextDescription: {
+    ...Typography.bodyMedium,
+    fontSize: 14,
+    color: "rgba(255, 255, 255, 0.7)",
+    textAlign: "center",
+  },
+  closeButtonCenter: {
+    marginTop: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.primaryGreen,
+    borderRadius: 12,
+  },
+  closeButtonText: {
+    ...Typography.labelMedium,
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  retryButton: {
+    marginTop: Spacing.xl,
+    backgroundColor: Colors.primaryGreen,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderRadius: 25,
+    flexDirection: "row",
     alignItems: "center",
     ...Platform.select({
       ios: {
-        shadowColor: "#000",
+        shadowColor: Colors.primaryGreen,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
       },
       android: {
-        elevation: 8,
+        elevation: 6,
       },
     }),
   },
-  navigationHotspot: {},
-  infoHotspot: {},
-  hotspotLabel: {
-    marginTop: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    borderRadius: 6,
-  },
-  hotspotLabelText: {
-    ...Typography.caption,
-    fontSize: 11,
+  retryButtonText: {
+    ...Typography.labelLarge,
+    fontSize: 16,
+    fontWeight: "700",
     color: "#FFFFFF",
-    fontWeight: "600",
   },
-  // Zoom Controls
-  zoomControls: {
+  navArrowLeft: {
     position: "absolute",
-    right: Spacing.lg,
-    gap: Spacing.sm,
+    left: Spacing.md,
+    top: "50%",
+    marginTop: -25,
+    zIndex: 30,
   },
-  zoomButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
+  navArrowRight: {
+    position: "absolute",
+    right: Spacing.md,
+    top: "50%",
+    marginTop: -25,
+    zIndex: 30,
+  },
+  navArrowContent: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.2)",
   },
-  // Compass
-  compass: {
+  roomInfoOverlay: {
     position: "absolute",
+    top: 120,
+    left: Spacing.lg,
     right: Spacing.lg,
+    zIndex: 30,
+  },
+  roomInfoCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    borderRadius: 16,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  roomInfoIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    backgroundColor: "rgba(34, 197, 94, 0.2)",
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
+    marginRight: Spacing.md,
   },
-  // Scene List
-  sceneList: {
+  roomInfoText: {
+    flex: 1,
+  },
+  roomInfoName: {
+    ...Typography.titleMedium,
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  roomInfoDescription: {
+    ...Typography.caption,
+    fontSize: 12,
+    color: "rgba(255, 255, 255, 0.6)",
+    marginTop: 2,
+  },
+  roomCounter: {
+    backgroundColor: Colors.primaryGreen,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  roomCounterText: {
+    ...Typography.caption,
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  touchHint: {
+    position: "absolute",
+    bottom: 180,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 30,
+  },
+  touchHintContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: 16,
+  },
+  touchHintText: {
+    ...Typography.caption,
+    fontSize: 12,
+    color: "rgba(255, 255, 255, 0.8)",
+    fontWeight: "500",
+  },
+  roomSelectorContainer: {
     position: "absolute",
     left: 0,
     right: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
-    paddingVertical: Spacing.md,
+    zIndex: 100,
     paddingHorizontal: Spacing.lg,
   },
-  sceneListContainer: {
+  roomSelectorToggle: {
     flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  roomSelectorTitle: {
+    ...Typography.labelMedium,
+    fontSize: 13,
+    fontWeight: "600",
+    color: "rgba(255, 255, 255, 0.8)",
+  },
+  roomSelectorList: {
+    paddingHorizontal: Spacing.xs,
     gap: Spacing.sm,
   },
-  sceneThumbnail: {
+  roomThumbnailCard: {
     width: 80,
-    height: 60,
-    borderRadius: 8,
+    height: 100,
+    borderRadius: 12,
     overflow: "hidden",
-    borderWidth: 2,
-    borderColor: "transparent",
+    position: "relative",
   },
-  sceneThumbnailActive: {
-    borderColor: Colors.primaryGreen,
+  roomThumbnailCardActive: {
+    transform: [{ scale: 1.05 }],
   },
-  sceneThumbnailImage: {
+  roomThumbnailImage: {
     width: "100%",
     height: "100%",
+    resizeMode: "cover",
   },
-  sceneThumbnailOverlay: {
+  roomThumbnailOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+  },
+  roomThumbnailContent: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-    paddingHorizontal: 4,
-    paddingVertical: 2,
+    padding: 6,
+    alignItems: "center",
   },
-  sceneThumbnailText: {
+  roomThumbnailIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  roomThumbnailIconActive: {
+    backgroundColor: Colors.primaryGreen,
+  },
+  roomThumbnailName: {
     ...Typography.caption,
-    fontSize: 9,
+    fontSize: 10,
+    fontWeight: "600",
+    color: "rgba(255, 255, 255, 0.8)",
+    textAlign: "center",
+  },
+  roomThumbnailNameActive: {
     color: "#FFFFFF",
-    fontWeight: "500",
+    fontWeight: "700",
   },
-  sceneThumbnailCheck: {
+  roomThumbnailActiveBorder: {
     position: "absolute",
-    top: 4,
-    right: 4,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderWidth: 2,
+    borderColor: Colors.primaryGreen,
+    borderRadius: 12,
   },
-  // Info Popup
   infoOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0, 0, 0, 0.7)",
     justifyContent: "center",
     alignItems: "center",
     padding: Spacing.xl,
+    zIndex: 200,
   },
   infoPopup: {
     width: "100%",
@@ -774,28 +1015,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
   },
-  infoCloseText: {
+  infoCloseButtonText: {
     ...Typography.labelMedium,
     fontSize: 15,
     fontWeight: "600",
     color: "#FFFFFF",
-  },
-  // Usage Hint
-  usageHint: {
-    position: "absolute",
-    bottom: 20,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-  },
-  usageHintText: {
-    ...Typography.caption,
-    fontSize: 12,
-    color: "rgba(255, 255, 255, 0.6)",
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: 12,
   },
 });
 

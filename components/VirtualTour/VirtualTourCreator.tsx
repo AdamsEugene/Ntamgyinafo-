@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,16 +7,17 @@ import {
   TouchableOpacity,
   Image,
   Alert,
-  Platform,
   TextInput,
   FlatList,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import { Scene, Hotspot } from "./PanoramaViewer";
+import { PanoramaCapture } from "./PanoramaCapture";
 
 export interface VirtualTourCreatorProps {
   onComplete: (scenes: Scene[]) => void;
@@ -43,17 +44,38 @@ export function VirtualTourCreator({
     existingScenes[0]?.id || null
   );
   const [isLoading, setIsLoading] = useState(false);
-  const [editingScene, setEditingScene] = useState<string | null>(null);
   const [editingHotspot, setEditingHotspot] = useState<EditingHotspot | null>(
     null
   );
+  const [showCaptureScreen, setShowCaptureScreen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [editingScene, setEditingScene] = useState<string | null>(null);
 
   const selectedScene = scenes.find((s) => s.id === selectedSceneId);
 
   // Generate unique ID
-  const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const generateId = () =>
+    `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-  // Add new 360° photo
+  // Handle photo captured from PanoramaCapture
+  const handlePhotoCaptured = useCallback(
+    (photoUri: string) => {
+      const newScene: Scene = {
+        id: generateId(),
+        name: `Room ${scenes.length + 1}`,
+        imageUrl: photoUri,
+        thumbnail: photoUri,
+        hotspots: [],
+      };
+
+      setScenes((prev) => [...prev, newScene]);
+      setSelectedSceneId(newScene.id);
+      setShowCaptureScreen(false);
+    },
+    [scenes.length]
+  );
+
+  // Add new 360° photo - show options
   const handleAddPhoto = useCallback(async () => {
     if (scenes.length >= maxScenes) {
       Alert.alert(
@@ -65,43 +87,31 @@ export function VirtualTourCreator({
 
     Alert.alert("Add 360° Photo", "Choose how to add your panoramic photo", [
       {
-        text: "Camera",
-        onPress: () => pickImage(true),
+        text: "📷 Capture 360°",
+        onPress: () => setShowCaptureScreen(true),
       },
       {
-        text: "Gallery",
+        text: "🖼️ From Gallery",
         onPress: () => pickImage(false),
       },
       { text: "Cancel", style: "cancel" },
     ]);
   }, [scenes.length, maxScenes]);
 
-  const pickImage = async (useCamera: boolean) => {
+  // Pick image from gallery only (camera uses PanoramaCapture)
+  const pickImage = async (_useCamera: boolean) => {
     try {
       setIsLoading(true);
 
-      // Request permissions
-      if (useCamera) {
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-        if (status !== "granted") {
-          Alert.alert(
-            "Permission Required",
-            "Camera permission is needed to take photos."
-          );
-          setIsLoading(false);
-          return;
-        }
-      } else {
-        const { status } =
-          await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== "granted") {
-          Alert.alert(
-            "Permission Required",
-            "Photo library permission is needed to select photos."
-          );
-          setIsLoading(false);
-          return;
-        }
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Required",
+          "Photo library permission is needed to select photos."
+        );
+        setIsLoading(false);
+        return;
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -284,14 +294,20 @@ export function VirtualTourCreator({
           {item.hotspots.length > 0 && (
             <View style={styles.hotspotCountBadge}>
               <Ionicons name="location" size={10} color="#FFFFFF" />
-              <Text style={styles.hotspotCountText}>{item.hotspots.length}</Text>
+              <Text style={styles.hotspotCountText}>
+                {item.hotspots.length}
+              </Text>
             </View>
           )}
         </View>
       </View>
       {selectedSceneId === item.id && (
         <View style={styles.sceneThumbnailCheck}>
-          <Ionicons name="checkmark-circle" size={18} color={Colors.primaryGreen} />
+          <Ionicons
+            name="checkmark-circle"
+            size={18}
+            color={Colors.primaryGreen}
+          />
         </View>
       )}
     </TouchableOpacity>
@@ -359,7 +375,11 @@ export function VirtualTourCreator({
                   <ActivityIndicator color={Colors.primaryGreen} />
                 ) : (
                   <>
-                    <Ionicons name="add" size={28} color={Colors.primaryGreen} />
+                    <Ionicons
+                      name="add"
+                      size={28}
+                      color={Colors.primaryGreen}
+                    />
                     <Text style={styles.addSceneText}>Add 360°</Text>
                   </>
                 )}
@@ -499,7 +519,9 @@ export function VirtualTourCreator({
                   </View>
                   <View style={styles.hotspotButtonContent}>
                     <Text style={styles.hotspotButtonTitle}>Info Point</Text>
-                    <Text style={styles.hotspotButtonDesc}>Show information</Text>
+                    <Text style={styles.hotspotButtonDesc}>
+                      Show information
+                    </Text>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -563,7 +585,11 @@ export function VirtualTourCreator({
                           handleDeleteHotspot(selectedScene.id, hotspot.id)
                         }
                       >
-                        <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                        <Ionicons
+                          name="trash-outline"
+                          size={18}
+                          color="#EF4444"
+                        />
                       </TouchableOpacity>
                     </View>
                   ))}
@@ -593,7 +619,9 @@ export function VirtualTourCreator({
               ) : (
                 <>
                   <Ionicons name="add-circle" size={20} color="#FFFFFF" />
-                  <Text style={styles.emptyButtonText}>Add First 360° Photo</Text>
+                  <Text style={styles.emptyButtonText}>
+                    Add First 360° Photo
+                  </Text>
                 </>
               )}
             </TouchableOpacity>
@@ -629,6 +657,14 @@ export function VirtualTourCreator({
           }
         />
       )}
+
+      {/* Panorama Capture Modal */}
+      <Modal visible={showCaptureScreen} animationType="slide">
+        <PanoramaCapture
+          onComplete={handlePhotoCaptured}
+          onCancel={() => setShowCaptureScreen(false)}
+        />
+      </Modal>
     </View>
   );
 }
@@ -814,7 +850,10 @@ function HotspotEditor({
           >
             <Text style={editorStyles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={editorStyles.saveButton} onPress={handleSave}>
+          <TouchableOpacity
+            style={editorStyles.saveButton}
+            onPress={handleSave}
+          >
             <Text style={editorStyles.saveButtonText}>Save Hotspot</Text>
           </TouchableOpacity>
         </View>
@@ -1390,4 +1429,3 @@ const editorStyles = StyleSheet.create({
 });
 
 export default VirtualTourCreator;
-
