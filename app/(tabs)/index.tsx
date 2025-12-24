@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,11 @@ import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import {
+  BottomSheetModal,
+  BottomSheetBackdrop,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import {
   FloatingHeaderStyles,
@@ -24,6 +29,7 @@ import {
   NEAR_YOU_PROPERTIES,
   NEW_LISTINGS,
 } from "@/constants/mockData";
+import { LocationSelector } from "@/components/LocationSelector";
 
 const CATEGORIES = [
   {
@@ -107,9 +113,37 @@ export default function BuyerHomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedLocation] = useState("Accra");
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([
+    "Accra",
+  ]);
   const [savedProperties, setSavedProperties] = useState<Set<string>>(
     new Set(["2", "5"])
+  );
+
+  // Location selector bottom sheet
+  const locationSheetRef = useRef<BottomSheetModal>(null);
+  const snapPoints = useMemo(() => ["90%"], []);
+
+  const selectedLocation =
+    selectedLocations.length > 0 ? selectedLocations[0] : "Select Location";
+
+  const handleLocationChange = (locations: string[]) => {
+    setSelectedLocations(locations);
+    // If a location is selected, close the sheet
+    // (LocationSelector allows multiple selections, but we'll use the first one for display)
+    if (locations.length > 0) {
+      // Optionally auto-close, or let user close manually
+      // locationSheetRef.current?.dismiss();
+    }
+  };
+
+  const renderBackdrop = (props: any) => (
+    <BottomSheetBackdrop
+      {...props}
+      disappearsOnIndex={-1}
+      appearsOnIndex={0}
+      opacity={0.5}
+    />
   );
 
   const onRefresh = React.useCallback(() => {
@@ -160,10 +194,7 @@ export default function BuyerHomeScreen() {
           ]}
         >
           <TouchableOpacity
-            onPress={() => {
-              // TODO: Show location picker
-              console.log("Change Location");
-            }}
+            onPress={() => locationSheetRef.current?.present()}
             style={styles.locationContainer}
             activeOpacity={0.7}
           >
@@ -628,6 +659,33 @@ export default function BuyerHomeScreen() {
           </View>
         </ScrollView>
       </View>
+
+      {/* Location Selector Bottom Sheet */}
+      <BottomSheetModal
+        ref={locationSheetRef}
+        index={0}
+        snapPoints={snapPoints}
+        enablePanDownToClose
+        backdropComponent={renderBackdrop}
+        backgroundStyle={styles.bottomSheetBackground}
+      >
+        <BottomSheetView style={styles.bottomSheetContent}>
+          <View style={styles.bottomSheetHeader}>
+            <Text style={styles.bottomSheetTitle}>Select Location</Text>
+            <TouchableOpacity
+              onPress={() => locationSheetRef.current?.dismiss()}
+              style={styles.closeButton}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="close" size={24} color={Colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
+          <LocationSelector
+            selectedLocations={selectedLocations}
+            onLocationsChange={handleLocationChange}
+          />
+        </BottomSheetView>
+      </BottomSheetModal>
     </>
   );
 }
@@ -1183,5 +1241,37 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     fontSize: 11,
     color: Colors.textSecondary,
+  },
+  bottomSheetBackground: {
+    backgroundColor: Colors.background,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  bottomSheetContent: {
+    flex: 1,
+    paddingHorizontal: Spacing.lg,
+  },
+  bottomSheetHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingBottom: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
+    marginBottom: Spacing.md,
+  },
+  bottomSheetTitle: {
+    ...Typography.titleLarge,
+    fontSize: 20,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.surface,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
