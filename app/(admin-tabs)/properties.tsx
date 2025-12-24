@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -7,12 +7,9 @@ import {
   TouchableOpacity,
   Image,
   RefreshControl,
-  TextInput as RNTextInput,
   Platform,
   Alert,
   Keyboard,
-  Animated,
-  Dimensions,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -29,6 +26,7 @@ import {
   FloatingHeader,
   HeaderActionButton,
 } from "@/components/FloatingHeader";
+import { FloatingSearchBar } from "@/components/FloatingSearchBar";
 
 interface Property {
   id: string;
@@ -52,8 +50,6 @@ interface Property {
 }
 
 type FilterTab = "pending" | "approved" | "rejected" | "all";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const MOCK_PROPERTIES: Property[] = [
   {
@@ -190,7 +186,6 @@ const REJECTION_REASONS = [
 export default function PropertyQueueScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const searchInputRef = useRef<RNTextInput>(null);
   const [properties, setProperties] = useState<Property[]>(MOCK_PROPERTIES);
   const [activeFilter, setActiveFilter] = useState<FilterTab>("pending");
   const [searchQuery, setSearchQuery] = useState("");
@@ -199,61 +194,9 @@ export default function PropertyQueueScreen() {
     null
   );
   const [selectedReason, setSelectedReason] = useState<string>("");
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const actionSheetRef = useRef<BottomSheetModal>(null);
   const rejectSheetRef = useRef<BottomSheetModal>(null);
   const filterSheetRef = useRef<BottomSheetModal>(null);
-  const searchInputWidth = useRef(new Animated.Value(200)).current;
-  const searchInputHeight = useRef(new Animated.Value(44)).current;
-
-  // Handle keyboard show/hide
-  useEffect(() => {
-    const keyboardWillShowListener = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
-      (e) => {
-        setKeyboardHeight(e.endCoordinates.height);
-        setIsKeyboardVisible(true);
-        Animated.parallel([
-          Animated.timing(searchInputWidth, {
-            toValue: SCREEN_WIDTH * 0.9 - Spacing.lg * 2,
-            duration: 250,
-            useNativeDriver: false,
-          }),
-          Animated.timing(searchInputHeight, {
-            toValue: 52,
-            duration: 250,
-            useNativeDriver: false,
-          }),
-        ]).start();
-      }
-    );
-
-    const keyboardWillHideListener = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
-      () => {
-        setKeyboardHeight(0);
-        setIsKeyboardVisible(false);
-        Animated.parallel([
-          Animated.timing(searchInputWidth, {
-            toValue: 200,
-            duration: 250,
-            useNativeDriver: false,
-          }),
-          Animated.timing(searchInputHeight, {
-            toValue: 44,
-            duration: 250,
-            useNativeDriver: false,
-          }),
-        ]).start();
-      }
-    );
-
-    return () => {
-      keyboardWillShowListener.remove();
-      keyboardWillHideListener.remove();
-    };
-  }, [searchInputWidth, searchInputHeight]);
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
@@ -619,59 +562,13 @@ export default function PropertyQueueScreen() {
         />
 
         {/* Floating Search Input */}
-        <Animated.View
-          style={[
-            styles.floatingSearchContainer,
-            {
-              bottom: isKeyboardVisible
-                ? keyboardHeight + Spacing.md
-                : Math.max(insets.bottom, Spacing.md) + 70,
-            },
-          ]}
-        >
-          <Animated.View
-            style={[
-              styles.floatingSearchInputContainer,
-              {
-                width: searchInputWidth,
-                height: searchInputHeight,
-              },
-            ]}
-          >
-            <Ionicons
-              name="search"
-              size={isKeyboardVisible ? 18 : 16}
-              color={Colors.textSecondary}
-              style={styles.floatingSearchIcon}
-            />
-            <RNTextInput
-              ref={searchInputRef}
-              style={[
-                styles.floatingSearchInput,
-                { fontSize: isKeyboardVisible ? 15 : 13 },
-              ]}
-              placeholder="Search properties..."
-              placeholderTextColor={Colors.textSecondary}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              returnKeyType="search"
-              autoCapitalize="none"
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity
-                onPress={() => setSearchQuery("")}
-                style={styles.floatingClearButton}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name="close-circle"
-                  size={isKeyboardVisible ? 20 : 18}
-                  color={Colors.textSecondary}
-                />
-              </TouchableOpacity>
-            )}
-          </Animated.View>
-        </Animated.View>
+        <FloatingSearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search properties..."
+          collapsedWidth={200}
+          collapsedHeight={44}
+        />
 
         {/* Filter Bottom Sheet */}
         <BottomSheetModal
@@ -1295,57 +1192,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: Colors.primaryGreen,
-  },
-  // Floating Search
-  floatingSearchContainer: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    alignItems: "center",
-    zIndex: 999,
-    backgroundColor: "transparent",
-  },
-  floatingSearchInputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    paddingHorizontal: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.divider,
-    gap: Spacing.xs / 2,
-    alignSelf: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.12,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
-  },
-  floatingSearchIcon: {
-    marginRight: Spacing.xs / 2,
-  },
-  floatingSearchInput: {
-    flex: 1,
-    ...Typography.bodyMedium,
-    fontSize: 13,
-    color: Colors.textPrimary,
-    padding: 0,
-    minWidth: 120,
-    ...Platform.select({
-      android: {
-        includeFontPadding: false,
-        textAlignVertical: "center",
-      },
-    }),
-  },
-  floatingClearButton: {
-    padding: Spacing.xs / 2,
   },
   // Filter Sheet
   filterSheetContent: {

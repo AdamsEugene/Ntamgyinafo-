@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -7,12 +7,9 @@ import {
   TouchableOpacity,
   Image,
   RefreshControl,
-  TextInput as RNTextInput,
   Platform,
   Alert,
   Keyboard,
-  Animated,
-  Dimensions,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -29,6 +26,7 @@ import {
   FloatingHeader,
   HeaderActionButton,
 } from "@/components/FloatingHeader";
+import { FloatingSearchBar } from "@/components/FloatingSearchBar";
 
 interface User {
   id: string;
@@ -45,8 +43,6 @@ interface User {
 }
 
 type FilterTab = "all" | "pending" | "owners" | "buyers" | "suspended";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const MOCK_USERS: User[] = [
   {
@@ -137,66 +133,13 @@ const FILTER_OPTIONS: {
 export default function UserManagementScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const searchInputRef = useRef<RNTextInput>(null);
   const [users, setUsers] = useState<User[]>(MOCK_USERS);
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const actionSheetRef = useRef<BottomSheetModal>(null);
   const filterSheetRef = useRef<BottomSheetModal>(null);
-  const searchInputWidth = useRef(new Animated.Value(200)).current;
-  const searchInputHeight = useRef(new Animated.Value(44)).current;
-
-  // Handle keyboard show/hide
-  useEffect(() => {
-    const keyboardWillShowListener = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
-      (e) => {
-        setKeyboardHeight(e.endCoordinates.height);
-        setIsKeyboardVisible(true);
-        Animated.parallel([
-          Animated.timing(searchInputWidth, {
-            toValue: SCREEN_WIDTH * 0.9 - Spacing.lg * 2,
-            duration: 250,
-            useNativeDriver: false,
-          }),
-          Animated.timing(searchInputHeight, {
-            toValue: 52,
-            duration: 250,
-            useNativeDriver: false,
-          }),
-        ]).start();
-      }
-    );
-
-    const keyboardWillHideListener = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
-      () => {
-        setKeyboardHeight(0);
-        setIsKeyboardVisible(false);
-        Animated.parallel([
-          Animated.timing(searchInputWidth, {
-            toValue: 200,
-            duration: 250,
-            useNativeDriver: false,
-          }),
-          Animated.timing(searchInputHeight, {
-            toValue: 44,
-            duration: 250,
-            useNativeDriver: false,
-          }),
-        ]).start();
-      }
-    );
-
-    return () => {
-      keyboardWillShowListener.remove();
-      keyboardWillHideListener.remove();
-    };
-  }, [searchInputWidth, searchInputHeight]);
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
@@ -555,59 +498,13 @@ export default function UserManagementScreen() {
         />
 
         {/* Floating Search Input */}
-        <Animated.View
-          style={[
-            styles.floatingSearchContainer,
-            {
-              bottom: isKeyboardVisible
-                ? keyboardHeight + Spacing.md
-                : Math.max(insets.bottom, Spacing.md) + 70,
-            },
-          ]}
-        >
-          <Animated.View
-            style={[
-              styles.floatingSearchInputContainer,
-              {
-                width: searchInputWidth,
-                height: searchInputHeight,
-              },
-            ]}
-          >
-            <Ionicons
-              name="search"
-              size={isKeyboardVisible ? 18 : 16}
-              color={Colors.textSecondary}
-              style={styles.floatingSearchIcon}
-            />
-            <RNTextInput
-              ref={searchInputRef}
-              style={[
-                styles.floatingSearchInput,
-                { fontSize: isKeyboardVisible ? 15 : 13 },
-              ]}
-              placeholder="Search users..."
-              placeholderTextColor={Colors.textSecondary}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              returnKeyType="search"
-              autoCapitalize="none"
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity
-                onPress={() => setSearchQuery("")}
-                style={styles.floatingClearButton}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name="close-circle"
-                  size={isKeyboardVisible ? 20 : 18}
-                  color={Colors.textSecondary}
-                />
-              </TouchableOpacity>
-            )}
-          </Animated.View>
-        </Animated.View>
+        <FloatingSearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search users..."
+          collapsedWidth={200}
+          collapsedHeight={44}
+        />
 
         {/* Filter Bottom Sheet */}
         <BottomSheetModal
@@ -906,33 +803,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primaryGreen,
     opacity: 0.05,
   },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
-    flex: 1,
-  },
-  headerTitleText: {
-    ...Typography.titleLarge,
-    fontSize: 22,
-    fontWeight: "700",
-    color: Colors.textPrimary,
-  },
-  headerBadge: {
-    backgroundColor: "#EF4444",
-    minWidth: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 6,
-  },
-  headerBadgeText: {
-    ...Typography.caption,
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#FFFFFF",
-  },
   // Active Filter Bar
   activeFilterBar: {
     position: "absolute",
@@ -1148,57 +1018,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: Colors.primaryGreen,
-  },
-  // Floating Search
-  floatingSearchContainer: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    alignItems: "center",
-    zIndex: 999,
-    backgroundColor: "transparent",
-  },
-  floatingSearchInputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    paddingHorizontal: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.divider,
-    gap: Spacing.xs / 2,
-    alignSelf: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.12,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
-  },
-  floatingSearchIcon: {
-    marginRight: Spacing.xs / 2,
-  },
-  floatingSearchInput: {
-    flex: 1,
-    ...Typography.bodyMedium,
-    fontSize: 13,
-    color: Colors.textPrimary,
-    padding: 0,
-    minWidth: 120,
-    ...Platform.select({
-      android: {
-        includeFontPadding: false,
-        textAlignVertical: "center",
-      },
-    }),
-  },
-  floatingClearButton: {
-    padding: Spacing.xs / 2,
   },
   // Filter Sheet
   filterSheetContent: {
