@@ -274,14 +274,7 @@ export default function MapScreen() {
     }
   };
 
-  const handleMapPress = (event: MapPressEvent) => {
-    const { latitude, longitude } = event.nativeEvent.coordinate;
-
-    // If distance filter is selected, draw circle from user location
-    if (distanceFilter && userLocation) {
-      setCircleCenter({ latitude, longitude });
-    }
-
+  const handleMapPress = (_event: MapPressEvent) => {
     // Close popup if clicking on map (not on marker)
     if (selectedProperty) {
       setSelectedProperty(null);
@@ -814,7 +807,29 @@ export default function MapScreen() {
               onPress={() => {
                 setDistanceFilter(filter.id);
                 if (!filter.id) {
+                  // Clear the circle when "All" is selected
                   setCircleCenter(null);
+                } else if (userLocation) {
+                  // Draw circle around user's current location
+                  setCircleCenter(userLocation);
+
+                  // Calculate the zoom level to show the entire circle
+                  const radiusInMeters = getDistanceInMeters(filter.id);
+                  // Convert meters to degrees (approximate)
+                  // 1 degree latitude ≈ 111,320 meters
+                  const latDelta = (radiusInMeters / 111320) * 2.5; // 2.5x to show padding
+                  const lngDelta = latDelta * 1.2; // Adjust for aspect ratio
+
+                  // Animate map to show the circle
+                  mapRef.current?.animateToRegion(
+                    {
+                      latitude: userLocation.latitude,
+                      longitude: userLocation.longitude,
+                      latitudeDelta: latDelta,
+                      longitudeDelta: lngDelta,
+                    },
+                    500
+                  );
                 }
               }}
               activeOpacity={0.7}
