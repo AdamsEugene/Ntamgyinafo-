@@ -680,10 +680,12 @@ export default function BuyerHomeScreen() {
               <Ionicons name="close" size={24} color={Colors.textPrimary} />
             </TouchableOpacity>
           </View>
-          <LocationSelector
-            selectedLocations={selectedLocations}
-            onLocationsChange={handleLocationChange}
-          />
+          <View style={styles.locationSelectorWrapper}>
+            <LocationSelector
+              selectedLocations={selectedLocations}
+              onLocationsChange={handleLocationChange}
+            />
+          </View>
         </BottomSheetView>
       </BottomSheetModal>
     </>
@@ -1250,6 +1252,7 @@ const styles = StyleSheet.create({
   bottomSheetContent: {
     flex: 1,
     paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.xl,
   },
   bottomSheetHeader: {
     flexDirection: "row",
@@ -1273,5 +1276,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     justifyContent: "center",
     alignItems: "center",
+  },
+  locationSelectorWrapper: {
+    flex: 1,
   },
 });

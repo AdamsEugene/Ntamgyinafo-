@@ -7,10 +7,13 @@ import {
   TextInput,
   Platform,
   ScrollView,
+  Dimensions,
 } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, Typography, Spacing } from "@/constants/design";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 interface LocationSelectorProps {
   selectedLocations: string[];
@@ -322,8 +325,8 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     width: "100%",
+    height: "100%",
   },
   header: {
     flexDirection: "row",
@@ -421,11 +424,10 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   mapContainer: {
-    flex: 1,
     borderRadius: 16,
     overflow: "hidden",
     width: "100%",
-    minHeight: 300,
+    height: SCREEN_HEIGHT * 0.6, // 60% of screen height
   },
   map: {
     width: "100%",
@@ -455,10 +457,11 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   listScrollView: {
-    flex: 1,
+    height: SCREEN_HEIGHT * 0.65, // Fixed height to ensure scrolling works
   },
   listContent: {
     paddingBottom: Spacing["3xl"],
+    flexGrow: 1,
   },
   locationItem: {
     flexDirection: "row",
