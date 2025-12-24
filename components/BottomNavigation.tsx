@@ -34,33 +34,41 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   const insets = useSafeAreaInsets();
   const isDark = variant === "dark";
 
-  return (
-    <View style={styles.floatingContainer}>
-      {/* Blur Background */}
-      <BlurView
-        intensity={isDark ? 25 : 35}
-        tint={isDark ? "dark" : "light"}
-        style={styles.blurContainer}
-      >
-        {/* Glass overlay */}
-        <View
-          style={[
-            styles.glassOverlay,
-            isDark ? styles.glassOverlayDark : styles.glassOverlayLight,
-          ]}
-        />
+  // Calculate the height needed for blur background
+  const navHeight = 64;
+  const bottomPadding = Math.max(insets.bottom, Spacing.md);
+  const totalBlurHeight = navHeight + bottomPadding; // extra for margin
 
-        {/* Top border line */}
+  return (
+    <View style={styles.wrapper}>
+      {/* Blur Background Layer - blocks clicks */}
+      <View style={[styles.blurBackground, { height: totalBlurHeight }]}>
+        <BlurView
+          intensity={isDark ? 15 : 20}
+          tint={isDark ? "dark" : "light"}
+          style={StyleSheet.absoluteFill}
+        >
+          <View
+            style={[
+              styles.glassOverlay,
+              isDark ? styles.glassOverlayDark : styles.glassOverlayLight,
+            ]}
+          />
+        </BlurView>
+      </View>
+
+      {/* Floating Pill Nav - sits on top */}
+      <View style={[styles.floatingNav, { marginBottom: bottomPadding }]}>
         <View
           style={[
-            styles.topBorder,
-            isDark ? styles.topBorderDark : styles.topBorderLight,
+            styles.navBackground,
+            isDark ? styles.navBackgroundDark : styles.navBackgroundLight,
           ]}
         />
 
         {/* Tabs Container */}
-        <View style={styles.container}>
-          {tabs.map((tab, index) => {
+        <View style={styles.tabsContainer}>
+          {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const iconName =
               isActive && tab.activeIcon ? tab.activeIcon : tab.icon;
@@ -114,60 +122,62 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
             );
           })}
         </View>
-
-        {/* Bottom safe area spacer */}
-        <View style={{ height: Math.max(insets.bottom, Spacing.sm) }} />
-      </BlurView>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  floatingContainer: {
+  wrapper: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
     zIndex: 1000,
-    overflow: "hidden",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 12,
-      },
-    }),
   },
-  blurContainer: {
+  blurBackground: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     overflow: "hidden",
   },
   glassOverlay: {
     ...StyleSheet.absoluteFillObject,
   },
   glassOverlayLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.6)",
+    backgroundColor: "rgba(255, 255, 255, 0.4)",
   },
   glassOverlayDark: {
-    backgroundColor: "rgba(30, 30, 30, 0.6)",
+    backgroundColor: "rgba(30, 30, 30, 0.4)",
   },
-  topBorder: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 1,
+  floatingNav: {
+    marginHorizontal: Spacing.lg,
+    borderRadius: 28,
+    overflow: "hidden",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
-  topBorderLight: {
-    backgroundColor: "rgba(0, 0, 0, 0.08)",
+  navBackground: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 28,
   },
-  topBorderDark: {
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+  navBackgroundLight: {
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
   },
-  container: {
+  navBackgroundDark: {
+    backgroundColor: "rgba(40, 40, 40, 0.95)",
+  },
+  tabsContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",

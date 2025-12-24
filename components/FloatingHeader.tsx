@@ -39,7 +39,7 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
   return (
     <View style={[styles.headerContainer, style]}>
       <BlurView
-        intensity={isDark ? 25 : 35}
+        intensity={isDark ? 15 : 20}
         tint={isDark ? "dark" : "light"}
         style={styles.blurContainer}
       >
@@ -94,14 +94,6 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             <View style={styles.rightSection}>{rightContent}</View>
           )}
         </View>
-
-        {/* Bottom border/highlight */}
-        <View
-          style={[
-            styles.bottomBorder,
-            isDark ? styles.bottomBorderDark : styles.bottomBorderLight,
-          ]}
-        />
       </BlurView>
     </View>
   );
@@ -165,10 +157,10 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   glassOverlayLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.6)",
+    backgroundColor: "rgba(255, 255, 255, 0.4)",
   },
   glassOverlayDark: {
-    backgroundColor: "rgba(30, 30, 30, 0.6)",
+    backgroundColor: "rgba(30, 30, 30, 0.4)",
   },
   headerContent: {
     flexDirection: "row",
@@ -249,19 +241,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "700",
     color: "#FFFFFF",
-  },
-  bottomBorder: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 1,
-  },
-  bottomBorderLight: {
-    backgroundColor: "rgba(0, 0, 0, 0.05)",
-  },
-  bottomBorderDark: {
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
 });
 
