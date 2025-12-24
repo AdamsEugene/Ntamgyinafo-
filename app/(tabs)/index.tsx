@@ -126,6 +126,7 @@ export default function BuyerHomeScreen() {
 
   const selectedLocation =
     selectedLocations.length > 0 ? selectedLocations[0] : "Select Location";
+  const hasMultipleLocations = selectedLocations.length > 1;
 
   const handleLocationChange = (locations: string[]) => {
     setSelectedLocations(locations);
@@ -201,7 +202,16 @@ export default function BuyerHomeScreen() {
             <View style={styles.locationIconContainer}>
               <Ionicons name="location" size={18} color={Colors.primaryGreen} />
             </View>
-            <Text style={styles.location}>{selectedLocation}</Text>
+            <Text style={styles.location} numberOfLines={1}>
+              {selectedLocation}
+            </Text>
+            {hasMultipleLocations && (
+              <View style={styles.locationBadge}>
+                <Text style={styles.locationBadgeText}>
+                  +{selectedLocations.length - 1}
+                </Text>
+              </View>
+            )}
             <Ionicons
               name="chevron-down"
               size={16}
@@ -772,6 +782,23 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     color: Colors.textPrimary,
+    maxWidth: 100,
+  },
+  locationBadge: {
+    backgroundColor: Colors.primaryGreen,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 6,
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: Spacing.xs,
+  },
+  locationBadgeText: {
+    ...Typography.caption,
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
   notificationBadge: {
     position: "absolute",
