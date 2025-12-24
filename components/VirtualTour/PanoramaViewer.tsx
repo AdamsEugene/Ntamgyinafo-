@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import * as FileSystem from "expo-file-system";
 
 export interface Hotspot {
   id: string;
@@ -51,7 +52,7 @@ export interface PanoramaViewerProps {
 
 // HTML template for 360° viewer using Pannellum
 const getPanoramaHTML = (
-  scene: Scene,
+  imageDataUrl: string, // Now accepts base64 data URL or regular URL
   autoRotate: boolean,
   hotspots: Hotspot[]
 ) => {
@@ -103,7 +104,7 @@ const getPanoramaHTML = (
   <script>
     var viewer = pannellum.viewer('panorama', {
       "type": "equirectangular",
-      "panorama": "${scene.imageUrl}",
+      "panorama": "${imageDataUrl}",
       "autoLoad": true,
       "autoRotate": ${autoRotate ? 2 : 0},
       "autoRotateInactivityDelay": 3000,
@@ -159,9 +160,58 @@ export function PanoramaViewer({
   const [showRoomSelector, setShowRoomSelector] = useState(true);
   const [isAutoRotating, setIsAutoRotating] = useState(autoRotate);
   const [showInfo, setShowInfo] = useState<Hotspot | null>(null);
+  const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
+  const [isConvertingImage, setIsConvertingImage] = useState(false);
 
   const currentSceneIndex = scenes.findIndex((s) => s.id === currentSceneId);
   const currentScene = scenes[currentSceneIndex] || scenes[0];
+
+  // Convert local file URIs to base64 for WebView
+  useEffect(() => {
+    const convertImageToBase64 = async () => {
+      if (!currentScene?.imageUrl) {
+        setHasError(true);
+        return;
+      }
+
+      const imageUrl = currentScene.imageUrl;
+
+      // Check if it's a local file URI
+      if (imageUrl.startsWith("file://") || imageUrl.startsWith("/")) {
+        setIsConvertingImage(true);
+        setIsLoading(true);
+
+        try {
+          // Read file as base64
+          const filePath = imageUrl.startsWith("file://")
+            ? imageUrl
+            : `file://${imageUrl}`;
+
+          const base64 = await FileSystem.readAsStringAsync(filePath, {
+            encoding: "base64",
+          });
+
+          // Determine mime type
+          const extension = imageUrl.split(".").pop()?.toLowerCase();
+          const mimeType = extension === "png" ? "image/png" : "image/jpeg";
+
+          setImageDataUrl(`data:${mimeType};base64,${base64}`);
+          setHasError(false);
+        } catch (error) {
+          console.error("Failed to convert image to base64:", error);
+          setHasError(true);
+        } finally {
+          setIsConvertingImage(false);
+        }
+      } else {
+        // Remote URL - use directly
+        setImageDataUrl(imageUrl);
+        setHasError(false);
+      }
+    };
+
+    convertImageToBase64();
+  }, [currentScene?.imageUrl]);
 
   // Pulse animation for the 360° indicator
   useEffect(() => {
@@ -349,13 +399,13 @@ export function PanoramaViewer({
               <Text style={styles.retryButtonText}>Try Again</Text>
             </TouchableOpacity>
           </View>
-        ) : (
+        ) : imageDataUrl ? (
           <>
             <WebView
               ref={webViewRef}
               source={{
                 html: getPanoramaHTML(
-                  currentScene,
+                  imageDataUrl,
                   isAutoRotating,
                   currentScene.hotspots
                 ),
@@ -369,6 +419,7 @@ export function PanoramaViewer({
               scalesPageToFit={true}
               allowsInlineMediaPlayback={true}
               mediaPlaybackRequiresUserAction={false}
+              originWhitelist={["*"]}
             />
 
             {isLoading && (
@@ -388,6 +439,17 @@ export function PanoramaViewer({
               </View>
             )}
           </>
+        ) : (
+          <View style={styles.loadingOverlay}>
+            <View style={styles.loadingContent}>
+              <View style={styles.loadingSpinner}>
+                <ActivityIndicator size="large" color="#FFFFFF" />
+              </View>
+              <Text style={styles.loadingText}>
+                {isConvertingImage ? "Preparing panorama..." : "Loading..."}
+              </Text>
+            </View>
+          </View>
         )}
 
         {/* Navigation Arrows */}
