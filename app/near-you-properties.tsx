@@ -60,7 +60,6 @@ export default function NearYouPropertiesScreen() {
   const [selectedLocations, setSelectedLocations] = useState<string[]>([
     "East Legon",
   ]);
-  const [currentLocation, setCurrentLocation] = useState("East Legon, Accra");
 
   // Location selector bottom sheet
   const locationSheetRef = useRef<BottomSheetModal>(null);
@@ -68,9 +67,6 @@ export default function NearYouPropertiesScreen() {
 
   const handleLocationChange = (locations: string[]) => {
     setSelectedLocations(locations);
-    if (locations.length > 0) {
-      setCurrentLocation(`${locations[0]}, Accra`);
-    }
   };
 
   const renderBackdrop = (props: any) => (
@@ -224,8 +220,25 @@ export default function NearYouPropertiesScreen() {
           <Ionicons name="navigate" size={20} color={Colors.primaryGreen} />
         </View>
         <View style={styles.locationDetails}>
-          <Text style={styles.locationLabel}>Your Location</Text>
-          <Text style={styles.locationValue}>{currentLocation}</Text>
+          <Text style={styles.locationLabel}>Selected Locations</Text>
+          {selectedLocations.length > 0 ? (
+            <View style={styles.selectedLocationsContainer}>
+              {selectedLocations.slice(0, 3).map((location, index) => (
+                <View key={location} style={styles.locationTag}>
+                  <Text style={styles.locationTagText}>{location}</Text>
+                </View>
+              ))}
+              {selectedLocations.length > 3 && (
+                <View style={styles.locationTag}>
+                  <Text style={styles.locationTagText}>
+                    +{selectedLocations.length - 3} more
+                  </Text>
+                </View>
+              )}
+            </View>
+          ) : (
+            <Text style={styles.locationValue}>No locations selected</Text>
+          )}
         </View>
         <TouchableOpacity
           style={styles.changeLocation}
@@ -491,6 +504,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: Colors.textPrimary,
+  },
+  selectedLocationsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.xs,
+    marginTop: 4,
+  },
+  locationTag: {
+    backgroundColor: `${Colors.primaryGreen}15`,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: `${Colors.primaryGreen}30`,
+  },
+  locationTagText: {
+    ...Typography.caption,
+    fontSize: 11,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
   },
   changeLocation: {
     paddingHorizontal: Spacing.md,

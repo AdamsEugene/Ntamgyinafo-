@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import RNMapView, {
   Marker,
+  Circle,
   PROVIDER_GOOGLE,
   Region,
   MapPressEvent,
@@ -45,6 +46,14 @@ const DEFAULT_REGION: Region = {
   latitudeDelta: 0.1,
   longitudeDelta: 0.1,
 };
+
+// Distance filter options
+const DISTANCE_FILTERS = [
+  { id: null, label: "All" },
+  { id: "1km", label: "1 km" },
+  { id: "5km", label: "5 km" },
+  { id: "10km", label: "10 km" },
+];
 
 const BOTTOM_NAV_TABS: TabItem[] = [
   {
@@ -92,11 +101,16 @@ export default function MapScreen() {
     null
   );
   const [popupExpanded, setPopupExpanded] = useState(false);
-  const [, setUserLocation] = useState<{
+  const [userLocation, setUserLocation] = useState<{
     latitude: number;
     longitude: number;
   } | null>(null);
   const [filters, setFilters] = useState<FilterOptions>({});
+  const [distanceFilter, setDistanceFilter] = useState<string | null>(null);
+  const [circleCenter, setCircleCenter] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
   const [filteredProperties, setFilteredProperties] =
     useState<MapProperty[]>(MAP_PROPERTIES);
   const [savedProperties, setSavedProperties] = useState<Set<string>>(
@@ -261,10 +275,32 @@ export default function MapScreen() {
   };
 
   const handleMapPress = (event: MapPressEvent) => {
+    const { latitude, longitude } = event.nativeEvent.coordinate;
+
+    // If distance filter is selected, draw circle from user location
+    if (distanceFilter && userLocation) {
+      setCircleCenter({ latitude, longitude });
+    }
+
     // Close popup if clicking on map (not on marker)
     if (selectedProperty) {
       setSelectedProperty(null);
       setPopupExpanded(false);
+    }
+  };
+
+  // Convert distance filter to meters
+  const getDistanceInMeters = (distanceFilter: string | null): number => {
+    if (!distanceFilter || distanceFilter === "all") return 0;
+    switch (distanceFilter) {
+      case "1km":
+        return 1000;
+      case "5km":
+        return 5000;
+      case "10km":
+        return 10000;
+      default:
+        return 0;
     }
   };
 
@@ -548,6 +584,17 @@ export default function MapScreen() {
               </Marker>
             );
           })}
+
+          {/* Distance Circle - shows selected distance radius when distance filter is active */}
+          {circleCenter && distanceFilter && (
+            <Circle
+              center={circleCenter}
+              radius={getDistanceInMeters(distanceFilter)}
+              strokeColor={Colors.primaryGreen}
+              fillColor={`${Colors.primaryGreen}20`}
+              strokeWidth={2}
+            />
+          )}
         </MapView>
 
         {/* Property Popup Card */}
@@ -754,6 +801,36 @@ export default function MapScreen() {
             </View>
           </View>
         )}
+
+        {/* Distance Filter Chips */}
+        <View style={styles.distanceFilterContainer}>
+          {DISTANCE_FILTERS.map((filter) => (
+            <TouchableOpacity
+              key={filter.id || "all"}
+              style={[
+                styles.distanceFilterChip,
+                distanceFilter === filter.id && styles.distanceFilterChipActive,
+              ]}
+              onPress={() => {
+                setDistanceFilter(filter.id);
+                if (!filter.id) {
+                  setCircleCenter(null);
+                }
+              }}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.distanceFilterText,
+                  distanceFilter === filter.id &&
+                    styles.distanceFilterTextActive,
+                ]}
+              >
+                {filter.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         {/* Fit to Properties Floating Button */}
         {filteredProperties.length > 0 && (
@@ -1346,5 +1423,46 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
     paddingBottom: Spacing.xl,
+  },
+  distanceFilterContainer: {
+    position: "absolute",
+    top: 120,
+    left: Spacing.lg,
+    right: Spacing.lg,
+    flexDirection: "row",
+    gap: Spacing.sm,
+    zIndex: 100,
+  },
+  distanceFilterChip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: 20,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
+  },
+  distanceFilterChipActive: {
+    backgroundColor: Colors.primaryGreen,
+    borderColor: Colors.primaryGreen,
+  },
+  distanceFilterText: {
+    ...Typography.labelMedium,
+    fontSize: 12,
+    fontWeight: "600",
+    color: Colors.textSecondary,
+  },
+  distanceFilterTextActive: {
+    color: Colors.surface,
   },
 });
