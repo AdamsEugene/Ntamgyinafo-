@@ -37,10 +37,7 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
   const isDark = variant === "dark";
 
   return (
-    <View
-      style={[styles.headerContainer, { paddingTop: insets.top }, style]}
-      pointerEvents="box-none"
-    >
+    <View style={[styles.headerContainer, style]}>
       <BlurView
         intensity={isDark ? 25 : 35}
         tint={isDark ? "dark" : "light"}
@@ -53,6 +50,9 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             isDark ? styles.glassOverlayDark : styles.glassOverlayLight,
           ]}
         />
+
+        {/* Safe area spacer */}
+        <View style={{ height: insets.top }} />
 
         {/* Header Content */}
         <View style={styles.headerContent}>

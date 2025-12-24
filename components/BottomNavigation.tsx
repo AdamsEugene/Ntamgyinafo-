@@ -35,14 +35,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   const isDark = variant === "dark";
 
   return (
-    <View
-      style={[
-        styles.floatingContainer,
-        {
-          marginBottom: Math.max(insets.bottom, Spacing.md),
-        },
-      ]}
-    >
+    <View style={styles.floatingContainer}>
       {/* Blur Background */}
       <BlurView
         intensity={isDark ? 25 : 35}
@@ -54,6 +47,14 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           style={[
             styles.glassOverlay,
             isDark ? styles.glassOverlayDark : styles.glassOverlayLight,
+          ]}
+        />
+
+        {/* Top border line */}
+        <View
+          style={[
+            styles.topBorder,
+            isDark ? styles.topBorderDark : styles.topBorderLight,
           ]}
         />
 
@@ -114,13 +115,8 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           })}
         </View>
 
-        {/* Top highlight line (iOS style) */}
-        <View
-          style={[
-            styles.topHighlight,
-            isDark ? styles.topHighlightDark : styles.topHighlightLight,
-          ]}
-        />
+        {/* Bottom safe area spacer */}
+        <View style={{ height: Math.max(insets.bottom, Spacing.sm) }} />
       </BlurView>
     </View>
   );
@@ -130,36 +126,46 @@ const styles = StyleSheet.create({
   floatingContainer: {
     position: "absolute",
     bottom: 0,
-    left: Spacing.lg,
-    right: Spacing.lg,
+    left: 0,
+    right: 0,
     zIndex: 1000,
-    borderRadius: 28,
     overflow: "hidden",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
         shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 20,
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
       },
       android: {
-        elevation: 16,
+        elevation: 12,
       },
     }),
   },
   blurContainer: {
-    borderRadius: 28,
     overflow: "hidden",
   },
   glassOverlay: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 28,
   },
   glassOverlayLight: {
     backgroundColor: "rgba(255, 255, 255, 0.6)",
   },
   glassOverlayDark: {
     backgroundColor: "rgba(30, 30, 30, 0.6)",
+  },
+  topBorder: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+  },
+  topBorderLight: {
+    backgroundColor: "rgba(0, 0, 0, 0.08)",
+  },
+  topBorderDark: {
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
   container: {
     flexDirection: "row",
@@ -218,19 +224,5 @@ const styles = StyleSheet.create({
   activeLabel: {
     color: Colors.primaryGreen,
     fontWeight: "600",
-  },
-  topHighlight: {
-    position: "absolute",
-    top: 0,
-    left: 20,
-    right: 20,
-    height: 1,
-    borderRadius: 0.5,
-  },
-  topHighlightLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.8)",
-  },
-  topHighlightDark: {
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
 });
