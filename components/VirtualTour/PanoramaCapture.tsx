@@ -122,7 +122,6 @@ export function PanoramaCapture({
 
   // Auto-capture countdown
   const [countdown, setCountdown] = useState<number | null>(null);
-  const countdownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownStartedRef = useRef(false); // Prevent countdown from being cancelled by sensor noise
 
   // First photo only needs level (any heading is fine - it sets the starting point)
@@ -347,27 +346,18 @@ export function PanoramaCapture({
     if (countdown === null) return;
 
     if (countdown > 0) {
-      countdownTimerRef.current = setTimeout(() => {
-        setCountdown((prev) => {
-          if (prev !== null && prev > 0) {
-            Vibration.vibrate(30);
-            return prev - 1;
-          }
-          return prev;
-        });
-      }, 700); // Slightly faster for better UX
+      const timer = setTimeout(() => {
+        Vibration.vibrate(30);
+        setCountdown(countdown - 1);
+      }, 700);
+
+      return () => clearTimeout(timer);
     } else if (countdown === 0) {
       // Countdown finished - take the picture!
       countdownStartedRef.current = false;
       setCountdown(null);
       handleCapture();
     }
-
-    return () => {
-      if (countdownTimerRef.current) {
-        clearTimeout(countdownTimerRef.current);
-      }
-    };
   }, [countdown, handleCapture]);
 
   // Pick from gallery
