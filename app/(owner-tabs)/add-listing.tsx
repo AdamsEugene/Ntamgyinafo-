@@ -1799,6 +1799,7 @@ const styles = StyleSheet.create({
   photoWrapper: {
     width: "31%",
     aspectRatio: 1,
+    minHeight: 100,
     borderRadius: 12,
     overflow: "hidden",
   },
@@ -1835,6 +1836,7 @@ const styles = StyleSheet.create({
   addPhotoButton: {
     width: "31%",
     aspectRatio: 1,
+    minHeight: 100,
     borderRadius: 12,
     borderWidth: 2,
     borderStyle: "dashed",
