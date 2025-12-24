@@ -16,9 +16,9 @@ import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import { getSavedProperties } from "@/constants/mockData";
 import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+  FloatingHeader,
+  HeaderActionButton,
+} from "@/components/FloatingHeader";
 
 // Mock user data
 const USER = {
@@ -114,34 +114,16 @@ export default function ProfileScreen() {
           <View style={styles.circle2} />
         </View>
 
-        {/* Floating Sticky Header */}
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            <Text style={styles.headerTitleText}>Profile</Text>
-          </View>
-
-          {/* Action Buttons */}
-          <View style={FloatingHeaderStyles.headerActions}>
-            <TouchableOpacity
-              style={FloatingHeaderStyles.actionButton}
-              activeOpacity={0.7}
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          title="Profile"
+          rightContent={
+            <HeaderActionButton
+              icon="settings-outline"
               onPress={() => router.push("/settings")}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name="settings-outline"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
+            />
+          }
+        />
 
         <ScrollView
           style={styles.scrollView}
@@ -286,19 +268,6 @@ const styles = StyleSheet.create({
     borderRadius: 200,
     backgroundColor: Colors.primaryGreen,
     opacity: 0.05,
-  },
-  // Header
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.md,
-    flex: 1,
-  },
-  headerTitleText: {
-    ...Typography.titleLarge,
-    fontSize: 20,
-    fontWeight: "700",
-    color: Colors.textPrimary,
   },
   scrollView: {
     flex: 1,

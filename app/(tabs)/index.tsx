@@ -21,9 +21,9 @@ import {
 } from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+  FloatingHeader,
+  HeaderActionButton,
+} from "@/components/FloatingHeader";
 import {
   FEATURED_PROPERTIES,
   NEAR_YOU_PROPERTIES,
@@ -187,72 +187,52 @@ export default function BuyerHomeScreen() {
           <View style={styles.circle2} />
         </View>
 
-        {/* Floating Sticky Header */}
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <TouchableOpacity
-            onPress={() => locationSheetRef.current?.present()}
-            style={styles.locationContainer}
-            activeOpacity={0.7}
-          >
-            <View style={styles.locationIconContainer}>
-              <Ionicons name="location" size={18} color={Colors.primaryGreen} />
-            </View>
-            <Text style={styles.location} numberOfLines={1}>
-              {selectedLocation}
-            </Text>
-            {hasMultipleLocations && (
-              <View style={styles.locationBadge}>
-                <Text style={styles.locationBadgeText}>
-                  +{selectedLocations.length - 1}
-                </Text>
-              </View>
-            )}
-            <Ionicons
-              name="chevron-down"
-              size={16}
-              color={Colors.textSecondary}
-            />
-          </TouchableOpacity>
-
-          {/* Search and Notification Buttons */}
-          <View style={styles.actionButtonsContainer}>
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          leftContent={
             <TouchableOpacity
-              onPress={() => router.push("/(tabs)/search")}
-              style={FloatingHeaderStyles.actionButton}
+              onPress={() => locationSheetRef.current?.present()}
+              style={styles.locationContainer}
               activeOpacity={0.7}
             >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
+              <View style={styles.locationIconContainer}>
                 <Ionicons
-                  name="search-outline"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
+                  name="location"
+                  size={18}
+                  color={Colors.primaryGreen}
                 />
               </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => router.push("/notifications")}
-              style={FloatingHeaderStyles.actionButton}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name="notifications-outline"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-                <View style={styles.notificationBadge}>
-                  <Text style={styles.notificationBadgeText}>3</Text>
+              <Text style={styles.location} numberOfLines={1}>
+                {selectedLocation}
+              </Text>
+              {hasMultipleLocations && (
+                <View style={styles.locationBadge}>
+                  <Text style={styles.locationBadgeText}>
+                    +{selectedLocations.length - 1}
+                  </Text>
                 </View>
-              </View>
+              )}
+              <Ionicons
+                name="chevron-down"
+                size={16}
+                color={Colors.textSecondary}
+              />
             </TouchableOpacity>
-          </View>
-        </View>
+          }
+          rightContent={
+            <>
+              <HeaderActionButton
+                icon="search-outline"
+                onPress={() => router.push("/(tabs)/search")}
+              />
+              <HeaderActionButton
+                icon="notifications-outline"
+                onPress={() => router.push("/notifications")}
+                badge={3}
+              />
+            </>
+          }
+        />
 
         <ScrollView
           style={styles.scrollView}
@@ -743,11 +723,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingTop: 100,
     paddingBottom: Spacing["2xl"],
-  },
-  actionButtonsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
   },
   locationContainer: {
     flexDirection: "row",

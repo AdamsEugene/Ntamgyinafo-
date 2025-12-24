@@ -16,7 +16,6 @@ import {
   Animated,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import RNMapView, {
@@ -35,9 +34,9 @@ import {
 } from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+  FloatingHeader,
+  HeaderActionButton,
+} from "@/components/FloatingHeader";
 import {
   FilterBottomSheet,
   type FilterOptions,
@@ -98,7 +97,6 @@ const BOTTOM_NAV_TABS: TabItem[] = [
 export default function MapScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const insets = useSafeAreaInsets();
   const mapRef = useRef<RNMapView>(null);
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const filterSheetRef = useRef<BottomSheetModal>(null);
@@ -429,62 +427,24 @@ export default function MapScreen() {
     <>
       <StatusBar style="dark" />
       <View style={styles.container}>
-        {/* Header */}
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            {
-              paddingTop: insets.top + Spacing.md,
-              paddingBottom: Spacing.sm,
-            },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={FloatingHeaderStyles.backButton}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.backButtonCircle}>
-                <Ionicons
-                  name="arrow-back"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-            <Text style={styles.headerTitleText}>Map View</Text>
-          </View>
-
-          <View style={styles.headerRight}>
-            <TouchableOpacity
-              style={FloatingHeaderStyles.actionButtonBackground}
-              onPress={() => filterSheetRef.current?.present()}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="options"
-                size={HEADER_ICON_SIZE}
-                color={Colors.textPrimary}
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          title="Map View"
+          showBackButton
+          onBackPress={() => router.back()}
+          rightContent={
+            <>
+              <HeaderActionButton
+                icon="options"
+                onPress={() => filterSheetRef.current?.present()}
               />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                FloatingHeaderStyles.actionButtonBackground,
-                styles.mapTypeButton,
-              ]}
-              onPress={toggleMapType}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name={mapType === "standard" ? "map" : "globe"}
-                size={HEADER_ICON_SIZE}
-                color={Colors.textPrimary}
+              <HeaderActionButton
+                icon={mapType === "standard" ? "map" : "globe"}
+                onPress={toggleMapType}
               />
-            </TouchableOpacity>
-          </View>
-        </View>
+            </>
+          }
+        />
 
         {/* Map */}
         <MapView
@@ -1038,26 +998,6 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
-  },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.md,
-    flex: 1,
-  },
-  headerTitleText: {
-    ...Typography.titleLarge,
-    fontSize: 20,
-    fontWeight: "700",
-    color: Colors.textPrimary,
-  },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs,
-  },
-  mapTypeButton: {
-    marginLeft: Spacing.xs,
   },
   // Cluster Styles
   clusterContainer: {
