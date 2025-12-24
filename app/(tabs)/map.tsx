@@ -1470,7 +1470,7 @@ const styles = StyleSheet.create({
   },
   distanceFilterContainer: {
     position: "absolute",
-    top: 120,
+    top: 140,
     left: Spacing.lg,
     right: Spacing.lg,
     flexDirection: "row",
