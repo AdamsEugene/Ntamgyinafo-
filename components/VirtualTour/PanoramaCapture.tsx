@@ -17,7 +17,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Colors, Typography, Spacing, BorderRadius } from "@/constants/design";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -119,6 +119,11 @@ export function PanoramaCapture({
     degrees: number;
   }>({ direction: "none", degrees: 0 });
   const wasOnTargetRef = useRef(false);
+
+  // Auto-capture countdown
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const countdownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isReadyForCapture = isOnTarget && isLevel && !isCapturing;
 
   // Calculate target heading for current segment
   const targetHeading =
@@ -313,6 +318,44 @@ export function PanoramaCapture({
     }
   }, [currentSegment, currentHeading, isCapturing, onComplete, triggerFlash]);
 
+  // Auto-capture countdown when ready
+  useEffect(() => {
+    if (isReadyForCapture && countdown === null && !isCapturing) {
+      // Start countdown
+      setCountdown(3);
+      Vibration.vibrate(30);
+    } else if (!isReadyForCapture && countdown !== null) {
+      // Cancel countdown if conditions are no longer met
+      if (countdownTimerRef.current) {
+        clearTimeout(countdownTimerRef.current);
+        countdownTimerRef.current = null;
+      }
+      setCountdown(null);
+    }
+  }, [isReadyForCapture, countdown, isCapturing]);
+
+  // Handle countdown timer
+  useEffect(() => {
+    if (countdown === null) return;
+
+    if (countdown > 0) {
+      countdownTimerRef.current = setTimeout(() => {
+        setCountdown(countdown - 1);
+        Vibration.vibrate(30);
+      }, 800);
+    } else if (countdown === 0) {
+      // Countdown finished - take the picture!
+      setCountdown(null);
+      handleCapture();
+    }
+
+    return () => {
+      if (countdownTimerRef.current) {
+        clearTimeout(countdownTimerRef.current);
+      }
+    };
+  }, [countdown, handleCapture]);
+
   // Pick from gallery
   const handlePickFromGallery = useCallback(async () => {
     try {
@@ -418,7 +461,7 @@ export function PanoramaCapture({
         />
 
         {/* On-Target Glow Effect */}
-        {isOnTarget && (
+        {isOnTarget && !countdown && (
           <Animated.View
             style={[
               styles.onTargetGlow,
@@ -426,6 +469,21 @@ export function PanoramaCapture({
             ]}
             pointerEvents="none"
           />
+        )}
+
+        {/* Countdown Overlay */}
+        {countdown !== null && countdown > 0 && (
+          <View style={styles.countdownOverlay} pointerEvents="none">
+            <Animated.View
+              style={[
+                styles.countdownCircle,
+                { transform: [{ scale: targetPulseAnim }] },
+              ]}
+            >
+              <Text style={styles.countdownNumber}>{countdown}</Text>
+            </Animated.View>
+            <Text style={styles.countdownText}>Hold steady...</Text>
+          </View>
         )}
 
         {/* Top Gradient */}
@@ -597,41 +655,43 @@ export function PanoramaCapture({
         </View>
 
         {/* Status Banner */}
-        <View
-          style={[
-            styles.statusBanner,
-            isOnTarget && isLevel && styles.statusBannerReady,
-            !isOnTarget &&
-              turnHint.direction === "left" &&
-              styles.statusBannerLeft,
-            !isOnTarget &&
-              turnHint.direction === "right" &&
-              styles.statusBannerRight,
-          ]}
-        >
-          <Ionicons
-            name={
-              isOnTarget && isLevel
-                ? "checkmark-circle"
-                : !isLevel
-                ? "phone-portrait-outline"
+        {!countdown && (
+          <View
+            style={[
+              styles.statusBanner,
+              isOnTarget && isLevel && styles.statusBannerReady,
+              !isOnTarget &&
+                turnHint.direction === "left" &&
+                styles.statusBannerLeft,
+              !isOnTarget &&
+                turnHint.direction === "right" &&
+                styles.statusBannerRight,
+            ]}
+          >
+            <Ionicons
+              name={
+                isOnTarget && isLevel
+                  ? "checkmark-circle"
+                  : !isLevel
+                  ? "phone-portrait-outline"
+                  : turnHint.direction === "left"
+                  ? "arrow-back"
+                  : "arrow-forward"
+              }
+              size={20}
+              color="#FFFFFF"
+            />
+            <Text style={styles.statusText}>
+              {!isLevel
+                ? "Hold phone upright"
+                : isOnTarget
+                ? "✓ Hold steady..."
                 : turnHint.direction === "left"
-                ? "arrow-back"
-                : "arrow-forward"
-            }
-            size={20}
-            color="#FFFFFF"
-          />
-          <Text style={styles.statusText}>
-            {!isLevel
-              ? "Hold phone upright & level"
-              : isOnTarget
-              ? "✓ Perfect! Tap to capture"
-              : turnHint.direction === "left"
-              ? `← Turn LEFT ${turnHint.degrees}°`
-              : `Turn RIGHT ${turnHint.degrees}° →`}
-          </Text>
-        </View>
+                ? `← Turn LEFT ${turnHint.degrees}°`
+                : `Turn RIGHT ${turnHint.degrees}° →`}
+            </Text>
+          </View>
+        )}
 
         {/* Large Direction Arrow Overlay (when not on target) */}
         {!isOnTarget && isLevel && turnHint.direction !== "none" && (
@@ -690,40 +750,18 @@ export function PanoramaCapture({
           />
         </View>
 
-        {/* Tips Panel */}
-        {showTips && capturedPhotos.length === 0 && (
-          <View style={styles.tipsPanel}>
-            <View style={styles.tipHeader}>
-              <Ionicons name="bulb" size={16} color="#FFD700" />
-              <Text style={styles.tipHeaderText}>Smart Capture Guide</Text>
-            </View>
-            <View style={styles.tipRow}>
-              <View
-                style={[
-                  styles.tipIcon,
-                  { backgroundColor: Colors.primaryGreen },
-                ]}
-              >
-                <Ionicons name="compass" size={12} color="#FFFFFF" />
-              </View>
-              <Text style={styles.tipText}>
-                Green border = correct direction
-              </Text>
-            </View>
-            <View style={styles.tipRow}>
-              <View style={[styles.tipIcon, { backgroundColor: "#FF9500" }]}>
-                <Ionicons name="phone-portrait" size={12} color="#FFFFFF" />
-              </View>
-              <Text style={styles.tipText}>Level bubble must be centered</Text>
-            </View>
-            <View style={styles.tipRow}>
-              <View style={[styles.tipIcon, { backgroundColor: "#007AFF" }]}>
-                <Ionicons name="sync" size={12} color="#FFFFFF" />
-              </View>
-              <Text style={styles.tipText}>
-                Rotate body (not just phone) 45°
-              </Text>
-            </View>
+        {/* Compact Tips - Only show when no photos taken yet */}
+        {showTips && capturedPhotos.length === 0 && !countdown && (
+          <View style={styles.compactTips}>
+            <TouchableOpacity
+              style={styles.compactTipsClose}
+              onPress={() => setShowTips(false)}
+            >
+              <Ionicons name="close" size={16} color="rgba(255,255,255,0.6)" />
+            </TouchableOpacity>
+            <Text style={styles.compactTipsText}>
+              🎯 Align to green • 📱 Hold level • Auto-captures when ready!
+            </Text>
           </View>
         )}
 
@@ -1027,7 +1065,7 @@ const styles = StyleSheet.create({
   },
   progressRingContainer: {
     position: "absolute",
-    top: SCREEN_HEIGHT * 0.2,
+    top: SCREEN_HEIGHT * 0.15,
     left: 0,
     right: 0,
     alignItems: "center",
@@ -1153,7 +1191,7 @@ const styles = StyleSheet.create({
   },
   levelIndicatorContainer: {
     position: "absolute",
-    top: SCREEN_HEIGHT * 0.48,
+    bottom: 220,
     right: Spacing.lg,
     alignItems: "center",
     zIndex: 20,
@@ -1463,6 +1501,66 @@ const styles = StyleSheet.create({
   directionArrowRight: {
     position: "absolute",
     right: 20,
+  },
+  // Countdown overlay
+  countdownOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    zIndex: 100,
+  },
+  countdownCircle: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: Colors.primaryGreen,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: Colors.primaryGreen,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 30,
+  },
+  countdownNumber: {
+    fontSize: 72,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+  countdownText: {
+    ...Typography.bodyMedium,
+    color: "#FFFFFF",
+    marginTop: Spacing.lg,
+    fontSize: 18,
+    fontWeight: "500",
+  },
+  // Compact tips
+  compactTips: {
+    position: "absolute",
+    bottom: 200,
+    left: Spacing.lg,
+    right: Spacing.lg,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    borderRadius: BorderRadius.medium,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    paddingRight: Spacing.xl + Spacing.md,
+  },
+  compactTipsClose: {
+    position: "absolute",
+    top: Spacing.xs,
+    right: Spacing.xs,
+    padding: Spacing.xs,
+  },
+  compactTipsText: {
+    ...Typography.caption,
+    color: "rgba(255, 255, 255, 0.9)",
+    textAlign: "center",
+    fontSize: 13,
   },
 });
 
