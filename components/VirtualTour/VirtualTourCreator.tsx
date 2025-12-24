@@ -96,6 +96,7 @@ export function VirtualTourCreator({
       },
       { text: "Cancel", style: "cancel" },
     ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scenes.length, maxScenes]);
 
   // Pick image from gallery only (camera uses PanoramaCapture)
@@ -133,7 +134,7 @@ export function VirtualTourCreator({
         setScenes((prev) => [...prev, newScene]);
         setSelectedSceneId(newScene.id);
       }
-    } catch (error) {
+    } catch {
       Alert.alert("Error", "Failed to pick image. Please try again.");
     } finally {
       setIsLoading(false);
@@ -689,6 +690,8 @@ function HotspotEditor({
     hotspot.targetSceneId || ""
   );
   const [infoText, setInfoText] = useState(hotspot.infoText || "");
+  // Position state - setPosition will be used when drag-to-position is implemented
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [position, setPosition] = useState({
     x: hotspot.x || 0.5,
     y: hotspot.y || 0.5,

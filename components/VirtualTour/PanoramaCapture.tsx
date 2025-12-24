@@ -149,7 +149,7 @@ export function PanoramaCapture({
       if (!result.canceled && result.assets[0]) {
         onComplete(result.assets[0].uri);
       }
-    } catch (error) {
+    } catch {
       Alert.alert("Error", "Failed to pick image. Please try again.");
     }
   }, [onComplete]);
