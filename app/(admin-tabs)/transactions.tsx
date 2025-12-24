@@ -24,9 +24,9 @@ import {
 } from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+  FloatingHeader,
+  HeaderActionButton,
+} from "@/components/FloatingHeader";
 
 interface Transaction {
   id: string;
@@ -440,54 +440,19 @@ export default function AllTransactionsScreen() {
         </View>
 
         {/* Floating Sticky Header */}
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            {/* Back Button */}
-            <TouchableOpacity
-              style={FloatingHeaderStyles.backButton}
-              onPress={() => router.back()}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.backButtonCircle}>
-                <Ionicons
-                  name="arrow-back"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-            <Text style={styles.headerTitleText}>Transactions</Text>
-          </View>
-
-          {/* Filter Button */}
-          <View style={FloatingHeaderStyles.headerActions}>
-            <TouchableOpacity
-              style={FloatingHeaderStyles.actionButton}
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          title="Transactions"
+          showBackButton
+          onBackPress={() => router.back()}
+          rightContent={
+            <HeaderActionButton
+              icon="options-outline"
               onPress={() => filterSheetRef.current?.present()}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name="options-outline"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-                {activeFiltersCount > 0 && (
-                  <View style={FloatingHeaderStyles.filterBadge}>
-                    <Text style={FloatingHeaderStyles.filterBadgeText}>
-                      {activeFiltersCount}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
+              badge={activeFiltersCount > 0 ? activeFiltersCount : undefined}
+            />
+          }
+        />
 
         {/* Summary Cards */}
         <View style={[styles.summaryContainer, { top: 70 + insets.top }]}>

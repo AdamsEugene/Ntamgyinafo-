@@ -24,9 +24,9 @@ import {
   type FilterOptions,
 } from "@/components/FilterBottomSheet";
 import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+  FloatingHeader,
+  HeaderActionButton,
+} from "@/components/FloatingHeader";
 import {
   BottomSheetModal,
   BottomSheetBackdrop,
@@ -311,87 +311,31 @@ export default function SearchResultsScreen() {
     <>
       <StatusBar style="dark" />
       <View style={styles.container}>
-        {/* Floating Sticky Header */}
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={FloatingHeaderStyles.backButton}
-            activeOpacity={0.7}
-          >
-            <View style={FloatingHeaderStyles.backButtonCircle}>
-              <Ionicons
-                name="arrow-back"
-                size={HEADER_ICON_SIZE}
-                color={Colors.textPrimary}
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          title="Search Results"
+          showBackButton
+          onBackPress={() => router.back()}
+          rightContent={
+            <>
+              <HeaderActionButton
+                icon="options-outline"
+                onPress={() => setShowFilterSheet(true)}
+                badge={hasActiveFilters ? getActiveFiltersCount() : undefined}
               />
-            </View>
-          </TouchableOpacity>
-
-          <Text
-            style={[FloatingHeaderStyles.headerTitle, styles.headerTitleText]}
-          >
-            Search Results
-          </Text>
-
-          {/* Filter and View Mode Toggle Buttons */}
-          <View style={FloatingHeaderStyles.headerActions}>
-            <TouchableOpacity
-              style={FloatingHeaderStyles.actionButton}
-              onPress={() => setShowFilterSheet(true)}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name="options-outline"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-                {hasActiveFilters && (
-                  <View style={FloatingHeaderStyles.filterBadge}>
-                    <Text style={FloatingHeaderStyles.filterBadgeText}>
-                      {getActiveFiltersCount()}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={FloatingHeaderStyles.actionButton}
-              onPress={() =>
-                setViewMode((prev) => (prev === "list" ? "grid" : "list"))
-              }
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name={viewMode === "list" ? "grid-outline" : "list-outline"}
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={FloatingHeaderStyles.actionButton}
-              onPress={() => setShowMenuSheet(true)}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name="ellipsis-vertical"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
+              <HeaderActionButton
+                icon={viewMode === "list" ? "grid-outline" : "list-outline"}
+                onPress={() =>
+                  setViewMode((prev) => (prev === "list" ? "grid" : "list"))
+                }
+              />
+              <HeaderActionButton
+                icon="ellipsis-vertical"
+                onPress={() => setShowMenuSheet(true)}
+              />
+            </>
+          }
+        />
 
         <ScrollView
           style={styles.scrollView}

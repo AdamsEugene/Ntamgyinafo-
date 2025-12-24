@@ -17,9 +17,9 @@ import { useRouter } from "expo-router";
 import { Swipeable } from "react-native-gesture-handler";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+  FloatingHeader,
+  HeaderActionButton,
+} from "@/components/FloatingHeader";
 
 interface Conversation {
   id: string;
@@ -445,63 +445,27 @@ export default function MessagesScreen() {
         </View>
 
         {/* Floating Header */}
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            {isSearching ? (
-              <TouchableOpacity
-                onPress={() => {
-                  setIsSearching(false);
-                  setSearchQuery("");
-                }}
-                style={FloatingHeaderStyles.backButton}
-                activeOpacity={0.7}
-              >
-                <View style={FloatingHeaderStyles.backButtonCircle}>
-                  <Ionicons
-                    name="arrow-back"
-                    size={HEADER_ICON_SIZE}
-                    color={Colors.textPrimary}
-                  />
-                </View>
-              </TouchableOpacity>
-            ) : null}
-            <Text style={styles.headerTitleText}>Messages</Text>
-          </View>
-
-          <View style={FloatingHeaderStyles.headerActions}>
-            <TouchableOpacity
-              style={FloatingHeaderStyles.actionButton}
-              onPress={() => setIsSearching(!isSearching)}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name="search-outline"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={FloatingHeaderStyles.actionButton}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name="create-outline"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          title="Messages"
+          showBackButton={isSearching}
+          onBackPress={() => {
+            setIsSearching(false);
+            setSearchQuery("");
+          }}
+          rightContent={
+            <>
+              <HeaderActionButton
+                icon="search-outline"
+                onPress={() => setIsSearching(!isSearching)}
+              />
+              <HeaderActionButton
+                icon="create-outline"
+                onPress={() => {}}
+              />
+            </>
+          }
+        />
 
         {/* Search Bar */}
         {isSearching && (

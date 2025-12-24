@@ -17,9 +17,9 @@ import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+  FloatingHeader,
+  HeaderActionButton,
+} from "@/components/FloatingHeader";
 
 // Quick actions
 const QUICK_ACTIONS = [
@@ -235,54 +235,29 @@ export default function OwnerDashboardScreen() {
         </View>
 
         {/* Floating Sticky Header */}
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <View style={styles.greetingContainer}>
-            <Text style={styles.greeting}>Hi, Kofi 👋</Text>
-            <Text style={styles.subGreeting}>Manage your properties</Text>
-          </View>
-
-          {/* Action Buttons */}
-          <View style={styles.actionButtonsContainer}>
-            <TouchableOpacity
-              onPress={() => router.push("/(owner-tabs)/messages")}
-              style={FloatingHeaderStyles.actionButton}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name="chatbubbles-outline"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-                <View style={styles.notificationBadge}>
-                  <Text style={styles.notificationBadgeText}>3</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => router.push("/notifications")}
-              style={FloatingHeaderStyles.actionButton}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name="notifications-outline"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-                <View style={styles.notificationBadge}>
-                  <Text style={styles.notificationBadgeText}>5</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          leftContent={
+            <View style={styles.greetingContainer}>
+              <Text style={styles.greeting}>Hi, Kofi 👋</Text>
+              <Text style={styles.subGreeting}>Manage your properties</Text>
+            </View>
+          }
+          rightContent={
+            <>
+              <HeaderActionButton
+                icon="chatbubbles-outline"
+                onPress={() => router.push("/(owner-tabs)/messages")}
+                badge={3}
+              />
+              <HeaderActionButton
+                icon="notifications-outline"
+                onPress={() => router.push("/notifications")}
+                badge={5}
+              />
+            </>
+          }
+        />
 
         <ScrollView
           style={styles.scrollView}

@@ -21,9 +21,9 @@ import {
 } from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+  FloatingHeader,
+  HeaderActionButton,
+} from "@/components/FloatingHeader";
 import { MAP_PROPERTIES, MapProperty } from "@/constants/mockData";
 import { LocationSelector } from "@/components/LocationSelector";
 
@@ -321,33 +321,14 @@ export default function NearYouPropertiesScreen() {
           <View style={styles.circle2} />
         </View>
 
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={FloatingHeaderStyles.actionButton}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name="arrow-back"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-            <Text style={styles.headerTitleText}>Near You</Text>
-          </View>
-
-          <View style={FloatingHeaderStyles.headerActions}>
-            <TouchableOpacity
-              style={FloatingHeaderStyles.actionButton}
-              activeOpacity={0.7}
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          title="Near You"
+          showBackButton
+          onBackPress={() => router.back()}
+          rightContent={
+            <HeaderActionButton
+              icon="map-outline"
               onPress={() => {
                 // Pass flag to show distance filters on map if distance is selected
                 if (distanceFilter && distanceFilter !== "all") {
@@ -359,17 +340,9 @@ export default function NearYouPropertiesScreen() {
                   router.push("/(tabs)/map");
                 }
               }}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name="map-outline"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
+            />
+          }
+        />
 
         <FlatList
           data={filteredProperties}

@@ -16,9 +16,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+  FloatingHeader,
+  HeaderActionButton,
+} from "@/components/FloatingHeader";
 import { MAP_PROPERTIES, MapProperty } from "@/constants/mockData";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -294,47 +294,18 @@ export default function FeaturedPropertiesScreen() {
           <View style={styles.circle2} />
         </View>
 
-        {/* Floating Sticky Header */}
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={FloatingHeaderStyles.actionButton}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name="arrow-back"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-            <Text style={styles.headerTitleText}>Featured Properties</Text>
-          </View>
-
-          {/* Search Button */}
-          <View style={FloatingHeaderStyles.headerActions}>
-            <TouchableOpacity
-              style={FloatingHeaderStyles.actionButton}
-              activeOpacity={0.7}
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          title="Featured Properties"
+          showBackButton
+          onBackPress={() => router.back()}
+          rightContent={
+            <HeaderActionButton
+              icon="search-outline"
               onPress={() => router.push("/(tabs)/search")}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name="search-outline"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
+            />
+          }
+        />
 
         <FlatList
           data={filteredProperties}

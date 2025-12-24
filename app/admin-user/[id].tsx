@@ -21,9 +21,9 @@ import {
 } from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+  FloatingHeader,
+  HeaderActionButton,
+} from "@/components/FloatingHeader";
 
 interface UserListing {
   id: string;
@@ -400,45 +400,18 @@ export default function AdminUserProfileScreen() {
         </View>
 
         {/* Floating Sticky Header */}
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            <TouchableOpacity
-              style={FloatingHeaderStyles.backButton}
-              onPress={() => router.back()}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.backButtonCircle}>
-                <Ionicons
-                  name="arrow-back"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-            <Text style={styles.headerTitleText}>User Profile</Text>
-          </View>
-
-          <View style={FloatingHeaderStyles.headerActions}>
-            <TouchableOpacity
-              style={FloatingHeaderStyles.actionButton}
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          title="User Profile"
+          showBackButton
+          onBackPress={() => router.back()}
+          rightContent={
+            <HeaderActionButton
+              icon="ellipsis-vertical"
               onPress={() => actionSheetRef.current?.present()}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name="ellipsis-vertical"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
+            />
+          }
+        />
 
         <ScrollView
           style={styles.scrollView}

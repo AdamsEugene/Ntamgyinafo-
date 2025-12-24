@@ -16,9 +16,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+  FloatingHeader,
+  HeaderActionButton,
+} from "@/components/FloatingHeader";
 import { MAP_PROPERTIES, MapProperty } from "@/constants/mockData";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -361,45 +361,18 @@ export default function NewListingsScreen() {
           <View style={styles.circle2} />
         </View>
 
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={FloatingHeaderStyles.actionButton}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name="arrow-back"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-            <Text style={styles.headerTitleText}>New Listings</Text>
-          </View>
-
-          <View style={FloatingHeaderStyles.headerActions}>
-            <TouchableOpacity
-              style={FloatingHeaderStyles.actionButton}
-              activeOpacity={0.7}
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          title="New Listings"
+          showBackButton
+          onBackPress={() => router.back()}
+          rightContent={
+            <HeaderActionButton
+              icon="notifications-outline"
               onPress={() => router.push("/notifications")}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name="notifications-outline"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
+            />
+          }
+        />
 
         <FlatList
           data={sortedProperties}

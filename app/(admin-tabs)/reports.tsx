@@ -16,7 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { BarChart, PieChart } from "react-native-gifted-charts";
 import { Colors, Typography, Spacing } from "@/constants/design";
-import { FloatingHeaderStyles } from "@/components/FloatingHeader.styles";
+import { FloatingHeader } from "@/components/FloatingHeader";
 
 interface Transaction {
   id: string;
@@ -174,30 +174,24 @@ export default function PaymentReportsScreen() {
         </View>
 
         {/* Floating Sticky Header */}
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            <Text style={styles.headerTitleText}>Reports</Text>
-          </View>
-
-          {/* Export Button */}
-          <TouchableOpacity
-            style={styles.exportButton}
-            onPress={handleExport}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="download-outline"
-              size={18}
-              color={Colors.primaryGreen}
-            />
-            <Text style={styles.exportButtonText}>Export</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          title="Reports"
+          rightContent={
+            <TouchableOpacity
+              style={styles.exportButton}
+              onPress={handleExport}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="download-outline"
+                size={18}
+                color={Colors.primaryGreen}
+              />
+              <Text style={styles.exportButtonText}>Export</Text>
+            </TouchableOpacity>
+          }
+        />
 
         <ScrollView
           style={styles.scrollView}

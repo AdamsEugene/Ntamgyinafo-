@@ -22,10 +22,7 @@ import {
   BottomSheetTextInput,
 } from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
-import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+import { FloatingHeader } from "@/components/FloatingHeader";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -332,36 +329,18 @@ export default function AdminPropertyReviewScreen() {
         </View>
 
         {/* Floating Sticky Header */}
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            <TouchableOpacity
-              style={FloatingHeaderStyles.backButton}
-              onPress={() => router.back()}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.backButtonCircle}>
-                <Ionicons
-                  name="arrow-back"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-            <Text style={styles.headerTitleText}>Review Property</Text>
-          </View>
-
-          <View style={FloatingHeaderStyles.headerActions}>
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          title="Review Property"
+          showBackButton
+          onBackPress={() => router.back()}
+          rightContent={
             <View style={styles.pendingBadge}>
               <Ionicons name="time" size={14} color="#F59E0B" />
               <Text style={styles.pendingBadgeText}>Pending Review</Text>
             </View>
-          </View>
-        </View>
+          }
+        />
 
         <ScrollView
           style={styles.scrollView}

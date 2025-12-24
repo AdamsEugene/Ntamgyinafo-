@@ -23,10 +23,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
 import { Colors, Typography, Spacing } from "@/constants/design";
-import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+import { FloatingHeader } from "@/components/FloatingHeader";
 
 // Constants
 const TOTAL_STEPS = 10;
@@ -1279,35 +1276,19 @@ export default function AddListingScreen() {
         </View>
 
         {/* Floating Sticky Header */}
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            <TouchableOpacity
-              onPress={goToPreviousStep}
-              style={FloatingHeaderStyles.backButton}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.backButtonCircle}>
-                <Ionicons
-                  name={currentStep === 1 ? "close" : "arrow-back"}
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-            <Text style={styles.headerTitleText}>New Listing</Text>
-          </View>
-
-          <View style={styles.stepIndicator}>
-            <Text style={styles.stepIndicatorText}>
-              {currentStep}/{TOTAL_STEPS}
-            </Text>
-          </View>
-        </View>
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          title="New Listing"
+          showBackButton
+          onBackPress={goToPreviousStep}
+          rightContent={
+            <View style={styles.stepIndicator}>
+              <Text style={styles.stepIndicatorText}>
+                {currentStep}/{TOTAL_STEPS}
+              </Text>
+            </View>
+          }
+        />
 
         {/* Progress Bar */}
         <View

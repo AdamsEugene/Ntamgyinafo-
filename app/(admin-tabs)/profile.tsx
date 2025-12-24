@@ -15,9 +15,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+  FloatingHeader,
+  HeaderActionButton,
+} from "@/components/FloatingHeader";
 
 const ADMIN_PROFILE = {
   name: "Admin User",
@@ -127,31 +127,16 @@ export default function AdminProfileScreen() {
         </View>
 
         {/* Floating Sticky Header */}
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            <Text style={styles.headerTitleText}>Profile</Text>
-          </View>
-
-          {/* Settings Button */}
-          <TouchableOpacity
-            onPress={() => router.push("/settings")}
-            style={FloatingHeaderStyles.actionButton}
-            activeOpacity={0.7}
-          >
-            <View style={FloatingHeaderStyles.actionButtonBackground}>
-              <Ionicons
-                name="settings-outline"
-                size={HEADER_ICON_SIZE}
-                color={Colors.textPrimary}
-              />
-            </View>
-          </TouchableOpacity>
-        </View>
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          title="Profile"
+          rightContent={
+            <HeaderActionButton
+              icon="settings-outline"
+              onPress={() => router.push("/settings")}
+            />
+          }
+        />
 
         <ScrollView
           style={styles.scrollView}

@@ -13,10 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Colors, Typography, Spacing } from "@/constants/design";
-import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+import { FloatingHeader } from "@/components/FloatingHeader";
 
 interface PlanFeature {
   text: string;
@@ -220,31 +217,12 @@ export default function SubscriptionPlansScreen() {
         <View style={styles.circle2} />
       </View>
 
-      {/* Header */}
-      <View
-        style={[
-          FloatingHeaderStyles.floatingHeader,
-          { paddingTop: insets.top + Spacing.md },
-        ]}
-      >
-        <TouchableOpacity
-          style={FloatingHeaderStyles.backButton}
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-        >
-          <View style={FloatingHeaderStyles.backButtonCircle}>
-            <Ionicons
-              name="arrow-back"
-              size={HEADER_ICON_SIZE}
-              color={Colors.textPrimary}
-            />
-          </View>
-        </TouchableOpacity>
-
-        <Text style={styles.headerTitle}>Choose Plan</Text>
-
-        <View style={{ width: 44 }} />
-      </View>
+      {/* Floating Header with Blur */}
+      <FloatingHeader
+        title="Choose Plan"
+        showBackButton
+        onBackPress={() => router.back()}
+      />
 
       {/* Content */}
       <ScrollView

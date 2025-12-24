@@ -15,9 +15,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+  FloatingHeader,
+  HeaderActionButton,
+} from "@/components/FloatingHeader";
 import { PropertyGridCard } from "@/components/PropertyCard";
 import { MAP_PROPERTIES, type MapProperty } from "@/constants/mockData";
 
@@ -196,46 +196,18 @@ export default function CategoryScreen() {
         </View>
 
         {/* Header */}
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={FloatingHeaderStyles.backButton}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.backButtonCircle}>
-                <Ionicons
-                  name="arrow-back"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-            <View>
-              <Text style={styles.headerTitle}>{categoryInfo.label}</Text>
-              <Text style={styles.headerSubtitle}>
-                {filteredProperties.length} properties
-              </Text>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            style={FloatingHeaderStyles.actionButtonBackground}
-            onPress={() => router.push("/(tabs)/search")}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="search"
-              size={HEADER_ICON_SIZE}
-              color={Colors.textPrimary}
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          title={categoryInfo.label}
+          showBackButton
+          onBackPress={() => router.back()}
+          rightContent={
+            <HeaderActionButton
+              icon="search"
+              onPress={() => router.push("/(tabs)/search")}
             />
-          </TouchableOpacity>
-        </View>
+          }
+        />
 
         {/* Content */}
         <FlatList

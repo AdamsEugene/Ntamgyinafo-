@@ -26,9 +26,9 @@ import {
 } from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+  FloatingHeader,
+  HeaderActionButton,
+} from "@/components/FloatingHeader";
 
 interface User {
   id: string;
@@ -458,43 +458,23 @@ export default function UserManagementScreen() {
         </View>
 
         {/* Floating Sticky Header */}
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            <Text style={styles.headerTitleText}>Users</Text>
-            {pendingCount > 0 && (
-              <View style={styles.headerBadge}>
-                <Text style={styles.headerBadgeText}>{pendingCount}</Text>
-              </View>
-            )}
-          </View>
-
-          {/* Filter Button */}
-          <View style={FloatingHeaderStyles.headerActions}>
-            <TouchableOpacity
-              style={FloatingHeaderStyles.actionButton}
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          title="Users"
+          rightContent={
+            <HeaderActionButton
+              icon="options-outline"
               onPress={() => filterSheetRef.current?.present()}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name="options-outline"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-                {activeFilter !== "all" && (
-                  <View style={FloatingHeaderStyles.filterBadge}>
-                    <Text style={FloatingHeaderStyles.filterBadgeText}>1</Text>
-                  </View>
-                )}
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
+              badge={
+                activeFilter !== "all"
+                  ? 1
+                  : pendingCount > 0
+                  ? pendingCount
+                  : undefined
+              }
+            />
+          }
+        />
 
         {/* Active Filter Indicator */}
         {activeFilter !== "all" && (

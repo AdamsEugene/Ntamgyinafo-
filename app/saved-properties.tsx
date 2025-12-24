@@ -21,9 +21,9 @@ import { Colors, Typography, Spacing } from "@/constants/design";
 import { PropertyListCard, PropertyGridCard } from "@/components/PropertyCard";
 import { BottomNavigation, TabItem } from "@/components/BottomNavigation";
 import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+  FloatingHeader,
+  HeaderActionButton,
+} from "@/components/FloatingHeader";
 import { ALL_PROPERTIES } from "@/constants/mockData";
 
 // Bottom navigation tabs
@@ -252,66 +252,26 @@ export default function SavedPropertiesScreen() {
         <View style={styles.bgCircle2} />
       </View>
 
-      {/* Floating Header */}
-      <View
-        style={[
-          FloatingHeaderStyles.floatingHeader,
-          { paddingTop: insets.top + Spacing.md },
-        ]}
-      >
-        {/* Left: Back button and title */}
-        <View style={styles.headerLeft}>
-          <TouchableOpacity
-            style={FloatingHeaderStyles.backButton}
-            onPress={() => router.back()}
-            activeOpacity={0.7}
-          >
-            <View style={FloatingHeaderStyles.backButtonCircle}>
-              <Ionicons
-                name="arrow-back"
-                size={HEADER_ICON_SIZE}
-                color={Colors.textPrimary}
-              />
-            </View>
-          </TouchableOpacity>
-          <Text style={styles.headerTitleText}>Saved Properties</Text>
-        </View>
-
-        {/* Right: Actions */}
-        <View style={FloatingHeaderStyles.headerActions}>
-          {/* Sort button */}
-          <TouchableOpacity
-            style={FloatingHeaderStyles.actionButton}
-            onPress={() => sortSheetRef.current?.present()}
-            activeOpacity={0.7}
-          >
-            <View style={FloatingHeaderStyles.actionButtonBackground}>
-              <Ionicons
-                name="funnel-outline"
-                size={HEADER_ICON_SIZE}
-                color={Colors.textPrimary}
-              />
-            </View>
-          </TouchableOpacity>
-
-          {/* View toggle */}
-          <TouchableOpacity
-            style={FloatingHeaderStyles.actionButton}
-            onPress={() =>
-              setViewMode((prev) => (prev === "list" ? "grid" : "list"))
-            }
-            activeOpacity={0.7}
-          >
-            <View style={FloatingHeaderStyles.actionButtonBackground}>
-              <Ionicons
-                name={viewMode === "list" ? "grid-outline" : "list-outline"}
-                size={HEADER_ICON_SIZE}
-                color={Colors.textPrimary}
-              />
-            </View>
-          </TouchableOpacity>
-        </View>
-      </View>
+      {/* Floating Header with Blur */}
+      <FloatingHeader
+        title="Saved Properties"
+        showBackButton
+        onBackPress={() => router.back()}
+        rightContent={
+          <>
+            <HeaderActionButton
+              icon="funnel-outline"
+              onPress={() => sortSheetRef.current?.present()}
+            />
+            <HeaderActionButton
+              icon={viewMode === "list" ? "grid-outline" : "list-outline"}
+              onPress={() =>
+                setViewMode((prev) => (prev === "list" ? "grid" : "list"))
+              }
+            />
+          </>
+        }
+      />
 
       {/* Content */}
       <ScrollView

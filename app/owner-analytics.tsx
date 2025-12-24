@@ -15,10 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LineChart, BarChart, PieChart } from "react-native-gifted-charts";
 import { Colors, Typography, Spacing } from "@/constants/design";
-import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+import { FloatingHeader } from "@/components/FloatingHeader";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CHART_WIDTH = SCREEN_WIDTH - Spacing.xl * 2 - 32;
@@ -126,54 +123,37 @@ export default function OwnerAnalyticsScreen() {
         </View>
 
         {/* Floating Sticky Header */}
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={FloatingHeaderStyles.actionButton}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name="arrow-back"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-              </View>
-            </TouchableOpacity>
-            <Text style={styles.headerTitleText}>Analytics</Text>
-          </View>
-
-          {/* Time Period Selector */}
-          <View style={styles.periodSelector}>
-            {TIME_PERIODS.map((period) => (
-              <TouchableOpacity
-                key={period.id}
-                style={[
-                  styles.periodButton,
-                  selectedPeriod === period.id && styles.periodButtonActive,
-                ]}
-                onPress={() => setSelectedPeriod(period.id)}
-                activeOpacity={0.7}
-              >
-                <Text
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          title="Analytics"
+          showBackButton
+          onBackPress={() => router.back()}
+          rightContent={
+            <View style={styles.periodSelector}>
+              {TIME_PERIODS.map((period) => (
+                <TouchableOpacity
+                  key={period.id}
                   style={[
-                    styles.periodButtonText,
-                    selectedPeriod === period.id &&
-                      styles.periodButtonTextActive,
+                    styles.periodButton,
+                    selectedPeriod === period.id && styles.periodButtonActive,
                   ]}
+                  onPress={() => setSelectedPeriod(period.id)}
+                  activeOpacity={0.7}
                 >
-                  {period.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+                  <Text
+                    style={[
+                      styles.periodButtonText,
+                      selectedPeriod === period.id &&
+                        styles.periodButtonTextActive,
+                    ]}
+                  >
+                    {period.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          }
+        />
 
         <ScrollView
           style={styles.scrollView}

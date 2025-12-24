@@ -14,10 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Swipeable } from "react-native-gesture-handler";
 import { Colors, Typography, Spacing } from "@/constants/design";
-import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+import { FloatingHeader } from "@/components/FloatingHeader";
 
 interface Notification {
   id: string;
@@ -348,50 +345,28 @@ export default function NotificationsScreen() {
         </View>
 
         {/* Floating Sticky Header */}
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={FloatingHeaderStyles.actionButton}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          title="Notifications"
+          showBackButton
+          onBackPress={() => router.back()}
+          rightContent={
+            unreadCount > 0 ? (
+              <TouchableOpacity
+                style={styles.markAllReadButton}
+                onPress={handleMarkAllRead}
+                activeOpacity={0.7}
+              >
                 <Ionicons
-                  name="arrow-back"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
+                  name="checkmark-done"
+                  size={18}
+                  color={Colors.primaryGreen}
                 />
-              </View>
-            </TouchableOpacity>
-            <Text style={styles.headerTitleText}>Notifications</Text>
-            {unreadCount > 0 && (
-              <View style={styles.headerBadge}>
-                <Text style={styles.headerBadgeText}>{unreadCount}</Text>
-              </View>
-            )}
-          </View>
-
-          {/* Mark All Read Button */}
-          {unreadCount > 0 && (
-            <TouchableOpacity
-              style={styles.markAllReadButton}
-              onPress={handleMarkAllRead}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="checkmark-done"
-                size={18}
-                color={Colors.primaryGreen}
-              />
-              <Text style={styles.markAllReadText}>Mark All Read</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+                <Text style={styles.markAllReadText}>Mark All Read</Text>
+              </TouchableOpacity>
+            ) : undefined
+          }
+        />
 
         {/* Filter Tabs */}
         <View style={[styles.filterTabsContainer, { top: 70 + insets.top }]}>

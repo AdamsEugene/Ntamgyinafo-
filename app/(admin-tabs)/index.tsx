@@ -15,9 +15,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import {
-  FloatingHeaderStyles,
-  HEADER_ICON_SIZE,
-} from "@/components/FloatingHeader.styles";
+  FloatingHeader,
+  HeaderActionButton,
+} from "@/components/FloatingHeader";
 
 interface MetricCard {
   id: string;
@@ -236,36 +236,17 @@ export default function AdminDashboardScreen() {
         </View>
 
         {/* Floating Sticky Header */}
-        <View
-          style={[
-            FloatingHeaderStyles.floatingHeader,
-            { paddingTop: insets.top + Spacing.md },
-          ]}
-        >
-          <View style={styles.headerLeft}>
-            <Text style={styles.headerTitleText}>Admin Dashboard</Text>
-          </View>
-
-          {/* Action Buttons */}
-          <View style={FloatingHeaderStyles.headerActions}>
-            <TouchableOpacity
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          title="Admin Dashboard"
+          rightContent={
+            <HeaderActionButton
+              icon="notifications-outline"
               onPress={() => router.push("/notifications")}
-              style={FloatingHeaderStyles.actionButton}
-              activeOpacity={0.7}
-            >
-              <View style={FloatingHeaderStyles.actionButtonBackground}>
-                <Ionicons
-                  name="notifications-outline"
-                  size={HEADER_ICON_SIZE}
-                  color={Colors.textPrimary}
-                />
-                <View style={styles.notificationBadge}>
-                  <Text style={styles.notificationBadgeText}>12</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
+              badge={12}
+            />
+          }
+        />
 
         <ScrollView
           style={styles.scrollView}
