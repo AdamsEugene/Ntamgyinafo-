@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,9 +7,12 @@ import {
   TouchableOpacity,
   Platform,
   RefreshControl,
-  TextInput,
+  TextInput as RNTextInput,
+  Keyboard,
+  Animated,
+  Dimensions,
 } from "react-native";
-import Animated from "react-native-reanimated";
+import RNAnimated from "react-native-reanimated";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -20,6 +23,8 @@ import {
   HEADER_ICON_SIZE,
 } from "@/components/FloatingHeader.styles";
 import { MAP_PROPERTIES, MapProperty } from "@/constants/mockData";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 // Popular areas data
 const POPULAR_AREAS = [
@@ -102,11 +107,101 @@ export default function PopularAreasScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
+  const searchInputRef = useRef<RNTextInput>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedArea, setSelectedArea] = useState<string | null>(
     (params.area as string) || null
   );
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  // Animated values for search bar
+  const searchInputWidth = useRef(new Animated.Value(180)).current;
+  const searchInputHeight = useRef(new Animated.Value(42)).current;
+  const searchInputScale = useRef(new Animated.Value(1)).current;
+  const searchInputOpacity = useRef(new Animated.Value(0.95)).current;
+
+  // Handle keyboard show/hide with iOS-like animations
+  useEffect(() => {
+    const keyboardWillShowListener = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      (e) => {
+        setKeyboardHeight(e.endCoordinates.height);
+        setIsKeyboardVisible(true);
+        // iOS-like spring animation
+        Animated.parallel([
+          Animated.spring(searchInputWidth, {
+            toValue: SCREEN_WIDTH - Spacing.lg * 2,
+            useNativeDriver: false,
+            tension: 100,
+            friction: 12,
+          }),
+          Animated.spring(searchInputHeight, {
+            toValue: 52,
+            useNativeDriver: false,
+            tension: 100,
+            friction: 12,
+          }),
+          Animated.spring(searchInputScale, {
+            toValue: 1.02,
+            useNativeDriver: true,
+            tension: 100,
+            friction: 12,
+          }),
+          Animated.timing(searchInputOpacity, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }
+    );
+
+    const keyboardWillHideListener = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      () => {
+        setKeyboardHeight(0);
+        setIsKeyboardVisible(false);
+        // iOS-like spring animation back to original
+        Animated.parallel([
+          Animated.spring(searchInputWidth, {
+            toValue: 180,
+            useNativeDriver: false,
+            tension: 80,
+            friction: 12,
+          }),
+          Animated.spring(searchInputHeight, {
+            toValue: 42,
+            useNativeDriver: false,
+            tension: 80,
+            friction: 12,
+          }),
+          Animated.spring(searchInputScale, {
+            toValue: 1,
+            useNativeDriver: true,
+            tension: 80,
+            friction: 12,
+          }),
+          Animated.timing(searchInputOpacity, {
+            toValue: 0.95,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }
+    );
+
+    return () => {
+      keyboardWillShowListener.remove();
+      keyboardWillHideListener.remove();
+    };
+  }, [
+    searchInputWidth,
+    searchInputHeight,
+    searchInputScale,
+    searchInputOpacity,
+  ]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -141,7 +236,7 @@ export default function PopularAreasScreen() {
       onPress={() => setSelectedArea(selectedArea === item.id ? null : item.id)}
       activeOpacity={0.9}
     >
-      <Animated.Image
+      <RNAnimated.Image
         source={{ uri: item.image }}
         style={styles.areaImage}
         resizeMode="cover"
@@ -172,7 +267,7 @@ export default function PopularAreasScreen() {
       onPress={() => router.push(`/property/${item.id}`)}
       activeOpacity={0.9}
     >
-      <Animated.Image
+      <RNAnimated.Image
         source={{ uri: item.image }}
         style={styles.propertyImage}
         resizeMode="cover"
@@ -240,37 +335,14 @@ export default function PopularAreasScreen() {
             styles.listContent,
             {
               paddingTop: 80 + insets.top,
-              paddingBottom: 100 + insets.bottom,
+              paddingBottom: 140 + insets.bottom, // Extra space for floating search
             },
           ]}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          onScrollBeginDrag={Keyboard.dismiss}
           ListHeaderComponent={
             <>
-              {/* Search Bar */}
-              <View style={styles.searchContainer}>
-                <Ionicons
-                  name="search"
-                  size={20}
-                  color={Colors.textSecondary}
-                />
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder="Search areas..."
-                  placeholderTextColor={Colors.textSecondary}
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                />
-                {searchQuery.length > 0 && (
-                  <TouchableOpacity onPress={() => setSearchQuery("")}>
-                    <Ionicons
-                      name="close-circle"
-                      size={20}
-                      color={Colors.textSecondary}
-                    />
-                  </TouchableOpacity>
-                )}
-              </View>
-
               {/* Areas Grid */}
               <Text style={styles.sectionTitle}>
                 {selectedArea ? "Selected Area" : "All Popular Areas"}
@@ -320,6 +392,65 @@ export default function PopularAreasScreen() {
             />
           }
         />
+
+        {/* Floating Search Bar - iOS-like */}
+        <Animated.View
+          style={[
+            styles.floatingSearchContainer,
+            {
+              bottom: isKeyboardVisible
+                ? keyboardHeight + Spacing.md
+                : Math.max(insets.bottom, Spacing.md) + 70,
+              opacity: searchInputOpacity,
+              transform: [{ scale: searchInputScale }],
+            },
+          ]}
+        >
+          <Animated.View
+            style={[
+              styles.floatingSearchInputContainer,
+              {
+                width: searchInputWidth,
+                height: searchInputHeight,
+              },
+            ]}
+          >
+            <Ionicons
+              name="search"
+              size={isKeyboardVisible ? 18 : 16}
+              color={Colors.textSecondary}
+              style={styles.floatingSearchIcon}
+            />
+            <RNTextInput
+              ref={searchInputRef}
+              style={[
+                styles.floatingSearchInput,
+                {
+                  fontSize: isKeyboardVisible ? 15 : 13,
+                },
+              ]}
+              placeholder="Search areas..."
+              placeholderTextColor={Colors.textSecondary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              returnKeyType="search"
+              autoCapitalize="none"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setSearchQuery("")}
+                style={styles.floatingClearButton}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="close-circle"
+                  size={isKeyboardVisible ? 20 : 18}
+                  color={Colors.textSecondary}
+                />
+              </TouchableOpacity>
+            )}
+          </Animated.View>
+        </Animated.View>
       </View>
     </>
   );
@@ -373,7 +504,58 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: Spacing.lg,
   },
-  // Search
+  // Floating Search Bar
+  floatingSearchContainer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    zIndex: 999,
+    backgroundColor: "transparent",
+  },
+  floatingSearchInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.surface,
+    borderRadius: 22,
+    paddingHorizontal: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    gap: Spacing.xs,
+    alignSelf: "center",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  floatingSearchIcon: {
+    marginRight: Spacing.xs / 2,
+  },
+  floatingSearchInput: {
+    flex: 1,
+    ...Typography.bodyMedium,
+    fontSize: 13,
+    color: Colors.textPrimary,
+    padding: 0,
+    minWidth: 100,
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        textAlignVertical: "center",
+      },
+    }),
+  },
+  floatingClearButton: {
+    padding: Spacing.xs / 2,
+  },
+  // Legacy search (kept for compatibility)
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
