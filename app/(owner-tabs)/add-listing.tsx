@@ -275,7 +275,8 @@ export default function AddListingScreen() {
       }
 
       const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
+        accuracy: Location.Accuracy.Balanced,
+        timeInterval: 10000,
       });
 
       setFormData({
@@ -317,8 +318,12 @@ export default function AddListingScreen() {
       } catch {
         // Address lookup failed, but we still have coordinates
       }
-    } catch {
-      Alert.alert("Error", "Failed to get location. Please try again.");
+    } catch (error) {
+      console.log("Location error:", error);
+      Alert.alert(
+        "Location Unavailable",
+        "Unable to get your current location. Please make sure location services are enabled on your device, or set the location manually on the map."
+      );
     } finally {
       setIsLoadingLocation(false);
     }

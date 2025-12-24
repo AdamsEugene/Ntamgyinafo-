@@ -168,25 +168,39 @@ export default function MapScreen() {
     if (propertyId) return; // Skip if navigating to specific property
 
     (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status === "granted") {
-        const location = await Location.getCurrentPositionAsync({});
-        setUserLocation({
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        });
-        // Center map on user location only if no property selected
-        if (mapRef.current && !hasAnimatedToProperty) {
-          mapRef.current.animateToRegion(
-            {
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
-              latitudeDelta: 0.05,
-              longitudeDelta: 0.05,
-            },
-            1000
-          );
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === "granted") {
+          const location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+            timeInterval: 10000,
+            distanceInterval: 100,
+          });
+          setUserLocation({
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          });
+          // Center map on user location only if no property selected
+          if (mapRef.current && !hasAnimatedToProperty) {
+            mapRef.current.animateToRegion(
+              {
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+                latitudeDelta: 0.05,
+                longitudeDelta: 0.05,
+              },
+              1000
+            );
+          }
         }
+      } catch (error) {
+        // Location services might be disabled or unavailable
+        console.log("Could not get current location:", error);
+        // Use default location (Accra, Ghana) as fallback
+        setUserLocation({
+          latitude: 5.6037,
+          longitude: -0.187,
+        });
       }
     })();
   }, [params.propertyId, hasAnimatedToProperty]);
