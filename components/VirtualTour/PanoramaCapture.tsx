@@ -123,7 +123,14 @@ export function PanoramaCapture({
   // Auto-capture countdown
   const [countdown, setCountdown] = useState<number | null>(null);
   const countdownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isReadyForCapture = isOnTarget && isLevel && !isCapturing;
+  const countdownStartedRef = useRef(false); // Prevent countdown from being cancelled by sensor noise
+
+  // First photo only needs level (any heading is fine - it sets the starting point)
+  // Subsequent photos need both level AND correct heading
+  const isFirstPhoto = currentSegment === 0 && capturedPhotos.length === 0;
+  const isReadyForCapture = isFirstPhoto
+    ? isLevel && !isCapturing
+    : isOnTarget && isLevel && !isCapturing;
 
   // Calculate target heading for current segment
   const targetHeading =
@@ -320,31 +327,38 @@ export function PanoramaCapture({
 
   // Auto-capture countdown when ready
   useEffect(() => {
-    if (isReadyForCapture && countdown === null && !isCapturing) {
+    if (
+      isReadyForCapture &&
+      countdown === null &&
+      !isCapturing &&
+      !countdownStartedRef.current
+    ) {
       // Start countdown
+      countdownStartedRef.current = true;
       setCountdown(3);
       Vibration.vibrate(30);
-    } else if (!isReadyForCapture && countdown !== null) {
-      // Cancel countdown if conditions are no longer met
-      if (countdownTimerRef.current) {
-        clearTimeout(countdownTimerRef.current);
-        countdownTimerRef.current = null;
-      }
-      setCountdown(null);
     }
+    // Note: We don't cancel countdown on sensor fluctuations anymore
+    // The countdown will complete once started
   }, [isReadyForCapture, countdown, isCapturing]);
 
-  // Handle countdown timer
+  // Handle countdown timer - runs independently once started
   useEffect(() => {
     if (countdown === null) return;
 
     if (countdown > 0) {
       countdownTimerRef.current = setTimeout(() => {
-        setCountdown(countdown - 1);
-        Vibration.vibrate(30);
-      }, 800);
+        setCountdown((prev) => {
+          if (prev !== null && prev > 0) {
+            Vibration.vibrate(30);
+            return prev - 1;
+          }
+          return prev;
+        });
+      }, 700); // Slightly faster for better UX
     } else if (countdown === 0) {
       // Countdown finished - take the picture!
+      countdownStartedRef.current = false;
       setCountdown(null);
       handleCapture();
     }
@@ -389,6 +403,8 @@ export function PanoramaCapture({
     setCurrentSegment(0);
     setLastCapturedUri(null);
     setStartHeading(null);
+    setCountdown(null);
+    countdownStartedRef.current = false;
   }, []);
 
   // Skip remaining segments
@@ -460,8 +476,8 @@ export function PanoramaCapture({
           pointerEvents="none"
         />
 
-        {/* On-Target Glow Effect */}
-        {isOnTarget && !countdown && (
+        {/* On-Target Glow Effect (shows for first photo when level, or subsequent when on target) */}
+        {isReadyForCapture && !countdown && (
           <Animated.View
             style={[
               styles.onTargetGlow,
@@ -659,18 +675,20 @@ export function PanoramaCapture({
           <View
             style={[
               styles.statusBanner,
-              isOnTarget && isLevel && styles.statusBannerReady,
-              !isOnTarget &&
+              isReadyForCapture && styles.statusBannerReady,
+              !isFirstPhoto &&
+                !isOnTarget &&
                 turnHint.direction === "left" &&
                 styles.statusBannerLeft,
-              !isOnTarget &&
+              !isFirstPhoto &&
+                !isOnTarget &&
                 turnHint.direction === "right" &&
                 styles.statusBannerRight,
             ]}
           >
             <Ionicons
               name={
-                isOnTarget && isLevel
+                isReadyForCapture
                   ? "checkmark-circle"
                   : !isLevel
                   ? "phone-portrait-outline"
@@ -684,6 +702,8 @@ export function PanoramaCapture({
             <Text style={styles.statusText}>
               {!isLevel
                 ? "Hold phone upright"
+                : isFirstPhoto
+                ? "✓ Hold steady for first shot..."
                 : isOnTarget
                 ? "✓ Hold steady..."
                 : turnHint.direction === "left"
@@ -693,29 +713,32 @@ export function PanoramaCapture({
           </View>
         )}
 
-        {/* Large Direction Arrow Overlay (when not on target) */}
-        {!isOnTarget && isLevel && turnHint.direction !== "none" && (
-          <View style={styles.directionOverlay}>
-            <View
-              style={[
-                styles.directionArrowLarge,
-                turnHint.direction === "left"
-                  ? styles.directionArrowLeft
-                  : styles.directionArrowRight,
-              ]}
-            >
-              <Ionicons
-                name={
+        {/* Large Direction Arrow Overlay (when not on target, not for first photo) */}
+        {!isFirstPhoto &&
+          !isOnTarget &&
+          isLevel &&
+          turnHint.direction !== "none" && (
+            <View style={styles.directionOverlay}>
+              <View
+                style={[
+                  styles.directionArrowLarge,
                   turnHint.direction === "left"
-                    ? "chevron-back"
-                    : "chevron-forward"
-                }
-                size={60}
-                color="rgba(255, 255, 255, 0.6)"
-              />
+                    ? styles.directionArrowLeft
+                    : styles.directionArrowRight,
+                ]}
+              >
+                <Ionicons
+                  name={
+                    turnHint.direction === "left"
+                      ? "chevron-back"
+                      : "chevron-forward"
+                  }
+                  size={60}
+                  color="rgba(255, 255, 255, 0.6)"
+                />
+              </View>
             </View>
-          </View>
-        )}
+          )}
 
         {/* Camera Viewfinder Guidelines */}
         <View style={styles.viewfinderContainer} pointerEvents="none">
@@ -760,7 +783,7 @@ export function PanoramaCapture({
               <Ionicons name="close" size={16} color="rgba(255,255,255,0.6)" />
             </TouchableOpacity>
             <Text style={styles.compactTipsText}>
-              🎯 Align to green • 📱 Hold level • Auto-captures when ready!
+              📱 Hold phone level • First shot starts your 360° • Auto-captures!
             </Text>
           </View>
         )}
