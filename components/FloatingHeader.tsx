@@ -42,11 +42,11 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
       pointerEvents="box-none"
     >
       <BlurView
-        intensity={isDark ? 60 : 80}
+        intensity={isDark ? 25 : 35}
         tint={isDark ? "dark" : "light"}
         style={styles.blurContainer}
       >
-        {/* Glass overlay for better visibility */}
+        {/* Frosted glass overlay - subtle tint over blurred content */}
         <View
           style={[
             styles.glassOverlay,
@@ -165,10 +165,10 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   glassOverlayLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.75)",
+    backgroundColor: "rgba(255, 255, 255, 0.6)",
   },
   glassOverlayDark: {
-    backgroundColor: "rgba(30, 30, 30, 0.8)",
+    backgroundColor: "rgba(30, 30, 30, 0.6)",
   },
   headerContent: {
     flexDirection: "row",

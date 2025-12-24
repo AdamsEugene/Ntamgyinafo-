@@ -45,7 +45,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
     >
       {/* Blur Background */}
       <BlurView
-        intensity={isDark ? 40 : 80}
+        intensity={isDark ? 25 : 35}
         tint={isDark ? "dark" : "light"}
         style={styles.blurContainer}
       >
@@ -156,10 +156,10 @@ const styles = StyleSheet.create({
     borderRadius: 28,
   },
   glassOverlayLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.7)",
+    backgroundColor: "rgba(255, 255, 255, 0.6)",
   },
   glassOverlayDark: {
-    backgroundColor: "rgba(30, 30, 30, 0.75)",
+    backgroundColor: "rgba(30, 30, 30, 0.6)",
   },
   container: {
     flexDirection: "row",
