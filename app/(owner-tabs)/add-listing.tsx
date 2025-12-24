@@ -13,6 +13,7 @@ import {
   Animated,
   Alert,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -24,6 +25,11 @@ import * as Location from "expo-location";
 import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import { FloatingHeader } from "@/components/FloatingHeader";
+import {
+  VirtualTourCreator,
+  PanoramaViewer,
+  Scene,
+} from "@/components/VirtualTour";
 
 // Constants
 const TOTAL_STEPS = 10;
@@ -89,6 +95,7 @@ interface ListingFormData {
   photos: string[];
   videos: string[];
   has360: boolean;
+  virtualTourScenes: Scene[];
   latitude: number | null;
   longitude: number | null;
   address: string;
@@ -123,10 +130,15 @@ export default function AddListingScreen() {
     photos: [],
     videos: [],
     has360: false,
+    virtualTourScenes: [],
     latitude: null,
     longitude: null,
     address: "",
   });
+
+  // Virtual Tour state
+  const [showTourCreator, setShowTourCreator] = useState(false);
+  const [showTourPreview, setShowTourPreview] = useState(false);
 
   // Default region for Ghana
   const defaultRegion = {
@@ -352,15 +364,6 @@ export default function AddListingScreen() {
       { text: "Gallery", onPress: () => pickVideos(false) },
       { text: "Cancel", style: "cancel" },
     ]);
-  };
-
-  // Show 360 info
-  const show360Info = () => {
-    Alert.alert(
-      "360° Virtual Tour",
-      "To create a 360° virtual tour, you can:\n\n1. Use a 360° camera like Insta360 or Ricoh Theta\n\n2. Use the Google Street View app to capture panoramas\n\n3. Hire a professional photographer\n\nOnce you have your 360° images, you can upload them in the app settings.",
-      [{ text: "Got it", style: "default" }]
-    );
   };
 
   // Progress percentage
@@ -1002,6 +1005,16 @@ export default function AddListingScreen() {
     </View>
   );
 
+  // Handle virtual tour creation
+  const handleTourComplete = (scenes: Scene[]) => {
+    setFormData((prev) => ({
+      ...prev,
+      virtualTourScenes: scenes,
+      has360: scenes.length > 0,
+    }));
+    setShowTourCreator(false);
+  };
+
   // Step 8: 360° View
   const render360Step = () => (
     <View style={styles.stepContent}>
@@ -1010,33 +1023,109 @@ export default function AddListingScreen() {
         Add an immersive 360° view of your property (Optional)
       </Text>
 
-      <TouchableOpacity
-        style={styles.addMediaButton}
-        activeOpacity={0.8}
-        onPress={show360Info}
-      >
-        <LinearGradient
-          colors={[`${Colors.primaryGreen}15`, `${Colors.primaryGreen}05`]}
-          style={styles.addMediaGradient}
-        >
-          <View style={styles.addMediaIconCircle}>
-            <Ionicons name="globe" size={32} color={Colors.primaryGreen} />
+      {/* Show existing tour or create button */}
+      {formData.virtualTourScenes.length > 0 ? (
+        <View style={styles.tourPreviewContainer}>
+          {/* Tour Thumbnail Grid */}
+          <View style={styles.tourThumbnailGrid}>
+            {formData.virtualTourScenes.slice(0, 4).map((scene, index) => (
+              <View key={scene.id} style={styles.tourThumbnail}>
+                <Image
+                  source={{ uri: scene.thumbnail || scene.imageUrl }}
+                  style={styles.tourThumbnailImage}
+                />
+                {index === 3 && formData.virtualTourScenes.length > 4 && (
+                  <View style={styles.tourThumbnailOverlay}>
+                    <Text style={styles.tourThumbnailOverlayText}>
+                      +{formData.virtualTourScenes.length - 4}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            ))}
           </View>
-          <Text style={styles.addMediaTitle}>Add 360° Tour</Text>
-          <Text style={styles.addMediaSubtitle}>
-            Learn how to create a virtual tour
-          </Text>
-        </LinearGradient>
-      </TouchableOpacity>
+
+          {/* Tour Info */}
+          <View style={styles.tourInfo}>
+            <View style={styles.tourInfoHeader}>
+              <Ionicons name="cube" size={20} color={Colors.primaryGreen} />
+              <Text style={styles.tourInfoTitle}>Virtual Tour Created</Text>
+            </View>
+            <Text style={styles.tourInfoText}>
+              {formData.virtualTourScenes.length} scenes •{" "}
+              {formData.virtualTourScenes.reduce(
+                (acc, s) => acc + s.hotspots.length,
+                0
+              )}{" "}
+              hotspots
+            </Text>
+          </View>
+
+          {/* Action Buttons */}
+          <View style={styles.tourActions}>
+            <TouchableOpacity
+              style={styles.tourPreviewButton}
+              onPress={() => setShowTourPreview(true)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="eye" size={18} color={Colors.primaryGreen} />
+              <Text style={styles.tourPreviewButtonText}>Preview</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.tourEditButton}
+              onPress={() => setShowTourCreator(true)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="pencil" size={18} color="#FFFFFF" />
+              <Text style={styles.tourEditButtonText}>Edit Tour</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Remove Tour */}
+          <TouchableOpacity
+            style={styles.removeTourButton}
+            onPress={() =>
+              setFormData((prev) => ({
+                ...prev,
+                virtualTourScenes: [],
+                has360: false,
+              }))
+            }
+          >
+            <Ionicons name="trash-outline" size={16} color="#EF4444" />
+            <Text style={styles.removeTourButtonText}>Remove Tour</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <TouchableOpacity
+          style={styles.addMediaButton}
+          activeOpacity={0.8}
+          onPress={() => setShowTourCreator(true)}
+        >
+          <LinearGradient
+            colors={[`${Colors.primaryGreen}15`, `${Colors.primaryGreen}05`]}
+            style={styles.addMediaGradient}
+          >
+            <View style={styles.addMediaIconCircle}>
+              <Ionicons name="cube" size={32} color={Colors.primaryGreen} />
+            </View>
+            <Text style={styles.addMediaTitle}>Create 360° Tour</Text>
+            <Text style={styles.addMediaSubtitle}>
+              Build an immersive virtual walkthrough
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      )}
 
       <View style={styles.tipsContainer}>
-        <Text style={styles.tipsTitle}>📷 How to capture 360°:</Text>
+        <Text style={styles.tipsTitle}>📷 How to capture 360° photos:</Text>
         <Text style={styles.tipText}>
           • Use a 360° camera (Insta360, Ricoh Theta)
         </Text>
         <Text style={styles.tipText}>
           • Or use Google Street View app for panoramas
         </Text>
+        <Text style={styles.tipText}>• Wide angle photos also work well</Text>
         <Text style={styles.tipText}>
           • Consider hiring a professional photographer
         </Text>
@@ -1346,6 +1435,28 @@ export default function AddListingScreen() {
           </LinearGradient>
         </TouchableOpacity>
       </KeyboardAvoidingView>
+
+      {/* Virtual Tour Creator Modal */}
+      <Modal visible={showTourCreator} animationType="slide">
+        <VirtualTourCreator
+          existingScenes={formData.virtualTourScenes}
+          onComplete={handleTourComplete}
+          onCancel={() => setShowTourCreator(false)}
+          maxScenes={10}
+        />
+      </Modal>
+
+      {/* Virtual Tour Preview Modal */}
+      <Modal visible={showTourPreview} animationType="fade">
+        {formData.virtualTourScenes.length > 0 && (
+          <PanoramaViewer
+            scenes={formData.virtualTourScenes}
+            onClose={() => setShowTourPreview(false)}
+            showControls
+            showThumbnails
+          />
+        )}
+      </Modal>
     </>
   );
 }
@@ -1871,6 +1982,117 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textSecondary,
     marginBottom: 4,
+  },
+  // Virtual Tour Styles
+  tourPreviewContainer: {
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+  },
+  tourThumbnailGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  tourThumbnail: {
+    width: "23%",
+    aspectRatio: 1.3,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  tourThumbnailImage: {
+    width: "100%",
+    height: "100%",
+  },
+  tourThumbnailOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  tourThumbnailOverlayText: {
+    ...Typography.titleMedium,
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  tourInfo: {
+    marginBottom: Spacing.md,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: Colors.divider,
+  },
+  tourInfoHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginBottom: Spacing.xs,
+  },
+  tourInfoTitle: {
+    ...Typography.titleMedium,
+    fontSize: 15,
+    fontWeight: "600",
+    color: Colors.textPrimary,
+  },
+  tourInfoText: {
+    ...Typography.bodyMedium,
+    fontSize: 13,
+    color: Colors.textSecondary,
+  },
+  tourActions: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  tourPreviewButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.xs,
+    paddingVertical: Spacing.md,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.primaryGreen,
+    backgroundColor: `${Colors.primaryGreen}10`,
+  },
+  tourPreviewButtonText: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.primaryGreen,
+  },
+  tourEditButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.xs,
+    paddingVertical: Spacing.md,
+    borderRadius: 12,
+    backgroundColor: Colors.primaryGreen,
+  },
+  tourEditButtonText: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  removeTourButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.xs,
+    paddingVertical: Spacing.sm,
+  },
+  removeTourButtonText: {
+    ...Typography.bodyMedium,
+    fontSize: 13,
+    color: "#EF4444",
   },
   // Media (Videos, 360)
   mediaLimitInfo: {
