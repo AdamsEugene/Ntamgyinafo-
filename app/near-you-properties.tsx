@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,12 +14,18 @@ import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import {
+  BottomSheetModal,
+  BottomSheetBackdrop,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
 import {
   FloatingHeaderStyles,
   HEADER_ICON_SIZE,
 } from "@/components/FloatingHeader.styles";
 import { MAP_PROPERTIES, MapProperty } from "@/constants/mockData";
+import { LocationSelector } from "@/components/LocationSelector";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.md) / 2;
@@ -51,6 +57,30 @@ export default function NearYouPropertiesScreen() {
   );
   const [distanceFilter, setDistanceFilter] = useState("all");
   const [propertyTypeFilter, setPropertyTypeFilter] = useState("all");
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([
+    "East Legon",
+  ]);
+  const [currentLocation, setCurrentLocation] = useState("East Legon, Accra");
+
+  // Location selector bottom sheet
+  const locationSheetRef = useRef<BottomSheetModal>(null);
+  const snapPoints = useMemo(() => ["90%"], []);
+
+  const handleLocationChange = (locations: string[]) => {
+    setSelectedLocations(locations);
+    if (locations.length > 0) {
+      setCurrentLocation(`${locations[0]}, Accra`);
+    }
+  };
+
+  const renderBackdrop = (props: any) => (
+    <BottomSheetBackdrop
+      {...props}
+      disappearsOnIndex={-1}
+      appearsOnIndex={0}
+      opacity={0.5}
+    />
+  );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -195,9 +225,13 @@ export default function NearYouPropertiesScreen() {
         </View>
         <View style={styles.locationDetails}>
           <Text style={styles.locationLabel}>Your Location</Text>
-          <Text style={styles.locationValue}>East Legon, Accra</Text>
+          <Text style={styles.locationValue}>{currentLocation}</Text>
         </View>
-        <TouchableOpacity style={styles.changeLocation} activeOpacity={0.7}>
+        <TouchableOpacity
+          style={styles.changeLocation}
+          activeOpacity={0.7}
+          onPress={() => locationSheetRef.current?.present()}
+        >
           <Text style={styles.changeLocationText}>Change</Text>
         </TouchableOpacity>
       </View>
@@ -301,7 +335,7 @@ export default function NearYouPropertiesScreen() {
             <TouchableOpacity
               style={FloatingHeaderStyles.actionButton}
               activeOpacity={0.7}
-              onPress={() => router.push("/(tabs)/search")}
+              onPress={() => router.push("/(tabs)/map")}
             >
               <View style={FloatingHeaderStyles.actionButtonBackground}>
                 <Ionicons
@@ -338,6 +372,35 @@ export default function NearYouPropertiesScreen() {
             />
           }
         />
+
+        {/* Location Selector Bottom Sheet */}
+        <BottomSheetModal
+          ref={locationSheetRef}
+          index={0}
+          snapPoints={snapPoints}
+          enablePanDownToClose
+          backdropComponent={renderBackdrop}
+          backgroundStyle={styles.bottomSheetBackground}
+        >
+          <BottomSheetView style={styles.bottomSheetContent}>
+            <View style={styles.bottomSheetHeader}>
+              <Text style={styles.bottomSheetTitle}>Select Location</Text>
+              <TouchableOpacity
+                onPress={() => locationSheetRef.current?.dismiss()}
+                style={styles.closeButton}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="close" size={24} color={Colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.locationSelectorWrapper}>
+              <LocationSelector
+                selectedLocations={selectedLocations}
+                onLocationsChange={handleLocationChange}
+              />
+            </View>
+          </BottomSheetView>
+        </BottomSheetModal>
       </View>
     </>
   );
@@ -607,5 +670,41 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     color: Colors.primaryGreen,
+  },
+  bottomSheetBackground: {
+    backgroundColor: Colors.background,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  bottomSheetContent: {
+    flex: 1,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.xl,
+  },
+  bottomSheetHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingBottom: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
+    marginBottom: Spacing.md,
+  },
+  bottomSheetTitle: {
+    ...Typography.titleLarge,
+    fontSize: 20,
+    fontWeight: "700",
+    color: Colors.textPrimary,
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.surface,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  locationSelectorWrapper: {
+    flex: 1,
   },
 });
