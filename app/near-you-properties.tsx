@@ -348,7 +348,17 @@ export default function NearYouPropertiesScreen() {
             <TouchableOpacity
               style={FloatingHeaderStyles.actionButton}
               activeOpacity={0.7}
-              onPress={() => router.push("/(tabs)/map")}
+              onPress={() => {
+                // Pass distance filter to map screen if selected
+                if (distanceFilter && distanceFilter !== "all") {
+                  router.push({
+                    pathname: "/(tabs)/map",
+                    params: { distance: distanceFilter },
+                  });
+                } else {
+                  router.push("/(tabs)/map");
+                }
+              }}
             >
               <View style={FloatingHeaderStyles.actionButtonBackground}>
                 <Ionicons

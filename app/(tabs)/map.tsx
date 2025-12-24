@@ -1,4 +1,10 @@
-import React, { useState, useRef, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+  useEffect,
+} from "react";
 import {
   View,
   Text,
@@ -7,6 +13,7 @@ import {
   Image,
   Platform,
   Dimensions,
+  Animated,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -111,6 +118,10 @@ export default function MapScreen() {
     latitude: number;
     longitude: number;
   } | null>(null);
+
+  // Pulsating animation for distance circle
+  const pulseAnim = useRef(new Animated.Value(0.3)).current;
+  const pulseScaleAnim = useRef(new Animated.Value(1)).current;
   const [filteredProperties, setFilteredProperties] =
     useState<MapProperty[]>(MAP_PROPERTIES);
   const [savedProperties, setSavedProperties] = useState<Set<string>>(
@@ -144,6 +155,70 @@ export default function MapScreen() {
       setPopupExpanded(false);
     }
   }, [params.propertyId, params.lat, params.lng]);
+
+  // Handle distance filter from navigation params (from near-you-properties screen)
+  useEffect(() => {
+    const distanceParam = params.distance as string;
+    if (distanceParam && userLocation) {
+      setDistanceFilter(distanceParam);
+      setCircleCenter(userLocation);
+
+      // Zoom to show the circle
+      const radiusInMeters = getDistanceInMeters(distanceParam);
+      const latDelta = (radiusInMeters / 111320) * 2.5;
+      const lngDelta = latDelta * 1.2;
+
+      setTimeout(() => {
+        mapRef.current?.animateToRegion(
+          {
+            latitude: userLocation.latitude,
+            longitude: userLocation.longitude,
+            latitudeDelta: latDelta,
+            longitudeDelta: lngDelta,
+          },
+          500
+        );
+      }, 300);
+    }
+  }, [params.distance, userLocation]);
+
+  // Pulsating animation effect for distance circle
+  useEffect(() => {
+    if (circleCenter && distanceFilter) {
+      // Start pulsating animation
+      const pulseAnimation = Animated.loop(
+        Animated.sequence([
+          Animated.parallel([
+            Animated.timing(pulseAnim, {
+              toValue: 0.15,
+              duration: 1500,
+              useNativeDriver: false,
+            }),
+            Animated.timing(pulseScaleAnim, {
+              toValue: 1.05,
+              duration: 1500,
+              useNativeDriver: false,
+            }),
+          ]),
+          Animated.parallel([
+            Animated.timing(pulseAnim, {
+              toValue: 0.3,
+              duration: 1500,
+              useNativeDriver: false,
+            }),
+            Animated.timing(pulseScaleAnim, {
+              toValue: 1,
+              duration: 1500,
+              useNativeDriver: false,
+            }),
+          ]),
+        ])
+      );
+      pulseAnimation.start();
+
+      return () => pulseAnimation.stop();
+    }
+  }, [circleCenter, distanceFilter, pulseAnim, pulseScaleAnim]);
 
   // Process pending navigation after map is ready
   React.useEffect(() => {
@@ -580,13 +655,39 @@ export default function MapScreen() {
 
           {/* Distance Circle - shows selected distance radius when distance filter is active */}
           {circleCenter && distanceFilter && (
-            <Circle
-              center={circleCenter}
-              radius={getDistanceInMeters(distanceFilter)}
-              strokeColor={Colors.primaryGreen}
-              fillColor={`${Colors.primaryGreen}20`}
-              strokeWidth={2}
-            />
+            <>
+              {/* Outer pulsating circle */}
+              <Circle
+                center={circleCenter}
+                radius={getDistanceInMeters(distanceFilter) * 1.08}
+                strokeColor={`${Colors.primaryGreen}40`}
+                fillColor={`${Colors.primaryGreen}08`}
+                strokeWidth={1}
+              />
+              {/* Main circle */}
+              <Circle
+                center={circleCenter}
+                radius={getDistanceInMeters(distanceFilter)}
+                strokeColor={Colors.primaryGreen}
+                fillColor={`${Colors.primaryGreen}18`}
+                strokeWidth={3}
+              />
+              {/* Inner glow circle */}
+              <Circle
+                center={circleCenter}
+                radius={getDistanceInMeters(distanceFilter) * 0.92}
+                strokeColor={`${Colors.primaryGreen}60`}
+                fillColor="transparent"
+                strokeWidth={1}
+              />
+              {/* Center marker */}
+              <Marker coordinate={circleCenter} anchor={{ x: 0.5, y: 0.5 }}>
+                <View style={styles.circleCenterMarker}>
+                  <View style={styles.circleCenterDot} />
+                  <View style={styles.circleCenterPulse} />
+                </View>
+              </Marker>
+            </>
           )}
         </MapView>
 
@@ -1479,5 +1580,39 @@ const styles = StyleSheet.create({
   },
   distanceFilterTextActive: {
     color: Colors.surface,
+  },
+  circleCenterMarker: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  circleCenterDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: Colors.primaryGreen,
+    borderWidth: 3,
+    borderColor: Colors.surface,
+    zIndex: 2,
+    ...Platform.select({
+      ios: {
+        shadowColor: Colors.primaryGreen,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.5,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
+  },
+  circleCenterPulse: {
+    position: "absolute",
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: `${Colors.primaryGreen}30`,
+    zIndex: 1,
   },
 });
