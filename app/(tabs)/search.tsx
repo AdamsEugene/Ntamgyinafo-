@@ -1,15 +1,11 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput as RNTextInput,
-  Platform,
   Keyboard,
-  Animated,
-  Dimensions,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -29,6 +25,7 @@ import {
   PropertyGridCard,
   type Property,
 } from "@/components/PropertyCard";
+import { FloatingSearchBar } from "@/components/FloatingSearchBar";
 import { ALL_PROPERTIES } from "@/constants/mockData";
 
 interface Filter {
@@ -40,16 +37,11 @@ interface Filter {
   amenities?: string[];
 }
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
 export default function SearchScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const searchInputRef = useRef<RNTextInput>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [savedProperties, setSavedProperties] = useState<Set<string>>(
     new Set(["2", "5"])
   );
@@ -57,66 +49,6 @@ export default function SearchScreen() {
   const [filteredProperties, setFilteredProperties] =
     useState<Property[]>(ALL_PROPERTIES);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
-  const searchInputWidth = useRef(new Animated.Value(200)).current;
-  const searchInputHeight = useRef(new Animated.Value(44)).current;
-
-  // Auto-focus search input on mount
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      searchInputRef.current?.focus();
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Handle keyboard show/hide
-  useEffect(() => {
-    const keyboardWillShowListener = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
-      (e) => {
-        setKeyboardHeight(e.endCoordinates.height);
-        setIsKeyboardVisible(true);
-        // Animate to larger size
-        Animated.parallel([
-          Animated.timing(searchInputWidth, {
-            toValue: SCREEN_WIDTH * 0.9 - Spacing.lg * 2, // 90% width minus padding
-            duration: 250,
-            useNativeDriver: false,
-          }),
-          Animated.timing(searchInputHeight, {
-            toValue: 52,
-            duration: 250,
-            useNativeDriver: false,
-          }),
-        ]).start();
-      }
-    );
-
-    const keyboardWillHideListener = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
-      () => {
-        setKeyboardHeight(0);
-        setIsKeyboardVisible(false);
-        // Animate back to smaller size
-        Animated.parallel([
-          Animated.timing(searchInputWidth, {
-            toValue: 200,
-            duration: 250,
-            useNativeDriver: false,
-          }),
-          Animated.timing(searchInputHeight, {
-            toValue: 44,
-            duration: 250,
-            useNativeDriver: false,
-          }),
-        ]).start();
-      }
-    );
-
-    return () => {
-      keyboardWillShowListener.remove();
-      keyboardWillHideListener.remove();
-    };
-  }, [searchInputWidth, searchInputHeight]);
 
   // Real-time search and filter
   useEffect(() => {
@@ -479,62 +411,14 @@ export default function SearchScreen() {
           )}
         </ScrollView>
 
-        {/* Floating Search Input - Above Keyboard/Bottom Navigation */}
-        <Animated.View
-          style={[
-            styles.floatingSearchContainer,
-            {
-              bottom: isKeyboardVisible
-                ? keyboardHeight + Spacing.md
-                : Math.max(insets.bottom, Spacing.md) + 70, // Space for bottom nav
-            },
-          ]}
-        >
-          <Animated.View
-            style={[
-              styles.floatingSearchInputContainer,
-              {
-                width: searchInputWidth,
-                height: searchInputHeight,
-              },
-            ]}
-          >
-            <Ionicons
-              name="search"
-              size={isKeyboardVisible ? 18 : 16}
-              color={Colors.textSecondary}
-              style={styles.floatingSearchIcon}
-            />
-            <RNTextInput
-              ref={searchInputRef}
-              style={[
-                styles.floatingSearchInput,
-                {
-                  fontSize: isKeyboardVisible ? 15 : 13,
-                },
-              ]}
-              placeholder="Search properties..."
-              placeholderTextColor={Colors.textSecondary}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              returnKeyType="search"
-              autoCapitalize="none"
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity
-                onPress={() => setSearchQuery("")}
-                style={styles.floatingClearButton}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name="close-circle"
-                  size={isKeyboardVisible ? 20 : 18}
-                  color={Colors.textSecondary}
-                />
-              </TouchableOpacity>
-            )}
-          </Animated.View>
-        </Animated.View>
+        {/* Floating Search Input */}
+        <FloatingSearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search properties..."
+          autoFocus
+          collapsedWidth={200}
+        />
 
         {/* Filter Bottom Sheet */}
         <FilterBottomSheet
@@ -604,56 +488,6 @@ const styles = StyleSheet.create({
     borderRadius: 200,
     backgroundColor: Colors.primaryGreen,
     opacity: 0.05,
-  },
-  floatingSearchContainer: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    alignItems: "center",
-    zIndex: 999,
-    backgroundColor: "transparent",
-  },
-  floatingSearchInputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    paddingHorizontal: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.divider,
-    gap: Spacing.xs / 2,
-    alignSelf: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
-  },
-  floatingSearchIcon: {
-    marginRight: Spacing.xs / 2,
-  },
-  floatingSearchInput: {
-    flex: 1,
-    ...Typography.bodyMedium,
-    fontSize: 13,
-    color: Colors.textPrimary,
-    padding: 0,
-    minWidth: 120,
-    ...Platform.select({
-      android: {
-        includeFontPadding: false,
-        textAlignVertical: "center",
-      },
-    }),
-  },
-  floatingClearButton: {
-    padding: Spacing.xs / 2,
   },
   scrollView: {
     flex: 1,
