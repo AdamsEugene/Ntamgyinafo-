@@ -44,23 +44,49 @@ export interface PanoramaCaptureProps {
 
 // Helper to normalize angle to 0-360 range
 const normalizeAngle = (angle: number): number => {
-  while (angle < 0) angle += 360;
-  while (angle >= 360) angle -= 360;
-  return angle;
+  let normalized = angle % 360;
+  if (normalized < 0) normalized += 360;
+  return normalized;
 };
 
-// Helper to calculate angle difference (handles wraparound)
-const angleDifference = (a: number, b: number): number => {
-  let diff = Math.abs(normalizeAngle(a) - normalizeAngle(b));
-  if (diff > 180) diff = 360 - diff;
+// Helper to calculate signed angle difference (-180 to 180)
+// Positive = target is to the right, Negative = target is to the left
+const signedAngleDifference = (current: number, target: number): number => {
+  let diff = normalizeAngle(target) - normalizeAngle(current);
+  if (diff > 180) diff -= 360;
+  if (diff < -180) diff += 360;
   return diff;
+};
+
+// Helper to calculate absolute angle difference (0 to 180)
+const angleDifference = (a: number, b: number): number => {
+  return Math.abs(signedAngleDifference(a, b));
 };
 
 // Cardinal direction labels
 const getCardinalDirection = (heading: number): string => {
   const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
-  const index = Math.round(heading / 45) % 8;
+  const normalized = normalizeAngle(heading);
+  const index = Math.round(normalized / 45) % 8;
   return directions[index];
+};
+
+// Get turn direction hint
+const getTurnDirection = (
+  current: number,
+  target: number
+): { direction: "left" | "right" | "none"; degrees: number } => {
+  const diff = signedAngleDifference(current, target);
+  const absDiff = Math.abs(diff);
+
+  if (absDiff <= TARGET_TOLERANCE) {
+    return { direction: "none", degrees: 0 };
+  }
+
+  return {
+    direction: diff > 0 ? "right" : "left",
+    degrees: Math.round(absDiff),
+  };
 };
 
 export function PanoramaCapture({
@@ -88,6 +114,10 @@ export function PanoramaCapture({
   const [isLevel, setIsLevel] = useState(false);
   const [tiltX, setTiltX] = useState(0);
   const [tiltY, setTiltY] = useState(0);
+  const [turnHint, setTurnHint] = useState<{
+    direction: "left" | "right" | "none";
+    degrees: number;
+  }>({ direction: "none", degrees: 0 });
   const wasOnTargetRef = useRef(false);
 
   // Calculate target heading for current segment
@@ -102,18 +132,26 @@ export function PanoramaCapture({
 
     const startCompass = async () => {
       // Set update interval (in ms)
-      Magnetometer.setUpdateInterval(100);
+      Magnetometer.setUpdateInterval(50); // Faster updates for smoother experience
 
       subscription = Magnetometer.addListener((data) => {
         // Calculate heading from magnetometer data
-        // atan2 gives angle in radians, convert to degrees
-        let angle = Math.atan2(data.y, data.x) * (180 / Math.PI);
-        angle = normalizeAngle(90 - angle); // Adjust to compass heading
+        // When phone is held upright (portrait, camera facing forward):
+        // - Rotating left/right changes the heading
+        // - We use atan2(x, y) for upright phone orientation
+        let angle = Math.atan2(data.x, data.y) * (180 / Math.PI);
+
+        // Normalize to 0-360 (compass heading where 0 = North)
+        angle = normalizeAngle(-angle);
 
         setCurrentHeading(angle);
 
-        // Set start heading on first reading
-        if (startHeading === null && currentSegment === 0) {
+        // Set start heading on first reading when we haven't captured anything yet
+        if (
+          startHeading === null &&
+          currentSegment === 0 &&
+          capturedPhotos.length === 0
+        ) {
           setStartHeading(angle);
         }
       });
@@ -126,22 +164,30 @@ export function PanoramaCapture({
         subscription.remove();
       }
     };
-  }, [startHeading, currentSegment]);
+  }, [startHeading, currentSegment, capturedPhotos.length]);
 
-  // Setup accelerometer (level detection)
+  // Setup accelerometer (level detection for UPRIGHT phone position)
   useEffect(() => {
-    Accelerometer.setUpdateInterval(100);
+    Accelerometer.setUpdateInterval(50);
 
     const subscription = Accelerometer.addListener((data) => {
-      // data.x and data.y indicate tilt
-      // When phone is perfectly level: x ≈ 0, y ≈ 0, z ≈ ±1
-      setTiltX(data.x);
-      setTiltY(data.y);
+      // For phone held UPRIGHT (vertical, like taking a photo):
+      // - x indicates left/right tilt (should be ~0 when level)
+      // - z indicates forward/back tilt (should be ~0 when phone is vertical)
+      // - y indicates up/down (should be ~-1 when phone is vertical with camera up)
 
-      // Check if phone is level (within tolerance)
+      // We want to check:
+      // 1. Not tilted left/right (x ≈ 0)
+      // 2. Phone is vertical, not tilted forward/back (z ≈ 0)
+
+      setTiltX(data.x); // Left/right tilt
+      setTiltY(data.z); // Forward/back tilt (using z for upright position)
+
+      // Check if phone is level for upright position
       const isPhoneLevel =
-        Math.abs(data.x) < LEVEL_TOLERANCE &&
-        Math.abs(data.y) < LEVEL_TOLERANCE;
+        Math.abs(data.x) < LEVEL_TOLERANCE && // Not tilted left/right
+        Math.abs(data.z) < LEVEL_TOLERANCE; // Phone is vertical (not tilted forward/back)
+
       setIsLevel(isPhoneLevel);
 
       // Animate level indicator
@@ -156,13 +202,17 @@ export function PanoramaCapture({
     return () => subscription.remove();
   }, [levelIndicatorAnim]);
 
-  // Check if on target
+  // Check if on target and calculate turn direction
   useEffect(() => {
     if (targetHeading === null) return;
 
     const diff = angleDifference(currentHeading, targetHeading);
     const onTarget = diff <= TARGET_TOLERANCE;
     setIsOnTarget(onTarget);
+
+    // Calculate turn direction hint
+    const hint = getTurnDirection(currentHeading, targetHeading);
+    setTurnHint(hint);
 
     // Haptic feedback when entering target zone
     if (onTarget && !wasOnTargetRef.current) {
@@ -551,23 +601,61 @@ export function PanoramaCapture({
           style={[
             styles.statusBanner,
             isOnTarget && isLevel && styles.statusBannerReady,
+            !isOnTarget &&
+              turnHint.direction === "left" &&
+              styles.statusBannerLeft,
+            !isOnTarget &&
+              turnHint.direction === "right" &&
+              styles.statusBannerRight,
           ]}
         >
           <Ionicons
-            name={isOnTarget && isLevel ? "checkmark-circle" : "navigate"}
-            size={18}
+            name={
+              isOnTarget && isLevel
+                ? "checkmark-circle"
+                : !isLevel
+                ? "phone-portrait-outline"
+                : turnHint.direction === "left"
+                ? "arrow-back"
+                : "arrow-forward"
+            }
+            size={20}
             color="#FFFFFF"
           />
           <Text style={styles.statusText}>
             {!isLevel
-              ? "Hold phone level"
+              ? "Hold phone upright & level"
               : isOnTarget
-              ? "Perfect! Tap to capture"
-              : `Rotate ${Math.round(
-                  angleDifference(currentHeading, targetHeading || 0)
-                )}° to target`}
+              ? "✓ Perfect! Tap to capture"
+              : turnHint.direction === "left"
+              ? `← Turn LEFT ${turnHint.degrees}°`
+              : `Turn RIGHT ${turnHint.degrees}° →`}
           </Text>
         </View>
+
+        {/* Large Direction Arrow Overlay (when not on target) */}
+        {!isOnTarget && isLevel && turnHint.direction !== "none" && (
+          <View style={styles.directionOverlay}>
+            <View
+              style={[
+                styles.directionArrowLarge,
+                turnHint.direction === "left"
+                  ? styles.directionArrowLeft
+                  : styles.directionArrowRight,
+              ]}
+            >
+              <Ionicons
+                name={
+                  turnHint.direction === "left"
+                    ? "chevron-back"
+                    : "chevron-forward"
+                }
+                size={60}
+                color="rgba(255, 255, 255, 0.6)"
+              />
+            </View>
+          </View>
+        )}
 
         {/* Camera Viewfinder Guidelines */}
         <View style={styles.viewfinderContainer} pointerEvents="none">
@@ -1123,6 +1211,12 @@ const styles = StyleSheet.create({
   statusBannerReady: {
     backgroundColor: Colors.primaryGreen,
   },
+  statusBannerLeft: {
+    backgroundColor: "#007AFF",
+  },
+  statusBannerRight: {
+    backgroundColor: "#FF9500",
+  },
   statusText: {
     ...Typography.bodyMedium,
     fontSize: 13,
@@ -1341,6 +1435,34 @@ const styles = StyleSheet.create({
     color: "rgba(255, 255, 255, 0.7)",
     marginTop: 6,
     fontWeight: "500",
+  },
+  // Direction overlay
+  directionOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 5,
+    pointerEvents: "none",
+  },
+  directionArrowLarge: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  directionArrowLeft: {
+    position: "absolute",
+    left: 20,
+  },
+  directionArrowRight: {
+    position: "absolute",
+    right: 20,
   },
 });
 
