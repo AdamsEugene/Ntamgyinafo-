@@ -156,46 +156,6 @@ export default function MapScreen() {
     }
   }, [params.propertyId, params.lat, params.lng]);
 
-  // Store pending distance filter from navigation params
-  const pendingDistanceRef = useRef<string | null>(null);
-
-  // Capture distance param when navigating from near-you-properties screen
-  useEffect(() => {
-    const distanceParam = params.distance as string;
-    if (distanceParam) {
-      pendingDistanceRef.current = distanceParam;
-      setDistanceFilter(distanceParam);
-    }
-  }, [params.distance]);
-
-  // Apply distance filter once userLocation is available
-  useEffect(() => {
-    const pendingDistance = pendingDistanceRef.current;
-    if (pendingDistance && userLocation && !circleCenter) {
-      setCircleCenter(userLocation);
-
-      // Zoom to show the circle
-      const radiusInMeters = getDistanceInMeters(pendingDistance);
-      const latDelta = (radiusInMeters / 111320) * 2.5;
-      const lngDelta = latDelta * 1.2;
-
-      setTimeout(() => {
-        mapRef.current?.animateToRegion(
-          {
-            latitude: userLocation.latitude,
-            longitude: userLocation.longitude,
-            latitudeDelta: latDelta,
-            longitudeDelta: lngDelta,
-          },
-          500
-        );
-      }, 300);
-
-      // Clear pending distance after applying
-      pendingDistanceRef.current = null;
-    }
-  }, [userLocation, circleCenter]);
-
   // Pulsating animation effect for distance circle
   useEffect(() => {
     if (circleCenter && distanceFilter) {

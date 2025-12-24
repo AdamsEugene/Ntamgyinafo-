@@ -349,15 +349,8 @@ export default function NearYouPropertiesScreen() {
               style={FloatingHeaderStyles.actionButton}
               activeOpacity={0.7}
               onPress={() => {
-                // Pass distance filter to map screen if selected
-                if (distanceFilter && distanceFilter !== "all") {
-                  router.push({
-                    pathname: "/(tabs)/map",
-                    params: { distance: distanceFilter },
-                  });
-                } else {
-                  router.push("/(tabs)/map");
-                }
+                // Navigate to map - distance filter will be applied via global state later
+                router.push("/(tabs)/map");
               }}
             >
               <View style={FloatingHeaderStyles.actionButtonBackground}>
