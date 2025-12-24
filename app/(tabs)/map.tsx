@@ -156,15 +156,26 @@ export default function MapScreen() {
     }
   }, [params.propertyId, params.lat, params.lng]);
 
-  // Handle distance filter from navigation params (from near-you-properties screen)
+  // Store pending distance filter from navigation params
+  const pendingDistanceRef = useRef<string | null>(null);
+
+  // Capture distance param when navigating from near-you-properties screen
   useEffect(() => {
     const distanceParam = params.distance as string;
-    if (distanceParam && userLocation) {
+    if (distanceParam) {
+      pendingDistanceRef.current = distanceParam;
       setDistanceFilter(distanceParam);
+    }
+  }, [params.distance]);
+
+  // Apply distance filter once userLocation is available
+  useEffect(() => {
+    const pendingDistance = pendingDistanceRef.current;
+    if (pendingDistance && userLocation && !circleCenter) {
       setCircleCenter(userLocation);
 
       // Zoom to show the circle
-      const radiusInMeters = getDistanceInMeters(distanceParam);
+      const radiusInMeters = getDistanceInMeters(pendingDistance);
       const latDelta = (radiusInMeters / 111320) * 2.5;
       const lngDelta = latDelta * 1.2;
 
@@ -179,8 +190,11 @@ export default function MapScreen() {
           500
         );
       }, 300);
+
+      // Clear pending distance after applying
+      pendingDistanceRef.current = null;
     }
-  }, [params.distance, userLocation]);
+  }, [userLocation, circleCenter]);
 
   // Pulsating animation effect for distance circle
   useEffect(() => {
@@ -680,14 +694,22 @@ export default function MapScreen() {
                 fillColor="transparent"
                 strokeWidth={1}
               />
-              {/* Center marker */}
-              <Marker coordinate={circleCenter} anchor={{ x: 0.5, y: 0.5 }}>
-                <View style={styles.circleCenterMarker}>
-                  <View style={styles.circleCenterDot} />
-                  <View style={styles.circleCenterPulse} />
-                </View>
-              </Marker>
             </>
+          )}
+
+          {/* Current Location Marker - Always visible */}
+          {userLocation && (
+            <Marker
+              coordinate={userLocation}
+              anchor={{ x: 0.5, y: 0.5 }}
+              zIndex={1000}
+            >
+              <View style={styles.currentLocationMarker}>
+                <View style={styles.currentLocationPulseOuter} />
+                <View style={styles.currentLocationPulseInner} />
+                <View style={styles.currentLocationDot} />
+              </View>
+            </Marker>
           )}
         </MapView>
 
@@ -1613,6 +1635,48 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     backgroundColor: `${Colors.primaryGreen}30`,
+    zIndex: 1,
+  },
+  currentLocationMarker: {
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  currentLocationDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: "#4285F4", // Google blue
+    borderWidth: 3,
+    borderColor: Colors.surface,
+    zIndex: 3,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#4285F4",
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.6,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  currentLocationPulseInner: {
+    position: "absolute",
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(66, 133, 244, 0.25)",
+    zIndex: 2,
+  },
+  currentLocationPulseOuter: {
+    position: "absolute",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(66, 133, 244, 0.12)",
     zIndex: 1,
   },
 });
