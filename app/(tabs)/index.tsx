@@ -198,7 +198,13 @@ export default function BuyerHomeScreen() {
           leftContent={
             <TouchableOpacity
               onPress={() => locationSheetRef.current?.present()}
-              style={styles.locationContainer}
+              style={[
+                styles.locationContainer,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
               activeOpacity={0.7}
             >
               <View
@@ -282,7 +288,10 @@ export default function BuyerHomeScreen() {
                 key={stat.id}
                 style={[
                   styles.quickStatCard,
-                  { backgroundColor: colors.surface },
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
                 ]}
               >
                 <View
@@ -323,7 +332,10 @@ export default function BuyerHomeScreen() {
                 <TouchableOpacity
                   style={[
                     styles.categoryCard,
-                    { backgroundColor: colors.surface },
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
                   ]}
                   onPress={() => router.push(`/category/${category.id}`)}
                   activeOpacity={0.8}
@@ -332,7 +344,7 @@ export default function BuyerHomeScreen() {
                     <View
                       style={[
                         styles.categoryIconBackground,
-                        { backgroundColor: `${colors.primary}12` },
+                        { backgroundColor: `${colors.primary}12`, borderColor: `${colors.primary}25` },
                       ]}
                     >
                       <Ionicons
@@ -375,7 +387,10 @@ export default function BuyerHomeScreen() {
                 <TouchableOpacity
                   style={[
                     styles.featuredCard,
-                    { backgroundColor: colors.surface },
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
                   ]}
                   onPress={() => router.push(`/property/${property.id}`)}
                   activeOpacity={0.9}
@@ -393,7 +408,10 @@ export default function BuyerHomeScreen() {
                     <TouchableOpacity
                       style={[
                         styles.saveButton,
-                        { backgroundColor: colors.surface },
+                        {
+                          backgroundColor: colors.surface,
+                          borderColor: colors.divider,
+                        },
                       ]}
                       onPress={() => toggleSave(property.id)}
                       activeOpacity={0.7}
@@ -504,7 +522,10 @@ export default function BuyerHomeScreen() {
                   key={property.id}
                   style={[
                     styles.nearYouCard,
-                    { backgroundColor: colors.surface },
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
                   ]}
                   onPress={() => router.push(`/property/${property.id}`)}
                   activeOpacity={0.8}
@@ -642,7 +663,10 @@ export default function BuyerHomeScreen() {
                 <TouchableOpacity
                   style={[
                     styles.popularAreaCard,
-                    { backgroundColor: colors.surface },
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
                   ]}
                   onPress={() => {
                     router.push("/(tabs)/search");
@@ -703,7 +727,10 @@ export default function BuyerHomeScreen() {
                   key={property.id}
                   style={[
                     styles.nearYouCard,
-                    { backgroundColor: colors.surface },
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
                   ]}
                   onPress={() => router.push(`/property/${property.id}`)}
                   activeOpacity={0.8}
