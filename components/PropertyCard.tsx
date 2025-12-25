@@ -10,6 +10,7 @@ import Animated from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export interface Property {
   id: string;
@@ -40,10 +41,14 @@ export const PropertyListCard: React.FC<PropertyCardProps> = ({
   formatPrice,
 }) => {
   const router = useRouter();
+  const { colors } = useTheme();
 
   return (
     <TouchableOpacity
-      style={PropertyCardStyles.propertyCard}
+      style={[
+        PropertyCardStyles.propertyCard,
+        { backgroundColor: colors.surface, borderColor: colors.divider },
+      ]}
       onPress={() => {
         router.push(`/property/${property.id}`);
       }}
@@ -61,16 +66,19 @@ export const PropertyListCard: React.FC<PropertyCardProps> = ({
           onPress={() => onToggleSave(property.id)}
           activeOpacity={0.7}
         >
-          <View style={PropertyCardStyles.propertySaveButtonBackground}>
+          <View
+            style={[
+              PropertyCardStyles.propertySaveButtonBackground,
+              { backgroundColor: colors.surface },
+            ]}
+          >
             <Ionicons
               name={
                 savedProperties.has(property.id) ? "heart" : "heart-outline"
               }
               size={20}
               color={
-                savedProperties.has(property.id)
-                  ? "#FF3B30"
-                  : Colors.textPrimary
+                savedProperties.has(property.id) ? colors.error : colors.text
               }
             />
           </View>
@@ -79,45 +87,64 @@ export const PropertyListCard: React.FC<PropertyCardProps> = ({
           property.bedrooms !== null &&
           property.bathrooms !== undefined &&
           property.bathrooms !== null && (
-            <View style={PropertyCardStyles.propertyBadge}>
-              <Ionicons
-                name="bed-outline"
-                size={12}
-                color={Colors.textPrimary}
-              />
-              <Text style={PropertyCardStyles.propertyBadgeText}>
+            <View
+              style={[
+                PropertyCardStyles.propertyBadge,
+                { backgroundColor: colors.surface },
+              ]}
+            >
+              <Ionicons name="bed-outline" size={12} color={colors.text} />
+              <Text
+                style={[
+                  PropertyCardStyles.propertyBadgeText,
+                  { color: colors.text },
+                ]}
+              >
                 {property.bedrooms}
               </Text>
               <Ionicons
                 name="water-outline"
                 size={12}
-                color={Colors.textPrimary}
+                color={colors.text}
                 style={{ marginLeft: Spacing.xs }}
               />
-              <Text style={PropertyCardStyles.propertyBadgeText}>
+              <Text
+                style={[
+                  PropertyCardStyles.propertyBadgeText,
+                  { color: colors.text },
+                ]}
+              >
                 {property.bathrooms}
               </Text>
             </View>
           )}
       </View>
       <View style={PropertyCardStyles.propertyContent}>
-        <Text style={PropertyCardStyles.propertyTitle} numberOfLines={2}>
+        <Text
+          style={[PropertyCardStyles.propertyTitle, { color: colors.text }]}
+          numberOfLines={2}
+        >
           {property.title}
         </Text>
         <View style={PropertyCardStyles.propertyLocation}>
           <Ionicons
             name="location-outline"
             size={14}
-            color={Colors.textSecondary}
+            color={colors.textSecondary}
           />
           <Text
-            style={PropertyCardStyles.propertyLocationText}
+            style={[
+              PropertyCardStyles.propertyLocationText,
+              { color: colors.textSecondary },
+            ]}
             numberOfLines={1}
           >
             {property.location}
           </Text>
         </View>
-        <Text style={PropertyCardStyles.propertyPrice}>
+        <Text
+          style={[PropertyCardStyles.propertyPrice, { color: colors.primary }]}
+        >
           {formatPrice(property.price)}
         </Text>
       </View>
@@ -136,10 +163,14 @@ export const PropertyGridCard: React.FC<PropertyCardProps> = ({
   formatPrice,
 }) => {
   const router = useRouter();
+  const { colors } = useTheme();
 
   return (
     <TouchableOpacity
-      style={PropertyCardStyles.gridCard}
+      style={[
+        PropertyCardStyles.gridCard,
+        { backgroundColor: colors.surface, borderColor: colors.divider },
+      ]}
       onPress={() => {
         router.push(`/property/${property.id}`);
       }}
@@ -160,16 +191,19 @@ export const PropertyGridCard: React.FC<PropertyCardProps> = ({
           }}
           activeOpacity={0.7}
         >
-          <View style={PropertyCardStyles.gridSaveButtonBackground}>
+          <View
+            style={[
+              PropertyCardStyles.gridSaveButtonBackground,
+              { backgroundColor: colors.surface },
+            ]}
+          >
             <Ionicons
               name={
                 savedProperties.has(property.id) ? "heart" : "heart-outline"
               }
               size={20}
               color={
-                savedProperties.has(property.id)
-                  ? "#FF3B30"
-                  : Colors.textPrimary
+                savedProperties.has(property.id) ? colors.error : colors.text
               }
             />
           </View>
@@ -178,42 +212,62 @@ export const PropertyGridCard: React.FC<PropertyCardProps> = ({
           property.bedrooms !== null &&
           property.bathrooms !== undefined &&
           property.bathrooms !== null && (
-            <View style={PropertyCardStyles.gridBadge}>
-              <Ionicons
-                name="bed-outline"
-                size={12}
-                color={Colors.textPrimary}
-              />
-              <Text style={PropertyCardStyles.gridBadgeText}>
+            <View
+              style={[
+                PropertyCardStyles.gridBadge,
+                { backgroundColor: colors.surface },
+              ]}
+            >
+              <Ionicons name="bed-outline" size={12} color={colors.text} />
+              <Text
+                style={[
+                  PropertyCardStyles.gridBadgeText,
+                  { color: colors.text },
+                ]}
+              >
                 {property.bedrooms}
               </Text>
               <Ionicons
                 name="water-outline"
                 size={12}
-                color={Colors.textPrimary}
+                color={colors.text}
                 style={{ marginLeft: Spacing.xs }}
               />
-              <Text style={PropertyCardStyles.gridBadgeText}>
+              <Text
+                style={[
+                  PropertyCardStyles.gridBadgeText,
+                  { color: colors.text },
+                ]}
+              >
                 {property.bathrooms}
               </Text>
             </View>
           )}
       </View>
       <View style={PropertyCardStyles.gridContent}>
-        <Text style={PropertyCardStyles.gridTitle} numberOfLines={1}>
+        <Text
+          style={[PropertyCardStyles.gridTitle, { color: colors.text }]}
+          numberOfLines={1}
+        >
           {property.title}
         </Text>
         <View style={PropertyCardStyles.locationRow}>
           <Ionicons
             name="location-outline"
             size={12}
-            color={Colors.textSecondary}
+            color={colors.textSecondary}
           />
-          <Text style={PropertyCardStyles.gridLocation} numberOfLines={1}>
+          <Text
+            style={[
+              PropertyCardStyles.gridLocation,
+              { color: colors.textSecondary },
+            ]}
+            numberOfLines={1}
+          >
             {property.location}
           </Text>
         </View>
-        <Text style={PropertyCardStyles.gridPrice}>
+        <Text style={[PropertyCardStyles.gridPrice, { color: colors.primary }]}>
           {formatPrice(property.price)}
         </Text>
       </View>
