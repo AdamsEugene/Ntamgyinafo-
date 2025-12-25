@@ -641,7 +641,9 @@ export default function MapScreen() {
         {/* Property Popup Card */}
         {selectedProperty && (
           <View style={styles.popupContainer}>
-            <View style={styles.popupCard}>
+            <View
+              style={[styles.popupCard, { backgroundColor: colors.surface }]}
+            >
               {/* Hero Image */}
               <TouchableOpacity
                 onPress={() => router.push(`/property/${selectedProperty.id}`)}
@@ -769,9 +771,14 @@ export default function MapScreen() {
                         <Ionicons
                           name="water-outline"
                           size={14}
-                          color={Colors.textSecondary}
+                          color={colors.textSecondary}
                         />
-                        <Text style={styles.popupStatText}>
+                        <Text
+                          style={[
+                            styles.popupStatText,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
                           {selectedProperty.bathrooms} Baths
                         </Text>
                       </View>
@@ -781,9 +788,17 @@ export default function MapScreen() {
               </View>
 
               {/* Action Buttons */}
-              <View style={styles.popupActions}>
+              <View
+                style={[
+                  styles.popupActions,
+                  { backgroundColor: colors.surface },
+                ]}
+              >
                 <TouchableOpacity
-                  style={styles.popupExpandButton}
+                  style={[
+                    styles.popupExpandButton,
+                    { backgroundColor: colors.inputBackground },
+                  ]}
                   onPress={() => setPopupExpanded(!popupExpanded)}
                   activeOpacity={0.7}
                 >
@@ -791,13 +806,14 @@ export default function MapScreen() {
                     name={popupExpanded ? "images" : "images-outline"}
                     size={16}
                     color={
-                      popupExpanded ? Colors.primaryGreen : Colors.textSecondary
+                      popupExpanded ? colors.primary : colors.textSecondary
                     }
                   />
                   <Text
                     style={[
                       styles.popupExpandText,
-                      popupExpanded && styles.popupExpandTextActive,
+                      { color: colors.textSecondary },
+                      popupExpanded && { color: colors.primary },
                     ]}
                   >
                     {popupExpanded ? "Hide" : "Gallery"}
@@ -805,18 +821,17 @@ export default function MapScreen() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.popupViewButton}
+                  style={[
+                    styles.popupViewButton,
+                    { backgroundColor: colors.primary },
+                  ]}
                   onPress={() =>
                     router.push(`/property/${selectedProperty.id}`)
                   }
                   activeOpacity={0.8}
                 >
                   <Text style={styles.popupViewButtonText}>View Details</Text>
-                  <Ionicons
-                    name="arrow-forward"
-                    size={16}
-                    color={Colors.surface}
-                  />
+                  <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
                 </TouchableOpacity>
               </View>
 
@@ -872,8 +887,14 @@ export default function MapScreen() {
                 key={filter.id || "all"}
                 style={[
                   styles.distanceFilterChip,
-                  distanceFilter === filter.id &&
-                    styles.distanceFilterChipActive,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                  distanceFilter === filter.id && {
+                    backgroundColor: colors.primary,
+                    borderColor: colors.primary,
+                  },
                 ]}
                 onPress={() => {
                   setDistanceFilter(filter.id);
@@ -908,8 +929,8 @@ export default function MapScreen() {
                 <Text
                   style={[
                     styles.distanceFilterText,
-                    distanceFilter === filter.id &&
-                      styles.distanceFilterTextActive,
+                    { color: colors.textSecondary },
+                    distanceFilter === filter.id && { color: "#FFFFFF" },
                   ]}
                 >
                   {filter.label}
@@ -922,23 +943,31 @@ export default function MapScreen() {
         {/* Fit to Properties Floating Button */}
         {filteredProperties.length > 0 && (
           <TouchableOpacity
-            style={styles.fitToPropertiesButton}
+            style={[
+              styles.fitToPropertiesButton,
+              { backgroundColor: colors.surface, borderColor: colors.primary },
+            ]}
             onPress={fitToProperties}
             activeOpacity={0.8}
           >
-            <Ionicons name="locate" size={24} color={Colors.primaryGreen} />
+            <Ionicons name="locate" size={24} color={colors.primary} />
           </TouchableOpacity>
         )}
 
         {/* Bottom Sheet Toggle Button */}
         <TouchableOpacity
-          style={styles.bottomSheetToggle}
+          style={[
+            styles.bottomSheetToggle,
+            { backgroundColor: colors.surface },
+          ]}
           onPress={() => bottomSheetRef.current?.present()}
           activeOpacity={0.8}
         >
           <View style={styles.bottomSheetToggleContent}>
-            <Ionicons name="chevron-up" size={20} color={Colors.textPrimary} />
-            <Text style={styles.bottomSheetToggleText}>
+            <Ionicons name="chevron-up" size={20} color={colors.text} />
+            <Text
+              style={[styles.bottomSheetToggleText, { color: colors.text }]}
+            >
               {filteredProperties.length} Properties Nearby
             </Text>
           </View>
@@ -952,8 +981,14 @@ export default function MapScreen() {
           enablePanDownToClose
           enableOverDrag={false}
           backdropComponent={renderBackdrop}
-          backgroundStyle={styles.bottomSheetBackground}
-          handleIndicatorStyle={styles.handleIndicator}
+          backgroundStyle={[
+            styles.bottomSheetBackground,
+            { backgroundColor: colors.surface },
+          ]}
+          handleIndicatorStyle={[
+            styles.handleIndicator,
+            { backgroundColor: colors.textSecondary },
+          ]}
         >
           <BottomSheetScrollView
             style={styles.bottomSheetContent}
@@ -962,9 +997,24 @@ export default function MapScreen() {
             stickyHeaderIndices={[0]}
           >
             {/* Sticky Header */}
-            <View style={styles.bottomSheetHeader}>
-              <Text style={styles.bottomSheetTitle}>Nearby Properties</Text>
-              <Text style={styles.bottomSheetSubtitle}>
+            <View
+              style={[
+                styles.bottomSheetHeader,
+                {
+                  backgroundColor: colors.surface,
+                  borderBottomColor: colors.divider,
+                },
+              ]}
+            >
+              <Text style={[styles.bottomSheetTitle, { color: colors.text }]}>
+                Nearby Properties
+              </Text>
+              <Text
+                style={[
+                  styles.bottomSheetSubtitle,
+                  { color: colors.textSecondary },
+                ]}
+              >
                 {filteredProperties.length} properties found
               </Text>
             </View>
