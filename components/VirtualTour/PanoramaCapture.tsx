@@ -47,8 +47,11 @@ const CAPTURE_GRID: CaptureRow[] = [
 const TOTAL_PHOTOS = CAPTURE_GRID.reduce((sum, row) => sum + row.segments, 0); // 50 photos
 
 // Tolerance for "on target" detection (adjusted per pitch level)
-const YAW_TOLERANCE = 12; // degrees for horizontal alignment
+const YAW_TOLERANCE = 18; // degrees for horizontal alignment (increased for magnetometer noise)
 const BASE_PITCH_TOLERANCE = 15; // base degrees for vertical alignment
+
+// Smoothing factor for magnetometer (0-1, higher = more smoothing)
+const YAW_SMOOTHING = 0.3;
 
 // Get pitch tolerance based on pitch level (horizon needs more tolerance)
 const getPitchTolerance = (targetPitch: number): number => {
@@ -168,6 +171,9 @@ export function PanoramaCapture({
   const [startYaw, setStartYaw] = useState<number | null>(null);
   const [isRollLevel, setIsRollLevel] = useState(false);
 
+  // Smoothed yaw for stable readings
+  const smoothedYawRef = useRef(0);
+
   // Capture targets
   const [captureTargets, setCaptureTargets] = useState<CaptureTarget[]>([]);
 
@@ -214,17 +220,35 @@ export function PanoramaCapture({
   // SENSOR SETUP
   // ============================================================================
 
-  // Setup magnetometer (compass for yaw)
+  // Setup magnetometer (compass for yaw) with smoothing
   useEffect(() => {
     let subscription: { remove: () => void } | null = null;
 
     const startCompass = async () => {
-      Magnetometer.setUpdateInterval(50);
+      // Slower update for more stability
+      Magnetometer.setUpdateInterval(100);
 
       subscription = Magnetometer.addListener((data) => {
-        let angle = Math.atan2(data.x, data.y) * (180 / Math.PI);
-        angle = normalizeAngle(-angle);
-        setCurrentYaw(angle);
+        // Calculate heading from magnetometer
+        // Using atan2(y, x) for landscape-style heading calculation
+        // Negating because we want clockwise rotation to increase angle
+        let rawAngle = Math.atan2(data.y, data.x) * (180 / Math.PI);
+        rawAngle = normalizeAngle(90 - rawAngle); // Adjust to put 0° at North
+
+        // Apply smoothing to reduce jitter
+        // Handle wrap-around at 0/360 boundary
+        let prevYaw = smoothedYawRef.current;
+        let diff = rawAngle - prevYaw;
+
+        // Handle wrap-around
+        if (diff > 180) diff -= 360;
+        if (diff < -180) diff += 360;
+
+        // Apply exponential smoothing
+        const smoothedYaw = normalizeAngle(prevYaw + diff * YAW_SMOOTHING);
+        smoothedYawRef.current = smoothedYaw;
+
+        setCurrentYaw(smoothedYaw);
       });
     };
 
@@ -815,14 +839,35 @@ export function PanoramaCapture({
               Photo {currentTarget.segmentIndex + 1} of{" "}
               {currentRowInfo?.segments}
             </Text>
-            <Text style={styles.rowAngleInfo}>
-              Target: {Math.round(currentTarget.targetYaw)}° yaw,{" "}
-              {currentTarget.targetPitch}° pitch
-            </Text>
-            <Text style={styles.rowAngleCurrent}>
-              Current: {Math.round(currentYaw)}° yaw, {Math.round(currentPitch)}
-              ° pitch
-            </Text>
+            {/* Mini compass to visualize yaw */}
+            <View style={styles.miniCompass}>
+              <View style={styles.miniCompassRing}>
+                {/* Current direction indicator */}
+                <View
+                  style={[
+                    styles.miniCompassNeedle,
+                    { transform: [{ rotate: `${-currentYaw}deg` }] },
+                  ]}
+                >
+                  <View style={styles.miniCompassNeedleHead} />
+                </View>
+                {/* Target direction indicator */}
+                <View
+                  style={[
+                    styles.miniCompassTarget,
+                    {
+                      transform: [{ rotate: `${-currentTarget.targetYaw}deg` }],
+                    },
+                  ]}
+                >
+                  <View style={styles.miniCompassTargetHead} />
+                </View>
+              </View>
+              <Text style={styles.miniCompassText}>
+                Yaw: {Math.round(currentYaw)}° →{" "}
+                {Math.round(currentTarget.targetYaw)}°
+              </Text>
+            </View>
           </View>
 
           {/* Roll level indicator */}
@@ -1204,15 +1249,50 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     fontSize: 14,
   },
-  rowAngleInfo: {
-    color: Colors.primaryGreen,
-    fontSize: 11,
-    marginTop: 4,
-    fontFamily: "monospace",
+  // Mini compass for yaw visualization
+  miniCompass: {
+    alignItems: "center",
+    marginTop: 8,
   },
-  rowAngleCurrent: {
-    color: "rgba(255,255,255,0.6)",
-    fontSize: 11,
+  miniCompassRing: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.3)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  miniCompassNeedle: {
+    position: "absolute",
+    width: 4,
+    height: 24,
+    alignItems: "center",
+  },
+  miniCompassNeedleHead: {
+    width: 8,
+    height: 8,
+    backgroundColor: "#fff",
+    borderRadius: 4,
+  },
+  miniCompassTarget: {
+    position: "absolute",
+    width: 4,
+    height: 24,
+    alignItems: "center",
+  },
+  miniCompassTargetHead: {
+    width: 10,
+    height: 10,
+    backgroundColor: Colors.primaryGreen,
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: "#fff",
+  },
+  miniCompassText: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 10,
+    marginTop: 4,
     fontFamily: "monospace",
   },
 
