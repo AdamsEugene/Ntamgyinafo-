@@ -57,20 +57,48 @@ export function VirtualTourCreator({
   const generateId = () =>
     `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-  // Handle photo captured from PanoramaCapture
+  // Handle photos captured from PanoramaCapture (array of photos with metadata)
   const handlePhotoCaptured = useCallback(
-    (photoUri: string) => {
+    (
+      photos: Array<{
+        uri: string;
+        yaw: number;
+        pitch: number;
+        rowIndex: number;
+        segmentIndex: number;
+      }>
+    ) => {
+      // For now, use the first photo as the main image
+      // In production, these would be stitched into an equirectangular panorama
+      const mainPhoto = photos[0];
+
+      if (!mainPhoto) {
+        setShowCaptureScreen(false);
+        return;
+      }
+
       const newScene: Scene = {
         id: generateId(),
         name: `Room ${scenes.length + 1}`,
-        imageUrl: photoUri,
-        thumbnail: photoUri,
+        imageUrl: mainPhoto.uri,
+        thumbnail: mainPhoto.uri,
         hotspots: [],
+        // Store all captured photos for future stitching
+        capturedPhotos: photos,
       };
 
       setScenes((prev) => [...prev, newScene]);
       setSelectedSceneId(newScene.id);
       setShowCaptureScreen(false);
+
+      // Show info about stitching (in production, this would trigger server-side stitching)
+      if (photos.length > 1) {
+        Alert.alert(
+          "Photos Captured!",
+          `${photos.length} photos captured successfully. In production, these would be stitched into a seamless 360° panorama.`,
+          [{ text: "OK" }]
+        );
+      }
     },
     [scenes.length]
   );

@@ -31,6 +31,15 @@ export interface Hotspot {
   yaw?: number;
 }
 
+// Captured photo with metadata for stitching
+export interface CapturedPhoto {
+  uri: string;
+  yaw: number;
+  pitch: number;
+  rowIndex: number;
+  segmentIndex: number;
+}
+
 export interface Scene {
   id: string;
   name: string;
@@ -38,6 +47,8 @@ export interface Scene {
   thumbnail?: string;
   hotspots: Hotspot[];
   initialRotation?: { x: number; y: number };
+  // Raw captured photos before stitching (for production server-side processing)
+  capturedPhotos?: CapturedPhoto[];
 }
 
 export interface PanoramaViewerProps {

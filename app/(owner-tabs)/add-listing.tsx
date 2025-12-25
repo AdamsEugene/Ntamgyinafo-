@@ -107,33 +107,38 @@ export default function AddListingScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const mapRef = useRef<MapView>(null);
 
-  // Current step
-  const [currentStep, setCurrentStep] = useState(1);
+  // Current step - Start at 360° step for testing
+  const [currentStep, setCurrentStep] = useState(8);
 
   // Loading states
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [isPickingMedia, setIsPickingMedia] = useState(false);
 
-  // Form data
+  // Form data - Pre-filled for quick testing
   const [formData, setFormData] = useState<ListingFormData>({
-    propertyType: null,
-    transactionType: null,
-    title: "",
-    description: "",
-    bedrooms: 0,
-    bathrooms: 0,
-    plotSize: "",
+    propertyType: "house",
+    transactionType: "sale",
+    title: "Beautiful 4 Bedroom House in East Legon",
+    description:
+      "A stunning 4 bedroom house with modern finishes, spacious living areas, and a beautiful garden. Located in the heart of East Legon with easy access to amenities.",
+    bedrooms: 4,
+    bathrooms: 3,
+    plotSize: "2",
     plotUnit: "plots",
-    price: "",
-    negotiable: false,
-    amenities: [],
-    photos: [],
+    price: "850000",
+    negotiable: true,
+    amenities: ["water", "electricity", "security", "parking"],
+    photos: [
+      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800",
+      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800",
+      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800",
+    ],
     videos: [],
     has360: false,
     virtualTourScenes: [],
-    latitude: null,
-    longitude: null,
-    address: "",
+    latitude: 5.6364,
+    longitude: -0.1731,
+    address: "East Legon, Accra, Ghana",
   });
 
   // Virtual Tour state

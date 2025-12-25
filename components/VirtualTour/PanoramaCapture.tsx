@@ -8,7 +8,6 @@ import {
   Dimensions,
   Alert,
   ActivityIndicator,
-  Image,
   Vibration,
 } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -16,44 +15,75 @@ import { Magnetometer, Accelerometer } from "expo-sensors";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Colors, Spacing } from "@/constants/design";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-// Teleport-style: 16 photos for full 360°
-const TOTAL_SEGMENTS = 16;
-const SEGMENT_ANGLE = 360 / TOTAL_SEGMENTS; // 22.5 degrees per segment
+// ============================================================================
+// TELEPORT-STYLE 360° CAPTURE CONFIGURATION
+// ============================================================================
+// Total: 51 photos across 7 pitch levels for full spherical coverage
+// Reference: https://www.hdreye.app/teleport360
 
-// Tolerance for "on target" detection (degrees)
-const TARGET_TOLERANCE = 8;
+interface CaptureRow {
+  pitch: number; // Degrees from horizon (-90 to +90)
+  segments: number; // Number of photos in this row
+  angleStep: number; // Degrees between photos
+}
 
-// Level tolerance
-const LEVEL_TOLERANCE = 0.12;
+const CAPTURE_GRID: CaptureRow[] = [
+  { pitch: 90, segments: 1, angleStep: 360 }, // Zenith (looking up)
+  { pitch: 60, segments: 8, angleStep: 45 }, // High row
+  { pitch: 30, segments: 12, angleStep: 30 }, // Upper row
+  { pitch: 0, segments: 16, angleStep: 22.5 }, // Horizon row
+  { pitch: -30, segments: 12, angleStep: 30 }, // Lower row
+  { pitch: -60, segments: 8, angleStep: 45 }, // Low row
+  { pitch: -90, segments: 1, angleStep: 360 }, // Nadir (looking down)
+];
 
-// Viewfinder dimensions
-const VIEWFINDER_SIZE = SCREEN_WIDTH * 0.85;
-const VIEWFINDER_HEIGHT = VIEWFINDER_SIZE * 1.2;
+// Calculate total segments
+const TOTAL_PHOTOS = CAPTURE_GRID.reduce((sum, row) => sum + row.segments, 0); // 58 photos
+
+// Tolerance for "on target" detection
+const YAW_TOLERANCE = 10; // degrees for horizontal alignment
+const PITCH_TOLERANCE = 12; // degrees for vertical alignment
+
+// ============================================================================
+// INTERFACES
+// ============================================================================
 
 interface CapturedPhoto {
   uri: string;
-  angle: number;
-  heading: number;
+  yaw: number;
+  pitch: number;
+  rowIndex: number;
   segmentIndex: number;
 }
 
+interface CaptureTarget {
+  rowIndex: number;
+  segmentIndex: number;
+  targetYaw: number;
+  targetPitch: number;
+}
+
 export interface PanoramaCaptureProps {
-  onComplete: (photoUri: string) => void;
+  onComplete: (photos: CapturedPhoto[]) => void;
   onCancel: () => void;
 }
 
-// Helper to normalize angle to 0-360 range
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+// Normalize angle to 0-360 range
 const normalizeAngle = (angle: number): number => {
   let normalized = angle % 360;
   if (normalized < 0) normalized += 360;
   return normalized;
 };
 
-// Helper to calculate signed angle difference
+// Signed angle difference (for direction hints)
 const signedAngleDifference = (current: number, target: number): number => {
   let diff = normalizeAngle(target) - normalizeAngle(current);
   if (diff > 180) diff -= 360;
@@ -61,10 +91,43 @@ const signedAngleDifference = (current: number, target: number): number => {
   return diff;
 };
 
-// Helper to calculate absolute angle difference
+// Absolute angle difference
 const angleDifference = (a: number, b: number): number => {
   return Math.abs(signedAngleDifference(a, b));
 };
+
+// Generate all capture targets
+const generateCaptureTargets = (startYaw: number): CaptureTarget[] => {
+  const targets: CaptureTarget[] = [];
+
+  CAPTURE_GRID.forEach((row, rowIndex) => {
+    for (let i = 0; i < row.segments; i++) {
+      targets.push({
+        rowIndex,
+        segmentIndex: i,
+        targetYaw: normalizeAngle(startYaw + i * row.angleStep),
+        targetPitch: row.pitch,
+      });
+    }
+  });
+
+  return targets;
+};
+
+// Get pitch from accelerometer (phone held upright, camera facing forward)
+const getPitchFromAccelerometer = (x: number, y: number, z: number): number => {
+  // When phone is upright (portrait mode):
+  // - y ≈ -1 when looking straight ahead (pitch = 0°)
+  // - y ≈ 0, z ≈ +1 when looking up/tilting back (pitch = +90°)
+  // - y ≈ 0, z ≈ -1 when looking down/tilting forward (pitch = -90°)
+  // Using atan2(z, -y) to get correct orientation
+  const pitch = Math.atan2(z, -y) * (180 / Math.PI);
+  return pitch;
+};
+
+// ============================================================================
+// COMPONENT
+// ============================================================================
 
 export function PanoramaCapture({
   onComplete,
@@ -79,36 +142,55 @@ export function PanoramaCapture({
 
   // Capture state
   const [capturedPhotos, setCapturedPhotos] = useState<CapturedPhoto[]>([]);
-  const [currentSegment, setCurrentSegment] = useState(0);
+  const [currentTargetIndex, setCurrentTargetIndex] = useState(0);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
 
-  // Compass/Sensor state
-  const [currentHeading, setCurrentHeading] = useState(0);
-  const [startHeading, setStartHeading] = useState<number | null>(null);
-  const [isOnTarget, setIsOnTarget] = useState(false);
-  const [isLevel, setIsLevel] = useState(false);
+  // Sensor state
+  const [currentYaw, setCurrentYaw] = useState(0);
+  const [currentPitch, setCurrentPitch] = useState(0);
+  const [startYaw, setStartYaw] = useState<number | null>(null);
+  const [isRollLevel, setIsRollLevel] = useState(false);
 
-  // Auto-capture
+  // Capture targets
+  const [captureTargets, setCaptureTargets] = useState<CaptureTarget[]>([]);
+
+  // Auto-capture countdown
   const [countdown, setCountdown] = useState<number | null>(null);
 
   // Animations
   const flashAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const targetOpacity = useRef(new Animated.Value(0)).current;
 
-  // First photo only needs level
-  const isFirstPhoto = currentSegment === 0 && capturedPhotos.length === 0;
-  const isReadyForCapture = isFirstPhoto
-    ? isLevel && !isCapturing
-    : isOnTarget && isLevel && !isCapturing;
+  // Current target
+  const currentTarget = captureTargets[currentTargetIndex];
 
-  // Calculate target heading for current segment
-  const targetHeading =
-    startHeading !== null
-      ? normalizeAngle(startHeading + currentSegment * SEGMENT_ANGLE)
-      : null;
+  // Check if on target
+  const isOnYaw = currentTarget
+    ? angleDifference(currentYaw, currentTarget.targetYaw) <= YAW_TOLERANCE
+    : false;
+  const isOnPitch = currentTarget
+    ? Math.abs(currentPitch - currentTarget.targetPitch) <= PITCH_TOLERANCE
+    : false;
+  const isOnTarget = isOnYaw && isOnPitch;
+  const isReadyForCapture =
+    isOnTarget && isRollLevel && !isCapturing && hasStarted;
 
-  // Setup magnetometer (compass)
+  // Progress percentage
+  const progress = (capturedPhotos.length / TOTAL_PHOTOS) * 100;
+
+  // Current row info
+  const currentRowInfo = currentTarget
+    ? CAPTURE_GRID[currentTarget.rowIndex]
+    : null;
+
+  // ============================================================================
+  // SENSOR SETUP
+  // ============================================================================
+
+  // Setup magnetometer (compass for yaw)
   useEffect(() => {
     let subscription: { remove: () => void } | null = null;
 
@@ -118,58 +200,66 @@ export function PanoramaCapture({
       subscription = Magnetometer.addListener((data) => {
         let angle = Math.atan2(data.x, data.y) * (180 / Math.PI);
         angle = normalizeAngle(-angle);
-        setCurrentHeading(angle);
-
-        // Set start heading on first reading
-        if (
-          startHeading === null &&
-          currentSegment === 0 &&
-          capturedPhotos.length === 0
-        ) {
-          setStartHeading(angle);
-        }
+        setCurrentYaw(angle);
       });
     };
 
     startCompass();
     return () => subscription?.remove();
-  }, [startHeading, currentSegment, capturedPhotos.length]);
+  }, []);
 
-  // Setup accelerometer (level detection for upright phone)
+  // Setup accelerometer (for pitch and roll)
   useEffect(() => {
     Accelerometer.setUpdateInterval(50);
 
     const subscription = Accelerometer.addListener((data) => {
-      // For upright phone: x = left/right tilt, z = forward/back tilt
-      const isPhoneLevel =
-        Math.abs(data.x) < LEVEL_TOLERANCE &&
-        Math.abs(data.z) < LEVEL_TOLERANCE;
-      setIsLevel(isPhoneLevel);
+      // Calculate pitch
+      const pitch = getPitchFromAccelerometer(data.x, data.y, data.z);
+      setCurrentPitch(pitch);
+
+      // Check roll (phone tilt left/right) - x should be near 0
+      const isLevel = Math.abs(data.x) < 0.15;
+      setIsRollLevel(isLevel);
     });
 
     return () => subscription.remove();
   }, []);
 
-  // Check if on target
+  // ============================================================================
+  // CAPTURE LOGIC
+  // ============================================================================
+
+  // Start capture session
+  const handleStart = useCallback(() => {
+    setStartYaw(currentYaw);
+    setCaptureTargets(generateCaptureTargets(currentYaw));
+    setHasStarted(true);
+    Vibration.vibrate(100);
+
+    Animated.timing(targetOpacity, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [currentYaw, targetOpacity]);
+
+  // On target detection with vibration
   useEffect(() => {
-    if (targetHeading === null) return;
-
-    const diff = angleDifference(currentHeading, targetHeading);
-    const onTarget = diff <= TARGET_TOLERANCE;
-
-    if (onTarget && !isOnTarget) {
+    if (isOnTarget && hasStarted && !isCapturing) {
       Vibration.vibrate(30);
     }
-    setIsOnTarget(onTarget);
-  }, [currentHeading, targetHeading, isOnTarget]);
+  }, [isOnTarget, hasStarted, isCapturing]);
 
   // Auto-capture countdown
   useEffect(() => {
-    if (isReadyForCapture && countdown === null && !isCapturing) {
+    if (isReadyForCapture && countdown === null) {
       setCountdown(3);
       Vibration.vibrate(30);
+    } else if (!isReadyForCapture && countdown !== null && countdown > 0) {
+      // Cancel countdown if moved off target
+      setCountdown(null);
     }
-  }, [isReadyForCapture, countdown, isCapturing]);
+  }, [isReadyForCapture, countdown]);
 
   // Handle countdown
   useEffect(() => {
@@ -178,7 +268,7 @@ export function PanoramaCapture({
     if (countdown > 0) {
       const timer = setTimeout(() => {
         Vibration.vibrate(30);
-        setCountdown(countdown - 1);
+        setCountdown((c) => (c !== null ? c - 1 : null));
       }, 600);
       return () => clearTimeout(timer);
     }
@@ -193,18 +283,18 @@ export function PanoramaCapture({
   // Update progress animation
   useEffect(() => {
     Animated.timing(progressAnim, {
-      toValue: capturedPhotos.length / TOTAL_SEGMENTS,
+      toValue: capturedPhotos.length / TOTAL_PHOTOS,
       duration: 300,
       useNativeDriver: false,
     }).start();
   }, [capturedPhotos.length, progressAnim]);
 
-  // Pulse animation
+  // Pulse animation for target indicator
   useEffect(() => {
     const pulse = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
-          toValue: 1.1,
+          toValue: 1.15,
           duration: 800,
           useNativeDriver: true,
         }),
@@ -231,7 +321,7 @@ export function PanoramaCapture({
 
   // Take photo
   const handleCapture = useCallback(async () => {
-    if (!cameraRef.current || isCapturing) return;
+    if (!cameraRef.current || isCapturing || !currentTarget) return;
 
     try {
       setIsCapturing(true);
@@ -246,18 +336,20 @@ export function PanoramaCapture({
       if (photo?.uri) {
         const newPhoto: CapturedPhoto = {
           uri: photo.uri,
-          angle: currentSegment * SEGMENT_ANGLE,
-          heading: currentHeading,
-          segmentIndex: currentSegment,
+          yaw: currentYaw,
+          pitch: currentPitch,
+          rowIndex: currentTarget.rowIndex,
+          segmentIndex: currentTarget.segmentIndex,
         };
 
-        setCapturedPhotos((prev) => [...prev, newPhoto]);
+        const updatedPhotos = [...capturedPhotos, newPhoto];
+        setCapturedPhotos(updatedPhotos);
 
-        if (currentSegment < TOTAL_SEGMENTS - 1) {
-          setCurrentSegment((prev) => prev + 1);
+        if (currentTargetIndex < captureTargets.length - 1) {
+          setCurrentTargetIndex((prev) => prev + 1);
         } else {
-          // All photos captured - complete!
-          setTimeout(() => onComplete(photo.uri), 500);
+          // All photos captured!
+          setTimeout(() => onComplete(updatedPhotos), 500);
         }
       }
     } catch {
@@ -265,9 +357,19 @@ export function PanoramaCapture({
     } finally {
       setIsCapturing(false);
     }
-  }, [currentSegment, currentHeading, isCapturing, onComplete, triggerFlash]);
+  }, [
+    currentTarget,
+    currentTargetIndex,
+    captureTargets.length,
+    currentYaw,
+    currentPitch,
+    capturedPhotos,
+    isCapturing,
+    onComplete,
+    triggerFlash,
+  ]);
 
-  // Pick from gallery
+  // Pick existing panorama from gallery
   const handlePickFromGallery = useCallback(async () => {
     try {
       const { status } =
@@ -284,7 +386,16 @@ export function PanoramaCapture({
       });
 
       if (!result.canceled && result.assets[0]) {
-        onComplete(result.assets[0].uri);
+        // Treat as single equirectangular image
+        onComplete([
+          {
+            uri: result.assets[0].uri,
+            yaw: 0,
+            pitch: 0,
+            rowIndex: 0,
+            segmentIndex: 0,
+          },
+        ]);
       }
     } catch {
       Alert.alert("Error", "Failed to pick image.");
@@ -294,51 +405,80 @@ export function PanoramaCapture({
   // Reset capture
   const handleReset = useCallback(() => {
     setCapturedPhotos([]);
-    setCurrentSegment(0);
-    setStartHeading(null);
+    setCurrentTargetIndex(0);
+    setCaptureTargets([]);
+    setStartYaw(null);
+    setHasStarted(false);
     setCountdown(null);
-  }, []);
 
-  // Calculate rotation offset for showing captured images
-  const getImageRotationOffset = useCallback(() => {
-    if (startHeading === null) return 0;
-    const diff = signedAngleDifference(currentHeading, startHeading);
-    return diff;
-  }, [currentHeading, startHeading]);
+    Animated.timing(targetOpacity, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [targetOpacity]);
 
-  // Get visible captured photos based on current heading
-  const getVisiblePhotos = useCallback(() => {
-    if (capturedPhotos.length === 0 || startHeading === null) return [];
+  // ============================================================================
+  // UI CALCULATIONS
+  // ============================================================================
 
-    const rotationOffset = getImageRotationOffset();
+  // Calculate target indicator position on screen
+  const getTargetScreenPosition = useCallback(() => {
+    if (!currentTarget) return { x: SCREEN_WIDTH / 2, y: SCREEN_HEIGHT / 2 };
 
-    return capturedPhotos.map((photo, index) => {
-      // Calculate where this photo should appear based on current rotation
-      const photoAngle = index * SEGMENT_ANGLE;
-      const displayAngle = photoAngle + rotationOffset;
+    // Yaw difference (horizontal)
+    const yawDiff = signedAngleDifference(currentYaw, currentTarget.targetYaw);
+    // Convert to screen position (±90° = edge of screen)
+    const xOffset = (yawDiff / 60) * (SCREEN_WIDTH / 2);
 
-      // Only show if within view (-90 to +90 degrees from center)
-      const isVisible = Math.abs(displayAngle) < 120;
+    // Pitch difference (vertical)
+    const pitchDiff = currentTarget.targetPitch - currentPitch;
+    // Convert to screen position (±60° = edge of screen)
+    const yOffset = (-pitchDiff / 45) * (SCREEN_HEIGHT / 3);
 
-      return {
-        ...photo,
-        displayAngle,
-        isVisible,
-        opacity: isVisible ? Math.max(0, 1 - Math.abs(displayAngle) / 120) : 0,
-      };
-    });
-  }, [capturedPhotos, startHeading, getImageRotationOffset]);
-
-  // Calculate direction indicator
-  const getDirectionIndicator = useCallback(() => {
-    if (targetHeading === null || isFirstPhoto) return null;
-
-    const diff = signedAngleDifference(currentHeading, targetHeading);
     return {
-      direction: diff > 0 ? "right" : "left",
-      degrees: Math.abs(Math.round(diff)),
+      x: SCREEN_WIDTH / 2 + xOffset,
+      y: SCREEN_HEIGHT / 2 + yOffset,
     };
-  }, [currentHeading, targetHeading, isFirstPhoto]);
+  }, [currentTarget, currentYaw, currentPitch]);
+
+  // Direction hints
+  const getDirectionHints = useCallback(() => {
+    if (!currentTarget) return { horizontal: null, vertical: null };
+
+    const yawDiff = signedAngleDifference(currentYaw, currentTarget.targetYaw);
+    const pitchDiff = currentTarget.targetPitch - currentPitch;
+
+    return {
+      horizontal:
+        Math.abs(yawDiff) > YAW_TOLERANCE
+          ? {
+              direction: yawDiff > 0 ? "right" : "left",
+              degrees: Math.abs(Math.round(yawDiff)),
+            }
+          : null,
+      vertical:
+        Math.abs(pitchDiff) > PITCH_TOLERANCE
+          ? {
+              direction: pitchDiff > 0 ? "up" : "down",
+              degrees: Math.abs(Math.round(pitchDiff)),
+            }
+          : null,
+    };
+  }, [currentTarget, currentYaw, currentPitch]);
+
+  // Row name for display
+  const getRowName = (pitch: number): string => {
+    if (pitch === 90) return "Zenith (Up)";
+    if (pitch === -90) return "Nadir (Down)";
+    if (pitch > 0) return `Upper ${pitch}°`;
+    if (pitch < 0) return `Lower ${Math.abs(pitch)}°`;
+    return "Horizon";
+  };
+
+  // ============================================================================
+  // RENDER
+  // ============================================================================
 
   // Request camera permission
   if (!permission) {
@@ -373,8 +513,8 @@ export function PanoramaCapture({
     );
   }
 
-  const visiblePhotos = getVisiblePhotos();
-  const directionIndicator = getDirectionIndicator();
+  const targetPos = getTargetScreenPosition();
+  const hints = getDirectionHints();
 
   return (
     <View style={styles.container}>
@@ -389,267 +529,278 @@ export function PanoramaCapture({
       {/* Dark overlay */}
       <View style={styles.overlay} pointerEvents="none" />
 
-      {/* Captured photos overlay - appears as you rotate */}
-      {visiblePhotos.map(
-        (photo, index) =>
-          photo.isVisible && (
-            <Animated.View
-              key={photo.uri}
-              style={[
-                styles.capturedPhotoOverlay,
-                {
-                  opacity: photo.opacity * 0.9,
-                  transform: [
-                    {
-                      translateX:
-                        (photo.displayAngle / 90) * (SCREEN_WIDTH * 0.7),
-                    },
-                  ],
-                },
-              ]}
-              pointerEvents="none"
-            >
-              <Image
-                source={{ uri: photo.uri }}
-                style={styles.capturedPhotoImage}
-              />
-            </Animated.View>
-          )
-      )}
-
       {/* Flash effect */}
       <Animated.View
         style={[styles.flashOverlay, { opacity: flashAnim }]}
         pointerEvents="none"
       />
 
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
-        <TouchableOpacity style={styles.headerButton} onPress={handleReset}>
-          <Ionicons name="refresh" size={24} color="#FFFFFF" />
+      {/* Top bar */}
+      <View style={[styles.topBar, { paddingTop: insets.top + Spacing.sm }]}>
+        <TouchableOpacity onPress={onCancel} style={styles.closeButton}>
+          <Ionicons name="close" size={28} color="#fff" />
         </TouchableOpacity>
 
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Capture 360°</Text>
-          <Text style={styles.headerSubtitle}>
-            Photo {capturedPhotos.length + 1} of {TOTAL_SEGMENTS}
+        <View style={styles.progressContainer}>
+          <Text style={styles.progressText}>
+            {capturedPhotos.length} / {TOTAL_PHOTOS}
           </Text>
+          <View style={styles.progressBar}>
+            <Animated.View
+              style={[
+                styles.progressFill,
+                {
+                  width: progressAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ["0%", "100%"],
+                  }),
+                },
+              ]}
+            />
+          </View>
         </View>
 
-        <TouchableOpacity style={styles.headerButtonClose} onPress={onCancel}>
-          <Ionicons name="close" size={28} color="#FFFFFF" />
-        </TouchableOpacity>
+        {capturedPhotos.length > 0 && (
+          <TouchableOpacity onPress={handleReset} style={styles.resetButton}>
+            <Ionicons name="refresh" size={24} color="#fff" />
+          </TouchableOpacity>
+        )}
       </View>
 
-      {/* Viewfinder */}
-      <View style={styles.viewfinderContainer}>
-        <View style={styles.viewfinder}>
-          {/* Corner brackets */}
-          <View style={[styles.bracket, styles.bracketTopLeft]} />
-          <View style={[styles.bracket, styles.bracketTopRight]} />
-          <View style={[styles.bracket, styles.bracketBottomLeft]} />
-          <View style={[styles.bracket, styles.bracketBottomRight]} />
-
-          {/* Direction dots at cardinal positions */}
-          {[0, 90, 180, 270].map((angle) => {
-            const relativeAngle =
-              startHeading !== null
-                ? signedAngleDifference(
-                    currentHeading,
-                    normalizeAngle(startHeading + angle)
-                  )
-                : angle;
-            const isInView = Math.abs(relativeAngle) < 60;
-
-            if (!isInView) return null;
-
-            const posX = (relativeAngle / 60) * (VIEWFINDER_SIZE / 2);
-            const isTop = Math.abs(relativeAngle) < 30;
-
-            return (
-              <View
-                key={angle}
-                style={[
-                  styles.directionDot,
-                  {
-                    left: VIEWFINDER_SIZE / 2 + posX - 20,
-                    top: isTop ? -30 : 10,
-                  },
-                ]}
-              >
-                <View style={styles.directionDotInner} />
-              </View>
-            );
-          })}
-
-          {/* Center progress indicator */}
-          <View style={styles.centerIndicator}>
-            {/* Progress pie */}
-            <View style={styles.progressPie}>
-              <Animated.View
-                style={[
-                  styles.progressPieFill,
-                  {
-                    transform: [
-                      {
-                        rotate: progressAnim.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: ["0deg", "360deg"],
-                        }),
-                      },
-                    ],
-                  },
-                ]}
+      {/* Pre-start screen */}
+      {!hasStarted && (
+        <View style={styles.startOverlay}>
+          <View style={styles.startContent}>
+            <View style={styles.iconCircle}>
+              <Ionicons
+                name="globe-outline"
+                size={48}
+                color={Colors.primaryGreen}
               />
             </View>
+            <Text style={styles.startTitle}>360° Capture</Text>
+            <Text style={styles.startSubtitle}>
+              Capture a full spherical panorama
+            </Text>
 
-            {/* Countdown or direction arrow */}
-            {countdown !== null && countdown > 0 ? (
-              <Animated.Text
-                style={[
-                  styles.countdownText,
-                  { transform: [{ scale: pulseAnim }] },
-                ]}
-              >
-                {countdown}
-              </Animated.Text>
-            ) : directionIndicator &&
-              directionIndicator.degrees > TARGET_TOLERANCE ? (
-              <View style={styles.directionArrow}>
+            <View style={styles.instructionsList}>
+              <View style={styles.instructionItem}>
                 <Ionicons
-                  name={
-                    directionIndicator.direction === "right"
-                      ? "chevron-forward"
-                      : "chevron-back"
-                  }
-                  size={32}
-                  color="#FFFFFF"
+                  name="phone-portrait-outline"
+                  size={20}
+                  color="#fff"
                 />
+                <Text style={styles.instructionText}>Hold phone upright</Text>
               </View>
-            ) : (
-              <View style={styles.readyIndicator}>
-                {isLevel ? (
-                  <Ionicons
-                    name="checkmark"
-                    size={28}
-                    color={Colors.primaryGreen}
-                  />
-                ) : (
-                  <Ionicons
-                    name="phone-portrait-outline"
-                    size={24}
-                    color="#FFFFFF"
-                  />
-                )}
+              <View style={styles.instructionItem}>
+                <Ionicons name="sync-outline" size={20} color="#fff" />
+                <Text style={styles.instructionText}>
+                  Follow the target dot
+                </Text>
               </View>
-            )}
+              <View style={styles.instructionItem}>
+                <Ionicons name="camera-outline" size={20} color="#fff" />
+                <Text style={styles.instructionText}>Photos auto-capture</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.startButton}
+              onPress={handleStart}
+              disabled={!isCameraReady}
+            >
+              <Text style={styles.startButtonText}>Start Capture</Text>
+              <Ionicons name="arrow-forward" size={20} color="#fff" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.galleryButton}
+              onPress={handlePickFromGallery}
+            >
+              <Ionicons name="images-outline" size={20} color="#fff" />
+              <Text style={styles.galleryButtonText}>
+                Upload existing 360° photo
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
-      </View>
+      )}
 
-      {/* Instructions */}
-      <View style={styles.instructionsContainer}>
-        <Text style={styles.instructionText}>
-          {isFirstPhoto
-            ? "Hold phone level to start capturing"
-            : isOnTarget && isLevel
-            ? countdown !== null
-              ? "Hold steady..."
-              : "Perfect! Capturing..."
-            : !isLevel
-            ? "Hold phone level"
-            : directionIndicator?.direction === "right"
-            ? `Turn right ${directionIndicator.degrees}°`
-            : `Turn left ${directionIndicator?.degrees || 0}°`}
-        </Text>
-      </View>
-
-      {/* Progress bar */}
-      <View
-        style={[
-          styles.progressContainer,
-          { paddingBottom: insets.bottom + Spacing.md },
-        ]}
-      >
-        <View style={styles.progressBar}>
+      {/* Capture UI */}
+      {hasStarted && currentTarget && (
+        <>
+          {/* Target indicator - floating dot */}
           <Animated.View
             style={[
-              styles.progressBarFill,
+              styles.targetIndicator,
               {
-                width: progressAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ["0%", "100%"],
-                }),
+                left: targetPos.x - 30,
+                top: targetPos.y - 30,
+                opacity: targetOpacity,
+                transform: [{ scale: isOnTarget ? pulseAnim : 1 }],
               },
             ]}
-          />
-        </View>
-        <Text style={styles.progressText}>
-          {capturedPhotos.length} of {TOTAL_SEGMENTS}
-        </Text>
-      </View>
-
-      {/* Bottom controls */}
-      <View style={[styles.bottomControls, { bottom: insets.bottom + 80 }]}>
-        {/* Gallery button */}
-        <TouchableOpacity
-          style={styles.sideButton}
-          onPress={handlePickFromGallery}
-        >
-          <Ionicons name="images-outline" size={24} color="#FFFFFF" />
-          <Text style={styles.sideButtonText}>Gallery</Text>
-        </TouchableOpacity>
-
-        {/* Manual capture button */}
-        <TouchableOpacity
-          style={[
-            styles.captureButton,
-            isReadyForCapture && styles.captureButtonReady,
-          ]}
-          onPress={handleCapture}
-          disabled={isCapturing || !isCameraReady}
-        >
-          <View style={styles.captureButtonInner}>
-            {isCapturing ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : null}
-          </View>
-        </TouchableOpacity>
-
-        {/* Done button (if at least 4 photos) */}
-        <TouchableOpacity
-          style={[
-            styles.sideButton,
-            capturedPhotos.length < 4 && styles.sideButtonDisabled,
-          ]}
-          onPress={() =>
-            capturedPhotos.length >= 4 &&
-            onComplete(capturedPhotos[capturedPhotos.length - 1].uri)
-          }
-          disabled={capturedPhotos.length < 4}
-        >
-          <Ionicons
-            name="checkmark-done"
-            size={24}
-            color={
-              capturedPhotos.length >= 4
-                ? Colors.primaryGreen
-                : "rgba(255,255,255,0.3)"
-            }
-          />
-          <Text
-            style={[
-              styles.sideButtonText,
-              capturedPhotos.length < 4 && styles.sideButtonTextDisabled,
-            ]}
           >
-            Done
-          </Text>
-        </TouchableOpacity>
-      </View>
+            <View
+              style={[
+                styles.targetDot,
+                isOnTarget && styles.targetDotActive,
+                isReadyForCapture && styles.targetDotReady,
+              ]}
+            >
+              {countdown !== null && countdown > 0 && (
+                <Text style={styles.countdownText}>{countdown}</Text>
+              )}
+            </View>
+          </Animated.View>
+
+          {/* Crosshair at center */}
+          <View style={styles.crosshairContainer}>
+            <View
+              style={[
+                styles.crosshair,
+                isReadyForCapture && styles.crosshairReady,
+              ]}
+            >
+              <View style={styles.crosshairHorizontal} />
+              <View style={styles.crosshairVertical} />
+            </View>
+          </View>
+
+          {/* Direction arrows */}
+          {hints.horizontal && (
+            <View
+              style={[
+                styles.arrowContainer,
+                hints.horizontal.direction === "left"
+                  ? styles.arrowLeft
+                  : styles.arrowRight,
+              ]}
+            >
+              <Ionicons
+                name={
+                  hints.horizontal.direction === "left"
+                    ? "chevron-back"
+                    : "chevron-forward"
+                }
+                size={48}
+                color={Colors.primaryGreen}
+              />
+              <Text style={styles.arrowText}>{hints.horizontal.degrees}°</Text>
+            </View>
+          )}
+
+          {hints.vertical && (
+            <View
+              style={[
+                styles.arrowContainer,
+                hints.vertical.direction === "up"
+                  ? styles.arrowUp
+                  : styles.arrowDown,
+              ]}
+            >
+              <Ionicons
+                name={
+                  hints.vertical.direction === "up"
+                    ? "chevron-up"
+                    : "chevron-down"
+                }
+                size={48}
+                color={Colors.primaryGreen}
+              />
+              <Text style={styles.arrowText}>{hints.vertical.degrees}°</Text>
+            </View>
+          )}
+
+          {/* Current row info */}
+          <View style={[styles.rowInfo, { bottom: insets.bottom + 120 }]}>
+            <Text style={styles.rowLabel}>
+              {getRowName(currentTarget.targetPitch)}
+            </Text>
+            <Text style={styles.rowProgress}>
+              Photo {currentTarget.segmentIndex + 1} of{" "}
+              {currentRowInfo?.segments}
+            </Text>
+          </View>
+
+          {/* Roll level indicator */}
+          <View style={styles.levelIndicatorContainer}>
+            <View
+              style={[
+                styles.levelIndicator,
+                isRollLevel
+                  ? styles.levelIndicatorLevel
+                  : styles.levelIndicatorTilted,
+              ]}
+            >
+              <View style={styles.levelBubble} />
+            </View>
+            <Text style={styles.levelText}>
+              {isRollLevel ? "Level ✓" : "Keep phone straight"}
+            </Text>
+          </View>
+
+          {/* Status message */}
+          {isOnTarget && !isRollLevel && (
+            <View style={styles.statusBanner}>
+              <Text style={styles.statusText}>Straighten your phone</Text>
+            </View>
+          )}
+        </>
+      )}
+
+      {/* Bottom bar with progress dots */}
+      {hasStarted && (
+        <View
+          style={[
+            styles.bottomBar,
+            { paddingBottom: insets.bottom + Spacing.md },
+          ]}
+        >
+          <View style={styles.rowDotsContainer}>
+            {CAPTURE_GRID.map((row, rowIndex) => (
+              <View key={rowIndex} style={styles.rowDots}>
+                <Text style={styles.rowDotLabel}>
+                  {row.pitch === 90
+                    ? "↑"
+                    : row.pitch === -90
+                    ? "↓"
+                    : `${row.pitch}°`}
+                </Text>
+                <View style={styles.dotsRow}>
+                  {Array.from({ length: row.segments }).map((_, segIndex) => {
+                    const targetIndex =
+                      CAPTURE_GRID.slice(0, rowIndex).reduce(
+                        (sum, r) => sum + r.segments,
+                        0
+                      ) + segIndex;
+                    const isCompleted = targetIndex < capturedPhotos.length;
+                    const isCurrent = targetIndex === currentTargetIndex;
+
+                    return (
+                      <View
+                        key={segIndex}
+                        style={[
+                          styles.dot,
+                          isCompleted && styles.dotCompleted,
+                          isCurrent && styles.dotCurrent,
+                        ]}
+                      />
+                    );
+                  })}
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
     </View>
   );
 }
+
+// ============================================================================
+// STYLES
+// ============================================================================
 
 const styles = StyleSheet.create({
   container: {
@@ -658,262 +809,65 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
-  },
-  capturedPhotoOverlay: {
-    position: "absolute",
-    top: SCREEN_HEIGHT * 0.15,
-    left: (SCREEN_WIDTH - VIEWFINDER_SIZE) / 2,
-    width: VIEWFINDER_SIZE,
-    height: VIEWFINDER_HEIGHT,
-  },
-  capturedPhotoImage: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover",
-    borderRadius: 8,
+    backgroundColor: "rgba(0,0,0,0.1)",
   },
   flashOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#fff",
   },
-  header: {
+
+  // Top bar
+  topBar: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.lg,
-    zIndex: 10,
+    paddingHorizontal: Spacing.md,
+    zIndex: 100,
   },
-  headerButton: {
+  closeButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
-  },
-  headerButtonClose: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255, 59, 48, 0.9)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  headerCenter: {
-    alignItems: "center",
-  },
-  headerTitle: {
-    ...Typography.titleMedium,
-    color: "#FFFFFF",
-    fontWeight: "600",
-  },
-  headerSubtitle: {
-    ...Typography.caption,
-    color: "rgba(255, 255, 255, 0.7)",
-    marginTop: 2,
-  },
-  viewfinderContainer: {
-    position: "absolute",
-    top: SCREEN_HEIGHT * 0.15,
-    left: (SCREEN_WIDTH - VIEWFINDER_SIZE) / 2,
-    width: VIEWFINDER_SIZE,
-    height: VIEWFINDER_HEIGHT,
-    zIndex: 5,
-  },
-  viewfinder: {
-    flex: 1,
-    borderWidth: 2,
-    borderColor: "rgba(255, 255, 255, 0.8)",
-    borderRadius: 12,
-  },
-  bracket: {
-    position: "absolute",
-    width: 30,
-    height: 30,
-    borderColor: "#FFFFFF",
-    borderWidth: 3,
-  },
-  bracketTopLeft: {
-    top: -2,
-    left: -2,
-    borderRightWidth: 0,
-    borderBottomWidth: 0,
-    borderTopLeftRadius: 12,
-  },
-  bracketTopRight: {
-    top: -2,
-    right: -2,
-    borderLeftWidth: 0,
-    borderBottomWidth: 0,
-    borderTopRightRadius: 12,
-  },
-  bracketBottomLeft: {
-    bottom: -2,
-    left: -2,
-    borderRightWidth: 0,
-    borderTopWidth: 0,
-    borderBottomLeftRadius: 12,
-  },
-  bracketBottomRight: {
-    bottom: -2,
-    right: -2,
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
-    borderBottomRightRadius: 12,
-  },
-  directionDot: {
-    position: "absolute",
-    width: 40,
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  directionDotInner: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: Colors.primaryGreen,
-  },
-  centerIndicator: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    width: 80,
-    height: 80,
-    marginLeft: -40,
-    marginTop: -40,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  progressPie: {
-    position: "absolute",
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 4,
-    borderColor: "rgba(255, 255, 255, 0.3)",
-    overflow: "hidden",
-  },
-  progressPieFill: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: "50%",
-    height: "100%",
-    backgroundColor: Colors.primaryGreen,
-    transformOrigin: "right center",
-  },
-  countdownText: {
-    fontSize: 36,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-  },
-  directionArrow: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  readyIndicator: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  instructionsContainer: {
-    position: "absolute",
-    bottom: SCREEN_HEIGHT * 0.25,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-  },
-  instructionText: {
-    ...Typography.bodyMedium,
-    color: "#FFFFFF",
-    fontSize: 16,
-    textAlign: "center",
-    paddingHorizontal: Spacing.xl,
   },
   progressContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: Spacing.lg,
-    right: Spacing.lg,
+    flex: 1,
+    marginHorizontal: Spacing.md,
     alignItems: "center",
+  },
+  progressText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 4,
   },
   progressBar: {
     width: "100%",
     height: 4,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: "rgba(255,255,255,0.3)",
     borderRadius: 2,
     overflow: "hidden",
   },
-  progressBarFill: {
+  progressFill: {
     height: "100%",
     backgroundColor: Colors.primaryGreen,
+    borderRadius: 2,
   },
-  progressText: {
-    ...Typography.caption,
-    color: "rgba(255, 255, 255, 0.7)",
-    marginTop: Spacing.xs,
-  },
-  bottomControls: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    paddingHorizontal: Spacing.xl,
-  },
-  sideButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: 60,
-  },
-  sideButtonDisabled: {
-    opacity: 0.5,
-  },
-  sideButtonText: {
-    ...Typography.caption,
-    color: "#FFFFFF",
-    marginTop: 4,
-    fontSize: 11,
-  },
-  sideButtonTextDisabled: {
-    color: "rgba(255, 255, 255, 0.3)",
-  },
-  captureButton: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 4,
-    borderColor: "#FFFFFF",
-  },
-  captureButtonReady: {
-    backgroundColor: Colors.primaryGreen,
-    borderColor: Colors.primaryGreen,
-  },
-  captureButtonInner: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "transparent",
+  resetButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
   },
+
+  // Permission screen
   permissionContainer: {
     flex: 1,
     justifyContent: "center",
@@ -921,14 +875,16 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
   },
   permissionTitle: {
-    ...Typography.titleMedium,
-    color: "#FFFFFF",
+    fontSize: 24,
+    fontWeight: "600",
+    color: "#fff",
     marginTop: Spacing.lg,
     marginBottom: Spacing.sm,
+    textAlign: "center",
   },
   permissionText: {
-    ...Typography.bodyMedium,
-    color: "rgba(255, 255, 255, 0.7)",
+    fontSize: 16,
+    color: Colors.textSecondary,
     textAlign: "center",
     marginBottom: Spacing.xl,
   },
@@ -939,9 +895,297 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   permissionButtonText: {
-    ...Typography.bodyMedium,
-    color: "#FFFFFF",
+    color: "#fff",
+    fontSize: 16,
     fontWeight: "600",
+  },
+
+  // Start overlay
+  startOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.85)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 50,
+  },
+  startContent: {
+    alignItems: "center",
+    padding: Spacing.xl,
+    maxWidth: 320,
+  },
+  iconCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "rgba(46, 204, 113, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: Spacing.lg,
+  },
+  startTitle: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#fff",
+    marginBottom: Spacing.xs,
+  },
+  startSubtitle: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+    textAlign: "center",
+    marginBottom: Spacing.xl,
+  },
+  instructionsList: {
+    alignSelf: "stretch",
+    marginBottom: Spacing.xl,
+  },
+  instructionItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    paddingVertical: Spacing.sm,
+  },
+  instructionText: {
+    fontSize: 16,
+    color: "#fff",
+  },
+  startButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    backgroundColor: Colors.primaryGreen,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderRadius: 12,
+    marginBottom: Spacing.md,
+  },
+  startButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  galleryButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    paddingVertical: Spacing.md,
+  },
+  galleryButtonText: {
+    color: Colors.textSecondary,
+    fontSize: 16,
+  },
+
+  // Target indicator
+  targetIndicator: {
+    position: "absolute",
+    width: 60,
+    height: 60,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 30,
+  },
+  targetDot: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 3,
+    borderColor: "rgba(255,255,255,0.5)",
+    backgroundColor: "rgba(255,255,255,0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  targetDotActive: {
+    borderColor: Colors.primaryGreen,
+    backgroundColor: "rgba(46, 204, 113, 0.2)",
+  },
+  targetDotReady: {
+    borderColor: Colors.primaryGreen,
+    backgroundColor: Colors.primaryGreen,
+  },
+  countdownText: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#fff",
+  },
+
+  // Crosshair
+  crosshairContainer: {
+    position: "absolute",
+    top: SCREEN_HEIGHT / 2 - 20,
+    left: SCREEN_WIDTH / 2 - 20,
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  crosshair: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  crosshairReady: {
+    opacity: 0.5,
+  },
+  crosshairHorizontal: {
+    position: "absolute",
+    width: 30,
+    height: 2,
+    backgroundColor: "rgba(255,255,255,0.6)",
+  },
+  crosshairVertical: {
+    position: "absolute",
+    width: 2,
+    height: 30,
+    backgroundColor: "rgba(255,255,255,0.6)",
+  },
+
+  // Direction arrows
+  arrowContainer: {
+    position: "absolute",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 20,
+  },
+  arrowLeft: {
+    left: Spacing.lg,
+    top: SCREEN_HEIGHT / 2 - 40,
+  },
+  arrowRight: {
+    right: Spacing.lg,
+    top: SCREEN_HEIGHT / 2 - 40,
+  },
+  arrowUp: {
+    top: SCREEN_HEIGHT * 0.2,
+    left: SCREEN_WIDTH / 2 - 30,
+  },
+  arrowDown: {
+    bottom: SCREEN_HEIGHT * 0.3,
+    left: SCREEN_WIDTH / 2 - 30,
+  },
+  arrowText: {
+    color: Colors.primaryGreen,
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 2,
+  },
+
+  // Row info
+  rowInfo: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+  },
+  rowLabel: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 2,
+  },
+  rowProgress: {
+    color: Colors.textSecondary,
+    fontSize: 14,
+  },
+
+  // Level indicator
+  levelIndicatorContainer: {
+    position: "absolute",
+    right: Spacing.md,
+    top: SCREEN_HEIGHT / 2 - 60,
+    alignItems: "center",
+  },
+  levelIndicator: {
+    width: 60,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  levelIndicatorLevel: {
+    borderColor: Colors.primaryGreen,
+    backgroundColor: "rgba(46, 204, 113, 0.2)",
+  },
+  levelIndicatorTilted: {
+    borderColor: "rgba(255,255,255,0.5)",
+    backgroundColor: "rgba(255,255,255,0.1)",
+  },
+  levelBubble: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#fff",
+  },
+  levelText: {
+    color: "#fff",
+    fontSize: 10,
+    textAlign: "center",
+    maxWidth: 60,
+  },
+
+  // Status banner
+  statusBanner: {
+    position: "absolute",
+    top: SCREEN_HEIGHT * 0.15,
+    left: Spacing.xl,
+    right: Spacing.xl,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  statusText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+
+  // Bottom bar with dots
+  bottomBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    paddingTop: Spacing.sm,
+    paddingHorizontal: Spacing.sm,
+  },
+  rowDotsContainer: {
+    flexDirection: "column",
+    gap: 6,
+  },
+  rowDots: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+  },
+  rowDotLabel: {
+    color: Colors.textSecondary,
+    fontSize: 10,
+    width: 28,
+    textAlign: "right",
+  },
+  dotsRow: {
+    flexDirection: "row",
+    gap: 3,
+    flexWrap: "wrap",
+    flex: 1,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "rgba(255,255,255,0.3)",
+  },
+  dotCompleted: {
+    backgroundColor: Colors.primaryGreen,
+  },
+  dotCurrent: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: Colors.primaryGreen,
   },
 });
 
