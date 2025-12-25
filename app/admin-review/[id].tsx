@@ -347,7 +347,14 @@ export default function AdminPropertyReviewScreen() {
           showBackButton
           onBackPress={() => router.back()}
           rightContent={
-            <View style={styles.pendingBadge}>
+            <View
+              style={[
+                styles.pendingBadge,
+                {
+                  backgroundColor: isDark ? "#78350F" : "#FEF3C7",
+                },
+              ]}
+            >
               <Ionicons name="time" size={14} color="#F59E0B" />
               <Text style={styles.pendingBadgeText}>Pending Review</Text>
             </View>
@@ -465,7 +472,9 @@ export default function AdminPropertyReviewScreen() {
             </Text>
             <View style={styles.locationRow}>
               <Ionicons name="location" size={16} color={colors.primary} />
-              <Text style={[styles.locationText, { color: colors.textSecondary }]}>
+              <Text
+                style={[styles.locationText, { color: colors.textSecondary }]}
+              >
                 {property.location}
               </Text>
             </View>
@@ -473,42 +482,72 @@ export default function AdminPropertyReviewScreen() {
               {formatPrice(property.price)}
             </Text>
             {property.negotiable && (
-              <Text style={[styles.negotiableText, { color: colors.textSecondary }]}>
+              <Text
+                style={[styles.negotiableText, { color: colors.textSecondary }]}
+              >
                 Price is negotiable
               </Text>
             )}
           </View>
 
           {/* Quick Stats */}
-          <View style={styles.statsRow}>
+          <View
+            style={[
+              styles.statsRow,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
             <View style={styles.statItem}>
               <Ionicons name="bed-outline" size={22} color={colors.primary} />
-              <Text style={styles.statValue}>{property.bedrooms}</Text>
-              <Text style={styles.statLabel}>Beds</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>
+                {property.bedrooms}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                Beds
+              </Text>
             </View>
-            <View style={styles.statDivider} />
+            <View
+              style={[styles.statDivider, { backgroundColor: colors.divider }]}
+            />
             <View style={styles.statItem}>
               <Ionicons name="water-outline" size={22} color={colors.primary} />
-              <Text style={styles.statValue}>{property.bathrooms}</Text>
-              <Text style={styles.statLabel}>Baths</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>
+                {property.bathrooms}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                Baths
+              </Text>
             </View>
-            <View style={styles.statDivider} />
+            <View
+              style={[styles.statDivider, { backgroundColor: colors.divider }]}
+            />
             <View style={styles.statItem}>
               <Ionicons
                 name="expand-outline"
                 size={22}
                 color={colors.primary}
               />
-              <Text style={styles.statValue}>
+              <Text style={[styles.statValue, { color: colors.text }]}>
                 {property.area.toLocaleString()}
               </Text>
-              <Text style={styles.statLabel}>{property.areaUnit}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                {property.areaUnit}
+              </Text>
             </View>
-            <View style={styles.statDivider} />
+            <View
+              style={[styles.statDivider, { backgroundColor: colors.divider }]}
+            />
             <View style={styles.statItem}>
               <Ionicons name="car-outline" size={22} color={colors.primary} />
-              <Text style={styles.statValue}>{property.parkingSpaces}</Text>
-              <Text style={styles.statLabel}>Parking</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>
+                {property.parkingSpaces}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                Parking
+              </Text>
             </View>
           </View>
 
@@ -669,7 +708,13 @@ export default function AdminPropertyReviewScreen() {
               </ScrollView>
               {property.virtualTour && (
                 <TouchableOpacity
-                  style={styles.virtualTourButton}
+                  style={[
+                    styles.virtualTourButton,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                  ]}
                   onPress={() => {
                     router.push(`/property/1/360`);
                   }}
@@ -680,7 +725,9 @@ export default function AdminPropertyReviewScreen() {
                     size={20}
                     color={colors.primary}
                   />
-                  <Text style={styles.virtualTourText}>
+                  <Text
+                    style={[styles.virtualTourText, { color: colors.text }]}
+                  >
                     360° Virtual Tour Available
                   </Text>
                   <Ionicons
@@ -699,7 +746,14 @@ export default function AdminPropertyReviewScreen() {
               <Text style={[styles.sectionTitle, { color: colors.text }]}>
                 Documents
               </Text>
-              <View style={styles.docStats}>
+              <View
+                style={[
+                  styles.docStats,
+                  {
+                    backgroundColor: `${colors.primary}15`,
+                  },
+                ]}
+              >
                 <Text
                   style={[styles.docStatsText, { color: colors.textSecondary }]}
                 >
@@ -953,12 +1007,20 @@ export default function AdminPropertyReviewScreen() {
           backgroundStyle={{ backgroundColor: colors.surface }}
         >
           <BottomSheetView
-            style={[styles.rejectSheetContent, { backgroundColor: colors.surface }]}
+            style={[
+              styles.rejectSheetContent,
+              { backgroundColor: colors.surface },
+            ]}
           >
             <Text style={[styles.rejectSheetTitle, { color: colors.text }]}>
               Reject Listing
             </Text>
-            <Text style={[styles.rejectSheetSubtitle, { color: colors.textSecondary }]}>
+            <Text
+              style={[
+                styles.rejectSheetSubtitle,
+                { color: colors.textSecondary },
+              ]}
+            >
               Select a reason for rejection. The property owner will be
               notified.
             </Text>
@@ -1071,9 +1133,21 @@ export default function AdminPropertyReviewScreen() {
             {selectedDocument && (
               <>
                 {/* Document Header */}
-                <View style={styles.docPreviewHeader}>
+                <View
+                  style={[
+                    styles.docPreviewHeader,
+                    { borderBottomColor: colors.divider },
+                  ]}
+                >
                   <View style={styles.docPreviewTitleRow}>
-                    <View style={styles.docPreviewIconContainer}>
+                    <View
+                      style={[
+                        styles.docPreviewIconContainer,
+                        {
+                          backgroundColor: `${colors.primary}15`,
+                        },
+                      ]}
+                    >
                       <Ionicons
                         name={getDocIcon(selectedDocument.type) as any}
                         size={24}
@@ -1081,7 +1155,9 @@ export default function AdminPropertyReviewScreen() {
                       />
                     </View>
                     <View style={styles.docPreviewTitleInfo}>
-                      <Text style={[styles.docPreviewTitle, { color: colors.text }]}>
+                      <Text
+                        style={[styles.docPreviewTitle, { color: colors.text }]}
+                      >
                         {selectedDocument.name}
                       </Text>
                       <View style={styles.docPreviewMeta}>
@@ -1165,12 +1241,35 @@ export default function AdminPropertyReviewScreen() {
                 </View>
 
                 {/* Document Info */}
-                <View style={styles.docPreviewInfoCard}>
-                  <View style={styles.docPreviewInfoRow}>
-                    <Text style={styles.docPreviewInfoLabel}>
+                <View
+                  style={[
+                    styles.docPreviewInfoCard,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.docPreviewInfoRow,
+                      { borderBottomColor: colors.divider },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.docPreviewInfoLabel,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
                       Document Type
                     </Text>
-                    <Text style={styles.docPreviewInfoValue}>
+                    <Text
+                      style={[
+                        styles.docPreviewInfoValue,
+                        { color: colors.text },
+                      ]}
+                    >
                       {selectedDocument.type === "pdf"
                         ? "PDF Document"
                         : selectedDocument.type === "certificate"
@@ -1178,17 +1277,46 @@ export default function AdminPropertyReviewScreen() {
                         : "Image"}
                     </Text>
                   </View>
-                  <View style={styles.docPreviewInfoRow}>
-                    <Text style={styles.docPreviewInfoLabel}>File Size</Text>
-                    <Text style={styles.docPreviewInfoValue}>
+                  <View
+                    style={[
+                      styles.docPreviewInfoRow,
+                      { borderBottomColor: colors.divider },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.docPreviewInfoLabel,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      File Size
+                    </Text>
+                    <Text
+                      style={[
+                        styles.docPreviewInfoValue,
+                        { color: colors.text },
+                      ]}
+                    >
                       {selectedDocument.fileSize}
                     </Text>
                   </View>
                   <View
                     style={[styles.docPreviewInfoRow, { borderBottomWidth: 0 }]}
                   >
-                    <Text style={styles.docPreviewInfoLabel}>Uploaded</Text>
-                    <Text style={styles.docPreviewInfoValue}>
+                    <Text
+                      style={[
+                        styles.docPreviewInfoLabel,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      Uploaded
+                    </Text>
+                    <Text
+                      style={[
+                        styles.docPreviewInfoValue,
+                        { color: colors.text },
+                      ]}
+                    >
                       {selectedDocument.uploadedAt}
                     </Text>
                   </View>
@@ -1197,7 +1325,13 @@ export default function AdminPropertyReviewScreen() {
                 {/* Action Buttons */}
                 <View style={styles.docPreviewActions}>
                   <TouchableOpacity
-                    style={styles.docPreviewDownloadButton}
+                    style={[
+                      styles.docPreviewDownloadButton,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.divider,
+                      },
+                    ]}
                     activeOpacity={0.7}
                   >
                     <Ionicons
@@ -1205,13 +1339,26 @@ export default function AdminPropertyReviewScreen() {
                       size={20}
                       color={colors.primary}
                     />
-                    <Text style={styles.docPreviewDownloadText}>Download</Text>
+                    <Text
+                      style={[
+                        styles.docPreviewDownloadText,
+                        { color: colors.primary },
+                      ]}
+                    >
+                      Download
+                    </Text>
                   </TouchableOpacity>
 
                   {!selectedDocument.verified ? (
                     <View style={styles.docPreviewVerifyActions}>
                       <TouchableOpacity
-                        style={styles.docPreviewRejectButton}
+                        style={[
+                          styles.docPreviewRejectButton,
+                          {
+                            backgroundColor: isDark ? "#7F1D1D" : "#FEE2E2",
+                            borderColor: "#EF4444",
+                          },
+                        ]}
                         onPress={handleRejectDocument}
                         activeOpacity={0.7}
                       >
@@ -1261,7 +1408,10 @@ export default function AdminPropertyReviewScreen() {
                         color={colors.primary}
                       />
                       <Text
-                        style={[styles.docVerifiedText, { color: colors.primary }]}
+                        style={[
+                          styles.docVerifiedText,
+                          { color: colors.primary },
+                        ]}
                       >
                         This document has been verified
                       </Text>
@@ -1706,10 +1856,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     gap: Spacing.md,
-    backgroundColor: "#DBEAFE",
     borderRadius: 16,
     padding: Spacing.lg,
     marginBottom: Spacing.lg,
+    borderWidth: 1,
   },
   reviewNotesContent: {
     flex: 1,
@@ -1718,13 +1868,11 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: "#3B82F6",
     marginBottom: 4,
   },
   reviewNotesText: {
     ...Typography.bodyMedium,
     fontSize: 13,
-    color: "#1E40AF",
     lineHeight: 20,
   },
   // Action Bar
@@ -1759,7 +1907,6 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     paddingVertical: Spacing.lg,
     borderRadius: 16,
-    backgroundColor: "#FEE2E2",
   },
   rejectButtonText: {
     ...Typography.labelLarge,
@@ -1814,8 +1961,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
     borderWidth: 1,
   },
-  reasonOptionActive: {
-  },
+  reasonOptionActive: {},
   reasonText: {
     ...Typography.bodyMedium,
     fontSize: 14,
@@ -1857,6 +2003,8 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     justifyContent: "space-between",
     marginBottom: Spacing.lg,
+    paddingBottom: Spacing.lg,
+    borderBottomWidth: 1,
   },
   docPreviewTitleRow: {
     flexDirection: "row",
@@ -1982,7 +2130,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     paddingVertical: Spacing.lg,
     borderRadius: 14,
-    backgroundColor: "#FEE2E2",
+    borderWidth: 1,
   },
   docPreviewRejectText: {
     ...Typography.labelMedium,
