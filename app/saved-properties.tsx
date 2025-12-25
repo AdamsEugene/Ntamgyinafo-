@@ -18,6 +18,7 @@ import {
 } from "@gorhom/bottom-sheet";
 
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import { PropertyListCard, PropertyGridCard } from "@/components/PropertyCard";
 import { BottomNavigation, TabItem } from "@/components/BottomNavigation";
 import {
@@ -70,6 +71,7 @@ const SORT_OPTIONS = [
 export default function SavedPropertiesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
 
   // State
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
@@ -176,34 +178,33 @@ export default function SavedPropertiesScreen() {
   // Render empty state
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      {/* Decorative circles */}
-      <View style={styles.emptyDecoration}>
-        <View style={[styles.decorativeCircle, styles.circle1]} />
-        <View style={[styles.decorativeCircle, styles.circle2]} />
-        <View style={[styles.decorativeCircle, styles.circle3]} />
-      </View>
-
       {/* Empty icon */}
       <View style={styles.emptyIconContainer}>
-        <View style={styles.emptyIconBackground}>
-          <Ionicons
-            name="heart-outline"
-            size={64}
-            color={Colors.primaryGreen}
-          />
+        <View
+          style={[
+            styles.emptyIconBackground,
+            {
+              backgroundColor: `${colors.primary}15`,
+              borderColor: `${colors.primary}30`,
+            },
+          ]}
+        >
+          <Ionicons name="heart-outline" size={64} color={colors.primary} />
         </View>
       </View>
 
       {/* Text */}
-      <Text style={styles.emptyTitle}>No Saved Properties Yet</Text>
-      <Text style={styles.emptySubtitle}>
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>
+        No Saved Properties Yet
+      </Text>
+      <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
         Properties you save will appear here.{"\n"}Start exploring to find your
         dream property!
       </Text>
 
       {/* Action button */}
       <TouchableOpacity
-        style={styles.browseButton}
+        style={[styles.browseButton, { backgroundColor: colors.primary }]}
         onPress={() => router.push("/(tabs)/search")}
         activeOpacity={0.8}
       >
@@ -245,13 +246,7 @@ export default function SavedPropertiesScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      {/* Decorative Background Elements */}
-      <View style={styles.decorativeBackground}>
-        <View style={styles.bgCircle1} />
-        <View style={styles.bgCircle2} />
-      </View>
-
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Floating Header with Blur */}
       <FloatingHeader
         title="Saved Properties"
@@ -282,31 +277,34 @@ export default function SavedPropertiesScreen() {
         ]}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+          />
         }
       >
         {/* Results count */}
         {savedPropertiesList.length > 0 && (
           <View style={styles.resultsHeader}>
-            <Text style={styles.resultsCount}>
+            <Text style={[styles.resultsCount, { color: colors.text }]}>
               {savedPropertiesList.length}{" "}
               {savedPropertiesList.length === 1
                 ? "property saved"
                 : "properties saved"}
             </Text>
             <TouchableOpacity
-              style={styles.sortButton}
+              style={[
+                styles.sortButton,
+                { backgroundColor: `${colors.primary}15` },
+              ]}
               onPress={() => sortSheetRef.current?.present()}
               activeOpacity={0.7}
             >
-              <Text style={styles.sortButtonText}>
+              <Text style={[styles.sortButtonText, { color: colors.primary }]}>
                 {SORT_OPTIONS.find((o) => o.id === sortOption)?.label}
               </Text>
-              <Ionicons
-                name="chevron-down"
-                size={14}
-                color={Colors.primaryGreen}
-              />
+              <Ionicons name="chevron-down" size={14} color={colors.primary} />
             </TouchableOpacity>
           </View>
         )}
@@ -334,18 +332,22 @@ export default function SavedPropertiesScreen() {
         ref={sortSheetRef}
         snapPoints={["50%"]}
         backdropComponent={renderBackdrop}
-        handleIndicatorStyle={{ backgroundColor: Colors.divider }}
-        backgroundStyle={{ backgroundColor: Colors.surface }}
+        handleIndicatorStyle={{ backgroundColor: colors.textSecondary }}
+        backgroundStyle={{ backgroundColor: colors.surface }}
       >
         <BottomSheetView style={styles.sortSheetContent}>
           {/* Header */}
-          <View style={styles.sortHeader}>
-            <Text style={styles.sortTitle}>Sort By</Text>
+          <View
+            style={[styles.sortHeader, { borderBottomColor: colors.divider }]}
+          >
+            <Text style={[styles.sortTitle, { color: colors.text }]}>
+              Sort By
+            </Text>
             <TouchableOpacity
               onPress={() => sortSheetRef.current?.dismiss()}
               activeOpacity={0.7}
             >
-              <Ionicons name="close" size={24} color={Colors.textSecondary} />
+              <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
 
@@ -358,7 +360,14 @@ export default function SavedPropertiesScreen() {
                   key={option.id}
                   style={[
                     styles.sortOption,
-                    isSelected && styles.sortOptionSelected,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                    isSelected && {
+                      backgroundColor: colors.primary,
+                      borderColor: colors.primary,
+                    },
                   ]}
                   onPress={() => {
                     setSortOption(option.id);
@@ -370,18 +379,20 @@ export default function SavedPropertiesScreen() {
                     <View
                       style={[
                         styles.sortIconContainer,
+                        { backgroundColor: `${colors.textSecondary}15` },
                         isSelected && styles.sortIconContainerSelected,
                       ]}
                     >
                       <Ionicons
                         name={option.icon as any}
                         size={20}
-                        color={isSelected ? "#FFFFFF" : Colors.textSecondary}
+                        color={isSelected ? "#FFFFFF" : colors.textSecondary}
                       />
                     </View>
                     <Text
                       style={[
                         styles.sortOptionText,
+                        { color: colors.text },
                         isSelected && styles.sortOptionTextSelected,
                       ]}
                     >
