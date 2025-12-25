@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import { getSavedProperties } from "@/constants/mockData";
 import {
   FloatingHeader,
@@ -42,6 +43,7 @@ interface MenuItem {
 export default function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const savedCount = getSavedProperties().length;
 
   const menuItems: MenuItem[] = [
@@ -106,14 +108,8 @@ export default function ProfileScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
-        {/* Decorative Background Elements */}
-        <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
-        </View>
-
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Floating Header with Blur */}
         <FloatingHeader
           title="Profile"
@@ -139,44 +135,72 @@ export default function ProfileScreen() {
           {/* Profile Header */}
           <View style={styles.profileHeader}>
             <View style={styles.avatarContainer}>
-              <Image source={{ uri: USER.avatar }} style={styles.avatar} />
+              <Image
+                source={{ uri: USER.avatar }}
+                style={[styles.avatar, { borderColor: colors.primary }]}
+              />
               {USER.verified && (
-                <View style={styles.verifiedBadge}>
+                <View
+                  style={[
+                    styles.verifiedBadge,
+                    {
+                      backgroundColor: colors.primary,
+                      borderColor: colors.background,
+                    },
+                  ]}
+                >
                   <Ionicons name="checkmark" size={14} color="#FFFFFF" />
                 </View>
               )}
             </View>
 
-            <Text style={styles.userName}>{USER.name}</Text>
-            <View style={styles.roleBadge}>
-              <Ionicons name="person" size={12} color={Colors.primaryGreen} />
-              <Text style={styles.roleBadgeText}>Buyer</Text>
+            <Text style={[styles.userName, { color: colors.text }]}>
+              {USER.name}
+            </Text>
+            <View
+              style={[
+                styles.roleBadge,
+                { backgroundColor: `${colors.primary}15` },
+              ]}
+            >
+              <Ionicons name="person" size={12} color={colors.primary} />
+              <Text style={[styles.roleBadgeText, { color: colors.primary }]}>
+                Buyer
+              </Text>
             </View>
-            <Text style={styles.memberSince}>
+            <Text style={[styles.memberSince, { color: colors.textSecondary }]}>
               Member since {USER.memberSince}
             </Text>
 
             <TouchableOpacity
-              style={styles.editButton}
+              style={[styles.editButton, { borderColor: colors.primary }]}
               activeOpacity={0.7}
               onPress={() => router.push("/edit-profile" as any)}
             >
               <Ionicons
                 name="create-outline"
                 size={18}
-                color={Colors.primaryGreen}
+                color={colors.primary}
               />
-              <Text style={styles.editButtonText}>Edit Profile</Text>
+              <Text style={[styles.editButtonText, { color: colors.primary }]}>
+                Edit Profile
+              </Text>
             </TouchableOpacity>
           </View>
 
           {/* Menu Items */}
-          <View style={styles.menuContainer}>
+          <View
+            style={[
+              styles.menuContainer,
+              { backgroundColor: colors.surface, borderColor: colors.divider },
+            ]}
+          >
             {menuItems.map((item, index) => (
               <TouchableOpacity
                 key={item.id}
                 style={[
                   styles.menuItem,
+                  { borderBottomColor: colors.divider },
                   index === menuItems.length - 1 && styles.menuItemLast,
                 ]}
                 onPress={() => {
@@ -187,30 +211,50 @@ export default function ProfileScreen() {
                 activeOpacity={0.7}
               >
                 <View style={styles.menuItemLeft}>
-                  <View style={styles.menuIconContainer}>
-                    <Ionicons
-                      name={item.icon}
-                      size={22}
-                      color={Colors.textPrimary}
-                    />
+                  <View
+                    style={[
+                      styles.menuIconContainer,
+                      { backgroundColor: colors.inputBackground },
+                    ]}
+                  >
+                    <Ionicons name={item.icon} size={22} color={colors.text} />
                   </View>
-                  <Text style={styles.menuItemLabel}>{item.label}</Text>
+                  <Text style={[styles.menuItemLabel, { color: colors.text }]}>
+                    {item.label}
+                  </Text>
                 </View>
                 <View style={styles.menuItemRight}>
                   {item.badge !== undefined && item.badge > 0 && (
-                    <View style={styles.menuBadge}>
+                    <View
+                      style={[
+                        styles.menuBadge,
+                        { backgroundColor: colors.primary },
+                      ]}
+                    >
                       <Text style={styles.menuBadgeText}>{item.badge}</Text>
                     </View>
                   )}
                   {item.value && (
-                    <View style={styles.menuValueBadge}>
-                      <Text style={styles.menuValueText}>{item.value}</Text>
+                    <View
+                      style={[
+                        styles.menuValueBadge,
+                        { backgroundColor: `${colors.primary}15` },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.menuValueText,
+                          { color: colors.primary },
+                        ]}
+                      >
+                        {item.value}
+                      </Text>
                     </View>
                   )}
                   <Ionicons
                     name="chevron-forward"
                     size={20}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                   />
                 </View>
               </TouchableOpacity>
@@ -219,16 +263,23 @@ export default function ProfileScreen() {
 
           {/* Logout Button */}
           <TouchableOpacity
-            style={styles.logoutButton}
+            style={[
+              styles.logoutButton,
+              { backgroundColor: colors.surface, borderColor: colors.error },
+            ]}
             onPress={handleLogout}
             activeOpacity={0.7}
           >
-            <Ionicons name="log-out-outline" size={22} color="#FF3B30" />
-            <Text style={styles.logoutButtonText}>Logout</Text>
+            <Ionicons name="log-out-outline" size={22} color={colors.error} />
+            <Text style={[styles.logoutButtonText, { color: colors.error }]}>
+              Logout
+            </Text>
           </TouchableOpacity>
 
           {/* Version */}
-          <Text style={styles.versionText}>Version 1.0.0</Text>
+          <Text style={[styles.versionText, { color: colors.textSecondary }]}>
+            Version 1.0.0
+          </Text>
         </ScrollView>
       </View>
     </>
@@ -240,38 +291,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  // Decorative Background
-  decorativeBackground: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 0,
-  },
-  circle1: {
-    position: "absolute",
-    top: -100,
-    right: -100,
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: Colors.primaryLight,
-    opacity: 0.08,
-  },
-  circle2: {
-    position: "absolute",
-    bottom: -150,
-    left: -150,
-    width: 400,
-    height: 400,
-    borderRadius: 200,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
-  },
   scrollView: {
     flex: 1,
-    zIndex: 1,
   },
   content: {
     paddingHorizontal: Spacing.xl,
