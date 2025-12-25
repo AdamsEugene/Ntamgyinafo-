@@ -13,11 +13,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function PendingApprovalScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const params = useLocalSearchParams<{ listingTitle?: string }>();
 
   // Animations
@@ -77,13 +79,33 @@ export default function PendingApprovalScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View
+        style={[
+          styles.container,
+          { paddingTop: insets.top, backgroundColor: colors.background },
+        ]}
+      >
         {/* Decorative Background */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
-          <View style={styles.circle3} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.1 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle3,
+              { backgroundColor: colors.accent, opacity: 0.08 },
+            ]}
+          />
         </View>
 
         {/* Scrollable Content */}
@@ -106,17 +128,19 @@ export default function PendingApprovalScreen() {
               ]}
             >
               <LinearGradient
-                colors={[
-                  `${Colors.primaryGreen}20`,
-                  `${Colors.primaryGreen}10`,
-                ]}
+                colors={[`${colors.primary}20`, `${colors.primary}10`]}
                 style={styles.iconGradient}
               >
-                <View style={styles.iconInner}>
+                <View
+                  style={[
+                    styles.iconInner,
+                    { backgroundColor: colors.surface },
+                  ]}
+                >
                   <Ionicons
                     name="time-outline"
                     size={64}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                 </View>
               </LinearGradient>
@@ -132,115 +156,226 @@ export default function PendingApprovalScreen() {
                 },
               ]}
             >
-              <Text style={styles.title}>Listing Under Review</Text>
-              <Text style={styles.message}>
+              <Text style={[styles.title, { color: colors.text }]}>
+                Listing Under Review
+              </Text>
+              <Text style={[styles.message, { color: colors.textSecondary }]}>
                 Your listing is being reviewed by our team. We&apos;ll notify
                 you once it&apos;s approved and live on the platform.
               </Text>
 
               {/* Listing Info Card */}
               {params.listingTitle && (
-                <View style={styles.listingCard}>
-                  <View style={styles.listingIconContainer}>
-                    <Ionicons
-                      name="home"
-                      size={20}
-                      color={Colors.primaryGreen}
-                    />
+                <View
+                  style={[
+                    styles.listingCard,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.listingIconContainer,
+                      { backgroundColor: `${colors.primary}15` },
+                    ]}
+                  >
+                    <Ionicons name="home" size={20} color={colors.primary} />
                   </View>
                   <View style={styles.listingInfo}>
-                    <Text style={styles.listingLabel}>Submitted Listing</Text>
-                    <Text style={styles.listingTitle} numberOfLines={1}>
+                    <Text
+                      style={[
+                        styles.listingLabel,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      Submitted Listing
+                    </Text>
+                    <Text
+                      style={[styles.listingTitle, { color: colors.text }]}
+                      numberOfLines={1}
+                    >
                       {params.listingTitle}
                     </Text>
                   </View>
-                  <View style={styles.statusBadge}>
-                    <Text style={styles.statusText}>Pending</Text>
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      {
+                        backgroundColor: isDark ? "#F57C0015" : "#FFF3E0",
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.statusText,
+                        { color: isDark ? "#FFB74D" : "#F57C00" },
+                      ]}
+                    >
+                      Pending
+                    </Text>
                   </View>
                 </View>
               )}
 
               {/* Timeline */}
-              <View style={styles.timelineCard}>
+              <View
+                style={[
+                  styles.timelineCard,
+                  {
+                    backgroundColor: `${colors.primary}08`,
+                    borderColor: `${colors.primary}20`,
+                  },
+                ]}
+              >
                 <View style={styles.timelineHeader}>
                   <Ionicons
                     name="timer-outline"
                     size={20}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
-                  <Text style={styles.timelineTitle}>Estimated Time</Text>
+                  <Text
+                    style={[styles.timelineTitle, { color: colors.primary }]}
+                  >
+                    Estimated Time
+                  </Text>
                 </View>
-                <Text style={styles.timelineValue}>24 - 48 hours</Text>
-                <Text style={styles.timelineNote}>
+                <Text style={[styles.timelineValue, { color: colors.text }]}>
+                  24 - 48 hours
+                </Text>
+                <Text
+                  style={[styles.timelineNote, { color: colors.textSecondary }]}
+                >
                   We review listings to ensure quality and accuracy
                 </Text>
               </View>
 
               {/* What Happens Next */}
-              <View style={styles.stepsCard}>
-                <Text style={styles.stepsTitle}>What happens next?</Text>
+              <View
+                style={[
+                  styles.stepsCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
+              >
+                <Text style={[styles.stepsTitle, { color: colors.text }]}>
+                  What happens next?
+                </Text>
                 <View style={styles.step}>
-                  <View style={styles.stepNumber}>
+                  <View
+                    style={[
+                      styles.stepNumber,
+                      { backgroundColor: colors.primary },
+                    ]}
+                  >
                     <Text style={styles.stepNumberText}>1</Text>
                   </View>
                   <View style={styles.stepContent}>
-                    <Text style={styles.stepLabel}>Review in Progress</Text>
-                    <Text style={styles.stepDescription}>
+                    <Text style={[styles.stepLabel, { color: colors.text }]}>
+                      Review in Progress
+                    </Text>
+                    <Text
+                      style={[
+                        styles.stepDescription,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
                       Our team verifies property details and photos
                     </Text>
                   </View>
                   <Ionicons
                     name="checkmark-circle"
                     size={20}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                 </View>
-                <View style={styles.stepConnector} />
+                <View
+                  style={[
+                    styles.stepConnector,
+                    { backgroundColor: colors.divider },
+                  ]}
+                />
                 <View style={styles.step}>
-                  <View style={[styles.stepNumber, styles.stepNumberPending]}>
+                  <View
+                    style={[
+                      styles.stepNumber,
+                      styles.stepNumberPending,
+                      { backgroundColor: colors.divider },
+                    ]}
+                  >
                     <Text
                       style={[
                         styles.stepNumberText,
                         styles.stepNumberTextPending,
+                        { color: colors.textSecondary },
                       ]}
                     >
                       2
                     </Text>
                   </View>
                   <View style={styles.stepContent}>
-                    <Text style={styles.stepLabel}>Approval</Text>
-                    <Text style={styles.stepDescription}>
+                    <Text style={[styles.stepLabel, { color: colors.text }]}>
+                      Approval
+                    </Text>
+                    <Text
+                      style={[
+                        styles.stepDescription,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
                       You&apos;ll receive a notification once approved
                     </Text>
                   </View>
                   <Ionicons
                     name="ellipse-outline"
                     size={20}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                   />
                 </View>
-                <View style={styles.stepConnector} />
+                <View
+                  style={[
+                    styles.stepConnector,
+                    { backgroundColor: colors.divider },
+                  ]}
+                />
                 <View style={styles.step}>
-                  <View style={[styles.stepNumber, styles.stepNumberPending]}>
+                  <View
+                    style={[
+                      styles.stepNumber,
+                      styles.stepNumberPending,
+                      { backgroundColor: colors.divider },
+                    ]}
+                  >
                     <Text
                       style={[
                         styles.stepNumberText,
                         styles.stepNumberTextPending,
+                        { color: colors.textSecondary },
                       ]}
                     >
                       3
                     </Text>
                   </View>
                   <View style={styles.stepContent}>
-                    <Text style={styles.stepLabel}>Go Live</Text>
-                    <Text style={styles.stepDescription}>
+                    <Text style={[styles.stepLabel, { color: colors.text }]}>
+                      Go Live
+                    </Text>
+                    <Text
+                      style={[
+                        styles.stepDescription,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
                       Your property will be visible to buyers
                     </Text>
                   </View>
                   <Ionicons
                     name="ellipse-outline"
                     size={20}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                   />
                 </View>
               </View>
@@ -256,16 +391,22 @@ export default function PendingApprovalScreen() {
           ]}
         >
           <TouchableOpacity
-            style={styles.secondaryButton}
+            style={[
+              styles.secondaryButton,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.primary,
+              },
+            ]}
             onPress={handleViewMyListings}
             activeOpacity={0.8}
           >
-            <Ionicons
-              name="list-outline"
-              size={20}
-              color={Colors.primaryGreen}
-            />
-            <Text style={styles.secondaryButtonText}>View My Listings</Text>
+            <Ionicons name="list-outline" size={20} color={colors.primary} />
+            <Text
+              style={[styles.secondaryButtonText, { color: colors.primary }]}
+            >
+              View My Listings
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -274,7 +415,7 @@ export default function PendingApprovalScreen() {
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={[Colors.primaryGreen, "#2E7D32"]}
+              colors={[colors.primary, colors.primaryDark]}
               style={styles.primaryButtonGradient}
             >
               <Text style={styles.primaryButtonText}>Back to Dashboard</Text>
@@ -290,7 +431,6 @@ export default function PendingApprovalScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   scrollView: {
     flex: 1,
@@ -314,8 +454,6 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: Colors.primaryLight,
-    opacity: 0.1,
   },
   circle2: {
     position: "absolute",
@@ -324,8 +462,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
   },
   circle3: {
     position: "absolute",
@@ -334,8 +470,6 @@ const styles = StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: 80,
-    backgroundColor: Colors.accentGold,
-    opacity: 0.08,
   },
   content: {
     alignItems: "center",
@@ -355,12 +489,10 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: Colors.surface,
     justifyContent: "center",
     alignItems: "center",
     ...Platform.select({
       ios: {
-        shadowColor: Colors.primaryGreen,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,
         shadowRadius: 12,
@@ -378,14 +510,12 @@ const styles = StyleSheet.create({
     ...Typography.headlineLarge,
     fontSize: 26,
     fontWeight: "700",
-    color: Colors.textPrimary,
     textAlign: "center",
     marginBottom: Spacing.md,
   },
   message: {
     ...Typography.bodyMedium,
     fontSize: 15,
-    color: Colors.textSecondary,
     textAlign: "center",
     lineHeight: 22,
     marginBottom: Spacing.xl,
@@ -395,12 +525,10 @@ const styles = StyleSheet.create({
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.md,
     marginBottom: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -417,7 +545,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: `${Colors.primaryGreen}15`,
     justifyContent: "center",
     alignItems: "center",
     marginRight: Spacing.md,
@@ -428,17 +555,14 @@ const styles = StyleSheet.create({
   listingLabel: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
     marginBottom: 2,
   },
   listingTitle: {
     ...Typography.titleMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.textPrimary,
   },
   statusBadge: {
-    backgroundColor: "#FFF3E0",
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
     borderRadius: 8,
@@ -447,16 +571,13 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     fontSize: 11,
     fontWeight: "600",
-    color: "#F57C00",
   },
   timelineCard: {
     width: "100%",
-    backgroundColor: `${Colors.primaryGreen}08`,
     borderRadius: 16,
     padding: Spacing.lg,
     marginBottom: Spacing.lg,
     borderWidth: 1,
-    borderColor: `${Colors.primaryGreen}20`,
   },
   timelineHeader: {
     flexDirection: "row",
@@ -468,33 +589,27 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 13,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
   timelineValue: {
     ...Typography.headlineMedium,
     fontSize: 24,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: 4,
   },
   timelineNote: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   stepsCard: {
     width: "100%",
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   stepsTitle: {
     ...Typography.titleMedium,
     fontSize: 15,
     fontWeight: "600",
-    color: Colors.textPrimary,
     marginBottom: Spacing.lg,
   },
   step: {
@@ -505,23 +620,18 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: Colors.primaryGreen,
     justifyContent: "center",
     alignItems: "center",
     marginRight: Spacing.md,
   },
-  stepNumberPending: {
-    backgroundColor: Colors.divider,
-  },
+  stepNumberPending: {},
   stepNumberText: {
     ...Typography.labelMedium,
     fontSize: 12,
     fontWeight: "700",
     color: "#FFFFFF",
   },
-  stepNumberTextPending: {
-    color: Colors.textSecondary,
-  },
+  stepNumberTextPending: {},
   stepContent: {
     flex: 1,
   },
@@ -529,18 +639,15 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 13,
     fontWeight: "600",
-    color: Colors.textPrimary,
     marginBottom: 2,
   },
   stepDescription: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
   },
   stepConnector: {
     width: 2,
     height: 20,
-    backgroundColor: Colors.divider,
     marginLeft: 13,
     marginVertical: 4,
   },
@@ -558,24 +665,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: "100%",
     gap: Spacing.sm,
-    backgroundColor: Colors.surface,
     paddingVertical: Spacing.md,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.primaryGreen,
   },
   secondaryButtonText: {
     ...Typography.labelLarge,
     fontSize: 15,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
   primaryButton: {
     borderRadius: 16,
     overflow: "hidden",
     ...Platform.select({
       ios: {
-        shadowColor: Colors.primaryGreen,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
