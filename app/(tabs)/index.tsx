@@ -344,7 +344,10 @@ export default function BuyerHomeScreen() {
                     <View
                       style={[
                         styles.categoryIconBackground,
-                        { backgroundColor: `${colors.primary}12`, borderColor: `${colors.primary}25` },
+                        {
+                          backgroundColor: `${colors.primary}12`,
+                          borderColor: `${colors.primary}25`,
+                        },
                       ]}
                     >
                       <Ionicons
