@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import { FloatingHeader } from "@/components/FloatingHeader";
 import { FloatingSearchBar } from "@/components/FloatingSearchBar";
 import { MAP_PROPERTIES, MapProperty } from "@/constants/mockData";
@@ -100,6 +101,7 @@ export default function PopularAreasScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedArea, setSelectedArea] = useState<string | null>(
@@ -134,7 +136,7 @@ export default function PopularAreasScreen() {
     <TouchableOpacity
       style={[
         styles.areaCard,
-        selectedArea === item.id && styles.areaCardSelected,
+        selectedArea === item.id && { borderColor: colors.primary },
       ]}
       onPress={() => setSelectedArea(selectedArea === item.id ? null : item.id)}
       activeOpacity={0.9}
@@ -154,11 +156,7 @@ export default function PopularAreasScreen() {
       </View>
       {selectedArea === item.id && (
         <View style={styles.selectedIndicator}>
-          <Ionicons
-            name="checkmark-circle"
-            size={24}
-            color={Colors.primaryGreen}
-          />
+          <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
         </View>
       )}
     </TouchableOpacity>
@@ -166,7 +164,10 @@ export default function PopularAreasScreen() {
 
   const renderPropertyCard = ({ item }: { item: MapProperty }) => (
     <TouchableOpacity
-      style={styles.propertyCard}
+      style={[
+        styles.propertyCard,
+        { backgroundColor: colors.surface, borderColor: colors.divider },
+      ]}
       onPress={() => router.push(`/property/${item.id}`)}
       activeOpacity={0.9}
     >
@@ -176,22 +177,33 @@ export default function PopularAreasScreen() {
         resizeMode="cover"
       />
       <View style={styles.propertyContent}>
-        <Text style={styles.propertyTitle} numberOfLines={1}>
+        <Text
+          style={[styles.propertyTitle, { color: colors.text }]}
+          numberOfLines={1}
+        >
           {item.title}
         </Text>
         <View style={styles.propertyLocation}>
           <Ionicons
             name="location-outline"
             size={12}
-            color={Colors.textSecondary}
+            color={colors.textSecondary}
           />
-          <Text style={styles.propertyLocationText} numberOfLines={1}>
+          <Text
+            style={[
+              styles.propertyLocationText,
+              { color: colors.textSecondary },
+            ]}
+            numberOfLines={1}
+          >
             {item.location}
           </Text>
         </View>
-        <Text style={styles.propertyPrice}>{formatPrice(item.price)}</Text>
+        <Text style={[styles.propertyPrice, { color: colors.primary }]}>
+          {formatPrice(item.price)}
+        </Text>
       </View>
-      <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+      <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
     </TouchableOpacity>
   );
 
@@ -199,8 +211,8 @@ export default function PopularAreasScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.decorativeBackground}>
           <View style={styles.circle1} />
           <View style={styles.circle2} />
@@ -230,7 +242,7 @@ export default function PopularAreasScreen() {
           ListHeaderComponent={
             <>
               {/* Areas Grid */}
-              <Text style={styles.sectionTitle}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
                 {selectedArea ? "Selected Area" : "All Popular Areas"}
               </Text>
               <FlatList
@@ -246,10 +258,15 @@ export default function PopularAreasScreen() {
               {/* Properties Header */}
               {selectedArea && (
                 <View style={styles.propertiesHeader}>
-                  <Text style={styles.sectionTitle}>
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>
                     Properties in {selectedAreaData?.name}
                   </Text>
-                  <Text style={styles.propertiesCount}>
+                  <Text
+                    style={[
+                      styles.propertiesCount,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
                     {areaProperties.length} available
                   </Text>
                 </View>
@@ -260,9 +277,14 @@ export default function PopularAreasScreen() {
                   <Ionicons
                     name="hand-left-outline"
                     size={32}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                   />
-                  <Text style={styles.selectPromptText}>
+                  <Text
+                    style={[
+                      styles.selectPromptText,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
                     Tap an area to see properties
                   </Text>
                 </View>
@@ -273,7 +295,7 @@ export default function PopularAreasScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={Colors.primaryGreen}
+              tintColor={colors.primary}
               progressViewOffset={80 + insets.top}
             />
           }

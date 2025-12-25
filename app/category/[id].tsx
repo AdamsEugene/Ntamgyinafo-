@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   FloatingHeader,
   HeaderActionButton,
@@ -68,6 +69,7 @@ const SORT_OPTIONS = [
 export default function CategoryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const params = useLocalSearchParams();
   const categoryId = params.id as string;
 
@@ -162,20 +164,27 @@ export default function CategoryScreen() {
   // Render empty state
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <View style={styles.emptyIconContainer}>
+      <View
+        style={[
+          styles.emptyIconContainer,
+          { backgroundColor: `${colors.primary}15` },
+        ]}
+      >
         <Ionicons
           name={categoryInfo.icon as any}
           size={64}
-          color={Colors.primaryGreen}
+          color={colors.primary}
         />
       </View>
-      <Text style={styles.emptyTitle}>No {categoryInfo.label} Found</Text>
-      <Text style={styles.emptySubtitle}>
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>
+        No {categoryInfo.label} Found
+      </Text>
+      <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
         We couldn&apos;t find any properties in this category.{"\n"}
         Try adjusting your filters or check back later.
       </Text>
       <TouchableOpacity
-        style={styles.browseButton}
+        style={[styles.browseButton, { backgroundColor: colors.primary }]}
         onPress={() => router.push("/(tabs)/search")}
         activeOpacity={0.8}
       >
@@ -187,15 +196,14 @@ export default function CategoryScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
           <View style={styles.circle1} />
           <View style={styles.circle2} />
         </View>
 
-        {/* Header */}
         {/* Floating Header with Blur */}
         <FloatingHeader
           title={categoryInfo.label}
@@ -226,19 +234,36 @@ export default function CategoryScreen() {
           ListHeaderComponent={
             <View style={styles.filtersSection}>
               {/* Category Header Card */}
-              <View style={styles.categoryHeaderCard}>
-                <View style={styles.categoryIconLarge}>
+              <View
+                style={[
+                  styles.categoryHeaderCard,
+                  { backgroundColor: colors.surface },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.categoryIconLarge,
+                    { backgroundColor: `${colors.primary}15` },
+                  ]}
+                >
                   <Ionicons
                     name={categoryInfo.icon as any}
                     size={32}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                 </View>
                 <View style={styles.categoryHeaderInfo}>
-                  <Text style={styles.categoryHeaderTitle}>
+                  <Text
+                    style={[styles.categoryHeaderTitle, { color: colors.text }]}
+                  >
                     {categoryInfo.label}
                   </Text>
-                  <Text style={styles.categoryHeaderDescription}>
+                  <Text
+                    style={[
+                      styles.categoryHeaderDescription,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
                     {categoryInfo.description}
                   </Text>
                 </View>
@@ -251,8 +276,14 @@ export default function CategoryScreen() {
                     key={filter.id}
                     style={[
                       styles.filterChip,
-                      transactionFilter === filter.id &&
-                        styles.filterChipActive,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.divider,
+                      },
+                      transactionFilter === filter.id && {
+                        backgroundColor: colors.primary,
+                        borderColor: colors.primary,
+                      },
                     ]}
                     onPress={() => setTransactionFilter(filter.id)}
                     activeOpacity={0.7}
@@ -260,6 +291,7 @@ export default function CategoryScreen() {
                     <Text
                       style={[
                         styles.filterChipText,
+                        { color: colors.textSecondary },
                         transactionFilter === filter.id &&
                           styles.filterChipTextActive,
                       ]}
@@ -272,14 +304,25 @@ export default function CategoryScreen() {
 
               {/* Sort Options */}
               <View style={styles.sortRow}>
-                <Text style={styles.sortLabel}>Sort by:</Text>
+                <Text
+                  style={[styles.sortLabel, { color: colors.textSecondary }]}
+                >
+                  Sort by:
+                </Text>
                 <View style={styles.sortOptions}>
                   {SORT_OPTIONS.map((option) => (
                     <TouchableOpacity
                       key={option.id}
                       style={[
                         styles.sortChip,
-                        sortOption === option.id && styles.sortChipActive,
+                        {
+                          backgroundColor: colors.surface,
+                          borderColor: colors.divider,
+                        },
+                        sortOption === option.id && {
+                          backgroundColor: `${colors.primary}15`,
+                          borderColor: colors.primary,
+                        },
                       ]}
                       onPress={() => setSortOption(option.id)}
                       activeOpacity={0.7}
@@ -287,7 +330,11 @@ export default function CategoryScreen() {
                       <Text
                         style={[
                           styles.sortChipText,
-                          sortOption === option.id && styles.sortChipTextActive,
+                          { color: colors.textSecondary },
+                          sortOption === option.id && {
+                            color: colors.primary,
+                            fontWeight: "600",
+                          },
                         ]}
                       >
                         {option.label}
@@ -298,7 +345,7 @@ export default function CategoryScreen() {
               </View>
 
               {/* Results Count */}
-              <Text style={styles.resultsCount}>
+              <Text style={[styles.resultsCount, { color: colors.text }]}>
                 {filteredProperties.length}{" "}
                 {filteredProperties.length === 1 ? "property" : "properties"}{" "}
                 found

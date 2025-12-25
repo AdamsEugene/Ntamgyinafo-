@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   FloatingHeader,
   HeaderActionButton,
@@ -55,6 +56,7 @@ const NEW_LISTINGS_DATA: (MapProperty & { listedAt: string })[] =
 export default function NewListingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [savedProperties, setSavedProperties] = useState<Set<string>>(
     new Set(["2", "5"])
@@ -115,7 +117,10 @@ export default function NewListingsScreen() {
 
     return (
       <TouchableOpacity
-        style={styles.propertyCard}
+        style={[
+          styles.propertyCard,
+          { backgroundColor: colors.surface, borderColor: colors.divider },
+        ]}
         onPress={() => router.push(`/property/${item.id}`)}
         activeOpacity={0.9}
       >
@@ -143,33 +148,37 @@ export default function NewListingsScreen() {
           </TouchableOpacity>
 
           {/* New Badge */}
-          <View style={styles.newBadge}>
+          <View style={[styles.newBadge, { backgroundColor: colors.primary }]}>
             <Ionicons name="sparkles" size={10} color="#FFFFFF" />
             <Text style={styles.newBadgeText}>NEW</Text>
           </View>
 
           {/* Listed Time Badge */}
-          <View style={styles.timeBadge}>
-            <Ionicons
-              name="time-outline"
-              size={10}
-              color={Colors.textPrimary}
-            />
-            <Text style={styles.timeBadgeText}>{item.listedAt}</Text>
+          <View style={[styles.timeBadge, { backgroundColor: colors.surface }]}>
+            <Ionicons name="time-outline" size={10} color={colors.text} />
+            <Text style={[styles.timeBadgeText, { color: colors.text }]}>
+              {item.listedAt}
+            </Text>
           </View>
         </View>
 
         <View style={styles.cardContent}>
-          <Text style={styles.propertyTitle} numberOfLines={2}>
+          <Text
+            style={[styles.propertyTitle, { color: colors.text }]}
+            numberOfLines={2}
+          >
             {item.title}
           </Text>
           <View style={styles.locationRow}>
             <Ionicons
               name="location-outline"
               size={12}
-              color={Colors.textSecondary}
+              color={colors.textSecondary}
             />
-            <Text style={styles.locationText} numberOfLines={1}>
+            <Text
+              style={[styles.locationText, { color: colors.textSecondary }]}
+              numberOfLines={1}
+            >
               {item.location}
             </Text>
           </View>
@@ -180,23 +189,33 @@ export default function NewListingsScreen() {
                 <Ionicons
                   name="bed-outline"
                   size={14}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
-                <Text style={styles.detailText}>{item.bedrooms}</Text>
+                <Text
+                  style={[styles.detailText, { color: colors.textSecondary }]}
+                >
+                  {item.bedrooms}
+                </Text>
               </View>
               <View style={styles.detailItem}>
                 <Ionicons
                   name="water-outline"
                   size={14}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
-                <Text style={styles.detailText}>{item.bathrooms}</Text>
+                <Text
+                  style={[styles.detailText, { color: colors.textSecondary }]}
+                >
+                  {item.bathrooms}
+                </Text>
               </View>
             </View>
           )}
 
           <View style={styles.priceRow}>
-            <Text style={styles.priceText}>{formatPrice(item.price)}</Text>
+            <Text style={[styles.priceText, { color: colors.primary }]}>
+              {formatPrice(item.price)}
+            </Text>
             <View
               style={[
                 styles.typeBadge,
@@ -204,7 +223,7 @@ export default function NewListingsScreen() {
                   backgroundColor:
                     item.transactionType === "rent"
                       ? `${Colors.accentOrange}20`
-                      : `${Colors.primaryGreen}20`,
+                      : `${colors.primary}20`,
                 },
               ]}
             >
@@ -215,7 +234,7 @@ export default function NewListingsScreen() {
                     color:
                       item.transactionType === "rent"
                         ? Colors.accentOrange
-                        : Colors.primaryGreen,
+                        : colors.primary,
                   },
                 ]}
               >
@@ -231,43 +250,66 @@ export default function NewListingsScreen() {
   const renderHeader = () => (
     <>
       {/* Stats Banner */}
-      <View style={styles.statsBanner}>
+      <View
+        style={[
+          styles.statsBanner,
+          { backgroundColor: colors.surface, borderColor: colors.divider },
+        ]}
+      >
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{NEW_LISTINGS_DATA.length}</Text>
-          <Text style={styles.statLabel}>Total New</Text>
+          <Text style={[styles.statValue, { color: colors.primary }]}>
+            {NEW_LISTINGS_DATA.length}
+          </Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+            Total New
+          </Text>
         </View>
-        <View style={styles.statDivider} />
+        <View
+          style={[styles.statDivider, { backgroundColor: colors.divider }]}
+        />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>
+          <Text style={[styles.statValue, { color: colors.primary }]}>
             {NEW_LISTINGS_DATA.filter((p) => p.listedAt === "Today").length}
           </Text>
-          <Text style={styles.statLabel}>Today</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+            Today
+          </Text>
         </View>
-        <View style={styles.statDivider} />
+        <View
+          style={[styles.statDivider, { backgroundColor: colors.divider }]}
+        />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>
+          <Text style={[styles.statValue, { color: colors.primary }]}>
             {
               NEW_LISTINGS_DATA.filter((p) => p.transactionType === "rent")
                 .length
             }
           </Text>
-          <Text style={styles.statLabel}>For Rent</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+            For Rent
+          </Text>
         </View>
-        <View style={styles.statDivider} />
+        <View
+          style={[styles.statDivider, { backgroundColor: colors.divider }]}
+        />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>
+          <Text style={[styles.statValue, { color: colors.primary }]}>
             {
               NEW_LISTINGS_DATA.filter((p) => p.transactionType === "buy")
                 .length
             }
           </Text>
-          <Text style={styles.statLabel}>For Sale</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+            For Sale
+          </Text>
         </View>
       </View>
 
       {/* Time Filter */}
       <View style={styles.filterSection}>
-        <Text style={styles.filterLabel}>Listed</Text>
+        <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>
+          Listed
+        </Text>
         <FlatList
           data={TIME_FILTERS}
           horizontal
@@ -278,7 +320,14 @@ export default function NewListingsScreen() {
             <TouchableOpacity
               style={[
                 styles.filterChip,
-                timeFilter === item.id && styles.filterChipActive,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+                timeFilter === item.id && {
+                  backgroundColor: colors.primary,
+                  borderColor: colors.primary,
+                },
               ]}
               onPress={() => setTimeFilter(item.id)}
               activeOpacity={0.7}
@@ -286,6 +335,7 @@ export default function NewListingsScreen() {
               <Text
                 style={[
                   styles.filterChipText,
+                  { color: colors.textSecondary },
                   timeFilter === item.id && styles.filterChipTextActive,
                 ]}
               >
@@ -298,7 +348,9 @@ export default function NewListingsScreen() {
 
       {/* Sort Options */}
       <View style={styles.filterSection}>
-        <Text style={styles.filterLabel}>Sort By</Text>
+        <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>
+          Sort By
+        </Text>
         <FlatList
           data={SORT_OPTIONS}
           horizontal
@@ -309,7 +361,14 @@ export default function NewListingsScreen() {
             <TouchableOpacity
               style={[
                 styles.filterChip,
-                sortBy === item.id && styles.filterChipActive,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+                sortBy === item.id && {
+                  backgroundColor: colors.primary,
+                  borderColor: colors.primary,
+                },
               ]}
               onPress={() => setSortBy(item.id)}
               activeOpacity={0.7}
@@ -317,6 +376,7 @@ export default function NewListingsScreen() {
               <Text
                 style={[
                   styles.filterChipText,
+                  { color: colors.textSecondary },
                   sortBy === item.id && styles.filterChipTextActive,
                 ]}
               >
@@ -329,7 +389,7 @@ export default function NewListingsScreen() {
 
       {/* Results Count */}
       <View style={styles.resultsHeader}>
-        <Text style={styles.resultsCount}>
+        <Text style={[styles.resultsCount, { color: colors.text }]}>
           {sortedProperties.length} New Listings
         </Text>
       </View>
@@ -338,15 +398,22 @@ export default function NewListingsScreen() {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <View style={styles.emptyIconContainer}>
+      <View
+        style={[
+          styles.emptyIconContainer,
+          { backgroundColor: colors.surface, borderColor: colors.divider },
+        ]}
+      >
         <Ionicons
           name="sparkles-outline"
           size={48}
-          color={Colors.textSecondary}
+          color={colors.textSecondary}
         />
       </View>
-      <Text style={styles.emptyTitle}>No New Listings</Text>
-      <Text style={styles.emptyMessage}>
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>
+        No New Listings
+      </Text>
+      <Text style={[styles.emptyMessage, { color: colors.textSecondary }]}>
         Check back later for fresh properties
       </Text>
     </View>
@@ -354,8 +421,8 @@ export default function NewListingsScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.decorativeBackground}>
           <View style={styles.circle1} />
           <View style={styles.circle2} />
@@ -394,7 +461,7 @@ export default function NewListingsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={Colors.primaryGreen}
+              tintColor={colors.primary}
               progressViewOffset={80 + insets.top}
             />
           }

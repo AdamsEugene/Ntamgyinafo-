@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   FloatingHeader,
   HeaderActionButton,
@@ -47,6 +48,7 @@ const FEATURED_PROPERTIES: MapProperty[] = MAP_PROPERTIES.filter(
 export default function FeaturedPropertiesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [savedProperties, setSavedProperties] = useState<Set<string>>(
     new Set(["2", "5"])
@@ -96,7 +98,10 @@ export default function FeaturedPropertiesScreen() {
 
     return (
       <TouchableOpacity
-        style={styles.propertyCard}
+        style={[
+          styles.propertyCard,
+          { backgroundColor: colors.surface, borderColor: colors.divider },
+        ]}
         onPress={() => router.push(`/property/${item.id}`)}
         activeOpacity={0.9}
       >
@@ -125,7 +130,9 @@ export default function FeaturedPropertiesScreen() {
           </TouchableOpacity>
 
           {/* Featured Badge */}
-          <View style={styles.featuredBadge}>
+          <View
+            style={[styles.featuredBadge, { backgroundColor: colors.surface }]}
+          >
             <Ionicons name="star" size={10} color="#F59E0B" />
             <Text style={styles.featuredBadgeText}>Featured</Text>
           </View>
@@ -138,7 +145,7 @@ export default function FeaturedPropertiesScreen() {
                 backgroundColor:
                   item.transactionType === "rent"
                     ? Colors.accentOrange
-                    : Colors.primaryGreen,
+                    : colors.primary,
               },
             ]}
           >
@@ -149,16 +156,22 @@ export default function FeaturedPropertiesScreen() {
         </View>
 
         <View style={styles.cardContent}>
-          <Text style={styles.propertyTitle} numberOfLines={2}>
+          <Text
+            style={[styles.propertyTitle, { color: colors.text }]}
+            numberOfLines={2}
+          >
             {item.title}
           </Text>
           <View style={styles.locationRow}>
             <Ionicons
               name="location-outline"
               size={12}
-              color={Colors.textSecondary}
+              color={colors.textSecondary}
             />
-            <Text style={styles.locationText} numberOfLines={1}>
+            <Text
+              style={[styles.locationText, { color: colors.textSecondary }]}
+              numberOfLines={1}
+            >
               {item.location}
             </Text>
           </View>
@@ -170,22 +183,32 @@ export default function FeaturedPropertiesScreen() {
                 <Ionicons
                   name="bed-outline"
                   size={14}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
-                <Text style={styles.detailText}>{item.bedrooms}</Text>
+                <Text
+                  style={[styles.detailText, { color: colors.textSecondary }]}
+                >
+                  {item.bedrooms}
+                </Text>
               </View>
               <View style={styles.detailItem}>
                 <Ionicons
                   name="water-outline"
                   size={14}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
-                <Text style={styles.detailText}>{item.bathrooms}</Text>
+                <Text
+                  style={[styles.detailText, { color: colors.textSecondary }]}
+                >
+                  {item.bathrooms}
+                </Text>
               </View>
             </View>
           )}
 
-          <Text style={styles.priceText}>{formatPrice(item.price)}</Text>
+          <Text style={[styles.priceText, { color: colors.primary }]}>
+            {formatPrice(item.price)}
+          </Text>
         </View>
       </TouchableOpacity>
     );
@@ -195,7 +218,9 @@ export default function FeaturedPropertiesScreen() {
     <>
       {/* Property Type Filter */}
       <View style={styles.filterSection}>
-        <Text style={styles.filterLabel}>Property Type</Text>
+        <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>
+          Property Type
+        </Text>
         <FlatList
           data={PROPERTY_TYPES}
           horizontal
@@ -206,7 +231,14 @@ export default function FeaturedPropertiesScreen() {
             <TouchableOpacity
               style={[
                 styles.filterChip,
-                propertyTypeFilter === item.id && styles.filterChipActive,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+                propertyTypeFilter === item.id && {
+                  backgroundColor: colors.primary,
+                  borderColor: colors.primary,
+                },
               ]}
               onPress={() => setPropertyTypeFilter(item.id)}
               activeOpacity={0.7}
@@ -214,6 +246,7 @@ export default function FeaturedPropertiesScreen() {
               <Text
                 style={[
                   styles.filterChipText,
+                  { color: colors.textSecondary },
                   propertyTypeFilter === item.id && styles.filterChipTextActive,
                 ]}
               >
@@ -226,15 +259,23 @@ export default function FeaturedPropertiesScreen() {
 
       {/* Transaction Type Filter */}
       <View style={styles.filterSection}>
-        <Text style={styles.filterLabel}>Transaction Type</Text>
+        <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>
+          Transaction Type
+        </Text>
         <View style={styles.transactionFilters}>
           {TRANSACTION_TYPES.map((type) => (
             <TouchableOpacity
               key={type.id}
               style={[
                 styles.transactionChip,
-                transactionTypeFilter === type.id &&
-                  styles.transactionChipActive,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+                transactionTypeFilter === type.id && {
+                  backgroundColor: colors.primary,
+                  borderColor: colors.primary,
+                },
               ]}
               onPress={() => setTransactionTypeFilter(type.id)}
               activeOpacity={0.7}
@@ -242,6 +283,7 @@ export default function FeaturedPropertiesScreen() {
               <Text
                 style={[
                   styles.transactionChipText,
+                  { color: colors.textSecondary },
                   transactionTypeFilter === type.id &&
                     styles.transactionChipTextActive,
                 ]}
@@ -255,7 +297,7 @@ export default function FeaturedPropertiesScreen() {
 
       {/* Results Count */}
       <View style={styles.resultsHeader}>
-        <Text style={styles.resultsCount}>
+        <Text style={[styles.resultsCount, { color: colors.text }]}>
           {filteredProperties.length} Featured Properties
         </Text>
       </View>
@@ -264,15 +306,22 @@ export default function FeaturedPropertiesScreen() {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <View style={styles.emptyIconContainer}>
-        <Ionicons name="home-outline" size={48} color={Colors.textSecondary} />
+      <View
+        style={[
+          styles.emptyIconContainer,
+          { backgroundColor: colors.surface, borderColor: colors.divider },
+        ]}
+      >
+        <Ionicons name="home-outline" size={48} color={colors.textSecondary} />
       </View>
-      <Text style={styles.emptyTitle}>No Properties Found</Text>
-      <Text style={styles.emptyMessage}>
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>
+        No Properties Found
+      </Text>
+      <Text style={[styles.emptyMessage, { color: colors.textSecondary }]}>
         Try adjusting your filters to see more results
       </Text>
       <TouchableOpacity
-        style={styles.resetButton}
+        style={[styles.resetButton, { backgroundColor: colors.primary }]}
         onPress={() => {
           setPropertyTypeFilter("all");
           setTransactionTypeFilter("all");
@@ -286,8 +335,8 @@ export default function FeaturedPropertiesScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
           <View style={styles.circle1} />
@@ -327,7 +376,7 @@ export default function FeaturedPropertiesScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={Colors.primaryGreen}
+              tintColor={colors.primary}
               progressViewOffset={80 + insets.top}
             />
           }

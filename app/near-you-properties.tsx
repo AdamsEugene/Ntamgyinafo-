@@ -20,6 +20,7 @@ import {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   FloatingHeader,
   HeaderActionButton,
@@ -51,6 +52,7 @@ const NEAR_YOU_PROPERTIES: MapProperty[] = MAP_PROPERTIES.slice(0, 8);
 export default function NearYouPropertiesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [savedProperties, setSavedProperties] = useState<Set<string>>(
     new Set(["2", "5"])
@@ -119,7 +121,10 @@ export default function NearYouPropertiesScreen() {
 
     return (
       <TouchableOpacity
-        style={styles.propertyCard}
+        style={[
+          styles.propertyCard,
+          { backgroundColor: colors.surface, borderColor: colors.divider },
+        ]}
         onPress={() => router.push(`/property/${item.id}`)}
         activeOpacity={0.9}
       >
@@ -147,9 +152,13 @@ export default function NearYouPropertiesScreen() {
           </TouchableOpacity>
 
           {/* Distance Badge */}
-          <View style={styles.distanceBadge}>
-            <Ionicons name="location" size={10} color={Colors.primaryGreen} />
-            <Text style={styles.distanceBadgeText}>{distance} km</Text>
+          <View
+            style={[styles.distanceBadge, { backgroundColor: colors.surface }]}
+          >
+            <Ionicons name="location" size={10} color={colors.primary} />
+            <Text style={[styles.distanceBadgeText, { color: colors.primary }]}>
+              {distance} km
+            </Text>
           </View>
 
           {/* Transaction Type Badge */}
@@ -160,7 +169,7 @@ export default function NearYouPropertiesScreen() {
                 backgroundColor:
                   item.transactionType === "rent"
                     ? Colors.accentOrange
-                    : Colors.primaryGreen,
+                    : colors.primary,
               },
             ]}
           >
@@ -171,16 +180,22 @@ export default function NearYouPropertiesScreen() {
         </View>
 
         <View style={styles.cardContent}>
-          <Text style={styles.propertyTitle} numberOfLines={2}>
+          <Text
+            style={[styles.propertyTitle, { color: colors.text }]}
+            numberOfLines={2}
+          >
             {item.title}
           </Text>
           <View style={styles.locationRow}>
             <Ionicons
               name="location-outline"
               size={12}
-              color={Colors.textSecondary}
+              color={colors.textSecondary}
             />
-            <Text style={styles.locationText} numberOfLines={1}>
+            <Text
+              style={[styles.locationText, { color: colors.textSecondary }]}
+              numberOfLines={1}
+            >
               {item.location}
             </Text>
           </View>
@@ -191,22 +206,32 @@ export default function NearYouPropertiesScreen() {
                 <Ionicons
                   name="bed-outline"
                   size={14}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
-                <Text style={styles.detailText}>{item.bedrooms}</Text>
+                <Text
+                  style={[styles.detailText, { color: colors.textSecondary }]}
+                >
+                  {item.bedrooms}
+                </Text>
               </View>
               <View style={styles.detailItem}>
                 <Ionicons
                   name="water-outline"
                   size={14}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
-                <Text style={styles.detailText}>{item.bathrooms}</Text>
+                <Text
+                  style={[styles.detailText, { color: colors.textSecondary }]}
+                >
+                  {item.bathrooms}
+                </Text>
               </View>
             </View>
           )}
 
-          <Text style={styles.priceText}>{formatPrice(item.price)}</Text>
+          <Text style={[styles.priceText, { color: colors.primary }]}>
+            {formatPrice(item.price)}
+          </Text>
         </View>
       </TouchableOpacity>
     );
@@ -215,29 +240,66 @@ export default function NearYouPropertiesScreen() {
   const renderHeader = () => (
     <>
       {/* Location Info */}
-      <View style={styles.locationInfo}>
-        <View style={styles.locationIcon}>
-          <Ionicons name="navigate" size={20} color={Colors.primaryGreen} />
+      <View
+        style={[
+          styles.locationInfo,
+          { backgroundColor: colors.surface, borderColor: colors.divider },
+        ]}
+      >
+        <View
+          style={[
+            styles.locationIcon,
+            { backgroundColor: `${colors.primary}15` },
+          ]}
+        >
+          <Ionicons name="navigate" size={20} color={colors.primary} />
         </View>
         <View style={styles.locationDetails}>
-          <Text style={styles.locationLabel}>Selected Locations</Text>
+          <Text style={[styles.locationLabel, { color: colors.textSecondary }]}>
+            Selected Locations
+          </Text>
           {selectedLocations.length > 0 ? (
             <View style={styles.selectedLocationsContainer}>
-              {selectedLocations.slice(0, 3).map((location, index) => (
-                <View key={location} style={styles.locationTag}>
-                  <Text style={styles.locationTagText}>{location}</Text>
+              {selectedLocations.slice(0, 3).map((location) => (
+                <View
+                  key={location}
+                  style={[
+                    styles.locationTag,
+                    {
+                      backgroundColor: `${colors.primary}15`,
+                      borderColor: `${colors.primary}30`,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.locationTagText, { color: colors.primary }]}
+                  >
+                    {location}
+                  </Text>
                 </View>
               ))}
               {selectedLocations.length > 3 && (
-                <View style={styles.locationTag}>
-                  <Text style={styles.locationTagText}>
+                <View
+                  style={[
+                    styles.locationTag,
+                    {
+                      backgroundColor: `${colors.primary}15`,
+                      borderColor: `${colors.primary}30`,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.locationTagText, { color: colors.primary }]}
+                  >
                     +{selectedLocations.length - 3} more
                   </Text>
                 </View>
               )}
             </View>
           ) : (
-            <Text style={styles.locationValue}>No locations selected</Text>
+            <Text style={[styles.locationValue, { color: colors.text }]}>
+              No locations selected
+            </Text>
           )}
         </View>
         <TouchableOpacity
@@ -245,20 +307,31 @@ export default function NearYouPropertiesScreen() {
           activeOpacity={0.7}
           onPress={() => locationSheetRef.current?.present()}
         >
-          <Text style={styles.changeLocationText}>Change</Text>
+          <Text style={[styles.changeLocationText, { color: colors.primary }]}>
+            Change
+          </Text>
         </TouchableOpacity>
       </View>
 
       {/* Distance Filter */}
       <View style={styles.filterSection}>
-        <Text style={styles.filterLabel}>Distance</Text>
+        <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>
+          Distance
+        </Text>
         <View style={styles.distanceFilters}>
           {DISTANCE_FILTERS.map((filter) => (
             <TouchableOpacity
               key={filter.id}
               style={[
                 styles.filterChip,
-                distanceFilter === filter.id && styles.filterChipActive,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+                distanceFilter === filter.id && {
+                  backgroundColor: colors.primary,
+                  borderColor: colors.primary,
+                },
               ]}
               onPress={() => setDistanceFilter(filter.id)}
               activeOpacity={0.7}
@@ -266,6 +339,7 @@ export default function NearYouPropertiesScreen() {
               <Text
                 style={[
                   styles.filterChipText,
+                  { color: colors.textSecondary },
                   distanceFilter === filter.id && styles.filterChipTextActive,
                 ]}
               >
@@ -278,14 +352,23 @@ export default function NearYouPropertiesScreen() {
 
       {/* Property Type Filter */}
       <View style={styles.filterSection}>
-        <Text style={styles.filterLabel}>Property Type</Text>
+        <Text style={[styles.filterLabel, { color: colors.textSecondary }]}>
+          Property Type
+        </Text>
         <View style={styles.distanceFilters}>
           {PROPERTY_TYPES.map((type) => (
             <TouchableOpacity
               key={type.id}
               style={[
                 styles.filterChip,
-                propertyTypeFilter === type.id && styles.filterChipActive,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+                propertyTypeFilter === type.id && {
+                  backgroundColor: colors.primary,
+                  borderColor: colors.primary,
+                },
               ]}
               onPress={() => setPropertyTypeFilter(type.id)}
               activeOpacity={0.7}
@@ -293,6 +376,7 @@ export default function NearYouPropertiesScreen() {
               <Text
                 style={[
                   styles.filterChipText,
+                  { color: colors.textSecondary },
                   propertyTypeFilter === type.id && styles.filterChipTextActive,
                 ]}
               >
@@ -305,7 +389,7 @@ export default function NearYouPropertiesScreen() {
 
       {/* Results Count */}
       <View style={styles.resultsHeader}>
-        <Text style={styles.resultsCount}>
+        <Text style={[styles.resultsCount, { color: colors.text }]}>
           {filteredProperties.length} Properties Near You
         </Text>
       </View>
@@ -314,8 +398,8 @@ export default function NearYouPropertiesScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.decorativeBackground}>
           <View style={styles.circle1} />
           <View style={styles.circle2} />
@@ -363,7 +447,7 @@ export default function NearYouPropertiesScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={Colors.primaryGreen}
+              tintColor={colors.primary}
               progressViewOffset={80 + insets.top}
             />
           }
@@ -376,17 +460,28 @@ export default function NearYouPropertiesScreen() {
           snapPoints={snapPoints}
           enablePanDownToClose
           backdropComponent={renderBackdrop}
-          backgroundStyle={styles.bottomSheetBackground}
+          backgroundStyle={{ backgroundColor: colors.background }}
+          handleIndicatorStyle={{ backgroundColor: colors.textSecondary }}
         >
           <BottomSheetView style={styles.bottomSheetContent}>
-            <View style={styles.bottomSheetHeader}>
-              <Text style={styles.bottomSheetTitle}>Select Location</Text>
+            <View
+              style={[
+                styles.bottomSheetHeader,
+                { borderBottomColor: colors.divider },
+              ]}
+            >
+              <Text style={[styles.bottomSheetTitle, { color: colors.text }]}>
+                Select Location
+              </Text>
               <TouchableOpacity
                 onPress={() => locationSheetRef.current?.dismiss()}
-                style={styles.closeButton}
+                style={[
+                  styles.closeButton,
+                  { backgroundColor: colors.surface },
+                ]}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Ionicons name="close" size={24} color={Colors.textPrimary} />
+                <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
             <View style={styles.locationSelectorWrapper}>
