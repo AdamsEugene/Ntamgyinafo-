@@ -15,7 +15,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { LineChart, BarChart, PieChart } from "react-native-gifted-charts";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import { FloatingHeader } from "@/components/FloatingHeader";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -70,19 +71,19 @@ const ANALYTICS_DATA = {
     ],
   },
   trafficSources: [
-    { value: 45, color: Colors.primaryGreen, text: "Search", label: "Search" },
-    { value: 25, color: Colors.accentOrange, text: "Direct", label: "Direct" },
-    { value: 18, color: Colors.accentGold, text: "Shared", label: "Shared" },
+    { value: 45, color: "#4CAF50", text: "Search", label: "Search" },
+    { value: 25, color: "#F59E0B", text: "Direct", label: "Direct" },
+    { value: 18, color: "#FFC107", text: "Shared", label: "Shared" },
     { value: 12, color: "#6366F1", text: "Social", label: "Social" },
   ],
   engagementByDay: [
-    { value: 15, label: "Mon", frontColor: Colors.primaryGreen },
-    { value: 22, label: "Tue", frontColor: Colors.primaryGreen },
-    { value: 18, label: "Wed", frontColor: Colors.primaryGreen },
-    { value: 28, label: "Thu", frontColor: Colors.primaryGreen },
-    { value: 35, label: "Fri", frontColor: Colors.primaryGreen },
-    { value: 42, label: "Sat", frontColor: Colors.primaryGreen },
-    { value: 38, label: "Sun", frontColor: Colors.primaryGreen },
+    { value: 15, label: "Mon", frontColor: "#4CAF50" },
+    { value: 22, label: "Tue", frontColor: "#4CAF50" },
+    { value: 18, label: "Wed", frontColor: "#4CAF50" },
+    { value: 28, label: "Thu", frontColor: "#4CAF50" },
+    { value: 35, label: "Fri", frontColor: "#4CAF50" },
+    { value: 42, label: "Sat", frontColor: "#4CAF50" },
+    { value: 38, label: "Sun", frontColor: "#4CAF50" },
   ],
   recentActivity: [
     { type: "view", count: 12, time: "Last hour" },
@@ -95,6 +96,7 @@ const ANALYTICS_DATA = {
 export default function ListingAnalyticsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [selectedPeriod, setSelectedPeriod] = useState("7d");
 
   const handleExportReport = async () => {
@@ -129,18 +131,18 @@ export default function ListingAnalyticsScreen() {
     }
   };
 
-  const getActivityColor = (type: string) => {
+  const getActivityColor = (type: string, themeColors: any) => {
     switch (type) {
       case "view":
-        return Colors.primaryGreen;
+        return themeColors.primary;
       case "save":
-        return Colors.accentOrange;
+        return "#F59E0B";
       case "inquiry":
-        return Colors.accentGold;
+        return "#FFC107";
       case "message":
         return "#6366F1";
       default:
-        return Colors.textSecondary;
+        return themeColors.textSecondary;
     }
   };
 
@@ -149,14 +151,37 @@ export default function ListingAnalyticsScreen() {
       selectedPeriod as keyof typeof ANALYTICS_DATA.viewsOverTime
     ];
 
+  // Update chart data with theme colors
+  const engagementByDayData = ANALYTICS_DATA.engagementByDay.map((item) => ({
+    ...item,
+    frontColor: colors.primary,
+  }));
+
+  const trafficSourcesData = ANALYTICS_DATA.trafficSources.map(
+    (item, index) => ({
+      ...item,
+      color: index === 0 ? colors.primary : item.color,
+    })
+  );
+
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
         </View>
 
         {/* Floating Sticky Header */}
@@ -179,13 +204,17 @@ export default function ListingAnalyticsScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Time Period Selector */}
-          <View style={styles.periodSelector}>
+          <View
+            style={[styles.periodSelector, { backgroundColor: colors.surface }]}
+          >
             {TIME_PERIODS.map((period) => (
               <TouchableOpacity
                 key={period.id}
                 style={[
                   styles.periodButton,
-                  selectedPeriod === period.id && styles.periodButtonActive,
+                  selectedPeriod === period.id && {
+                    backgroundColor: colors.primary,
+                  },
                 ]}
                 onPress={() => setSelectedPeriod(period.id)}
                 activeOpacity={0.7}
@@ -193,8 +222,13 @@ export default function ListingAnalyticsScreen() {
                 <Text
                   style={[
                     styles.periodButtonText,
-                    selectedPeriod === period.id &&
-                      styles.periodButtonTextActive,
+                    {
+                      color:
+                        selectedPeriod === period.id
+                          ? "#FFFFFF"
+                          : colors.textSecondary,
+                    },
+                    selectedPeriod === period.id && { fontWeight: "600" },
                   ]}
                 >
                   {period.label}
@@ -205,166 +239,243 @@ export default function ListingAnalyticsScreen() {
 
           {/* Stats Overview Cards */}
           <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
+            <View
+              style={[styles.statCard, { backgroundColor: colors.surface }]}
+            >
               <View
                 style={[
                   styles.statIconBg,
-                  { backgroundColor: `${Colors.primaryGreen}15` },
+                  { backgroundColor: `${colors.primary}15` },
                 ]}
               >
-                <Ionicons
-                  name="eye-outline"
-                  size={24}
-                  color={Colors.primaryGreen}
-                />
+                <Ionicons name="eye-outline" size={24} color={colors.primary} />
               </View>
-              <Text style={styles.statValue}>
+              <Text style={[styles.statValue, { color: colors.text }]}>
                 {ANALYTICS_DATA.overview.totalViews.toLocaleString()}
               </Text>
-              <Text style={styles.statLabel}>Total Views</Text>
-              <View style={styles.statTrend}>
-                <Ionicons
-                  name="trending-up"
-                  size={14}
-                  color={Colors.primaryGreen}
-                />
-                <Text style={styles.statTrendText}>+12%</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                Total Views
+              </Text>
+              <View
+                style={[
+                  styles.statTrend,
+                  { backgroundColor: `${colors.primary}10` },
+                ]}
+              >
+                <Ionicons name="trending-up" size={14} color={colors.primary} />
+                <Text style={[styles.statTrendText, { color: colors.primary }]}>
+                  +12%
+                </Text>
               </View>
             </View>
 
-            <View style={styles.statCard}>
+            <View
+              style={[styles.statCard, { backgroundColor: colors.surface }]}
+            >
               <View
-                style={[
-                  styles.statIconBg,
-                  { backgroundColor: `${Colors.accentOrange}15` },
-                ]}
+                style={[styles.statIconBg, { backgroundColor: "#F59E0B15" }]}
               >
-                <Ionicons
-                  name="people-outline"
-                  size={24}
-                  color={Colors.accentOrange}
-                />
+                <Ionicons name="people-outline" size={24} color="#F59E0B" />
               </View>
-              <Text style={styles.statValue}>
+              <Text style={[styles.statValue, { color: colors.text }]}>
                 {ANALYTICS_DATA.overview.uniqueViews.toLocaleString()}
               </Text>
-              <Text style={styles.statLabel}>Unique Views</Text>
-              <View style={styles.statTrend}>
-                <Ionicons
-                  name="trending-up"
-                  size={14}
-                  color={Colors.primaryGreen}
-                />
-                <Text style={styles.statTrendText}>+8%</Text>
-              </View>
-            </View>
-
-            <View style={styles.statCard}>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                Unique Views
+              </Text>
               <View
                 style={[
-                  styles.statIconBg,
-                  { backgroundColor: `${Colors.accentGold}15` },
+                  styles.statTrend,
+                  { backgroundColor: `${colors.primary}10` },
                 ]}
               >
-                <Ionicons
-                  name="heart-outline"
-                  size={24}
-                  color={Colors.accentGold}
-                />
-              </View>
-              <Text style={styles.statValue}>
-                {ANALYTICS_DATA.overview.saves}
-              </Text>
-              <Text style={styles.statLabel}>Saves</Text>
-              <View style={styles.statTrend}>
-                <Ionicons
-                  name="trending-up"
-                  size={14}
-                  color={Colors.primaryGreen}
-                />
-                <Text style={styles.statTrendText}>+15%</Text>
+                <Ionicons name="trending-up" size={14} color={colors.primary} />
+                <Text style={[styles.statTrendText, { color: colors.primary }]}>
+                  +8%
+                </Text>
               </View>
             </View>
 
-            <View style={styles.statCard}>
+            <View
+              style={[styles.statCard, { backgroundColor: colors.surface }]}
+            >
+              <View
+                style={[styles.statIconBg, { backgroundColor: "#FFC10715" }]}
+              >
+                <Ionicons name="heart-outline" size={24} color="#FFC107" />
+              </View>
+              <Text style={[styles.statValue, { color: colors.text }]}>
+                {ANALYTICS_DATA.overview.saves}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                Saves
+              </Text>
+              <View
+                style={[
+                  styles.statTrend,
+                  { backgroundColor: `${colors.primary}10` },
+                ]}
+              >
+                <Ionicons name="trending-up" size={14} color={colors.primary} />
+                <Text style={[styles.statTrendText, { color: colors.primary }]}>
+                  +15%
+                </Text>
+              </View>
+            </View>
+
+            <View
+              style={[styles.statCard, { backgroundColor: colors.surface }]}
+            >
               <View
                 style={[styles.statIconBg, { backgroundColor: "#6366F115" }]}
               >
                 <Ionicons name="chatbubble-outline" size={24} color="#6366F1" />
               </View>
-              <Text style={styles.statValue}>
+              <Text style={[styles.statValue, { color: colors.text }]}>
                 {ANALYTICS_DATA.overview.inquiries}
               </Text>
-              <Text style={styles.statLabel}>Inquiries</Text>
-              <View style={styles.statTrend}>
-                <Ionicons
-                  name="trending-up"
-                  size={14}
-                  color={Colors.primaryGreen}
-                />
-                <Text style={styles.statTrendText}>+22%</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                Inquiries
+              </Text>
+              <View
+                style={[
+                  styles.statTrend,
+                  { backgroundColor: `${colors.primary}10` },
+                ]}
+              >
+                <Ionicons name="trending-up" size={14} color={colors.primary} />
+                <Text style={[styles.statTrendText, { color: colors.primary }]}>
+                  +22%
+                </Text>
               </View>
             </View>
           </View>
 
           {/* Additional Stats Row */}
-          <View style={styles.additionalStats}>
+          <View
+            style={[
+              styles.additionalStats,
+              { backgroundColor: colors.surface },
+            ]}
+          >
             <View style={styles.additionalStatItem}>
               <Ionicons
                 name="mail-outline"
                 size={20}
-                color={Colors.textSecondary}
+                color={colors.textSecondary}
               />
-              <Text style={styles.additionalStatValue}>
+              <Text
+                style={[styles.additionalStatValue, { color: colors.text }]}
+              >
                 {ANALYTICS_DATA.overview.messages}
               </Text>
-              <Text style={styles.additionalStatLabel}>Messages</Text>
+              <Text
+                style={[
+                  styles.additionalStatLabel,
+                  { color: colors.textSecondary },
+                ]}
+              >
+                Messages
+              </Text>
             </View>
-            <View style={styles.additionalStatDivider} />
+            <View
+              style={[
+                styles.additionalStatDivider,
+                { backgroundColor: colors.divider },
+              ]}
+            />
             <View style={styles.additionalStatItem}>
               <Ionicons
                 name="share-social-outline"
                 size={20}
-                color={Colors.textSecondary}
+                color={colors.textSecondary}
               />
-              <Text style={styles.additionalStatValue}>
+              <Text
+                style={[styles.additionalStatValue, { color: colors.text }]}
+              >
                 {ANALYTICS_DATA.overview.shares}
               </Text>
-              <Text style={styles.additionalStatLabel}>Shares</Text>
+              <Text
+                style={[
+                  styles.additionalStatLabel,
+                  { color: colors.textSecondary },
+                ]}
+              >
+                Shares
+              </Text>
             </View>
-            <View style={styles.additionalStatDivider} />
+            <View
+              style={[
+                styles.additionalStatDivider,
+                { backgroundColor: colors.divider },
+              ]}
+            />
             <View style={styles.additionalStatItem}>
               <Ionicons
                 name="time-outline"
                 size={20}
-                color={Colors.textSecondary}
+                color={colors.textSecondary}
               />
-              <Text style={styles.additionalStatValue}>
+              <Text
+                style={[styles.additionalStatValue, { color: colors.text }]}
+              >
                 {ANALYTICS_DATA.overview.avgTimeOnPage}
               </Text>
-              <Text style={styles.additionalStatLabel}>Avg. Time</Text>
+              <Text
+                style={[
+                  styles.additionalStatLabel,
+                  { color: colors.textSecondary },
+                ]}
+              >
+                Avg. Time
+              </Text>
             </View>
-            <View style={styles.additionalStatDivider} />
+            <View
+              style={[
+                styles.additionalStatDivider,
+                { backgroundColor: colors.divider },
+              ]}
+            />
             <View style={styles.additionalStatItem}>
               <Ionicons
                 name="analytics-outline"
                 size={20}
-                color={Colors.textSecondary}
+                color={colors.textSecondary}
               />
-              <Text style={styles.additionalStatValue}>
+              <Text
+                style={[styles.additionalStatValue, { color: colors.text }]}
+              >
                 {ANALYTICS_DATA.overview.conversionRate}%
               </Text>
-              <Text style={styles.additionalStatLabel}>Conversion</Text>
+              <Text
+                style={[
+                  styles.additionalStatLabel,
+                  { color: colors.textSecondary },
+                ]}
+              >
+                Conversion
+              </Text>
             </View>
           </View>
 
           {/* Views Over Time Chart */}
-          <View style={styles.chartCard}>
+          <View style={[styles.chartCard, { backgroundColor: colors.surface }]}>
             <View style={styles.chartHeader}>
-              <Text style={styles.chartTitle}>Views Over Time</Text>
+              <Text style={[styles.chartTitle, { color: colors.text }]}>
+                Views Over Time
+              </Text>
               <View style={styles.chartLegend}>
-                <View style={styles.legendDot} />
-                <Text style={styles.legendText}>Views</Text>
+                <View
+                  style={[
+                    styles.legendDot,
+                    { backgroundColor: colors.primary },
+                  ]}
+                />
+                <Text
+                  style={[styles.legendText, { color: colors.textSecondary }]}
+                >
+                  Views
+                </Text>
               </View>
             </View>
             <View style={styles.chartContainer}>
@@ -374,21 +485,27 @@ export default function ListingAnalyticsScreen() {
                 height={180}
                 spacing={CHART_WIDTH / (currentViewsData.length + 1)}
                 initialSpacing={20}
-                color={Colors.primaryGreen}
+                color={colors.primary}
                 thickness={3}
-                startFillColor={`${Colors.primaryGreen}40`}
-                endFillColor={`${Colors.primaryGreen}05`}
+                startFillColor={`${colors.primary}40`}
+                endFillColor={`${colors.primary}05`}
                 startOpacity={0.9}
                 endOpacity={0.1}
                 hideDataPoints={false}
-                dataPointsColor={Colors.primaryGreen}
+                dataPointsColor={colors.primary}
                 dataPointsRadius={5}
                 curved
                 areaChart
                 yAxisColor="transparent"
-                xAxisColor="#E5E5E5"
-                yAxisTextStyle={styles.axisText}
-                xAxisLabelTextStyle={styles.axisText}
+                xAxisColor={colors.divider}
+                yAxisTextStyle={{
+                  ...styles.axisText,
+                  color: colors.textSecondary,
+                }}
+                xAxisLabelTextStyle={{
+                  ...styles.axisText,
+                  color: colors.textSecondary,
+                }}
                 hideRules
                 noOfSections={4}
                 maxValue={
@@ -399,13 +516,15 @@ export default function ListingAnalyticsScreen() {
           </View>
 
           {/* Engagement by Day Chart */}
-          <View style={styles.chartCard}>
+          <View style={[styles.chartCard, { backgroundColor: colors.surface }]}>
             <View style={styles.chartHeader}>
-              <Text style={styles.chartTitle}>Engagement by Day</Text>
+              <Text style={[styles.chartTitle, { color: colors.text }]}>
+                Engagement by Day
+              </Text>
             </View>
             <View style={styles.chartContainer}>
               <BarChart
-                data={ANALYTICS_DATA.engagementByDay}
+                data={engagementByDayData}
                 width={CHART_WIDTH}
                 height={160}
                 barWidth={28}
@@ -416,9 +535,15 @@ export default function ListingAnalyticsScreen() {
                 hideRules
                 xAxisThickness={1}
                 yAxisThickness={0}
-                xAxisColor="#E5E5E5"
-                yAxisTextStyle={styles.axisText}
-                xAxisLabelTextStyle={styles.axisText}
+                xAxisColor={colors.divider}
+                yAxisTextStyle={{
+                  ...styles.axisText,
+                  color: colors.textSecondary,
+                }}
+                xAxisLabelTextStyle={{
+                  ...styles.axisText,
+                  color: colors.textSecondary,
+                }}
                 noOfSections={4}
                 maxValue={50}
                 isAnimated
@@ -427,26 +552,39 @@ export default function ListingAnalyticsScreen() {
           </View>
 
           {/* Traffic Sources */}
-          <View style={styles.chartCard}>
+          <View style={[styles.chartCard, { backgroundColor: colors.surface }]}>
             <View style={styles.chartHeader}>
-              <Text style={styles.chartTitle}>Traffic Sources</Text>
+              <Text style={[styles.chartTitle, { color: colors.text }]}>
+                Traffic Sources
+              </Text>
             </View>
             <View style={styles.pieChartContainer}>
               <PieChart
-                data={ANALYTICS_DATA.trafficSources}
+                data={trafficSourcesData}
                 donut
                 radius={80}
                 innerRadius={50}
-                innerCircleColor={Colors.surface}
+                innerCircleColor={colors.surface}
                 centerLabelComponent={() => (
                   <View style={styles.pieCenter}>
-                    <Text style={styles.pieCenterValue}>100%</Text>
-                    <Text style={styles.pieCenterLabel}>Total</Text>
+                    <Text
+                      style={[styles.pieCenterValue, { color: colors.text }]}
+                    >
+                      100%
+                    </Text>
+                    <Text
+                      style={[
+                        styles.pieCenterLabel,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      Total
+                    </Text>
                   </View>
                 )}
               />
               <View style={styles.pieChartLegend}>
-                {ANALYTICS_DATA.trafficSources.map((source, index) => (
+                {trafficSourcesData.map((source, index) => (
                   <View key={index} style={styles.pieChartLegendItem}>
                     <View
                       style={[
@@ -454,10 +592,20 @@ export default function ListingAnalyticsScreen() {
                         { backgroundColor: source.color },
                       ]}
                     />
-                    <Text style={styles.pieChartLegendLabel}>
+                    <Text
+                      style={[
+                        styles.pieChartLegendLabel,
+                        { color: colors.text },
+                      ]}
+                    >
                       {source.label}
                     </Text>
-                    <Text style={styles.pieChartLegendValue}>
+                    <Text
+                      style={[
+                        styles.pieChartLegendValue,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
                       {source.value}%
                     </Text>
                   </View>
@@ -467,42 +615,64 @@ export default function ListingAnalyticsScreen() {
           </View>
 
           {/* Recent Activity */}
-          <View style={styles.activityCard}>
-            <Text style={styles.activityTitle}>Recent Activity</Text>
-            {ANALYTICS_DATA.recentActivity.map((activity, index) => (
-              <View key={index} style={styles.activityItem}>
+          <View
+            style={[styles.activityCard, { backgroundColor: colors.surface }]}
+          >
+            <Text style={[styles.activityTitle, { color: colors.text }]}>
+              Recent Activity
+            </Text>
+            {ANALYTICS_DATA.recentActivity.map((activity, index) => {
+              const activityColor = getActivityColor(activity.type, colors);
+              return (
                 <View
+                  key={index}
                   style={[
-                    styles.activityIconBg,
-                    { backgroundColor: `${getActivityColor(activity.type)}15` },
+                    styles.activityItem,
+                    { borderBottomColor: colors.divider },
                   ]}
                 >
+                  <View
+                    style={[
+                      styles.activityIconBg,
+                      { backgroundColor: `${activityColor}15` },
+                    ]}
+                  >
+                    <Ionicons
+                      name={getActivityIcon(activity.type) as any}
+                      size={18}
+                      color={activityColor}
+                    />
+                  </View>
+                  <View style={styles.activityContent}>
+                    <Text
+                      style={[styles.activityCount, { color: colors.text }]}
+                    >
+                      {activity.count}{" "}
+                      {activity.type === "view"
+                        ? "views"
+                        : activity.type === "save"
+                        ? "saves"
+                        : activity.type === "inquiry"
+                        ? "inquiries"
+                        : "messages"}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.activityTime,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      {activity.time}
+                    </Text>
+                  </View>
                   <Ionicons
-                    name={getActivityIcon(activity.type) as any}
+                    name="chevron-forward"
                     size={18}
-                    color={getActivityColor(activity.type)}
+                    color={colors.textSecondary}
                   />
                 </View>
-                <View style={styles.activityContent}>
-                  <Text style={styles.activityCount}>
-                    {activity.count}{" "}
-                    {activity.type === "view"
-                      ? "views"
-                      : activity.type === "save"
-                      ? "saves"
-                      : activity.type === "inquiry"
-                      ? "inquiries"
-                      : "messages"}
-                  </Text>
-                  <Text style={styles.activityTime}>{activity.time}</Text>
-                </View>
-                <Ionicons
-                  name="chevron-forward"
-                  size={18}
-                  color={Colors.textSecondary}
-                />
-              </View>
-            ))}
+              );
+            })}
           </View>
 
           {/* Export Button */}
@@ -512,7 +682,7 @@ export default function ListingAnalyticsScreen() {
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={[Colors.primaryGreen, "#2E7D32"]}
+              colors={[colors.primary, colors.primaryDark]}
               style={styles.exportButtonGradient}
             >
               <Ionicons name="download-outline" size={20} color="#FFFFFF" />
@@ -528,7 +698,6 @@ export default function ListingAnalyticsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   // Decorative Background
   decorativeBackground: {
@@ -546,8 +715,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: Colors.primaryLight,
-    opacity: 0.08,
   },
   circle2: {
     position: "absolute",
@@ -556,8 +723,6 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     borderRadius: 200,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
   },
   // Header
   headerLeft: {
@@ -570,7 +735,6 @@ const styles = StyleSheet.create({
     ...Typography.titleLarge,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   scrollView: {
     flex: 1,
@@ -583,7 +747,6 @@ const styles = StyleSheet.create({
   // Period Selector
   periodSelector: {
     flexDirection: "row",
-    backgroundColor: Colors.surface,
     borderRadius: 12,
     padding: 4,
     marginBottom: Spacing.lg,
@@ -594,12 +757,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 10,
   },
-  periodButtonActive: {
-    backgroundColor: Colors.primaryGreen,
-  },
+  periodButtonActive: {},
   periodButtonText: {
     ...Typography.labelMedium,
-    color: Colors.textSecondary,
   },
   periodButtonTextActive: {
     color: "#FFFFFF",
@@ -615,7 +775,6 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.sm) / 2,
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.md,
     alignItems: "center",
@@ -641,11 +800,9 @@ const styles = StyleSheet.create({
   },
   statValue: {
     ...Typography.headlineLarge,
-    color: Colors.textPrimary,
   },
   statLabel: {
     ...Typography.caption,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   statTrend: {
@@ -653,21 +810,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 2,
     marginTop: Spacing.xs,
-    backgroundColor: `${Colors.primaryGreen}10`,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
   },
   statTrendText: {
     ...Typography.caption,
-    color: Colors.primaryGreen,
     fontWeight: "600",
   },
 
   // Additional Stats
   additionalStats: {
     flexDirection: "row",
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.md,
     marginBottom: Spacing.lg,
@@ -690,24 +844,20 @@ const styles = StyleSheet.create({
   additionalStatValue: {
     ...Typography.headlineMedium,
     fontSize: 18,
-    color: Colors.textPrimary,
     marginTop: 4,
   },
   additionalStatLabel: {
     ...Typography.caption,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   additionalStatDivider: {
     width: 1,
     height: 40,
-    backgroundColor: "#E5E5E5",
     alignSelf: "center",
   },
 
   // Chart Card
   chartCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.lg,
     marginBottom: Spacing.lg,
@@ -732,7 +882,6 @@ const styles = StyleSheet.create({
   chartTitle: {
     ...Typography.headlineMedium,
     fontSize: 18,
-    color: Colors.textPrimary,
   },
   chartLegend: {
     flexDirection: "row",
@@ -743,11 +892,9 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.primaryGreen,
   },
   legendText: {
     ...Typography.caption,
-    color: Colors.textSecondary,
   },
   chartContainer: {
     alignItems: "center",
@@ -755,7 +902,6 @@ const styles = StyleSheet.create({
   },
   axisText: {
     fontSize: 10,
-    color: Colors.textSecondary,
   },
 
   // Pie Chart
@@ -769,11 +915,9 @@ const styles = StyleSheet.create({
   },
   pieCenterValue: {
     ...Typography.headlineMedium,
-    color: Colors.textPrimary,
   },
   pieCenterLabel: {
     ...Typography.caption,
-    color: Colors.textSecondary,
   },
   pieChartLegend: {
     gap: Spacing.sm,
@@ -790,17 +934,14 @@ const styles = StyleSheet.create({
   },
   pieChartLegendLabel: {
     ...Typography.bodyMedium,
-    color: Colors.textPrimary,
     flex: 1,
   },
   pieChartLegendValue: {
     ...Typography.labelMedium,
-    color: Colors.textSecondary,
   },
 
   // Activity Card
   activityCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.lg,
     marginBottom: Spacing.lg,
@@ -819,7 +960,6 @@ const styles = StyleSheet.create({
   activityTitle: {
     ...Typography.headlineMedium,
     fontSize: 18,
-    color: Colors.textPrimary,
     marginBottom: Spacing.md,
   },
   activityItem: {
@@ -827,7 +967,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
   },
   activityIconBg: {
     width: 36,
@@ -842,12 +981,10 @@ const styles = StyleSheet.create({
   },
   activityCount: {
     ...Typography.bodyMedium,
-    color: Colors.textPrimary,
     fontWeight: "500",
   },
   activityTime: {
     ...Typography.caption,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
 

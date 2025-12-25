@@ -14,7 +14,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LineChart, BarChart, PieChart } from "react-native-gifted-charts";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import { FloatingHeader } from "@/components/FloatingHeader";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -48,12 +49,12 @@ const ANALYTICS_DATA = {
     { value: 1890, dataPointText: "1890" },
   ],
   inquiriesByMonth: [
-    { value: 28, label: "Jan", frontColor: Colors.primaryGreen },
-    { value: 45, label: "Feb", frontColor: Colors.primaryGreen },
-    { value: 38, label: "Mar", frontColor: Colors.primaryGreen },
-    { value: 52, label: "Apr", frontColor: Colors.primaryGreen },
-    { value: 48, label: "May", frontColor: Colors.primaryGreen },
-    { value: 65, label: "Jun", frontColor: Colors.primaryGreen },
+    { value: 28, label: "Jan", frontColor: "#4CAF50" },
+    { value: 45, label: "Feb", frontColor: "#4CAF50" },
+    { value: 38, label: "Mar", frontColor: "#4CAF50" },
+    { value: 52, label: "Apr", frontColor: "#4CAF50" },
+    { value: 48, label: "May", frontColor: "#4CAF50" },
+    { value: 65, label: "Jun", frontColor: "#4CAF50" },
   ],
   topListings: [
     {
@@ -79,7 +80,7 @@ const ANALYTICS_DATA = {
     },
   ],
   trafficSources: [
-    { value: 42, color: Colors.primaryGreen, text: "42%" },
+    { value: 42, color: "#4CAF50", text: "42%" },
     { value: 28, color: "#3B82F6", text: "28%" },
     { value: 18, color: "#F59E0B", text: "18%" },
     { value: 12, color: "#8B5CF6", text: "12%" },
@@ -97,6 +98,7 @@ const TRAFFIC_LABELS = ["Search", "Direct", "Shared", "Social"];
 export default function OwnerAnalyticsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [selectedPeriod, setSelectedPeriod] = useState("30d");
   const [refreshing, setRefreshing] = useState(false);
 
@@ -112,14 +114,37 @@ export default function OwnerAnalyticsScreen() {
     return num.toString();
   };
 
+  // Update chart data with theme colors
+  const inquiriesByMonthData = ANALYTICS_DATA.inquiriesByMonth.map((item) => ({
+    ...item,
+    frontColor: colors.primary,
+  }));
+
+  const trafficSourcesData = ANALYTICS_DATA.trafficSources.map(
+    (item, index) => ({
+      ...item,
+      color: index === 0 ? colors.primary : item.color,
+    })
+  );
+
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
         </View>
 
         {/* Floating Sticky Header */}
@@ -129,13 +154,23 @@ export default function OwnerAnalyticsScreen() {
           showBackButton
           onBackPress={() => router.back()}
           rightContent={
-            <View style={styles.periodSelector}>
+            <View
+              style={[
+                styles.periodSelector,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               {TIME_PERIODS.map((period) => (
                 <TouchableOpacity
                   key={period.id}
                   style={[
                     styles.periodButton,
-                    selectedPeriod === period.id && styles.periodButtonActive,
+                    selectedPeriod === period.id && {
+                      backgroundColor: colors.primary,
+                    },
                   ]}
                   onPress={() => setSelectedPeriod(period.id)}
                   activeOpacity={0.7}
@@ -143,8 +178,12 @@ export default function OwnerAnalyticsScreen() {
                   <Text
                     style={[
                       styles.periodButtonText,
-                      selectedPeriod === period.id &&
-                        styles.periodButtonTextActive,
+                      {
+                        color:
+                          selectedPeriod === period.id
+                            ? "#FFFFFF"
+                            : colors.textSecondary,
+                      },
                     ]}
                   >
                     {period.label}
@@ -169,29 +208,49 @@ export default function OwnerAnalyticsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={Colors.primaryGreen}
+              tintColor={colors.primary}
               progressViewOffset={90 + insets.top}
             />
           }
         >
           {/* Overview Stats */}
           <View style={styles.overviewGrid}>
-            <View style={styles.overviewCard}>
+            <View
+              style={[
+                styles.overviewCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               <View
                 style={[
                   styles.overviewIcon,
-                  { backgroundColor: `${Colors.primaryGreen}15` },
+                  { backgroundColor: `${colors.primary}15` },
                 ]}
               >
-                <Ionicons name="eye" size={20} color={Colors.primaryGreen} />
+                <Ionicons name="eye" size={20} color={colors.primary} />
               </View>
-              <Text style={styles.overviewValue}>
+              <Text style={[styles.overviewValue, { color: colors.text }]}>
                 {formatNumber(ANALYTICS_DATA.overview.totalViews)}
               </Text>
-              <Text style={styles.overviewLabel}>Total Views</Text>
+              <Text
+                style={[styles.overviewLabel, { color: colors.textSecondary }]}
+              >
+                Total Views
+              </Text>
             </View>
 
-            <View style={styles.overviewCard}>
+            <View
+              style={[
+                styles.overviewCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               <View
                 style={[styles.overviewIcon, { backgroundColor: "#3B82F615" }]}
               >
@@ -201,42 +260,80 @@ export default function OwnerAnalyticsScreen() {
                   color="#3B82F6"
                 />
               </View>
-              <Text style={styles.overviewValue}>
+              <Text style={[styles.overviewValue, { color: colors.text }]}>
                 {ANALYTICS_DATA.overview.totalInquiries}
               </Text>
-              <Text style={styles.overviewLabel}>Inquiries</Text>
+              <Text
+                style={[styles.overviewLabel, { color: colors.textSecondary }]}
+              >
+                Inquiries
+              </Text>
             </View>
 
-            <View style={styles.overviewCard}>
+            <View
+              style={[
+                styles.overviewCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               <View
                 style={[styles.overviewIcon, { backgroundColor: "#F59E0B15" }]}
               >
                 <Ionicons name="home" size={20} color="#F59E0B" />
               </View>
-              <Text style={styles.overviewValue}>
+              <Text style={[styles.overviewValue, { color: colors.text }]}>
                 {ANALYTICS_DATA.overview.activeListings}/
                 {ANALYTICS_DATA.overview.totalListings}
               </Text>
-              <Text style={styles.overviewLabel}>Active</Text>
+              <Text
+                style={[styles.overviewLabel, { color: colors.textSecondary }]}
+              >
+                Active
+              </Text>
             </View>
 
-            <View style={styles.overviewCard}>
+            <View
+              style={[
+                styles.overviewCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               <View
                 style={[styles.overviewIcon, { backgroundColor: "#10B98115" }]}
               >
                 <Ionicons name="trending-up" size={20} color="#10B981" />
               </View>
-              <Text style={styles.overviewValue}>
+              <Text style={[styles.overviewValue, { color: colors.text }]}>
                 {ANALYTICS_DATA.overview.conversionRate}%
               </Text>
-              <Text style={styles.overviewLabel}>Conversion</Text>
+              <Text
+                style={[styles.overviewLabel, { color: colors.textSecondary }]}
+              >
+                Conversion
+              </Text>
             </View>
           </View>
 
           {/* Views Trend Chart */}
-          <View style={styles.chartCard}>
+          <View
+            style={[
+              styles.chartCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
             <View style={styles.chartHeader}>
-              <Text style={styles.chartTitle}>Views Trend</Text>
+              <Text style={[styles.chartTitle, { color: colors.text }]}>
+                Views Trend
+              </Text>
               <View style={styles.trendBadge}>
                 <Ionicons name="arrow-up" size={14} color="#10B981" />
                 <Text style={styles.trendBadgeText}>+18.5%</Text>
@@ -248,22 +345,22 @@ export default function OwnerAnalyticsScreen() {
                 width={CHART_WIDTH}
                 height={180}
                 spacing={CHART_WIDTH / 7}
-                color={Colors.primaryGreen}
+                color={colors.primary}
                 thickness={3}
-                startFillColor={`${Colors.primaryGreen}30`}
-                endFillColor={`${Colors.primaryGreen}05`}
+                startFillColor={`${colors.primary}30`}
+                endFillColor={`${colors.primary}05`}
                 startOpacity={0.9}
                 endOpacity={0.1}
                 initialSpacing={20}
                 noOfSections={4}
                 yAxisColor="transparent"
-                xAxisColor={Colors.divider}
+                xAxisColor={colors.divider}
                 yAxisTextStyle={{
-                  color: Colors.textSecondary,
+                  color: colors.textSecondary,
                   fontSize: 10,
                 }}
                 hideDataPoints={false}
-                dataPointsColor={Colors.primaryGreen}
+                dataPointsColor={colors.primary}
                 dataPointsRadius={4}
                 curved
                 areaChart
@@ -272,16 +369,28 @@ export default function OwnerAnalyticsScreen() {
           </View>
 
           {/* Inquiries by Month */}
-          <View style={styles.chartCard}>
+          <View
+            style={[
+              styles.chartCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
             <View style={styles.chartHeader}>
-              <Text style={styles.chartTitle}>Inquiries by Month</Text>
+              <Text style={[styles.chartTitle, { color: colors.text }]}>
+                Inquiries by Month
+              </Text>
               <TouchableOpacity activeOpacity={0.7}>
-                <Text style={styles.viewAllText}>View Details</Text>
+                <Text style={[styles.viewAllText, { color: colors.primary }]}>
+                  View Details
+                </Text>
               </TouchableOpacity>
             </View>
             <View style={styles.chartContainer}>
               <BarChart
-                data={ANALYTICS_DATA.inquiriesByMonth}
+                data={inquiriesByMonthData}
                 width={CHART_WIDTH}
                 height={160}
                 barWidth={32}
@@ -290,31 +399,43 @@ export default function OwnerAnalyticsScreen() {
                 endSpacing={15}
                 noOfSections={4}
                 yAxisColor="transparent"
-                xAxisColor={Colors.divider}
+                xAxisColor={colors.divider}
                 yAxisTextStyle={{
-                  color: Colors.textSecondary,
+                  color: colors.textSecondary,
                   fontSize: 10,
                 }}
                 xAxisLabelTextStyle={{
-                  color: Colors.textSecondary,
+                  color: colors.textSecondary,
                   fontSize: 11,
                 }}
                 barBorderRadius={6}
-                frontColor={Colors.primaryGreen}
+                frontColor={colors.primary}
                 isAnimated
               />
             </View>
           </View>
 
           {/* Top Performing Listings */}
-          <View style={styles.sectionCard}>
+          <View
+            style={[
+              styles.sectionCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Top Performing Listings</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Top Performing Listings
+              </Text>
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => router.push("/(owner-tabs)/my-listings")}
               >
-                <Text style={styles.viewAllText}>See All</Text>
+                <Text style={[styles.viewAllText, { color: colors.primary }]}>
+                  See All
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -323,17 +444,32 @@ export default function OwnerAnalyticsScreen() {
                 key={listing.id}
                 style={[
                   styles.listingItem,
+                  {
+                    borderBottomColor: colors.divider,
+                  },
                   index === ANALYTICS_DATA.topListings.length - 1 &&
                     styles.listingItemLast,
                 ]}
                 activeOpacity={0.7}
                 onPress={() => router.push(`/owner-listing/${listing.id}`)}
               >
-                <View style={styles.listingRank}>
-                  <Text style={styles.listingRankText}>#{index + 1}</Text>
+                <View
+                  style={[
+                    styles.listingRank,
+                    { backgroundColor: `${colors.primary}15` },
+                  ]}
+                >
+                  <Text
+                    style={[styles.listingRankText, { color: colors.primary }]}
+                  >
+                    #{index + 1}
+                  </Text>
                 </View>
                 <View style={styles.listingInfo}>
-                  <Text style={styles.listingTitle} numberOfLines={1}>
+                  <Text
+                    style={[styles.listingTitle, { color: colors.text }]}
+                    numberOfLines={1}
+                  >
                     {listing.title}
                   </Text>
                   <View style={styles.listingStats}>
@@ -341,9 +477,14 @@ export default function OwnerAnalyticsScreen() {
                       <Ionicons
                         name="eye-outline"
                         size={14}
-                        color={Colors.textSecondary}
+                        color={colors.textSecondary}
                       />
-                      <Text style={styles.listingStatText}>
+                      <Text
+                        style={[
+                          styles.listingStatText,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
                         {formatNumber(listing.views)}
                       </Text>
                     </View>
@@ -351,9 +492,14 @@ export default function OwnerAnalyticsScreen() {
                       <Ionicons
                         name="chatbubble-outline"
                         size={14}
-                        color={Colors.textSecondary}
+                        color={colors.textSecondary}
                       />
-                      <Text style={styles.listingStatText}>
+                      <Text
+                        style={[
+                          styles.listingStatText,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
                         {listing.inquiries}
                       </Text>
                     </View>
@@ -368,27 +514,46 @@ export default function OwnerAnalyticsScreen() {
           </View>
 
           {/* Traffic Sources */}
-          <View style={styles.chartCard}>
-            <Text style={styles.chartTitle}>Traffic Sources</Text>
+          <View
+            style={[
+              styles.chartCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
+            <Text style={[styles.chartTitle, { color: colors.text }]}>
+              Traffic Sources
+            </Text>
             <View style={styles.trafficContainer}>
               <View style={styles.pieChartContainer}>
                 <PieChart
-                  data={ANALYTICS_DATA.trafficSources}
+                  data={trafficSourcesData}
                   donut
                   radius={70}
                   innerRadius={45}
                   centerLabelComponent={() => (
                     <View style={styles.pieCenter}>
-                      <Text style={styles.pieCenterValue}>
+                      <Text
+                        style={[styles.pieCenterValue, { color: colors.text }]}
+                      >
                         {formatNumber(ANALYTICS_DATA.overview.totalViews)}
                       </Text>
-                      <Text style={styles.pieCenterLabel}>Total</Text>
+                      <Text
+                        style={[
+                          styles.pieCenterLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Total
+                      </Text>
                     </View>
                   )}
                 />
               </View>
               <View style={styles.trafficLegend}>
-                {ANALYTICS_DATA.trafficSources.map((source, index) => (
+                {trafficSourcesData.map((source, index) => (
                   <View key={index} style={styles.legendItem}>
                     <View
                       style={[
@@ -396,10 +561,17 @@ export default function OwnerAnalyticsScreen() {
                         { backgroundColor: source.color },
                       ]}
                     />
-                    <Text style={styles.legendLabel}>
+                    <Text style={[styles.legendLabel, { color: colors.text }]}>
                       {TRAFFIC_LABELS[index]}
                     </Text>
-                    <Text style={styles.legendValue}>{source.text}</Text>
+                    <Text
+                      style={[
+                        styles.legendValue,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      {source.text}
+                    </Text>
                   </View>
                 ))}
               </View>
@@ -407,26 +579,55 @@ export default function OwnerAnalyticsScreen() {
           </View>
 
           {/* Recent Performance */}
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Recent Performance</Text>
+          <View
+            style={[
+              styles.sectionCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Recent Performance
+            </Text>
             <View style={styles.performanceGrid}>
               {ANALYTICS_DATA.recentPerformance.map((item, index) => (
-                <View key={index} style={styles.performanceItem}>
-                  <Text style={styles.performanceLabel}>{item.label}</Text>
+                <View
+                  key={index}
+                  style={[
+                    styles.performanceItem,
+                    { backgroundColor: colors.background },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.performanceLabel,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
                   <View style={styles.performanceStats}>
                     <View style={styles.performanceStat}>
-                      <Ionicons
-                        name="eye"
-                        size={14}
-                        color={Colors.primaryGreen}
-                      />
-                      <Text style={styles.performanceValue}>
+                      <Ionicons name="eye" size={14} color={colors.primary} />
+                      <Text
+                        style={[
+                          styles.performanceValue,
+                          { color: colors.text },
+                        ]}
+                      >
                         {formatNumber(item.views)}
                       </Text>
                     </View>
                     <View style={styles.performanceStat}>
                       <Ionicons name="chatbubble" size={14} color="#3B82F6" />
-                      <Text style={styles.performanceValue}>
+                      <Text
+                        style={[
+                          styles.performanceValue,
+                          { color: colors.text },
+                        ]}
+                      >
                         {item.inquiries}
                       </Text>
                     </View>
@@ -437,13 +638,30 @@ export default function OwnerAnalyticsScreen() {
           </View>
 
           {/* Response Time Card */}
-          <View style={styles.responseCard}>
-            <View style={styles.responseIcon}>
-              <Ionicons name="time" size={28} color={Colors.primaryGreen} />
+          <View
+            style={[
+              styles.responseCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.responseIcon,
+                { backgroundColor: `${colors.primary}15` },
+              ]}
+            >
+              <Ionicons name="time" size={28} color={colors.primary} />
             </View>
             <View style={styles.responseInfo}>
-              <Text style={styles.responseLabel}>Average Response Time</Text>
-              <Text style={styles.responseValue}>
+              <Text
+                style={[styles.responseLabel, { color: colors.textSecondary }]}
+              >
+                Average Response Time
+              </Text>
+              <Text style={[styles.responseValue, { color: colors.text }]}>
                 {ANALYTICS_DATA.overview.avgResponseTime}
               </Text>
             </View>
@@ -460,7 +678,6 @@ export default function OwnerAnalyticsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   // Decorative Background
   decorativeBackground: {
@@ -478,8 +695,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: Colors.primaryLight,
-    opacity: 0.08,
   },
   circle2: {
     position: "absolute",
@@ -488,8 +703,6 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     borderRadius: 200,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
   },
   // Header
   headerLeft: {
@@ -501,29 +714,23 @@ const styles = StyleSheet.create({
     ...Typography.titleLarge,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   periodSelector: {
     flexDirection: "row",
-    backgroundColor: Colors.surface,
     borderRadius: 10,
     padding: 4,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   periodButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
   },
-  periodButtonActive: {
-    backgroundColor: Colors.primaryGreen,
-  },
+  periodButtonActive: {},
   periodButtonText: {
     ...Typography.labelMedium,
     fontSize: 12,
     fontWeight: "600",
-    color: Colors.textSecondary,
   },
   periodButtonTextActive: {
     color: "#FFFFFF",
@@ -544,11 +751,9 @@ const styles = StyleSheet.create({
   },
   overviewCard: {
     width: (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.md) / 2 - 1,
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -573,22 +778,18 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 24,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: 2,
   },
   overviewLabel: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   // Chart Card
   chartCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 20,
     padding: Spacing.lg,
     marginBottom: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -611,7 +812,6 @@ const styles = StyleSheet.create({
     ...Typography.titleMedium,
     fontSize: 16,
     fontWeight: "600",
-    color: Colors.textPrimary,
   },
   trendBadge: {
     flexDirection: "row",
@@ -635,16 +835,13 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 13,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
   // Section Card
   sectionCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 20,
     padding: Spacing.lg,
     marginBottom: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -667,7 +864,6 @@ const styles = StyleSheet.create({
     ...Typography.titleMedium,
     fontSize: 16,
     fontWeight: "600",
-    color: Colors.textPrimary,
   },
   // Listing Items
   listingItem: {
@@ -675,7 +871,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
     gap: Spacing.md,
   },
   listingItemLast: {
@@ -686,7 +881,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: `${Colors.primaryGreen}15`,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -694,7 +888,6 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 12,
     fontWeight: "700",
-    color: Colors.primaryGreen,
   },
   listingInfo: {
     flex: 1,
@@ -703,7 +896,6 @@ const styles = StyleSheet.create({
     ...Typography.bodyMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.textPrimary,
     marginBottom: 4,
   },
   listingStats: {
@@ -718,7 +910,6 @@ const styles = StyleSheet.create({
   listingStatText: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   listingTrend: {
     flexDirection: "row",
@@ -752,12 +943,10 @@ const styles = StyleSheet.create({
     ...Typography.titleMedium,
     fontSize: 16,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   pieCenterLabel: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
   },
   trafficLegend: {
     flex: 1,
@@ -776,14 +965,12 @@ const styles = StyleSheet.create({
   legendLabel: {
     ...Typography.bodyMedium,
     fontSize: 13,
-    color: Colors.textPrimary,
     flex: 1,
   },
   legendValue: {
     ...Typography.labelMedium,
     fontSize: 13,
     fontWeight: "600",
-    color: Colors.textSecondary,
   },
   // Performance Grid
   performanceGrid: {
@@ -794,14 +981,12 @@ const styles = StyleSheet.create({
   },
   performanceItem: {
     width: (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.lg * 2 - Spacing.md) / 2,
-    backgroundColor: Colors.background,
     borderRadius: 12,
     padding: Spacing.md,
   },
   performanceLabel: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
     marginBottom: Spacing.xs,
   },
   performanceStats: {
@@ -817,18 +1002,15 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.textPrimary,
   },
   // Response Card
   responseCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.lg,
     gap: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -845,7 +1027,6 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 14,
-    backgroundColor: `${Colors.primaryGreen}15`,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -855,14 +1036,12 @@ const styles = StyleSheet.create({
   responseLabel: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
     marginBottom: 2,
   },
   responseValue: {
     ...Typography.titleMedium,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   responseBadge: {
     backgroundColor: "#10B98115",
