@@ -31,22 +31,37 @@ interface CaptureRow {
   angleStep: number; // Degrees between photos
 }
 
+// REORDERED: Start at Horizon (most natural position), then go UP, then DOWN
+// This makes the capture flow much more intuitive
 const CAPTURE_GRID: CaptureRow[] = [
-  { pitch: 90, segments: 1, angleStep: 360 }, // Zenith (looking up)
-  { pitch: 60, segments: 8, angleStep: 45 }, // High row
-  { pitch: 30, segments: 12, angleStep: 30 }, // Upper row
-  { pitch: 0, segments: 16, angleStep: 22.5 }, // Horizon row
-  { pitch: -30, segments: 12, angleStep: 30 }, // Lower row
-  { pitch: -60, segments: 8, angleStep: 45 }, // Low row
-  { pitch: -90, segments: 1, angleStep: 360 }, // Nadir (looking down)
+  { pitch: 0, segments: 12, angleStep: 30 }, // 1. Horizon (start here - most natural)
+  { pitch: 30, segments: 10, angleStep: 36 }, // 2. Upper row (tilt up slightly)
+  { pitch: 60, segments: 8, angleStep: 45 }, // 3. High row (tilt more)
+  { pitch: 90, segments: 1, angleStep: 360 }, // 4. Zenith (look straight up)
+  { pitch: -30, segments: 10, angleStep: 36 }, // 5. Lower row (tilt down)
+  { pitch: -60, segments: 8, angleStep: 45 }, // 6. Low row (tilt more down)
+  { pitch: -90, segments: 1, angleStep: 360 }, // 7. Nadir (look straight down)
 ];
 
 // Calculate total segments
-const TOTAL_PHOTOS = CAPTURE_GRID.reduce((sum, row) => sum + row.segments, 0); // 58 photos
+const TOTAL_PHOTOS = CAPTURE_GRID.reduce((sum, row) => sum + row.segments, 0); // 50 photos
 
-// Tolerance for "on target" detection
-const YAW_TOLERANCE = 10; // degrees for horizontal alignment
-const PITCH_TOLERANCE = 12; // degrees for vertical alignment
+// Tolerance for "on target" detection (adjusted per pitch level)
+const YAW_TOLERANCE = 12; // degrees for horizontal alignment
+const BASE_PITCH_TOLERANCE = 15; // base degrees for vertical alignment
+
+// Get pitch tolerance based on pitch level (horizon needs more tolerance)
+const getPitchTolerance = (targetPitch: number): number => {
+  // Horizon (0°) is hardest to keep steady, give more tolerance
+  if (Math.abs(targetPitch) <= 10) return 20;
+  // Extreme angles (zenith/nadir) also get more tolerance
+  if (Math.abs(targetPitch) >= 80) return 25;
+  // Mid-angles get normal tolerance
+  return BASE_PITCH_TOLERANCE;
+};
+
+// Minimum time between captures to prevent accidental rapid-fire (ms)
+const CAPTURE_COOLDOWN = 1500;
 
 // ============================================================================
 // INTERFACES
@@ -159,6 +174,10 @@ export function PanoramaCapture({
   // Auto-capture countdown
   const [countdown, setCountdown] = useState<number | null>(null);
 
+  // Cooldown tracking to prevent rapid captures
+  const lastCaptureTime = useRef<number>(0);
+  const [isCooldown, setIsCooldown] = useState(false);
+
   // Animations
   const flashAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
@@ -168,16 +187,19 @@ export function PanoramaCapture({
   // Current target
   const currentTarget = captureTargets[currentTargetIndex];
 
-  // Check if on target
+  // Check if on target (using dynamic pitch tolerance)
   const isOnYaw = currentTarget
     ? angleDifference(currentYaw, currentTarget.targetYaw) <= YAW_TOLERANCE
     : false;
+  const pitchTolerance = currentTarget
+    ? getPitchTolerance(currentTarget.targetPitch)
+    : BASE_PITCH_TOLERANCE;
   const isOnPitch = currentTarget
-    ? Math.abs(currentPitch - currentTarget.targetPitch) <= PITCH_TOLERANCE
+    ? Math.abs(currentPitch - currentTarget.targetPitch) <= pitchTolerance
     : false;
   const isOnTarget = isOnYaw && isOnPitch;
   const isReadyForCapture =
-    isOnTarget && isRollLevel && !isCapturing && hasStarted;
+    isOnTarget && isRollLevel && !isCapturing && hasStarted && !isCooldown;
 
   // Progress percentage (used for debugging)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -323,7 +345,8 @@ export function PanoramaCapture({
 
   // Take photo
   const handleCapture = useCallback(async () => {
-    if (!cameraRef.current || isCapturing || !currentTarget) return;
+    if (!cameraRef.current || isCapturing || !currentTarget || isCooldown)
+      return;
 
     try {
       setIsCapturing(true);
@@ -347,6 +370,11 @@ export function PanoramaCapture({
         const updatedPhotos = [...capturedPhotos, newPhoto];
         setCapturedPhotos(updatedPhotos);
 
+        // Set cooldown to prevent rapid captures
+        lastCaptureTime.current = Date.now();
+        setIsCooldown(true);
+        setTimeout(() => setIsCooldown(false), CAPTURE_COOLDOWN);
+
         if (currentTargetIndex < captureTargets.length - 1) {
           setCurrentTargetIndex((prev) => prev + 1);
         } else {
@@ -367,6 +395,7 @@ export function PanoramaCapture({
     currentPitch,
     capturedPhotos,
     isCapturing,
+    isCooldown,
     onComplete,
     triggerFlash,
   ]);
@@ -481,12 +510,13 @@ export function PanoramaCapture({
     };
   }, [currentTarget, currentYaw, currentPitch]);
 
-  // Direction hints
+  // Direction hints (using dynamic pitch tolerance)
   const getDirectionHints = useCallback(() => {
     if (!currentTarget) return { horizontal: null, vertical: null };
 
     const yawDiff = signedAngleDifference(currentYaw, currentTarget.targetYaw);
     const pitchDiff = currentTarget.targetPitch - currentPitch;
+    const currentPitchTolerance = getPitchTolerance(currentTarget.targetPitch);
 
     return {
       horizontal:
@@ -497,7 +527,7 @@ export function PanoramaCapture({
             }
           : null,
       vertical:
-        Math.abs(pitchDiff) > PITCH_TOLERANCE
+        Math.abs(pitchDiff) > currentPitchTolerance
           ? {
               direction: pitchDiff > 0 ? "up" : "down",
               degrees: Math.abs(Math.round(pitchDiff)),
@@ -813,11 +843,22 @@ export function PanoramaCapture({
           </View>
 
           {/* Status message */}
-          {isOnTarget && !isRollLevel && (
+          {isCooldown ? (
+            <View style={[styles.statusBanner, styles.statusBannerCooldown]}>
+              <Ionicons
+                name="checkmark-circle"
+                size={20}
+                color={Colors.primaryGreen}
+              />
+              <Text style={[styles.statusText, styles.statusTextSuccess]}>
+                Photo captured! Move to next position...
+              </Text>
+            </View>
+          ) : isOnTarget && !isRollLevel ? (
             <View style={styles.statusBanner}>
               <Text style={styles.statusText}>Straighten your phone</Text>
             </View>
-          )}
+          ) : null}
         </>
       )}
 
@@ -1223,11 +1264,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     borderRadius: 8,
     alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: Spacing.xs,
+  },
+  statusBannerCooldown: {
+    backgroundColor: "rgba(46, 204, 113, 0.2)",
+    borderWidth: 1,
+    borderColor: Colors.primaryGreen,
   },
   statusText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "500",
+  },
+  statusTextSuccess: {
+    color: Colors.primaryGreen,
   },
 
   // Bottom bar with dots
