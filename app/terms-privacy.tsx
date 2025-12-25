@@ -125,6 +125,11 @@ export default function TermsPrivacyScreen() {
     <>
       <StatusBar style={isDark ? "light" : "dark"} />
       <View style={[styles.container, { backgroundColor: colors.background }]}>
+        {/* Decorative Background Elements */}
+        <View style={styles.decorativeBackground}>
+          <View style={styles.circle1} />
+          <View style={styles.circle2} />
+        </View>
         {/* Floating Header with Blur */}
         <FloatingHeader
           title="Terms & Privacy"
@@ -214,7 +219,9 @@ export default function TermsPrivacyScreen() {
               size={14}
               color={colors.textSecondary}
             />
-            <Text style={[styles.lastUpdatedText, { color: colors.textSecondary }]}>
+            <Text
+              style={[styles.lastUpdatedText, { color: colors.textSecondary }]}
+            >
               Last updated: December 2024
             </Text>
           </View>
@@ -252,13 +259,18 @@ export default function TermsPrivacyScreen() {
               key={index}
               style={[
                 styles.section,
-                { backgroundColor: colors.surface, borderColor: colors.divider },
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
               ]}
             >
               <Text style={[styles.sectionTitle, { color: colors.text }]}>
                 {section.title}
               </Text>
-              <Text style={[styles.sectionContent, { color: colors.textSecondary }]}>
+              <Text
+                style={[styles.sectionContent, { color: colors.textSecondary }]}
+              >
                 {section.content}
               </Text>
             </View>
@@ -281,7 +293,10 @@ export default function TermsPrivacyScreen() {
               please contact us.
             </Text>
             <TouchableOpacity
-              style={[styles.contactButton, { backgroundColor: colors.primary }]}
+              style={[
+                styles.contactButton,
+                { backgroundColor: colors.primary },
+              ]}
               onPress={() => router.push("/help-support")}
               activeOpacity={0.8}
             >

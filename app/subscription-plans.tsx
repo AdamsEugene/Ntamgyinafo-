@@ -245,6 +245,11 @@ export default function SubscriptionPlansScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? "light" : "dark"} />
+      {/* Decorative Background Elements */}
+      <View style={styles.decorativeBackground}>
+        <View style={styles.circle1} />
+        <View style={styles.circle2} />
+      </View>
 
       {/* Floating Header with Blur */}
       <FloatingHeader

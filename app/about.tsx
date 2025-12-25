@@ -100,6 +100,12 @@ export default function AboutScreen() {
     <>
       <StatusBar style={isDark ? "light" : "dark"} />
       <View style={[styles.container, { backgroundColor: colors.background }]}>
+        {/* Decorative Background Elements */}
+        <View style={styles.decorativeBackground}>
+          <View style={styles.circle1} />
+          <View style={styles.circle2} />
+        </View>
+
         {/* Floating Header with Blur */}
         <FloatingHeader
           title="About"

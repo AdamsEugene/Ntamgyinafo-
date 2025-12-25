@@ -247,172 +247,185 @@ export default function SavedPropertiesScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Floating Header with Blur */}
-      <FloatingHeader
-        title="Saved Properties"
-        showBackButton
-        onBackPress={() => router.back()}
-        rightContent={
-          <>
-            <HeaderActionButton
-              icon="funnel-outline"
-              onPress={() => sortSheetRef.current?.present()}
-            />
-            <HeaderActionButton
-              icon={viewMode === "list" ? "grid-outline" : "list-outline"}
-              onPress={() =>
-                setViewMode((prev) => (prev === "list" ? "grid" : "list"))
-              }
-            />
-          </>
-        }
-      />
+    <View style={styles.container}>
+      {/* Decorative Background Elements */}
+      <View style={styles.decorativeBackground}>
+        <View style={styles.bgCircle1} />
+        <View style={styles.bgCircle2} />
+      </View>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        {/* Floating Header with Blur */}
+        <FloatingHeader
+          title="Saved Properties"
+          showBackButton
+          onBackPress={() => router.back()}
+          rightContent={
+            <>
+              <HeaderActionButton
+                icon="funnel-outline"
+                onPress={() => sortSheetRef.current?.present()}
+              />
+              <HeaderActionButton
+                icon={viewMode === "list" ? "grid-outline" : "list-outline"}
+                onPress={() =>
+                  setViewMode((prev) => (prev === "list" ? "grid" : "list"))
+                }
+              />
+            </>
+          }
+        />
 
-      {/* Content */}
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingTop: insets.top + 80 },
-        ]}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={colors.primary}
-          />
-        }
-      >
-        {/* Results count */}
-        {savedPropertiesList.length > 0 && (
-          <View style={styles.resultsHeader}>
-            <Text style={[styles.resultsCount, { color: colors.text }]}>
-              {savedPropertiesList.length}{" "}
-              {savedPropertiesList.length === 1
-                ? "property saved"
-                : "properties saved"}
-            </Text>
-            <TouchableOpacity
-              style={[
-                styles.sortButton,
-                { backgroundColor: `${colors.primary}15` },
-              ]}
-              onPress={() => sortSheetRef.current?.present()}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.sortButtonText, { color: colors.primary }]}>
-                {SORT_OPTIONS.find((o) => o.id === sortOption)?.label}
+        {/* Content */}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingTop: insets.top + 80 },
+          ]}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.primary}
+            />
+          }
+        >
+          {/* Results count */}
+          {savedPropertiesList.length > 0 && (
+            <View style={styles.resultsHeader}>
+              <Text style={[styles.resultsCount, { color: colors.text }]}>
+                {savedPropertiesList.length}{" "}
+                {savedPropertiesList.length === 1
+                  ? "property saved"
+                  : "properties saved"}
               </Text>
-              <Ionicons name="chevron-down" size={14} color={colors.primary} />
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Property list/grid or empty state */}
-        {savedPropertiesList.length === 0
-          ? renderEmptyState()
-          : viewMode === "list"
-          ? renderPropertyList()
-          : renderPropertyGrid()}
-
-        {/* Bottom padding for navigation */}
-        <View style={{ height: 120 }} />
-      </ScrollView>
-
-      {/* Bottom Navigation */}
-      <BottomNavigation
-        tabs={NAV_TABS}
-        activeTab="saved"
-        onTabPress={handleNavigation}
-      />
-
-      {/* Sort Bottom Sheet */}
-      <BottomSheetModal
-        ref={sortSheetRef}
-        snapPoints={["50%"]}
-        backdropComponent={renderBackdrop}
-        handleIndicatorStyle={{ backgroundColor: colors.textSecondary }}
-        backgroundStyle={{ backgroundColor: colors.surface }}
-      >
-        <BottomSheetView style={styles.sortSheetContent}>
-          {/* Header */}
-          <View
-            style={[styles.sortHeader, { borderBottomColor: colors.divider }]}
-          >
-            <Text style={[styles.sortTitle, { color: colors.text }]}>
-              Sort By
-            </Text>
-            <TouchableOpacity
-              onPress={() => sortSheetRef.current?.dismiss()}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="close" size={24} color={colors.text} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Sort options */}
-          <View style={styles.sortOptions}>
-            {SORT_OPTIONS.map((option) => {
-              const isSelected = sortOption === option.id;
-              return (
-                <TouchableOpacity
-                  key={option.id}
-                  style={[
-                    styles.sortOption,
-                    {
-                      backgroundColor: colors.surface,
-                      borderColor: colors.divider,
-                    },
-                    isSelected && {
-                      backgroundColor: colors.primary,
-                      borderColor: colors.primary,
-                    },
-                  ]}
-                  onPress={() => {
-                    setSortOption(option.id);
-                    sortSheetRef.current?.dismiss();
-                  }}
-                  activeOpacity={0.7}
+              <TouchableOpacity
+                style={[
+                  styles.sortButton,
+                  { backgroundColor: `${colors.primary}15` },
+                ]}
+                onPress={() => sortSheetRef.current?.present()}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[styles.sortButtonText, { color: colors.primary }]}
                 >
-                  <View style={styles.sortOptionLeft}>
-                    <View
-                      style={[
-                        styles.sortIconContainer,
-                        { backgroundColor: `${colors.textSecondary}15` },
-                        isSelected && styles.sortIconContainerSelected,
-                      ]}
-                    >
-                      <Ionicons
-                        name={option.icon as any}
-                        size={20}
-                        color={isSelected ? "#FFFFFF" : colors.textSecondary}
-                      />
+                  {SORT_OPTIONS.find((o) => o.id === sortOption)?.label}
+                </Text>
+                <Ionicons
+                  name="chevron-down"
+                  size={14}
+                  color={colors.primary}
+                />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Property list/grid or empty state */}
+          {savedPropertiesList.length === 0
+            ? renderEmptyState()
+            : viewMode === "list"
+            ? renderPropertyList()
+            : renderPropertyGrid()}
+
+          {/* Bottom padding for navigation */}
+          <View style={{ height: 120 }} />
+        </ScrollView>
+
+        {/* Bottom Navigation */}
+        <BottomNavigation
+          tabs={NAV_TABS}
+          activeTab="saved"
+          onTabPress={handleNavigation}
+        />
+
+        {/* Sort Bottom Sheet */}
+        <BottomSheetModal
+          ref={sortSheetRef}
+          snapPoints={["50%"]}
+          backdropComponent={renderBackdrop}
+          handleIndicatorStyle={{ backgroundColor: colors.textSecondary }}
+          backgroundStyle={{ backgroundColor: colors.surface }}
+        >
+          <BottomSheetView style={styles.sortSheetContent}>
+            {/* Header */}
+            <View
+              style={[styles.sortHeader, { borderBottomColor: colors.divider }]}
+            >
+              <Text style={[styles.sortTitle, { color: colors.text }]}>
+                Sort By
+              </Text>
+              <TouchableOpacity
+                onPress={() => sortSheetRef.current?.dismiss()}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Sort options */}
+            <View style={styles.sortOptions}>
+              {SORT_OPTIONS.map((option) => {
+                const isSelected = sortOption === option.id;
+                return (
+                  <TouchableOpacity
+                    key={option.id}
+                    style={[
+                      styles.sortOption,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.divider,
+                      },
+                      isSelected && {
+                        backgroundColor: colors.primary,
+                        borderColor: colors.primary,
+                      },
+                    ]}
+                    onPress={() => {
+                      setSortOption(option.id);
+                      sortSheetRef.current?.dismiss();
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.sortOptionLeft}>
+                      <View
+                        style={[
+                          styles.sortIconContainer,
+                          { backgroundColor: `${colors.textSecondary}15` },
+                          isSelected && styles.sortIconContainerSelected,
+                        ]}
+                      >
+                        <Ionicons
+                          name={option.icon as any}
+                          size={20}
+                          color={isSelected ? "#FFFFFF" : colors.textSecondary}
+                        />
+                      </View>
+                      <Text
+                        style={[
+                          styles.sortOptionText,
+                          { color: colors.text },
+                          isSelected && styles.sortOptionTextSelected,
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
                     </View>
-                    <Text
-                      style={[
-                        styles.sortOptionText,
-                        { color: colors.text },
-                        isSelected && styles.sortOptionTextSelected,
-                      ]}
-                    >
-                      {option.label}
-                    </Text>
-                  </View>
-                  {isSelected && (
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={24}
-                      color="#FFFFFF"
-                    />
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </BottomSheetView>
-      </BottomSheetModal>
+                    {isSelected && (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={24}
+                        color="#FFFFFF"
+                      />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </BottomSheetView>
+        </BottomSheetModal>
+      </View>
     </View>
   );
 }
