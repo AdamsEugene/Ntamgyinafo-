@@ -24,6 +24,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import { FloatingHeader } from "@/components/FloatingHeader";
 import {
   VirtualTourCreator,
@@ -104,6 +105,7 @@ interface ListingFormData {
 export default function AddListingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const scrollViewRef = useRef<ScrollView>(null);
   const mapRef = useRef<MapView>(null);
 
@@ -464,63 +466,86 @@ export default function AddListingScreen() {
   // Step 1: Property Type
   const renderPropertyTypeStep = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>What type of property?</Text>
-      <Text style={styles.stepSubtitle}>
+      <Text style={[styles.stepTitle, { color: colors.text }]}>
+        What type of property?
+      </Text>
+      <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
         Select the category that best describes your property
       </Text>
 
       <View style={styles.optionsContainer}>
-        {PROPERTY_TYPES.map((type) => (
-          <TouchableOpacity
-            key={type.id}
-            style={[
-              styles.optionCard,
-              formData.propertyType === type.id && styles.optionCardSelected,
-            ]}
-            onPress={() => setFormData({ ...formData, propertyType: type.id })}
-            activeOpacity={0.8}
-          >
-            <View
+        {PROPERTY_TYPES.map((type) => {
+          const isSelected = formData.propertyType === type.id;
+          return (
+            <TouchableOpacity
+              key={type.id}
               style={[
-                styles.optionIconContainer,
-                formData.propertyType === type.id &&
-                  styles.optionIconContainerSelected,
+                styles.optionCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+                isSelected && {
+                  borderColor: colors.primary,
+                  backgroundColor: `${colors.primary}08`,
+                },
               ]}
+              onPress={() =>
+                setFormData({ ...formData, propertyType: type.id })
+              }
+              activeOpacity={0.8}
             >
-              <Ionicons
-                name={type.icon}
-                size={28}
-                color={
-                  formData.propertyType === type.id
-                    ? "#FFFFFF"
-                    : Colors.primaryGreen
-                }
-              />
-            </View>
-            <View style={styles.optionContent}>
-              <Text
+              <View
                 style={[
-                  styles.optionLabel,
-                  formData.propertyType === type.id &&
-                    styles.optionLabelSelected,
+                  styles.optionIconContainer,
+                  { backgroundColor: `${colors.primary}15` },
+                  isSelected && { backgroundColor: colors.primary },
                 ]}
               >
-                {type.label}
-              </Text>
-              <Text style={styles.optionDescription}>{type.description}</Text>
-            </View>
-            <View
-              style={[
-                styles.radioOuter,
-                formData.propertyType === type.id && styles.radioOuterSelected,
-              ]}
-            >
-              {formData.propertyType === type.id && (
-                <View style={styles.radioInner} />
-              )}
-            </View>
-          </TouchableOpacity>
-        ))}
+                <Ionicons
+                  name={type.icon}
+                  size={28}
+                  color={isSelected ? "#FFFFFF" : colors.primary}
+                />
+              </View>
+              <View style={styles.optionContent}>
+                <Text
+                  style={[
+                    styles.optionLabel,
+                    { color: colors.text },
+                    isSelected && { color: colors.primary },
+                  ]}
+                >
+                  {type.label}
+                </Text>
+                <Text
+                  style={[
+                    styles.optionDescription,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  {type.description}
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.radioOuter,
+                  { borderColor: colors.divider },
+                  isSelected && { borderColor: colors.primary },
+                ]}
+              >
+                {isSelected && (
+                  <View
+                    style={[
+                      styles.radioInner,
+                      { backgroundColor: colors.primary },
+                    ]}
+                  />
+                )}
+              </View>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );
@@ -528,62 +553,69 @@ export default function AddListingScreen() {
   // Step 2: Transaction Type
   const renderTransactionTypeStep = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Transaction Type</Text>
-      <Text style={styles.stepSubtitle}>
+      <Text style={[styles.stepTitle, { color: colors.text }]}>
+        Transaction Type
+      </Text>
+      <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
         Are you selling or renting out this property?
       </Text>
 
       <View style={styles.transactionCardsRow}>
-        {TRANSACTION_TYPES.map((type) => (
-          <TouchableOpacity
-            key={type.id}
-            style={[
-              styles.transactionCard,
-              formData.transactionType === type.id &&
-                styles.transactionCardSelected,
-            ]}
-            onPress={() =>
-              setFormData({ ...formData, transactionType: type.id })
-            }
-            activeOpacity={0.8}
-          >
-            <View
+        {TRANSACTION_TYPES.map((type) => {
+          const isSelected = formData.transactionType === type.id;
+          return (
+            <TouchableOpacity
+              key={type.id}
               style={[
-                styles.transactionIconContainer,
-                formData.transactionType === type.id &&
-                  styles.transactionIconContainerSelected,
+                styles.transactionCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+                isSelected && {
+                  borderColor: colors.primary,
+                  backgroundColor: `${colors.primary}08`,
+                },
               ]}
+              onPress={() =>
+                setFormData({ ...formData, transactionType: type.id })
+              }
+              activeOpacity={0.8}
             >
-              <Ionicons
-                name={type.icon}
-                size={40}
-                color={
-                  formData.transactionType === type.id
-                    ? "#FFFFFF"
-                    : Colors.primaryGreen
-                }
-              />
-            </View>
-            <Text
-              style={[
-                styles.transactionLabel,
-                formData.transactionType === type.id &&
-                  styles.transactionLabelSelected,
-              ]}
-            >
-              {type.label}
-            </Text>
-            {formData.transactionType === type.id && (
-              <View style={styles.transactionCheckmark}>
+              <View
+                style={[
+                  styles.transactionIconContainer,
+                  { backgroundColor: `${colors.primary}15` },
+                  isSelected && { backgroundColor: colors.primary },
+                ]}
+              >
                 <Ionicons
-                  name="checkmark-circle"
-                  size={24}
-                  color={Colors.primaryGreen}
+                  name={type.icon}
+                  size={40}
+                  color={isSelected ? "#FFFFFF" : colors.primary}
                 />
               </View>
-            )}
-          </TouchableOpacity>
-        ))}
+              <Text
+                style={[
+                  styles.transactionLabel,
+                  { color: colors.text },
+                  isSelected && { color: colors.primary },
+                ]}
+              >
+                {type.label}
+              </Text>
+              {isSelected && (
+                <View style={styles.transactionCheckmark}>
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={24}
+                    color={colors.primary}
+                  />
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );
@@ -591,27 +623,50 @@ export default function AddListingScreen() {
   // Step 3: Basic Details
   const renderBasicDetailsStep = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Property Details</Text>
-      <Text style={styles.stepSubtitle}>Tell us more about your property</Text>
+      <Text style={[styles.stepTitle, { color: colors.text }]}>
+        Property Details
+      </Text>
+      <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
+        Tell us more about your property
+      </Text>
 
       <View style={styles.formGroup}>
-        <Text style={styles.inputLabel}>Title *</Text>
+        <Text style={[styles.inputLabel, { color: colors.text }]}>Title *</Text>
         <TextInput
-          style={styles.textInput}
+          style={[
+            styles.textInput,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.divider,
+              color: colors.text,
+            },
+          ]}
           placeholder="e.g., 4 Bedroom House in East Legon"
-          placeholderTextColor={Colors.textSecondary}
+          placeholderTextColor={colors.textSecondary}
           value={formData.title}
           onChangeText={(text) => setFormData({ ...formData, title: text })}
         />
-        <Text style={styles.inputHint}>Minimum 5 characters</Text>
+        <Text style={[styles.inputHint, { color: colors.textSecondary }]}>
+          Minimum 5 characters
+        </Text>
       </View>
 
       <View style={styles.formGroup}>
-        <Text style={styles.inputLabel}>Description *</Text>
+        <Text style={[styles.inputLabel, { color: colors.text }]}>
+          Description *
+        </Text>
         <TextInput
-          style={[styles.textInput, styles.textArea]}
+          style={[
+            styles.textInput,
+            styles.textArea,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.divider,
+              color: colors.text,
+            },
+          ]}
           placeholder="Describe your property in detail..."
-          placeholderTextColor={Colors.textSecondary}
+          placeholderTextColor={colors.textSecondary}
           value={formData.description}
           onChangeText={(text) =>
             setFormData({ ...formData, description: text })
@@ -620,7 +675,7 @@ export default function AddListingScreen() {
           numberOfLines={5}
           textAlignVertical="top"
         />
-        <Text style={styles.inputHint}>
+        <Text style={[styles.inputHint, { color: colors.textSecondary }]}>
           {formData.description.length}/500 characters (min 20)
         </Text>
       </View>
@@ -640,11 +695,7 @@ export default function AddListingScreen() {
                     })
                   }
                 >
-                  <Ionicons
-                    name="remove"
-                    size={20}
-                    color={Colors.textPrimary}
-                  />
+                  <Ionicons name="remove" size={20} color={colors.text} />
                 </TouchableOpacity>
                 <Text style={styles.counterValue}>{formData.bedrooms}</Text>
                 <TouchableOpacity
@@ -656,7 +707,7 @@ export default function AddListingScreen() {
                     })
                   }
                 >
-                  <Ionicons name="add" size={20} color={Colors.textPrimary} />
+                  <Ionicons name="add" size={20} color={colors.text} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -673,11 +724,7 @@ export default function AddListingScreen() {
                     })
                   }
                 >
-                  <Ionicons
-                    name="remove"
-                    size={20}
-                    color={Colors.textPrimary}
-                  />
+                  <Ionicons name="remove" size={20} color={colors.text} />
                 </TouchableOpacity>
                 <Text style={styles.counterValue}>{formData.bathrooms}</Text>
                 <TouchableOpacity
@@ -689,7 +736,7 @@ export default function AddListingScreen() {
                     })
                   }
                 >
-                  <Ionicons name="add" size={20} color={Colors.textPrimary} />
+                  <Ionicons name="add" size={20} color={colors.text} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -698,38 +745,62 @@ export default function AddListingScreen() {
       )}
 
       <View style={styles.formGroup}>
-        <Text style={styles.inputLabel}>Plot Size</Text>
+        <Text style={[styles.inputLabel, { color: colors.text }]}>
+          Plot Size
+        </Text>
         <View style={styles.plotSizeRow}>
           <TextInput
-            style={[styles.textInput, { flex: 1 }]}
+            style={[
+              styles.textInput,
+              {
+                flex: 1,
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+                color: colors.text,
+              },
+            ]}
             placeholder="e.g., 2"
-            placeholderTextColor={Colors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             value={formData.plotSize}
             onChangeText={(text) =>
               setFormData({ ...formData, plotSize: text })
             }
             keyboardType="numeric"
           />
-          <View style={styles.unitSelector}>
-            {["plots", "acres", "sqft"].map((unit) => (
-              <TouchableOpacity
-                key={unit}
-                style={[
-                  styles.unitButton,
-                  formData.plotUnit === unit && styles.unitButtonSelected,
-                ]}
-                onPress={() => setFormData({ ...formData, plotUnit: unit })}
-              >
-                <Text
+          <View
+            style={[
+              styles.unitSelector,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
+            {["plots", "acres", "sqft"].map((unit) => {
+              const isSelected = formData.plotUnit === unit;
+              return (
+                <TouchableOpacity
+                  key={unit}
                   style={[
-                    styles.unitButtonText,
-                    formData.plotUnit === unit && styles.unitButtonTextSelected,
+                    styles.unitButton,
+                    isSelected && {
+                      backgroundColor: colors.primary,
+                    },
                   ]}
+                  onPress={() => setFormData({ ...formData, plotUnit: unit })}
                 >
-                  {unit}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text
+                    style={[
+                      styles.unitButtonText,
+                      { color: colors.text },
+                      isSelected && styles.unitButtonTextSelected,
+                    ]}
+                  >
+                    {unit}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
       </View>
@@ -739,18 +810,35 @@ export default function AddListingScreen() {
   // Step 4: Price
   const renderPriceStep = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Set Your Price</Text>
-      <Text style={styles.stepSubtitle}>
+      <Text style={[styles.stepTitle, { color: colors.text }]}>
+        Set Your Price
+      </Text>
+      <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
         Enter the{" "}
         {formData.transactionType === "rent" ? "monthly rent" : "selling price"}
       </Text>
 
-      <View style={styles.priceInputContainer}>
-        <Text style={styles.currencyLabel}>GHS</Text>
+      <View
+        style={[
+          styles.priceInputContainer,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.primary,
+          },
+        ]}
+      >
+        <Text style={[styles.currencyLabel, { color: colors.primary }]}>
+          GHS
+        </Text>
         <TextInput
-          style={styles.priceInput}
+          style={[
+            styles.priceInput,
+            {
+              color: colors.text,
+            },
+          ]}
           placeholder="0"
-          placeholderTextColor={Colors.textSecondary}
+          placeholderTextColor={colors.textSecondary}
           value={formData.price}
           onChangeText={(text) =>
             setFormData({ ...formData, price: text.replace(/[^0-9]/g, "") })
@@ -760,11 +848,19 @@ export default function AddListingScreen() {
       </View>
 
       {formData.transactionType === "rent" && (
-        <Text style={styles.priceNote}>per month</Text>
+        <Text style={[styles.priceNote, { color: colors.textSecondary }]}>
+          per month
+        </Text>
       )}
 
       <TouchableOpacity
-        style={styles.negotiableRow}
+        style={[
+          styles.negotiableRow,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.divider,
+          },
+        ]}
         activeOpacity={0.8}
         onPress={() =>
           setFormData({ ...formData, negotiable: !formData.negotiable })
@@ -774,18 +870,28 @@ export default function AddListingScreen() {
           <View
             style={[
               styles.negotiableIcon,
-              formData.negotiable && styles.negotiableIconActive,
+              {
+                backgroundColor: `${colors.primary}15`,
+              },
+              formData.negotiable && {
+                backgroundColor: colors.primary,
+              },
             ]}
           >
             <Ionicons
               name="swap-horizontal"
               size={20}
-              color={formData.negotiable ? "#FFFFFF" : Colors.primaryGreen}
+              color={formData.negotiable ? "#FFFFFF" : colors.primary}
             />
           </View>
           <View style={styles.negotiableText}>
-            <Text style={styles.negotiableLabel}>Negotiable</Text>
-            <Text style={styles.negotiableHint} numberOfLines={1}>
+            <Text style={[styles.negotiableLabel, { color: colors.text }]}>
+              Negotiable
+            </Text>
+            <Text
+              style={[styles.negotiableHint, { color: colors.textSecondary }]}
+              numberOfLines={1}
+            >
               {formData.negotiable
                 ? "Buyers can make offers"
                 : "Allow price negotiation"}
@@ -798,12 +904,10 @@ export default function AddListingScreen() {
             setFormData({ ...formData, negotiable: value })
           }
           trackColor={{
-            false: Colors.divider,
-            true: `${Colors.primaryGreen}50`,
+            false: colors.divider,
+            true: `${colors.primary}50`,
           }}
-          thumbColor={
-            formData.negotiable ? Colors.primaryGreen : Colors.surface
-          }
+          thumbColor={formData.negotiable ? colors.primary : colors.surface}
         />
       </TouchableOpacity>
     </View>
@@ -812,8 +916,8 @@ export default function AddListingScreen() {
   // Step 5: Amenities
   const renderAmenitiesStep = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Amenities</Text>
-      <Text style={styles.stepSubtitle}>
+      <Text style={[styles.stepTitle, { color: colors.text }]}>Amenities</Text>
+      <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
         Select all the amenities available
       </Text>
 
@@ -825,7 +929,14 @@ export default function AddListingScreen() {
               key={amenity.id}
               style={[
                 styles.amenityCard,
-                isSelected && styles.amenityCardSelected,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+                isSelected && {
+                  borderColor: colors.primary,
+                  backgroundColor: `${colors.primary}08`,
+                },
               ]}
               onPress={() => {
                 const newAmenities = isSelected
@@ -838,19 +949,21 @@ export default function AddListingScreen() {
               <View
                 style={[
                   styles.amenityIcon,
-                  isSelected && styles.amenityIconSelected,
+                  { backgroundColor: `${colors.primary}15` },
+                  isSelected && { backgroundColor: colors.primary },
                 ]}
               >
                 <Ionicons
                   name={amenity.icon}
                   size={24}
-                  color={isSelected ? "#FFFFFF" : Colors.primaryGreen}
+                  color={isSelected ? "#FFFFFF" : colors.primary}
                 />
               </View>
               <Text
                 style={[
                   styles.amenityLabel,
-                  isSelected && styles.amenityLabelSelected,
+                  { color: colors.text },
+                  isSelected && { color: colors.primary },
                 ]}
               >
                 {amenity.label}
@@ -870,14 +983,14 @@ export default function AddListingScreen() {
   // Step 6: Photos
   const renderPhotosStep = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Add Photos</Text>
-      <Text style={styles.stepSubtitle}>
+      <Text style={[styles.stepTitle, { color: colors.text }]}>Add Photos</Text>
+      <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
         Add at least 5 photos. First photo will be the cover.
       </Text>
 
       <View style={styles.photoCounter}>
-        <Ionicons name="images" size={20} color={Colors.primaryGreen} />
-        <Text style={styles.photoCounterText}>
+        <Ionicons name="images" size={20} color={colors.primary} />
+        <Text style={[styles.photoCounterText, { color: colors.text }]}>
           {formData.photos.length}/15 photos added
         </Text>
       </View>
@@ -887,7 +1000,9 @@ export default function AddListingScreen() {
           <View key={index} style={styles.photoWrapper}>
             <Image source={{ uri: photo }} style={styles.photoThumbnail} />
             {index === 0 && (
-              <View style={styles.coverBadge}>
+              <View
+                style={[styles.coverBadge, { backgroundColor: colors.primary }]}
+              >
                 <Text style={styles.coverBadgeText}>Cover</Text>
               </View>
             )}
@@ -901,32 +1016,50 @@ export default function AddListingScreen() {
         ))}
         {formData.photos.length < 15 && (
           <TouchableOpacity
-            style={styles.addPhotoButton}
+            style={[
+              styles.addPhotoButton,
+              {
+                borderColor: colors.primary,
+                backgroundColor: `${colors.primary}08`,
+              },
+            ]}
             activeOpacity={0.8}
             onPress={showPhotoOptions}
             disabled={isPickingMedia}
           >
             {isPickingMedia ? (
-              <ActivityIndicator color={Colors.primaryGreen} />
+              <ActivityIndicator color={colors.primary} />
             ) : (
               <>
-                <Ionicons name="add" size={32} color={Colors.primaryGreen} />
-                <Text style={styles.addPhotoText}>Add Photo</Text>
+                <Ionicons name="add" size={32} color={colors.primary} />
+                <Text style={[styles.addPhotoText, { color: colors.primary }]}>
+                  Add Photo
+                </Text>
               </>
             )}
           </TouchableOpacity>
         )}
       </View>
 
-      <View style={styles.tipsContainer}>
-        <Text style={styles.tipsTitle}>💡 Tips for great photos:</Text>
-        <Text style={styles.tipText}>
+      <View
+        style={[
+          styles.tipsContainer,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.divider,
+          },
+        ]}
+      >
+        <Text style={[styles.tipsTitle, { color: colors.text }]}>
+          💡 Tips for great photos:
+        </Text>
+        <Text style={[styles.tipText, { color: colors.textSecondary }]}>
           • Use good lighting, preferably natural light
         </Text>
-        <Text style={styles.tipText}>
+        <Text style={[styles.tipText, { color: colors.textSecondary }]}>
           • Show all rooms from multiple angles
         </Text>
-        <Text style={styles.tipText}>
+        <Text style={[styles.tipText, { color: colors.textSecondary }]}>
           • Clean and declutter before taking photos
         </Text>
       </View>
@@ -936,14 +1069,14 @@ export default function AddListingScreen() {
   // Step 7: Videos
   const renderVideosStep = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Add Videos</Text>
-      <Text style={styles.stepSubtitle}>
+      <Text style={[styles.stepTitle, { color: colors.text }]}>Add Videos</Text>
+      <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
         Videos help buyers see your property better (Optional)
       </Text>
 
       <View style={styles.mediaLimitInfo}>
-        <Ionicons name="videocam" size={24} color={Colors.primaryGreen} />
-        <Text style={styles.mediaLimitText}>
+        <Ionicons name="videocam" size={24} color={colors.primary} />
+        <Text style={[styles.mediaLimitText, { color: colors.text }]}>
           {formData.videos.length}/3 videos added (max 2 min each)
         </Text>
       </View>
@@ -957,7 +1090,7 @@ export default function AddListingScreen() {
                 <Ionicons
                   name="videocam"
                   size={32}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
                 <Text style={styles.videoLabel}>Video {index + 1}</Text>
               </View>
@@ -980,22 +1113,25 @@ export default function AddListingScreen() {
           disabled={isPickingMedia}
         >
           <LinearGradient
-            colors={[`${Colors.primaryGreen}15`, `${Colors.primaryGreen}05`]}
+            colors={[`${colors.primary}15`, `${colors.primary}05`]}
             style={styles.addMediaGradient}
           >
             {isPickingMedia ? (
-              <ActivityIndicator size="large" color={Colors.primaryGreen} />
+              <ActivityIndicator size="large" color={colors.primary} />
             ) : (
               <>
                 <View style={styles.addMediaIconCircle}>
-                  <Ionicons
-                    name="videocam"
-                    size={32}
-                    color={Colors.primaryGreen}
-                  />
+                  <Ionicons name="videocam" size={32} color={colors.primary} />
                 </View>
-                <Text style={styles.addMediaTitle}>Add Video</Text>
-                <Text style={styles.addMediaSubtitle}>
+                <Text style={[styles.addMediaTitle, { color: colors.text }]}>
+                  Add Video
+                </Text>
+                <Text
+                  style={[
+                    styles.addMediaSubtitle,
+                    { color: colors.textSecondary },
+                  ]}
+                >
                   Record or upload from gallery
                 </Text>
               </>
@@ -1005,7 +1141,9 @@ export default function AddListingScreen() {
       )}
 
       <TouchableOpacity style={styles.skipButton} onPress={goToNextStep}>
-        <Text style={styles.skipButtonText}>Skip for now</Text>
+        <Text style={[styles.skipButtonText, { color: colors.textSecondary }]}>
+          Skip for now
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -1023,14 +1161,24 @@ export default function AddListingScreen() {
   // Step 8: 360° View
   const render360Step = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>360° Virtual Tour</Text>
-      <Text style={styles.stepSubtitle}>
+      <Text style={[styles.stepTitle, { color: colors.text }]}>
+        360° Virtual Tour
+      </Text>
+      <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
         Add an immersive 360° view of your property (Optional)
       </Text>
 
       {/* Show existing tour or create button */}
       {formData.virtualTourScenes.length > 0 ? (
-        <View style={styles.tourPreviewContainer}>
+        <View
+          style={[
+            styles.tourPreviewContainer,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.divider,
+            },
+          ]}
+        >
           {/* Tour Thumbnail Grid */}
           <View style={styles.tourThumbnailGrid}>
             {formData.virtualTourScenes.slice(0, 4).map((scene, index) => (
@@ -1051,12 +1199,16 @@ export default function AddListingScreen() {
           </View>
 
           {/* Tour Info */}
-          <View style={styles.tourInfo}>
+          <View style={[styles.tourInfo, { borderTopColor: colors.divider }]}>
             <View style={styles.tourInfoHeader}>
-              <Ionicons name="cube" size={20} color={Colors.primaryGreen} />
-              <Text style={styles.tourInfoTitle}>Virtual Tour Created</Text>
+              <Ionicons name="cube" size={20} color={colors.primary} />
+              <Text style={[styles.tourInfoTitle, { color: colors.text }]}>
+                Virtual Tour Created
+              </Text>
             </View>
-            <Text style={styles.tourInfoText}>
+            <Text
+              style={[styles.tourInfoText, { color: colors.textSecondary }]}
+            >
               {formData.virtualTourScenes.length} scenes •{" "}
               {formData.virtualTourScenes.reduce(
                 (acc, s) => acc + s.hotspots.length,
@@ -1069,15 +1221,31 @@ export default function AddListingScreen() {
           {/* Action Buttons */}
           <View style={styles.tourActions}>
             <TouchableOpacity
-              style={styles.tourPreviewButton}
+              style={[
+                styles.tourPreviewButton,
+                {
+                  backgroundColor: `${colors.primary}10`,
+                  borderColor: colors.primary,
+                },
+              ]}
               onPress={() => setShowTourPreview(true)}
               activeOpacity={0.8}
             >
-              <Ionicons name="eye" size={18} color={Colors.primaryGreen} />
-              <Text style={styles.tourPreviewButtonText}>Preview</Text>
+              <Ionicons name="eye" size={18} color={colors.primary} />
+              <Text
+                style={[
+                  styles.tourPreviewButtonText,
+                  { color: colors.primary },
+                ]}
+              >
+                Preview
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.tourEditButton}
+              style={[
+                styles.tourEditButton,
+                { backgroundColor: colors.primary },
+              ]}
               onPress={() => setShowTourCreator(true)}
               activeOpacity={0.8}
             >
@@ -1098,7 +1266,9 @@ export default function AddListingScreen() {
             }
           >
             <Ionicons name="trash-outline" size={16} color="#EF4444" />
-            <Text style={styles.removeTourButtonText}>Remove Tour</Text>
+            <Text style={[styles.removeTourButtonText, { color: "#EF4444" }]}>
+              Remove Tour
+            </Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -1108,14 +1278,18 @@ export default function AddListingScreen() {
           onPress={() => setShowTourCreator(true)}
         >
           <LinearGradient
-            colors={[`${Colors.primaryGreen}15`, `${Colors.primaryGreen}05`]}
+            colors={[`${colors.primary}15`, `${colors.primary}05`]}
             style={styles.addMediaGradient}
           >
             <View style={styles.addMediaIconCircle}>
-              <Ionicons name="cube" size={32} color={Colors.primaryGreen} />
+              <Ionicons name="cube" size={32} color={colors.primary} />
             </View>
-            <Text style={styles.addMediaTitle}>Create 360° Tour</Text>
-            <Text style={styles.addMediaSubtitle}>
+            <Text style={[styles.addMediaTitle, { color: colors.text }]}>
+              Create 360° Tour
+            </Text>
+            <Text
+              style={[styles.addMediaSubtitle, { color: colors.textSecondary }]}
+            >
               Build an immersive virtual walkthrough
             </Text>
           </LinearGradient>
@@ -1123,21 +1297,27 @@ export default function AddListingScreen() {
       )}
 
       <View style={styles.tipsContainer}>
-        <Text style={styles.tipsTitle}>📷 How to capture 360° photos:</Text>
-        <Text style={styles.tipText}>
+        <Text style={[styles.tipsTitle, { color: colors.text }]}>
+          📷 How to capture 360° photos:
+        </Text>
+        <Text style={[styles.tipText, { color: colors.textSecondary }]}>
           • Use a 360° camera (Insta360, Ricoh Theta)
         </Text>
-        <Text style={styles.tipText}>
+        <Text style={[styles.tipText, { color: colors.textSecondary }]}>
           • Or use Google Street View app for panoramas
         </Text>
-        <Text style={styles.tipText}>• Wide angle photos also work well</Text>
-        <Text style={styles.tipText}>
+        <Text style={[styles.tipText, { color: colors.textSecondary }]}>
+          • Wide angle photos also work well
+        </Text>
+        <Text style={[styles.tipText, { color: colors.textSecondary }]}>
           • Consider hiring a professional photographer
         </Text>
       </View>
 
       <TouchableOpacity style={styles.skipButton} onPress={goToNextStep}>
-        <Text style={styles.skipButtonText}>Skip for now</Text>
+        <Text style={[styles.skipButtonText, { color: colors.textSecondary }]}>
+          Skip for now
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -1145,8 +1325,10 @@ export default function AddListingScreen() {
   // Step 9: Location
   const renderLocationStep = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Set Location</Text>
-      <Text style={styles.stepSubtitle}>
+      <Text style={[styles.stepTitle, { color: colors.text }]}>
+        Set Location
+      </Text>
+      <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
         Tap on the map to pinpoint your property location
       </Text>
 
@@ -1176,29 +1358,42 @@ export default function AddListingScreen() {
           )}
         </MapView>
         {formData.latitude && formData.longitude && (
-          <View style={styles.mapLocationBadge}>
+          <View
+            style={[
+              styles.mapLocationBadge,
+              { backgroundColor: colors.surface },
+            ]}
+          >
             <Ionicons
               name="checkmark-circle"
               size={16}
-              color={Colors.primaryGreen}
+              color={colors.primary}
             />
-            <Text style={styles.mapLocationBadgeText}>Location set</Text>
+            <Text style={[styles.mapLocationBadgeText, { color: colors.text }]}>
+              Location set
+            </Text>
           </View>
         )}
       </View>
 
       <TouchableOpacity
-        style={styles.locationButton}
+        style={[
+          styles.locationButton,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.divider,
+          },
+        ]}
         activeOpacity={0.8}
         onPress={getCurrentLocation}
         disabled={isLoadingLocation}
       >
         {isLoadingLocation ? (
-          <ActivityIndicator size="small" color={Colors.primaryGreen} />
+          <ActivityIndicator size="small" color={colors.primary} />
         ) : (
-          <Ionicons name="locate" size={20} color={Colors.primaryGreen} />
+          <Ionicons name="locate" size={20} color={colors.primary} />
         )}
-        <Text style={styles.locationButtonText}>
+        <Text style={[styles.locationButtonText, { color: colors.text }]}>
           {isLoadingLocation
             ? "Getting location..."
             : "Use My Current Location"}
@@ -1206,11 +1401,18 @@ export default function AddListingScreen() {
       </TouchableOpacity>
 
       <View style={styles.formGroup}>
-        <Text style={styles.inputLabel}>Address</Text>
+        <Text style={[styles.inputLabel, { color: colors.text }]}>Address</Text>
         <TextInput
-          style={styles.textInput}
+          style={[
+            styles.textInput,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.divider,
+              color: colors.text,
+            },
+          ]}
           placeholder="Enter property address"
-          placeholderTextColor={Colors.textSecondary}
+          placeholderTextColor={colors.textSecondary}
           value={formData.address}
           onChangeText={(text) => setFormData({ ...formData, address: text })}
         />
@@ -1218,11 +1420,20 @@ export default function AddListingScreen() {
 
       <View style={styles.coordinatesRow}>
         <View style={[styles.formGroup, { flex: 1 }]}>
-          <Text style={styles.inputLabel}>Latitude</Text>
+          <Text style={[styles.inputLabel, { color: colors.text }]}>
+            Latitude
+          </Text>
           <TextInput
-            style={styles.textInput}
+            style={[
+              styles.textInput,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+                color: colors.text,
+              },
+            ]}
             placeholder="5.6037"
-            placeholderTextColor={Colors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             keyboardType="numeric"
             value={formData.latitude?.toString() || ""}
             onChangeText={(text) =>
@@ -1231,11 +1442,20 @@ export default function AddListingScreen() {
           />
         </View>
         <View style={[styles.formGroup, { flex: 1 }]}>
-          <Text style={styles.inputLabel}>Longitude</Text>
+          <Text style={[styles.inputLabel, { color: colors.text }]}>
+            Longitude
+          </Text>
           <TextInput
-            style={styles.textInput}
+            style={[
+              styles.textInput,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+                color: colors.text,
+              },
+            ]}
             placeholder="-0.1870"
-            placeholderTextColor={Colors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             keyboardType="numeric"
             value={formData.longitude?.toString() || ""}
             onChangeText={(text) =>
@@ -1250,12 +1470,22 @@ export default function AddListingScreen() {
   // Step 10: Preview
   const renderPreviewStep = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Preview Listing</Text>
-      <Text style={styles.stepSubtitle}>
+      <Text style={[styles.stepTitle, { color: colors.text }]}>
+        Preview Listing
+      </Text>
+      <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
         Review your listing before submitting
       </Text>
 
-      <View style={styles.previewCard}>
+      <View
+        style={[
+          styles.previewCard,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.divider,
+          },
+        ]}
+      >
         {formData.photos.length > 0 ? (
           <Image
             source={{ uri: formData.photos[0] }}
@@ -1263,28 +1493,41 @@ export default function AddListingScreen() {
             resizeMode="cover"
           />
         ) : (
-          <View style={[styles.previewImage, styles.previewImagePlaceholder]}>
+          <View
+            style={[
+              styles.previewImage,
+              styles.previewImagePlaceholder,
+              { backgroundColor: colors.background },
+            ]}
+          >
             <Ionicons
               name="image-outline"
               size={48}
-              color={Colors.textSecondary}
+              color={colors.textSecondary}
             />
-            <Text style={styles.previewImagePlaceholderText}>
+            <Text
+              style={[
+                styles.previewImagePlaceholderText,
+                { color: colors.textSecondary },
+              ]}
+            >
               No photos added
             </Text>
           </View>
         )}
         <View style={styles.previewContent}>
-          <Text style={styles.previewTitle}>
+          <Text style={[styles.previewTitle, { color: colors.text }]}>
             {formData.title || "4 Bedroom House in East Legon"}
           </Text>
           <View style={styles.previewLocationRow}>
-            <Ionicons name="location" size={14} color={Colors.primaryGreen} />
-            <Text style={styles.previewLocation}>
+            <Ionicons name="location" size={14} color={colors.primary} />
+            <Text
+              style={[styles.previewLocation, { color: colors.textSecondary }]}
+            >
               {formData.address || "East Legon, Accra"}
             </Text>
           </View>
-          <Text style={styles.previewPrice}>
+          <Text style={[styles.previewPrice, { color: colors.primary }]}>
             GHS{" "}
             {formData.price
               ? parseInt(formData.price).toLocaleString()
@@ -1295,14 +1538,31 @@ export default function AddListingScreen() {
       </View>
 
       <View style={styles.previewSections}>
-        <View style={styles.previewSection}>
+        <View
+          style={[
+            styles.previewSection,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.divider,
+            },
+          ]}
+        >
           <View style={styles.previewSectionHeader}>
-            <Text style={styles.previewSectionTitle}>Property Type</Text>
+            <Text style={[styles.previewSectionTitle, { color: colors.text }]}>
+              Property Type
+            </Text>
             <TouchableOpacity onPress={() => setCurrentStep(1)}>
-              <Text style={styles.editLink}>Edit</Text>
+              <Text style={[styles.editLink, { color: colors.primary }]}>
+                Edit
+              </Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.previewSectionValue}>
+          <Text
+            style={[
+              styles.previewSectionValue,
+              { color: colors.textSecondary },
+            ]}
+          >
             {PROPERTY_TYPES.find((t) => t.id === formData.propertyType)
               ?.label || "House"}{" "}
             •{" "}
@@ -1311,27 +1571,61 @@ export default function AddListingScreen() {
           </Text>
         </View>
 
-        <View style={styles.previewSection}>
+        <View
+          style={[
+            styles.previewSection,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.divider,
+            },
+          ]}
+        >
           <View style={styles.previewSectionHeader}>
-            <Text style={styles.previewSectionTitle}>Details</Text>
+            <Text style={[styles.previewSectionTitle, { color: colors.text }]}>
+              Details
+            </Text>
             <TouchableOpacity onPress={() => setCurrentStep(3)}>
-              <Text style={styles.editLink}>Edit</Text>
+              <Text style={[styles.editLink, { color: colors.primary }]}>
+                Edit
+              </Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.previewSectionValue}>
+          <Text
+            style={[
+              styles.previewSectionValue,
+              { color: colors.textSecondary },
+            ]}
+          >
             {formData.bedrooms} Beds • {formData.bathrooms} Baths •{" "}
             {formData.plotSize || "2"} {formData.plotUnit}
           </Text>
         </View>
 
-        <View style={styles.previewSection}>
+        <View
+          style={[
+            styles.previewSection,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.divider,
+            },
+          ]}
+        >
           <View style={styles.previewSectionHeader}>
-            <Text style={styles.previewSectionTitle}>Amenities</Text>
+            <Text style={[styles.previewSectionTitle, { color: colors.text }]}>
+              Amenities
+            </Text>
             <TouchableOpacity onPress={() => setCurrentStep(5)}>
-              <Text style={styles.editLink}>Edit</Text>
+              <Text style={[styles.editLink, { color: colors.primary }]}>
+                Edit
+              </Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.previewSectionValue}>
+          <Text
+            style={[
+              styles.previewSectionValue,
+              { color: colors.textSecondary },
+            ]}
+          >
             {formData.amenities.length > 0
               ? formData.amenities
                   .map((id) => AMENITIES.find((a) => a.id === id)?.label)
@@ -1340,14 +1634,31 @@ export default function AddListingScreen() {
           </Text>
         </View>
 
-        <View style={styles.previewSection}>
+        <View
+          style={[
+            styles.previewSection,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.divider,
+            },
+          ]}
+        >
           <View style={styles.previewSectionHeader}>
-            <Text style={styles.previewSectionTitle}>Media</Text>
+            <Text style={[styles.previewSectionTitle, { color: colors.text }]}>
+              Media
+            </Text>
             <TouchableOpacity onPress={() => setCurrentStep(6)}>
-              <Text style={styles.editLink}>Edit</Text>
+              <Text style={[styles.editLink, { color: colors.primary }]}>
+                Edit
+              </Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.previewSectionValue}>
+          <Text
+            style={[
+              styles.previewSectionValue,
+              { color: colors.textSecondary },
+            ]}
+          >
             {formData.photos.length} Photos • {formData.videos.length} Videos •{" "}
             {formData.has360 ? "360° View" : "No 360° View"}
           </Text>
@@ -1358,15 +1669,25 @@ export default function AddListingScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? "light" : "dark"} />
       <KeyboardAvoidingView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
         </View>
 
         {/* Floating Sticky Header */}
@@ -1376,7 +1697,12 @@ export default function AddListingScreen() {
           showBackButton
           onBackPress={goToPreviousStep}
           rightContent={
-            <View style={styles.stepIndicator}>
+            <View
+              style={[
+                styles.stepIndicator,
+                { backgroundColor: colors.primary },
+              ]}
+            >
               <Text style={styles.stepIndicatorText}>
                 {currentStep}/{TOTAL_STEPS}
               </Text>
@@ -1388,9 +1714,17 @@ export default function AddListingScreen() {
         <View
           style={[styles.progressContainer, { marginTop: 80 + insets.top }]}
         >
-          <View style={styles.progressBar}>
+          <View
+            style={[styles.progressBar, { backgroundColor: colors.divider }]}
+          >
             <Animated.View
-              style={[styles.progressFill, { width: `${progressPercentage}%` }]}
+              style={[
+                styles.progressFill,
+                {
+                  width: `${progressPercentage}%`,
+                  backgroundColor: colors.primary,
+                },
+              ]}
             />
           </View>
         </View>
@@ -1420,8 +1754,8 @@ export default function AddListingScreen() {
           <LinearGradient
             colors={
               isStepValid()
-                ? [Colors.primaryGreen, "#2E7D32"]
-                : [Colors.divider, Colors.divider]
+                ? [colors.primary, colors.primaryDark]
+                : [colors.divider, colors.divider]
             }
             style={styles.floatingContinueButtonGradient}
           >
@@ -1469,7 +1803,6 @@ export default function AddListingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   // Decorative Background
   decorativeBackground: {
@@ -1487,8 +1820,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: Colors.primaryLight,
-    opacity: 0.08,
   },
   circle2: {
     position: "absolute",
@@ -1497,8 +1828,6 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     borderRadius: 200,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
   },
   // Header
   headerLeft: {
@@ -1514,7 +1843,6 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   stepIndicator: {
-    backgroundColor: Colors.primaryGreen,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
     borderRadius: 12,
@@ -1533,13 +1861,11 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 4,
-    backgroundColor: Colors.divider,
     borderRadius: 2,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    backgroundColor: Colors.primaryGreen,
     borderRadius: 2,
   },
   // Scroll View
@@ -1559,13 +1885,11 @@ const styles = StyleSheet.create({
     ...Typography.headlineLarge,
     fontSize: 26,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: Spacing.sm,
   },
   stepSubtitle: {
     ...Typography.bodyMedium,
     fontSize: 15,
-    color: Colors.textSecondary,
     marginBottom: Spacing.xl,
   },
   // Options (Property Type)
