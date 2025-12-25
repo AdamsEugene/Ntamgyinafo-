@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, Spacing, Typography } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export interface CheckboxProps {
   label: string;
@@ -14,16 +15,33 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   checked,
   onPress,
 }) => {
+  const { colors } = useTheme();
+
   return (
     <TouchableOpacity
       style={styles.container}
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
+      <View
+        style={[
+          styles.checkbox,
+          { backgroundColor: colors.surface, borderColor: colors.divider },
+          checked && {
+            backgroundColor: colors.primary,
+            borderColor: colors.primary,
+          },
+        ]}
+      >
         {checked && <Ionicons name="checkmark" size={18} color="#FFFFFF" />}
       </View>
-      <Text style={[styles.label, checked && styles.labelChecked]}>
+      <Text
+        style={[
+          styles.label,
+          { color: colors.text },
+          checked && styles.labelChecked,
+        ]}
+      >
         {label}
       </Text>
     </TouchableOpacity>
