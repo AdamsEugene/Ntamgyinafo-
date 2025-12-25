@@ -24,7 +24,8 @@ import {
   BottomSheetBackdrop,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import { getDetailedProperty } from "@/constants/mockData";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -82,21 +83,31 @@ const LISTING_STATS = {
   shares: 6,
 };
 
-const STATUS_OPTIONS: {
-  id: ListingStatus;
-  label: string;
-  icon: string;
-  color: string;
-}[] = [
+const getStatusOptions = (primaryColor: string) => [
   {
-    id: "active",
+    id: "active" as ListingStatus,
     label: "Active",
     icon: "checkmark-circle",
-    color: Colors.primaryGreen,
+    color: primaryColor,
   },
-  { id: "pending", label: "Pending", icon: "time", color: Colors.accentOrange },
-  { id: "sold", label: "Sold", icon: "pricetag", color: Colors.accentGold },
-  { id: "rented", label: "Rented", icon: "key", color: "#6B7280" },
+  {
+    id: "pending" as ListingStatus,
+    label: "Pending",
+    icon: "time",
+    color: "#F59E0B",
+  },
+  {
+    id: "sold" as ListingStatus,
+    label: "Sold",
+    icon: "pricetag",
+    color: "#F59E0B",
+  },
+  {
+    id: "rented" as ListingStatus,
+    label: "Rented",
+    icon: "key",
+    color: "#6B7280",
+  },
 ];
 
 export default function OwnerListingDetailScreen() {
@@ -104,6 +115,7 @@ export default function OwnerListingDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
   const id = params.id;
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -251,6 +263,8 @@ export default function OwnerListingDetailScreen() {
     setCurrentImageIndex(index);
   };
 
+  const STATUS_OPTIONS = getStatusOptions(colors.primary);
+
   const getStatusInfo = (status: ListingStatus) => {
     return STATUS_OPTIONS.find((s) => s.id === status) || STATUS_OPTIONS[0];
   };
@@ -260,7 +274,7 @@ export default function OwnerListingDetailScreen() {
   return (
     <>
       <StatusBar style="light" />
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <ScrollView
           ref={scrollViewRef}
           style={styles.scrollView}
@@ -323,12 +337,13 @@ export default function OwnerListingDetailScreen() {
                 style={styles.headerButton}
                 activeOpacity={0.7}
               >
-                <View style={styles.headerButtonBackground}>
-                  <Ionicons
-                    name="arrow-back"
-                    size={22}
-                    color={Colors.textPrimary}
-                  />
+                <View
+                  style={[
+                    styles.headerButtonBackground,
+                    { backgroundColor: colors.surface },
+                  ]}
+                >
+                  <Ionicons name="arrow-back" size={22} color={colors.text} />
                 </View>
               </TouchableOpacity>
 
@@ -340,11 +355,16 @@ export default function OwnerListingDetailScreen() {
                   style={styles.headerButton}
                   activeOpacity={0.7}
                 >
-                  <View style={styles.headerButtonBackground}>
+                  <View
+                    style={[
+                      styles.headerButtonBackground,
+                      { backgroundColor: colors.surface },
+                    ]}
+                  >
                     <Ionicons
                       name="share-outline"
                       size={22}
-                      color={Colors.textPrimary}
+                      color={colors.text}
                     />
                   </View>
                 </TouchableOpacity>
@@ -396,56 +416,84 @@ export default function OwnerListingDetailScreen() {
           </View>
 
           {/* Quick Stats Banner */}
-          <View style={styles.statsSection}>
-            <Text style={styles.statsSectionTitle}>Performance Overview</Text>
+          <View
+            style={[
+              styles.statsSection,
+              {
+                backgroundColor: colors.surface,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.statsSectionTitle,
+                { color: colors.textSecondary },
+              ]}
+            >
+              Performance Overview
+            </Text>
             <View style={styles.statsGrid}>
               <View style={styles.statCard}>
                 <View
                   style={[
                     styles.statIconContainer,
-                    { backgroundColor: `${Colors.primaryGreen}15` },
+                    { backgroundColor: `${colors.primary}15` },
                   ]}
                 >
                   <Ionicons
                     name="eye-outline"
                     size={20}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                 </View>
-                <Text style={styles.statValue}>{LISTING_STATS.views}</Text>
-                <Text style={styles.statLabel}>Views</Text>
+                <Text style={[styles.statValue, { color: colors.text }]}>
+                  {LISTING_STATS.views}
+                </Text>
+                <Text
+                  style={[styles.statLabel, { color: colors.textSecondary }]}
+                >
+                  Views
+                </Text>
               </View>
               <View style={styles.statCard}>
                 <View
                   style={[
                     styles.statIconContainer,
-                    { backgroundColor: `${Colors.accentOrange}15` },
+                    { backgroundColor: "#F59E0B15" },
                   ]}
                 >
-                  <Ionicons
-                    name="heart-outline"
-                    size={20}
-                    color={Colors.accentOrange}
-                  />
+                  <Ionicons name="heart-outline" size={20} color="#F59E0B" />
                 </View>
-                <Text style={styles.statValue}>{LISTING_STATS.saves}</Text>
-                <Text style={styles.statLabel}>Saves</Text>
+                <Text style={[styles.statValue, { color: colors.text }]}>
+                  {LISTING_STATS.saves}
+                </Text>
+                <Text
+                  style={[styles.statLabel, { color: colors.textSecondary }]}
+                >
+                  Saves
+                </Text>
               </View>
               <View style={styles.statCard}>
                 <View
                   style={[
                     styles.statIconContainer,
-                    { backgroundColor: `${Colors.accentGold}15` },
+                    { backgroundColor: "#F59E0B15" },
                   ]}
                 >
                   <Ionicons
                     name="chatbubble-outline"
                     size={20}
-                    color={Colors.accentGold}
+                    color="#F59E0B"
                   />
                 </View>
-                <Text style={styles.statValue}>{LISTING_STATS.inquiries}</Text>
-                <Text style={styles.statLabel}>Inquiries</Text>
+                <Text style={[styles.statValue, { color: colors.text }]}>
+                  {LISTING_STATS.inquiries}
+                </Text>
+                <Text
+                  style={[styles.statLabel, { color: colors.textSecondary }]}
+                >
+                  Inquiries
+                </Text>
               </View>
               <View style={styles.statCard}>
                 <View
@@ -460,22 +508,29 @@ export default function OwnerListingDetailScreen() {
                     color="#6366F1"
                   />
                 </View>
-                <Text style={styles.statValue}>{LISTING_STATS.shares}</Text>
-                <Text style={styles.statLabel}>Shares</Text>
+                <Text style={[styles.statValue, { color: colors.text }]}>
+                  {LISTING_STATS.shares}
+                </Text>
+                <Text
+                  style={[styles.statLabel, { color: colors.textSecondary }]}
+                >
+                  Shares
+                </Text>
               </View>
             </View>
             <TouchableOpacity
-              style={styles.viewAllStatsButton}
+              style={[
+                styles.viewAllStatsButton,
+                { borderTopColor: colors.divider },
+              ]}
               onPress={handleViewStats}
             >
-              <Text style={styles.viewAllStatsText}>
+              <Text
+                style={[styles.viewAllStatsText, { color: colors.primary }]}
+              >
                 View Detailed Analytics
               </Text>
-              <Ionicons
-                name="arrow-forward"
-                size={16}
-                color={Colors.primaryGreen}
-              />
+              <Ionicons name="arrow-forward" size={16} color={colors.primary} />
             </TouchableOpacity>
           </View>
 
@@ -483,7 +538,12 @@ export default function OwnerListingDetailScreen() {
           <View style={styles.propertyInfo}>
             <View style={styles.propertyTypeRow}>
               {property.propertyType && (
-                <View style={styles.typeBadge}>
+                <View
+                  style={[
+                    styles.typeBadge,
+                    { backgroundColor: `${colors.primary}10` },
+                  ]}
+                >
                   <Ionicons
                     name={
                       property.propertyType === "house"
@@ -495,9 +555,11 @@ export default function OwnerListingDetailScreen() {
                         : "storefront-outline"
                     }
                     size={14}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
-                  <Text style={styles.typeBadgeText}>
+                  <Text
+                    style={[styles.typeBadgeText, { color: colors.primary }]}
+                  >
                     {property.propertyType.charAt(0).toUpperCase() +
                       property.propertyType.slice(1)}
                   </Text>
@@ -506,7 +568,10 @@ export default function OwnerListingDetailScreen() {
               <View
                 style={[
                   styles.transactionBadge,
-                  property.transactionType === "rent" && styles.rentBadge,
+                  { backgroundColor: colors.primary },
+                  property.transactionType === "rent" && {
+                    backgroundColor: "#F59E0B",
+                  },
                 ]}
               >
                 <Text style={styles.transactionBadgeText}>
@@ -515,78 +580,141 @@ export default function OwnerListingDetailScreen() {
               </View>
             </View>
 
-            <Text style={styles.propertyTitle}>{property.title}</Text>
+            <Text style={[styles.propertyTitle, { color: colors.text }]}>
+              {property.title}
+            </Text>
 
             <View style={styles.locationRow}>
               <Ionicons
                 name="location-outline"
                 size={18}
-                color={Colors.textSecondary}
+                color={colors.textSecondary}
               />
-              <Text style={styles.locationText}>{property.location}</Text>
+              <Text
+                style={[styles.locationText, { color: colors.textSecondary }]}
+              >
+                {property.location}
+              </Text>
             </View>
 
             <View style={styles.priceRow}>
-              <Text style={styles.price}>{formatPrice(property.price)}</Text>
+              <Text style={[styles.price, { color: colors.primary }]}>
+                {formatPrice(property.price)}
+              </Text>
               {property.transactionType === "rent" && (
-                <Text style={styles.priceUnit}>/month</Text>
+                <Text
+                  style={[styles.priceUnit, { color: colors.textSecondary }]}
+                >
+                  /month
+                </Text>
               )}
               {property.negotiable && (
-                <View style={styles.negotiableBadge}>
-                  <Text style={styles.negotiableText}>Negotiable</Text>
+                <View
+                  style={[
+                    styles.negotiableBadge,
+                    { backgroundColor: `${colors.accent}20` },
+                  ]}
+                >
+                  <Text
+                    style={[styles.negotiableText, { color: colors.accent }]}
+                  >
+                    Negotiable
+                  </Text>
                 </View>
               )}
             </View>
           </View>
 
           {/* Quick Stats */}
-          <View style={styles.quickStats}>
+          <View
+            style={[
+              styles.quickStats,
+              {
+                backgroundColor: colors.surface,
+              },
+            ]}
+          >
             <View style={styles.quickStatItem}>
-              <Ionicons
-                name="bed-outline"
-                size={22}
-                color={Colors.primaryGreen}
-              />
-              <Text style={styles.quickStatValue}>{property.bedrooms}</Text>
-              <Text style={styles.quickStatLabel}>Beds</Text>
+              <Ionicons name="bed-outline" size={22} color={colors.primary} />
+              <Text style={[styles.quickStatValue, { color: colors.text }]}>
+                {property.bedrooms}
+              </Text>
+              <Text
+                style={[styles.quickStatLabel, { color: colors.textSecondary }]}
+              >
+                Beds
+              </Text>
             </View>
-            <View style={styles.quickStatDivider} />
+            <View
+              style={[
+                styles.quickStatDivider,
+                { backgroundColor: colors.divider },
+              ]}
+            />
             <View style={styles.quickStatItem}>
-              <Ionicons
-                name="water-outline"
-                size={22}
-                color={Colors.primaryGreen}
-              />
-              <Text style={styles.quickStatValue}>{property.bathrooms}</Text>
-              <Text style={styles.quickStatLabel}>Baths</Text>
+              <Ionicons name="water-outline" size={22} color={colors.primary} />
+              <Text style={[styles.quickStatValue, { color: colors.text }]}>
+                {property.bathrooms}
+              </Text>
+              <Text
+                style={[styles.quickStatLabel, { color: colors.textSecondary }]}
+              >
+                Baths
+              </Text>
             </View>
             {property.plotSize && (
               <>
-                <View style={styles.quickStatDivider} />
+                <View
+                  style={[
+                    styles.quickStatDivider,
+                    { backgroundColor: colors.divider },
+                  ]}
+                />
                 <View style={styles.quickStatItem}>
                   <Ionicons
                     name="resize-outline"
                     size={22}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
-                  <Text style={styles.quickStatValue}>{property.plotSize}</Text>
-                  <Text style={styles.quickStatLabel}>Plots</Text>
+                  <Text style={[styles.quickStatValue, { color: colors.text }]}>
+                    {property.plotSize}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.quickStatLabel,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    Plots
+                  </Text>
                 </View>
               </>
             )}
             {property.propertySize && (
               <>
-                <View style={styles.quickStatDivider} />
+                <View
+                  style={[
+                    styles.quickStatDivider,
+                    { backgroundColor: colors.divider },
+                  ]}
+                />
                 <View style={styles.quickStatItem}>
                   <Ionicons
                     name="square-outline"
                     size={22}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
-                  <Text style={styles.quickStatValue}>
+                  <Text style={[styles.quickStatValue, { color: colors.text }]}>
                     {property.propertySize}
                   </Text>
-                  <Text style={styles.quickStatLabel}>m²</Text>
+                  <Text
+                    style={[
+                      styles.quickStatLabel,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    m²
+                  </Text>
                 </View>
               </>
             )}
@@ -594,10 +722,20 @@ export default function OwnerListingDetailScreen() {
 
           {/* Description */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Description</Text>
-            <View style={styles.descriptionCard}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Description
+            </Text>
+            <View
+              style={[
+                styles.descriptionCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               <Text
-                style={styles.description}
+                style={[styles.description, { color: colors.textSecondary }]}
                 numberOfLines={showFullDescription ? undefined : 3}
               >
                 {property.description}
@@ -607,13 +745,15 @@ export default function OwnerListingDetailScreen() {
                   onPress={() => setShowFullDescription(!showFullDescription)}
                   style={styles.readMoreButton}
                 >
-                  <Text style={styles.readMoreText}>
+                  <Text
+                    style={[styles.readMoreText, { color: colors.primary }]}
+                  >
                     {showFullDescription ? "Show Less" : "Read More"}
                   </Text>
                   <Ionicons
                     name={showFullDescription ? "chevron-up" : "chevron-down"}
                     size={16}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                 </TouchableOpacity>
               )}
@@ -622,18 +762,36 @@ export default function OwnerListingDetailScreen() {
 
           {/* Amenities */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Amenities</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Amenities
+            </Text>
             <View style={styles.amenitiesGrid}>
               {property.amenities.map((amenity, index) => (
-                <View key={index} style={styles.amenityChip}>
-                  <View style={styles.amenityIconContainer}>
+                <View
+                  key={index}
+                  style={[
+                    styles.amenityChip,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.amenityIconContainer,
+                      { backgroundColor: `${colors.primary}15` },
+                    ]}
+                  >
                     <Ionicons
                       name="checkmark"
                       size={14}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
                   </View>
-                  <Text style={styles.amenityText}>{amenity}</Text>
+                  <Text style={[styles.amenityText, { color: colors.text }]}>
+                    {amenity}
+                  </Text>
                 </View>
               ))}
             </View>
@@ -642,18 +800,24 @@ export default function OwnerListingDetailScreen() {
           {/* Location Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Location</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Location
+              </Text>
               <TouchableOpacity
                 onPress={() =>
                   router.push(`/(tabs)/map?property=${property.id}` as any)
                 }
                 style={styles.viewButton}
               >
-                <Text style={styles.viewButtonText}>View Full Map</Text>
+                <Text
+                  style={[styles.viewButtonText, { color: colors.primary }]}
+                >
+                  View Full Map
+                </Text>
                 <Ionicons
                   name="chevron-forward"
                   size={16}
-                  color={Colors.primaryGreen}
+                  color={colors.primary}
                 />
               </TouchableOpacity>
             </View>
@@ -682,49 +846,110 @@ export default function OwnerListingDetailScreen() {
                     }}
                     title={property.title}
                   >
-                    <View style={styles.customMarker}>
+                    <View
+                      style={[
+                        styles.customMarker,
+                        {
+                          backgroundColor: colors.surface,
+                          borderColor: colors.primary,
+                        },
+                      ]}
+                    >
                       <Ionicons
                         name="location"
                         size={24}
-                        color={Colors.primaryGreen}
+                        color={colors.primary}
                       />
                     </View>
                   </Marker>
                 </MapView>
               ) : (
-                <View style={styles.mapPlaceholder}>
+                <View
+                  style={[
+                    styles.mapPlaceholder,
+                    { backgroundColor: colors.surface },
+                  ]}
+                >
                   <Ionicons
                     name="map-outline"
                     size={48}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                   />
-                  <Text style={styles.mapPlaceholderText}>
+                  <Text
+                    style={[
+                      styles.mapPlaceholderText,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
                     Map not available
                   </Text>
                 </View>
               )}
             </View>
-            <Text style={styles.address}>{property.address}</Text>
+            <Text style={[styles.address, { color: colors.textSecondary }]}>
+              {property.address}
+            </Text>
           </View>
 
           {/* Listing Info */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Listing Info</Text>
-            <View style={styles.listingInfoCard}>
-              <View style={styles.listingInfoRow}>
-                <Text style={styles.listingInfoLabel}>Property ID</Text>
-                <Text style={styles.listingInfoValue}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Listing Info
+            </Text>
+            <View
+              style={[
+                styles.listingInfoCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.listingInfoRow,
+                  { borderBottomColor: colors.divider },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.listingInfoLabel,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Property ID
+                </Text>
+                <Text style={[styles.listingInfoValue, { color: colors.text }]}>
                   {property.propertyId || `#${property.id}`}
                 </Text>
               </View>
-              <View style={styles.listingInfoRow}>
-                <Text style={styles.listingInfoLabel}>Listed Date</Text>
-                <Text style={styles.listingInfoValue}>
+              <View
+                style={[
+                  styles.listingInfoRow,
+                  { borderBottomColor: colors.divider },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.listingInfoLabel,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Listed Date
+                </Text>
+                <Text style={[styles.listingInfoValue, { color: colors.text }]}>
                   {property.listedDate || "Dec 15, 2024"}
                 </Text>
               </View>
               <View style={styles.listingInfoRow}>
-                <Text style={styles.listingInfoLabel}>Status</Text>
+                <Text
+                  style={[
+                    styles.listingInfoLabel,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Status
+                </Text>
                 <View
                   style={[
                     styles.statusIndicator,
@@ -747,6 +972,8 @@ export default function OwnerListingDetailScreen() {
             {
               paddingBottom: insets.bottom + Spacing.md,
               paddingTop: Spacing.md,
+              backgroundColor: colors.surface,
+              borderTopColor: colors.divider,
             },
           ]}
         >
@@ -756,7 +983,7 @@ export default function OwnerListingDetailScreen() {
               onPress={handleEditListing}
             >
               <LinearGradient
-                colors={[Colors.primaryGreen, "#2E7D32"]}
+                colors={[colors.primary, colors.primaryDark]}
                 style={styles.ownerActionGradient}
               >
                 <Ionicons name="create-outline" size={20} color="#FFFFFF" />
@@ -768,13 +995,28 @@ export default function OwnerListingDetailScreen() {
               style={styles.ownerActionButton}
               onPress={handleViewStats}
             >
-              <View style={styles.ownerActionOutline}>
+              <View
+                style={[
+                  styles.ownerActionOutline,
+                  {
+                    borderColor: colors.primary,
+                    backgroundColor: colors.surface,
+                  },
+                ]}
+              >
                 <Ionicons
                   name="stats-chart-outline"
                   size={20}
-                  color={Colors.primaryGreen}
+                  color={colors.primary}
                 />
-                <Text style={styles.ownerActionOutlineText}>Stats</Text>
+                <Text
+                  style={[
+                    styles.ownerActionOutlineText,
+                    { color: colors.primary },
+                  ]}
+                >
+                  Stats
+                </Text>
               </View>
             </TouchableOpacity>
 
@@ -782,13 +1024,28 @@ export default function OwnerListingDetailScreen() {
               style={styles.ownerActionButton}
               onPress={handleChangeStatus}
             >
-              <View style={styles.ownerActionOutline}>
+              <View
+                style={[
+                  styles.ownerActionOutline,
+                  {
+                    borderColor: colors.primary,
+                    backgroundColor: colors.surface,
+                  },
+                ]}
+              >
                 <Ionicons
                   name="swap-horizontal-outline"
                   size={20}
-                  color={Colors.primaryGreen}
+                  color={colors.primary}
                 />
-                <Text style={styles.ownerActionOutlineText}>Status</Text>
+                <Text
+                  style={[
+                    styles.ownerActionOutlineText,
+                    { color: colors.primary },
+                  ]}
+                >
+                  Status
+                </Text>
               </View>
             </TouchableOpacity>
 
@@ -797,7 +1054,14 @@ export default function OwnerListingDetailScreen() {
               onPress={handleDeleteListing}
             >
               <View
-                style={[styles.ownerActionOutline, styles.deleteActionOutline]}
+                style={[
+                  styles.ownerActionOutline,
+                  styles.deleteActionOutline,
+                  {
+                    borderColor: "#DC2626",
+                    backgroundColor: colors.surface,
+                  },
+                ]}
               >
                 <Ionicons name="trash-outline" size={20} color="#DC2626" />
                 <Text style={styles.deleteActionText}>Delete</Text>
@@ -812,11 +1076,18 @@ export default function OwnerListingDetailScreen() {
           index={0}
           snapPoints={statusSnapPoints}
           backdropComponent={renderBackdrop}
-          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+          handleIndicatorStyle={{ backgroundColor: colors.textSecondary }}
+          backgroundStyle={{ backgroundColor: colors.surface }}
         >
           <BottomSheetView style={styles.sheetContent}>
-            <Text style={styles.sheetTitle}>Change Status</Text>
-            <Text style={styles.sheetSubtitle}>Update your listing status</Text>
+            <Text style={[styles.sheetTitle, { color: colors.text }]}>
+              Change Status
+            </Text>
+            <Text
+              style={[styles.sheetSubtitle, { color: colors.textSecondary }]}
+            >
+              Update your listing status
+            </Text>
 
             <View style={styles.statusOptions}>
               {STATUS_OPTIONS.map((status) => (
@@ -824,7 +1095,14 @@ export default function OwnerListingDetailScreen() {
                   key={status.id}
                   style={[
                     styles.statusOption,
-                    listingStatus === status.id && styles.statusOptionActive,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                    listingStatus === status.id && {
+                      borderColor: colors.primary,
+                      backgroundColor: `${colors.primary}08`,
+                    },
                   ]}
                   onPress={() => selectStatus(status.id)}
                   activeOpacity={0.7}
@@ -841,12 +1119,16 @@ export default function OwnerListingDetailScreen() {
                       color={status.color}
                     />
                   </View>
-                  <Text style={styles.statusOptionLabel}>{status.label}</Text>
+                  <Text
+                    style={[styles.statusOptionLabel, { color: colors.text }]}
+                  >
+                    {status.label}
+                  </Text>
                   {listingStatus === status.id && (
                     <Ionicons
                       name="checkmark-circle"
                       size={24}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
                   )}
                 </TouchableOpacity>
@@ -861,23 +1143,43 @@ export default function OwnerListingDetailScreen() {
           index={0}
           snapPoints={deleteSnapPoints}
           backdropComponent={renderBackdrop}
-          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+          handleIndicatorStyle={{ backgroundColor: colors.textSecondary }}
+          backgroundStyle={{ backgroundColor: colors.surface }}
         >
           <BottomSheetView style={styles.sheetContent}>
-            <View style={styles.deleteWarningIcon}>
+            <View
+              style={[
+                styles.deleteWarningIcon,
+                {
+                  backgroundColor: isDark ? "#DC262615" : "#FEE2E2",
+                },
+              ]}
+            >
               <Ionicons name="warning-outline" size={48} color="#DC2626" />
             </View>
-            <Text style={styles.deleteTitle}>Delete Listing?</Text>
-            <Text style={styles.deleteMessage}>
+            <Text style={[styles.deleteTitle, { color: colors.text }]}>
+              Delete Listing?
+            </Text>
+            <Text
+              style={[styles.deleteMessage, { color: colors.textSecondary }]}
+            >
               This action cannot be undone. All data associated with this
               listing will be permanently removed.
             </Text>
             <View style={styles.deleteActions}>
               <TouchableOpacity
-                style={styles.cancelDeleteButton}
+                style={[
+                  styles.cancelDeleteButton,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
                 onPress={() => deleteBottomSheetRef.current?.dismiss()}
               >
-                <Text style={styles.cancelDeleteText}>Cancel</Text>
+                <Text style={[styles.cancelDeleteText, { color: colors.text }]}>
+                  Cancel
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.confirmDeleteButton}
@@ -897,7 +1199,6 @@ export default function OwnerListingDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   scrollView: {
     flex: 1,
@@ -933,7 +1234,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.95)",
     alignItems: "center",
     justifyContent: "center",
     ...Platform.select({
@@ -1022,7 +1322,6 @@ const styles = StyleSheet.create({
 
   // Stats Section
   statsSection: {
-    backgroundColor: Colors.surface,
     marginHorizontal: Spacing.lg,
     marginTop: -30,
     borderRadius: 16,
@@ -1041,7 +1340,6 @@ const styles = StyleSheet.create({
   },
   statsSectionTitle: {
     ...Typography.labelMedium,
-    color: Colors.textSecondary,
     marginBottom: Spacing.md,
   },
   statsGrid: {
@@ -1062,11 +1360,9 @@ const styles = StyleSheet.create({
   },
   statValue: {
     ...Typography.headlineMedium,
-    color: Colors.textPrimary,
   },
   statLabel: {
     ...Typography.caption,
-    color: Colors.textSecondary,
   },
   viewAllStatsButton: {
     flexDirection: "row",
@@ -1075,12 +1371,10 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: "#E5E5E5",
     gap: Spacing.xs,
   },
   viewAllStatsText: {
     ...Typography.labelMedium,
-    color: Colors.primaryGreen,
     fontWeight: "600",
   },
 
@@ -1097,25 +1391,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: `${Colors.primaryGreen}10`,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
   },
   typeBadgeText: {
     ...Typography.caption,
-    color: Colors.primaryGreen,
     fontWeight: "600",
   },
   transactionBadge: {
-    backgroundColor: Colors.primaryGreen,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
   },
-  rentBadge: {
-    backgroundColor: Colors.accentOrange,
-  },
+  rentBadge: {},
   transactionBadgeText: {
     ...Typography.caption,
     color: "#FFFFFF",
@@ -1123,7 +1412,6 @@ const styles = StyleSheet.create({
   },
   propertyTitle: {
     ...Typography.headlineLarge,
-    color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   locationRow: {
@@ -1134,7 +1422,6 @@ const styles = StyleSheet.create({
   },
   locationText: {
     ...Typography.bodyMedium,
-    color: Colors.textSecondary,
   },
   priceRow: {
     flexDirection: "row",
@@ -1143,14 +1430,11 @@ const styles = StyleSheet.create({
   },
   price: {
     ...Typography.displayMedium,
-    color: Colors.primaryGreen,
   },
   priceUnit: {
     ...Typography.bodyMedium,
-    color: Colors.textSecondary,
   },
   negotiableBadge: {
-    backgroundColor: `${Colors.accentGold}20`,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
@@ -1158,14 +1442,12 @@ const styles = StyleSheet.create({
   },
   negotiableText: {
     ...Typography.caption,
-    color: Colors.accentGold,
     fontWeight: "600",
   },
 
   // Quick Stats
   quickStats: {
     flexDirection: "row",
-    backgroundColor: Colors.surface,
     marginHorizontal: Spacing.lg,
     padding: Spacing.lg,
     borderRadius: 16,
@@ -1189,17 +1471,14 @@ const styles = StyleSheet.create({
   },
   quickStatValue: {
     ...Typography.headlineMedium,
-    color: Colors.textPrimary,
     marginTop: 4,
   },
   quickStatLabel: {
     ...Typography.caption,
-    color: Colors.textSecondary,
   },
   quickStatDivider: {
     width: 1,
     height: 40,
-    backgroundColor: "#E5E5E5",
   },
 
   // Sections
@@ -1215,7 +1494,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     ...Typography.headlineMedium,
     fontSize: 18,
-    color: Colors.textPrimary,
     marginBottom: Spacing.md,
   },
   viewButton: {
@@ -1225,18 +1503,14 @@ const styles = StyleSheet.create({
   },
   viewButtonText: {
     ...Typography.labelMedium,
-    color: Colors.primaryGreen,
   },
   descriptionCard: {
-    backgroundColor: Colors.surface,
     padding: Spacing.md,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E5E5E5",
   },
   description: {
     ...Typography.bodyMedium,
-    color: Colors.textSecondary,
     lineHeight: 24,
   },
   readMoreButton: {
@@ -1247,7 +1521,6 @@ const styles = StyleSheet.create({
   },
   readMoreText: {
     ...Typography.labelMedium,
-    color: Colors.primaryGreen,
   },
 
   // Amenities
@@ -1259,25 +1532,21 @@ const styles = StyleSheet.create({
   amenityChip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.surface,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
     gap: 6,
     borderWidth: 1,
-    borderColor: "#E5E5E5",
   },
   amenityIconContainer: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: `${Colors.primaryGreen}15`,
     alignItems: "center",
     justifyContent: "center",
   },
   amenityText: {
     ...Typography.labelMedium,
-    color: Colors.textPrimary,
   },
 
   // Map
@@ -1294,32 +1563,25 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.surface,
   },
   mapPlaceholderText: {
     ...Typography.bodyMedium,
-    color: Colors.textSecondary,
     marginTop: Spacing.sm,
   },
   customMarker: {
-    backgroundColor: Colors.surface,
     padding: 8,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: Colors.primaryGreen,
   },
   address: {
     ...Typography.bodyMedium,
-    color: Colors.textSecondary,
   },
 
   // Listing Info
   listingInfoCard: {
-    backgroundColor: Colors.surface,
     padding: Spacing.md,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E5E5E5",
   },
   listingInfoRow: {
     flexDirection: "row",
@@ -1327,15 +1589,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
   },
   listingInfoLabel: {
     ...Typography.bodyMedium,
-    color: Colors.textSecondary,
   },
   listingInfoValue: {
     ...Typography.bodyMedium,
-    color: Colors.textPrimary,
     fontWeight: "600",
   },
   statusIndicator: {
@@ -1356,9 +1615,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingHorizontal: Spacing.lg,
-    backgroundColor: Colors.surface,
     borderTopWidth: 1,
-    borderTopColor: "#E5E5E5",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -1399,12 +1656,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: Colors.primaryGreen,
-    backgroundColor: Colors.surface,
   },
   ownerActionOutlineText: {
     ...Typography.labelMedium,
-    color: Colors.primaryGreen,
     fontWeight: "600",
   },
   deleteActionOutline: {
@@ -1423,13 +1677,11 @@ const styles = StyleSheet.create({
   },
   sheetTitle: {
     ...Typography.headlineMedium,
-    color: Colors.textPrimary,
     textAlign: "center",
     marginBottom: Spacing.xs,
   },
   sheetSubtitle: {
     ...Typography.bodyMedium,
-    color: Colors.textSecondary,
     textAlign: "center",
     marginBottom: Spacing.lg,
   },
@@ -1439,17 +1691,12 @@ const styles = StyleSheet.create({
   statusOption: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.surface,
     padding: Spacing.md,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E5E5E5",
     gap: Spacing.md,
   },
-  statusOptionActive: {
-    borderColor: Colors.primaryGreen,
-    backgroundColor: `${Colors.primaryGreen}08`,
-  },
+  statusOptionActive: {},
   statusOptionIcon: {
     width: 48,
     height: 48,
@@ -1459,7 +1706,6 @@ const styles = StyleSheet.create({
   },
   statusOptionLabel: {
     ...Typography.bodyLarge,
-    color: Colors.textPrimary,
     fontWeight: "500",
     flex: 1,
   },
@@ -1469,7 +1715,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "#FEE2E2",
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "center",
@@ -1477,13 +1722,11 @@ const styles = StyleSheet.create({
   },
   deleteTitle: {
     ...Typography.headlineMedium,
-    color: Colors.textPrimary,
     textAlign: "center",
     marginBottom: Spacing.xs,
   },
   deleteMessage: {
     ...Typography.bodyMedium,
-    color: Colors.textSecondary,
     textAlign: "center",
     marginBottom: Spacing.lg,
   },
@@ -1498,12 +1741,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E5E5E5",
-    backgroundColor: Colors.surface,
   },
   cancelDeleteText: {
     ...Typography.labelMedium,
-    color: Colors.textPrimary,
     fontWeight: "600",
   },
   confirmDeleteButton: {
