@@ -19,7 +19,8 @@ import {
   BottomSheetBackdrop,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   FloatingHeader,
   HeaderActionButton,
@@ -223,6 +224,7 @@ export default function AdminUserProfileScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const chatSheetRef = useRef<BottomSheetModal>(null);
   const actionSheetRef = useRef<BottomSheetModal>(null);
 
@@ -351,25 +353,45 @@ export default function AdminUserProfileScreen() {
     switch (user.status) {
       case "active":
         return {
-          bg: `${Colors.primaryGreen}15`,
-          text: Colors.primaryGreen,
+          bg: `${colors.primary}15`,
+          text: colors.primary,
           label: "Active",
         };
       case "pending":
-        return { bg: "#FEF3C7", text: "#F59E0B", label: "Pending" };
+        return {
+          bg: isDark ? "#78350F" : "#FEF3C7",
+          text: "#F59E0B",
+          label: "Pending",
+        };
       case "suspended":
-        return { bg: "#FEE2E2", text: "#EF4444", label: "Suspended" };
+        return {
+          bg: isDark ? "#7F1D1D" : "#FEE2E2",
+          text: "#EF4444",
+          label: "Suspended",
+        };
     }
   };
 
   const getRoleStyle = () => {
     switch (user.role) {
       case "owner":
-        return { bg: "#DBEAFE", text: "#3B82F6", label: "Property Owner" };
+        return {
+          bg: isDark ? "#1E3A8A" : "#DBEAFE",
+          text: "#3B82F6",
+          label: "Property Owner",
+        };
       case "buyer":
-        return { bg: "#F3E8FF", text: "#8B5CF6", label: "Buyer" };
+        return {
+          bg: isDark ? "#581C87" : "#F3E8FF",
+          text: "#8B5CF6",
+          label: "Buyer",
+        };
       case "admin":
-        return { bg: "#FEE2E2", text: "#EF4444", label: "Admin" };
+        return {
+          bg: isDark ? "#7F1D1D" : "#FEE2E2",
+          text: "#EF4444",
+          label: "Admin",
+        };
     }
   };
 
@@ -391,12 +413,22 @@ export default function AdminUserProfileScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
         </View>
 
         {/* Floating Sticky Header */}
@@ -425,17 +457,38 @@ export default function AdminUserProfileScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* User Profile Card */}
-          <View style={styles.profileCard}>
+          <View
+            style={[
+              styles.profileCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
             <View style={styles.avatarContainer}>
-              <Image source={{ uri: user.avatar }} style={styles.avatar} />
+              <Image
+                source={{ uri: user.avatar }}
+                style={[styles.avatar, { borderColor: colors.primary }]}
+              />
               {user.isVerified && (
-                <View style={styles.verifiedBadge}>
+                <View
+                  style={[
+                    styles.verifiedBadge,
+                    {
+                      backgroundColor: colors.primary,
+                      borderColor: colors.surface,
+                    },
+                  ]}
+                >
                   <Ionicons name="checkmark" size={14} color="#FFFFFF" />
                 </View>
               )}
             </View>
 
-            <Text style={styles.userName}>{user.name}</Text>
+            <Text style={[styles.userName, { color: colors.text }]}>
+              {user.name}
+            </Text>
 
             <View style={styles.userBadges}>
               <View style={[styles.badge, { backgroundColor: roleStyle.bg }]}>
@@ -467,7 +520,11 @@ export default function AdminUserProfileScreen() {
               </View>
             </View>
 
-            {user.bio && <Text style={styles.userBio}>{user.bio}</Text>}
+            {user.bio && (
+              <Text style={[styles.userBio, { color: colors.textSecondary }]}>
+                {user.bio}
+              </Text>
+            )}
 
             <View style={styles.userMeta}>
               {user.location && (
@@ -475,71 +532,132 @@ export default function AdminUserProfileScreen() {
                   <Ionicons
                     name="location-outline"
                     size={16}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                   />
-                  <Text style={styles.metaText}>{user.location}</Text>
+                  <Text
+                    style={[styles.metaText, { color: colors.textSecondary }]}
+                  >
+                    {user.location}
+                  </Text>
                 </View>
               )}
               <View style={styles.metaItem}>
                 <Ionicons
                   name="calendar-outline"
                   size={16}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
-                <Text style={styles.metaText}>Joined {user.joinedDate}</Text>
+                <Text
+                  style={[styles.metaText, { color: colors.textSecondary }]}
+                >
+                  Joined {user.joinedDate}
+                </Text>
               </View>
               <View style={styles.metaItem}>
                 <Ionicons
                   name="time-outline"
                   size={16}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
-                <Text style={styles.metaText}>Active {user.lastActive}</Text>
+                <Text
+                  style={[styles.metaText, { color: colors.textSecondary }]}
+                >
+                  Active {user.lastActive}
+                </Text>
               </View>
             </View>
           </View>
 
           {/* Contact Info */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Contact Information</Text>
-            <View style={styles.contactCard}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Contact Information
+            </Text>
+            <View
+              style={[
+                styles.contactCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               <View style={styles.contactRow}>
-                <View style={styles.contactIcon}>
+                <View
+                  style={[
+                    styles.contactIcon,
+                    { backgroundColor: `${colors.primary}15` },
+                  ]}
+                >
                   <Ionicons
                     name="call-outline"
                     size={20}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                 </View>
                 <View style={styles.contactInfo}>
-                  <Text style={styles.contactLabel}>Phone</Text>
-                  <Text style={styles.contactValue}>{user.phone}</Text>
+                  <Text
+                    style={[
+                      styles.contactLabel,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    Phone
+                  </Text>
+                  <Text style={[styles.contactValue, { color: colors.text }]}>
+                    {user.phone}
+                  </Text>
                 </View>
                 <TouchableOpacity
-                  style={styles.contactAction}
+                  style={[
+                    styles.contactAction,
+                    { backgroundColor: `${colors.primary}15` },
+                  ]}
                   onPress={handleCall}
                 >
-                  <Ionicons name="call" size={18} color={Colors.primaryGreen} />
+                  <Ionicons name="call" size={18} color={colors.primary} />
                 </TouchableOpacity>
               </View>
-              <View style={styles.contactDivider} />
+              <View
+                style={[
+                  styles.contactDivider,
+                  { backgroundColor: colors.divider },
+                ]}
+              />
               <View style={styles.contactRow}>
-                <View style={styles.contactIcon}>
+                <View
+                  style={[
+                    styles.contactIcon,
+                    { backgroundColor: `${colors.primary}15` },
+                  ]}
+                >
                   <Ionicons
                     name="mail-outline"
                     size={20}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                 </View>
                 <View style={styles.contactInfo}>
-                  <Text style={styles.contactLabel}>Email</Text>
-                  <Text style={styles.contactValue}>{user.email}</Text>
+                  <Text
+                    style={[
+                      styles.contactLabel,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    Email
+                  </Text>
+                  <Text style={[styles.contactValue, { color: colors.text }]}>
+                    {user.email}
+                  </Text>
                 </View>
                 <TouchableOpacity
-                  style={styles.contactAction}
+                  style={[
+                    styles.contactAction,
+                    { backgroundColor: `${colors.primary}15` },
+                  ]}
                   onPress={() => Linking.openURL(`mailto:${user.email}`)}
                 >
-                  <Ionicons name="mail" size={18} color={Colors.primaryGreen} />
+                  <Ionicons name="mail" size={18} color={colors.primary} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -548,33 +666,83 @@ export default function AdminUserProfileScreen() {
           {/* Stats */}
           {user.role === "owner" && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Statistics</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Statistics
+              </Text>
               <View style={styles.statsGrid}>
-                <View style={styles.statCard}>
-                  <Text style={styles.statValue}>
+                <View
+                  style={[
+                    styles.statCard,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.statValue, { color: colors.primary }]}>
                     {user.stats.totalListings}
                   </Text>
-                  <Text style={styles.statLabel}>Total Listings</Text>
+                  <Text
+                    style={[styles.statLabel, { color: colors.textSecondary }]}
+                  >
+                    Total Listings
+                  </Text>
                 </View>
-                <View style={styles.statCard}>
-                  <Text style={styles.statValue}>
+                <View
+                  style={[
+                    styles.statCard,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.statValue, { color: colors.primary }]}>
                     {user.stats.activeListings}
                   </Text>
-                  <Text style={styles.statLabel}>Active</Text>
+                  <Text
+                    style={[styles.statLabel, { color: colors.textSecondary }]}
+                  >
+                    Active
+                  </Text>
                 </View>
-                <View style={styles.statCard}>
-                  <Text style={styles.statValue}>
+                <View
+                  style={[
+                    styles.statCard,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.statValue, { color: colors.primary }]}>
                     {user.stats.totalViews > 999
                       ? `${(user.stats.totalViews / 1000).toFixed(1)}K`
                       : user.stats.totalViews}
                   </Text>
-                  <Text style={styles.statLabel}>Views</Text>
+                  <Text
+                    style={[styles.statLabel, { color: colors.textSecondary }]}
+                  >
+                    Views
+                  </Text>
                 </View>
-                <View style={styles.statCard}>
-                  <Text style={styles.statValue}>
+                <View
+                  style={[
+                    styles.statCard,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.statValue, { color: colors.primary }]}>
                     {user.stats.totalInquiries}
                   </Text>
-                  <Text style={styles.statLabel}>Inquiries</Text>
+                  <Text
+                    style={[styles.statLabel, { color: colors.textSecondary }]}
+                  >
+                    Inquiries
+                  </Text>
                 </View>
               </View>
             </View>
@@ -584,9 +752,13 @@ export default function AdminUserProfileScreen() {
           {user.listings && user.listings.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Properties</Text>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                  Properties
+                </Text>
                 <TouchableOpacity>
-                  <Text style={styles.seeAllText}>See All</Text>
+                  <Text style={[styles.seeAllText, { color: colors.primary }]}>
+                    See All
+                  </Text>
                 </TouchableOpacity>
               </View>
               <ScrollView
@@ -597,7 +769,13 @@ export default function AdminUserProfileScreen() {
                 {user.listings.map((listing) => (
                   <TouchableOpacity
                     key={listing.id}
-                    style={styles.listingCard}
+                    style={[
+                      styles.listingCard,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.divider,
+                      },
+                    ]}
                     activeOpacity={0.8}
                   >
                     <Image
@@ -610,7 +788,7 @@ export default function AdminUserProfileScreen() {
                         {
                           backgroundColor:
                             listing.status === "active"
-                              ? Colors.primaryGreen
+                              ? colors.primary
                               : listing.status === "pending"
                               ? "#F59E0B"
                               : "#EF4444",
@@ -623,19 +801,29 @@ export default function AdminUserProfileScreen() {
                       </Text>
                     </View>
                     <View style={styles.listingInfo}>
-                      <Text style={styles.listingTitle} numberOfLines={1}>
+                      <Text
+                        style={[styles.listingTitle, { color: colors.text }]}
+                        numberOfLines={1}
+                      >
                         {listing.title}
                       </Text>
-                      <Text style={styles.listingPrice}>
+                      <Text
+                        style={[styles.listingPrice, { color: colors.primary }]}
+                      >
                         ₵{listing.price.toLocaleString()}
                       </Text>
                       <View style={styles.listingViews}>
                         <Ionicons
                           name="eye-outline"
                           size={12}
-                          color={Colors.textSecondary}
+                          color={colors.textSecondary}
                         />
-                        <Text style={styles.listingViewsText}>
+                        <Text
+                          style={[
+                            styles.listingViewsText,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
                           {listing.views} views
                         </Text>
                       </View>
@@ -649,30 +837,55 @@ export default function AdminUserProfileScreen() {
           {/* Recent Activity */}
           {user.activity && user.activity.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Recent Activity</Text>
-              <View style={styles.activityCard}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Recent Activity
+              </Text>
+              <View
+                style={[
+                  styles.activityCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
+              >
                 {user.activity.map((activity, index) => (
                   <View
                     key={activity.id}
                     style={[
                       styles.activityItem,
+                      { borderBottomColor: colors.divider },
                       index === user.activity!.length - 1 && {
                         borderBottomWidth: 0,
                       },
                     ]}
                   >
-                    <View style={styles.activityIcon}>
+                    <View
+                      style={[
+                        styles.activityIcon,
+                        { backgroundColor: `${colors.primary}15` },
+                      ]}
+                    >
                       <Ionicons
                         name={getActivityIcon(activity.type) as any}
                         size={18}
-                        color={Colors.primaryGreen}
+                        color={colors.primary}
                       />
                     </View>
                     <View style={styles.activityContent}>
-                      <Text style={styles.activityMessage}>
+                      <Text
+                        style={[styles.activityMessage, { color: colors.text }]}
+                      >
                         {activity.message}
                       </Text>
-                      <Text style={styles.activityTime}>{activity.time}</Text>
+                      <Text
+                        style={[
+                          styles.activityTime,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        {activity.time}
+                      </Text>
                     </View>
                   </View>
                 ))}
@@ -686,6 +899,7 @@ export default function AdminUserProfileScreen() {
               <TouchableOpacity
                 style={[
                   styles.verifyButton,
+                  { backgroundColor: colors.primary },
                   isVerifying && styles.buttonDisabled,
                 ]}
                 onPress={handleVerifyUser}
@@ -705,11 +919,18 @@ export default function AdminUserProfileScreen() {
         <View
           style={[
             styles.actionBar,
-            { paddingBottom: insets.bottom + Spacing.md },
+            {
+              paddingBottom: insets.bottom + Spacing.md,
+              backgroundColor: colors.background,
+              borderTopColor: colors.divider,
+            },
           ]}
         >
           <TouchableOpacity
-            style={styles.callActionButton}
+            style={[
+              styles.callActionButton,
+              { backgroundColor: colors.primary },
+            ]}
             onPress={handleCall}
             activeOpacity={0.8}
           >
@@ -717,16 +938,20 @@ export default function AdminUserProfileScreen() {
             <Text style={styles.callActionText}>Call</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.messageActionButton}
+            style={[
+              styles.messageActionButton,
+              {
+                backgroundColor: `${colors.primary}15`,
+                borderColor: colors.primary,
+              },
+            ]}
             onPress={handleMessage}
             activeOpacity={0.8}
           >
-            <Ionicons
-              name="chatbubbles"
-              size={20}
-              color={Colors.primaryGreen}
-            />
-            <Text style={styles.messageActionText}>Message</Text>
+            <Ionicons name="chatbubbles" size={20} color={colors.primary} />
+            <Text style={[styles.messageActionText, { color: colors.primary }]}>
+              Message
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -736,42 +961,73 @@ export default function AdminUserProfileScreen() {
           index={0}
           snapPoints={chatSnapPoints}
           backdropComponent={renderBackdrop}
-          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+          handleIndicatorStyle={{ backgroundColor: colors.divider }}
+          backgroundStyle={{ backgroundColor: colors.surface }}
         >
           <BottomSheetView style={styles.chatSheetContent}>
-            <Text style={styles.chatSheetTitle}>Choose how to contact</Text>
+            <Text style={[styles.chatSheetTitle, { color: colors.text }]}>
+              Choose how to contact
+            </Text>
 
             {/* In-App Chat Option */}
             <TouchableOpacity
-              style={styles.chatOption}
+              style={[
+                styles.chatOption,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
               onPress={handleChatInApp}
               activeOpacity={0.7}
             >
-              <View style={styles.chatOptionIcon}>
-                <Ionicons
-                  name="chatbubbles"
-                  size={24}
-                  color={Colors.primaryGreen}
-                />
+              <View
+                style={[
+                  styles.chatOptionIcon,
+                  { backgroundColor: `${colors.primary}15` },
+                ]}
+              >
+                <Ionicons name="chatbubbles" size={24} color={colors.primary} />
               </View>
               <View style={styles.chatOptionContent}>
-                <Text style={styles.chatOptionTitle}>Chat in-app</Text>
-                <Text style={styles.chatOptionSubtitle}>
+                <Text style={[styles.chatOptionTitle, { color: colors.text }]}>
+                  Chat in-app
+                </Text>
+                <Text
+                  style={[
+                    styles.chatOptionSubtitle,
+                    { color: colors.textSecondary },
+                  ]}
+                >
                   Send messages within the app
                 </Text>
               </View>
               <Ionicons
                 name="chevron-forward"
                 size={20}
-                color={Colors.textSecondary}
+                color={colors.textSecondary}
               />
             </TouchableOpacity>
 
             {/* Divider */}
             <View style={styles.chatDivider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>Or use external apps</Text>
-              <View style={styles.dividerLine} />
+              <View
+                style={[
+                  styles.dividerLine,
+                  { backgroundColor: colors.divider },
+                ]}
+              />
+              <Text
+                style={[styles.dividerText, { color: colors.textSecondary }]}
+              >
+                Or use external apps
+              </Text>
+              <View
+                style={[
+                  styles.dividerLine,
+                  { backgroundColor: colors.divider },
+                ]}
+              />
             </View>
 
             {/* External Apps */}
@@ -804,7 +1060,14 @@ export default function AdminUserProfileScreen() {
                 >
                   <Ionicons name="chatbox" size={24} color="#3B82F6" />
                 </View>
-                <Text style={styles.externalAppText}>SMS</Text>
+                <Text
+                  style={[
+                    styles.externalAppText,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  SMS
+                </Text>
               </TouchableOpacity>
             </View>
           </BottomSheetView>
@@ -816,10 +1079,13 @@ export default function AdminUserProfileScreen() {
           index={0}
           snapPoints={["40%"]}
           backdropComponent={renderBackdrop}
-          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+          handleIndicatorStyle={{ backgroundColor: colors.divider }}
+          backgroundStyle={{ backgroundColor: colors.surface }}
         >
           <BottomSheetView style={styles.actionSheetContent}>
-            <Text style={styles.actionSheetTitle}>User Actions</Text>
+            <Text style={[styles.actionSheetTitle, { color: colors.text }]}>
+              User Actions
+            </Text>
 
             {user.status === "pending" && (
               <TouchableOpacity
@@ -833,20 +1099,24 @@ export default function AdminUserProfileScreen() {
                 <View
                   style={[
                     styles.actionSheetIcon,
-                    { backgroundColor: `${Colors.primaryGreen}15` },
+                    { backgroundColor: `${colors.primary}15` },
                   ]}
                 >
                   <Ionicons
                     name="checkmark-circle"
                     size={22}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                 </View>
-                <Text style={styles.actionSheetItemText}>Verify User</Text>
+                <Text
+                  style={[styles.actionSheetItemText, { color: colors.text }]}
+                >
+                  Verify User
+                </Text>
                 <Ionicons
                   name="chevron-forward"
                   size={18}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
               </TouchableOpacity>
             )}
@@ -860,16 +1130,22 @@ export default function AdminUserProfileScreen() {
                 <View
                   style={[
                     styles.actionSheetIcon,
-                    { backgroundColor: "#FEF3C7" },
+                    {
+                      backgroundColor: isDark ? "#78350F" : "#FEF3C7",
+                    },
                   ]}
                 >
                   <Ionicons name="ban" size={22} color="#F59E0B" />
                 </View>
-                <Text style={styles.actionSheetItemText}>Suspend User</Text>
+                <Text
+                  style={[styles.actionSheetItemText, { color: colors.text }]}
+                >
+                  Suspend User
+                </Text>
                 <Ionicons
                   name="chevron-forward"
                   size={18}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
               </TouchableOpacity>
             )}
@@ -886,20 +1162,20 @@ export default function AdminUserProfileScreen() {
                 <View
                   style={[
                     styles.actionSheetIcon,
-                    { backgroundColor: `${Colors.primaryGreen}15` },
+                    { backgroundColor: `${colors.primary}15` },
                   ]}
                 >
-                  <Ionicons
-                    name="refresh"
-                    size={22}
-                    color={Colors.primaryGreen}
-                  />
+                  <Ionicons name="refresh" size={22} color={colors.primary} />
                 </View>
-                <Text style={styles.actionSheetItemText}>Reactivate User</Text>
+                <Text
+                  style={[styles.actionSheetItemText, { color: colors.text }]}
+                >
+                  Reactivate User
+                </Text>
                 <Ionicons
                   name="chevron-forward"
                   size={18}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
               </TouchableOpacity>
             )}
@@ -910,7 +1186,12 @@ export default function AdminUserProfileScreen() {
               activeOpacity={0.7}
             >
               <View
-                style={[styles.actionSheetIcon, { backgroundColor: "#FEE2E2" }]}
+                style={[
+                  styles.actionSheetIcon,
+                  {
+                    backgroundColor: isDark ? "#7F1D1D" : "#FEE2E2",
+                  },
+                ]}
               >
                 <Ionicons name="trash" size={22} color="#EF4444" />
               </View>
@@ -929,7 +1210,6 @@ export default function AdminUserProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   decorativeBackground: {
     position: "absolute",
@@ -946,8 +1226,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: Colors.primaryLight,
-    opacity: 0.08,
   },
   circle2: {
     position: "absolute",
@@ -956,8 +1234,6 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     borderRadius: 200,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
   },
   headerLeft: {
     flexDirection: "row",
@@ -969,7 +1245,6 @@ const styles = StyleSheet.create({
     ...Typography.titleLarge,
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   scrollView: {
     flex: 1,
@@ -980,13 +1255,11 @@ const styles = StyleSheet.create({
   },
   // Profile Card
   profileCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 24,
     padding: Spacing.xl,
     alignItems: "center",
     marginBottom: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -1008,7 +1281,6 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     borderWidth: 4,
-    borderColor: Colors.primaryGreen,
   },
   verifiedBadge: {
     position: "absolute",
@@ -1017,17 +1289,14 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: Colors.primaryGreen,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 3,
-    borderColor: Colors.surface,
   },
   userName: {
     ...Typography.headlineMedium,
     fontSize: 24,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: Spacing.sm,
   },
   userBadges: {
@@ -1056,7 +1325,6 @@ const styles = StyleSheet.create({
   userBio: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
     textAlign: "center",
     lineHeight: 22,
     marginBottom: Spacing.md,
@@ -1075,7 +1343,6 @@ const styles = StyleSheet.create({
   metaText: {
     ...Typography.caption,
     fontSize: 13,
-    color: Colors.textSecondary,
   },
   // Section
   section: {
@@ -1091,22 +1358,18 @@ const styles = StyleSheet.create({
     ...Typography.titleMedium,
     fontSize: 16,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: Spacing.md,
   },
   seeAllText: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
   // Contact Card
   contactCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   contactRow: {
     flexDirection: "row",
@@ -1117,7 +1380,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: `${Colors.primaryGreen}15`,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1127,26 +1389,22 @@ const styles = StyleSheet.create({
   contactLabel: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
     marginBottom: 2,
   },
   contactValue: {
     ...Typography.labelMedium,
     fontSize: 15,
     fontWeight: "600",
-    color: Colors.textPrimary,
   },
   contactAction: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: `${Colors.primaryGreen}15`,
     alignItems: "center",
     justifyContent: "center",
   },
   contactDivider: {
     height: 1,
-    backgroundColor: Colors.divider,
     marginVertical: Spacing.md,
   },
   // Stats
@@ -1158,23 +1416,19 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     minWidth: "45%",
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     padding: Spacing.md,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   statValue: {
     ...Typography.headlineMedium,
     fontSize: 24,
     fontWeight: "700",
-    color: Colors.primaryGreen,
   },
   statLabel: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   // Listings
@@ -1184,12 +1438,10 @@ const styles = StyleSheet.create({
   },
   listingCard: {
     width: 160,
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     marginRight: Spacing.md,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   listingImage: {
     width: "100%",
@@ -1216,14 +1468,12 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 13,
     fontWeight: "600",
-    color: Colors.textPrimary,
     marginBottom: 2,
   },
   listingPrice: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "700",
-    color: Colors.primaryGreen,
     marginBottom: 4,
   },
   listingViews: {
@@ -1234,15 +1484,12 @@ const styles = StyleSheet.create({
   listingViewsText: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
   },
   // Activity
   activityCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   activityItem: {
     flexDirection: "row",
@@ -1250,13 +1497,11 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
   },
   activityIcon: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: `${Colors.primaryGreen}15`,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1266,12 +1511,10 @@ const styles = StyleSheet.create({
   activityMessage: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textPrimary,
   },
   activityTime: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   // Pending Actions
@@ -1285,7 +1528,6 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     paddingVertical: Spacing.lg,
     borderRadius: 16,
-    backgroundColor: Colors.primaryGreen,
   },
   verifyButtonText: {
     ...Typography.labelLarge,
@@ -1307,9 +1549,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
-    backgroundColor: Colors.background,
     borderTopWidth: 1,
-    borderTopColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -1330,7 +1570,6 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     paddingVertical: Spacing.md,
     borderRadius: 14,
-    backgroundColor: Colors.primaryGreen,
   },
   callActionText: {
     ...Typography.labelMedium,
@@ -1346,15 +1585,12 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     paddingVertical: Spacing.md,
     borderRadius: 14,
-    backgroundColor: `${Colors.primaryGreen}15`,
     borderWidth: 1.5,
-    borderColor: Colors.primaryGreen,
   },
   messageActionText: {
     ...Typography.labelMedium,
     fontSize: 15,
     fontWeight: "700",
-    color: Colors.primaryGreen,
   },
   // Chat Sheet
   chatSheetContent: {
@@ -1364,7 +1600,6 @@ const styles = StyleSheet.create({
     ...Typography.titleMedium,
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: Spacing.lg,
     textAlign: "center",
   },
@@ -1373,16 +1608,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: Spacing.md,
     padding: Spacing.md,
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   chatOptionIcon: {
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: `${Colors.primaryGreen}15`,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1393,12 +1625,10 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 15,
     fontWeight: "600",
-    color: Colors.textPrimary,
   },
   chatOptionSubtitle: {
     ...Typography.caption,
     fontSize: 13,
-    color: Colors.textSecondary,
   },
   chatDivider: {
     flexDirection: "row",
@@ -1409,12 +1639,10 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: Colors.divider,
   },
   dividerText: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   externalApps: {
     flexDirection: "row",
@@ -1435,7 +1663,6 @@ const styles = StyleSheet.create({
   externalAppText: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   // Action Sheet
   actionSheetContent: {
@@ -1445,7 +1672,6 @@ const styles = StyleSheet.create({
     ...Typography.titleMedium,
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: Spacing.lg,
   },
   actionSheetItem: {
@@ -1465,7 +1691,6 @@ const styles = StyleSheet.create({
     ...Typography.bodyMedium,
     fontSize: 15,
     fontWeight: "500",
-    color: Colors.textPrimary,
     flex: 1,
   },
 });
