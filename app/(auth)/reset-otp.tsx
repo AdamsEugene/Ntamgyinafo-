@@ -478,19 +478,36 @@ export default function ResetOTPScreen() {
                 style={[
                   styles.verifyButton,
                   { backgroundColor: colors.primary },
-                  (otp.length !== 4 || isLoading) &&
+                  (otp.length !== 4 || isLoading) && [
                     styles.verifyButtonDisabled,
+                    { backgroundColor: colors.divider },
+                  ],
                 ]}
                 onPress={handleVerify}
                 activeOpacity={0.9}
                 disabled={otp.length !== 4 || isLoading}
               >
-                <Text style={styles.verifyButtonText}>
+                <Text
+                  style={[
+                    styles.verifyButtonText,
+                    (otp.length !== 4 || isLoading) && {
+                      color: colors.textSecondary,
+                    },
+                  ]}
+                >
                   {isLoading ? "Verifying..." : "Verify"}
                 </Text>
                 {!isLoading && (
                   <View style={styles.buttonIcon}>
-                    <Ionicons name="checkmark" size={18} color="#FFFFFF" />
+                    <Ionicons
+                      name="checkmark"
+                      size={18}
+                      color={
+                        otp.length !== 4 || isLoading
+                          ? colors.textSecondary
+                          : "#FFFFFF"
+                      }
+                    />
                   </View>
                 )}
               </TouchableOpacity>
