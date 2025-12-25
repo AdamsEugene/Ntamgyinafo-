@@ -15,6 +15,12 @@ export interface OTPInputProps {
   onChangeText: (text: string) => void;
   onComplete?: (otp: string) => void;
   error?: boolean;
+  colors?: {
+    surface: string;
+    divider: string;
+    text: string;
+    primary: string;
+  };
 }
 
 const DEFAULT_OTP_LENGTH = 4;
@@ -25,7 +31,14 @@ export const OTPInput: React.FC<OTPInputProps> = ({
   onChangeText,
   onComplete,
   error = false,
+  colors,
 }) => {
+  const themeColors = colors || {
+    surface: Colors.surface,
+    divider: Colors.divider,
+    text: Colors.textPrimary,
+    primary: Colors.primaryGreen,
+  };
   const inputRefs = useRef<(TextInput | null)[]>([]);
   const completedValueRef = useRef<string>(""); // Track which value we've already completed
 
@@ -101,8 +114,11 @@ export const OTPInput: React.FC<OTPInputProps> = ({
           }}
           style={[
             styles.input,
-            value[index] && styles.inputFilled,
-            error && styles.inputError,
+            {
+              borderColor: error ? "#D32F2F" : value[index] ? themeColors.primary : themeColors.divider,
+              backgroundColor: value[index] ? `${themeColors.primary}10` : themeColors.surface,
+              color: themeColors.text,
+            },
           ]}
           value={value[index] || ""}
           onChangeText={(text) => handleChangeText(text, index)}
@@ -131,12 +147,9 @@ const styles = StyleSheet.create({
     height: 70,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: Colors.divider,
-    backgroundColor: Colors.surface,
     ...Typography.headlineMedium,
     fontSize: 28,
     fontWeight: "700",
-    color: Colors.textPrimary,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -148,12 +161,5 @@ const styles = StyleSheet.create({
         elevation: 2,
       },
     }),
-  },
-  inputFilled: {
-    borderColor: Colors.primaryGreen,
-    backgroundColor: "#F1F8F4",
-  },
-  inputError: {
-    borderColor: "#D32F2F",
   },
 });

@@ -442,6 +442,7 @@ export default function ResetOTPScreen() {
                   onChangeText={setOtp}
                   onComplete={handleOTPComplete}
                   error={!!error}
+                  colors={colors}
                 />
               </View>
 

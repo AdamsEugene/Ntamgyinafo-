@@ -156,6 +156,7 @@ const PulsingRing = ({
 
 export default function SplashScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [showParticles, setShowParticles] = useState(false);
 
   // Animation values
@@ -316,9 +317,15 @@ export default function SplashScreen() {
             <Animated.View style={[styles.logoGlow, glowStyle]} />
 
             {/* Logo circle */}
-            <Animated.View style={[styles.logoCircle, logoContainerStyle]}>
+            <Animated.View
+              style={[
+                styles.logoCircle,
+                logoContainerStyle,
+                { backgroundColor: colors.surface },
+              ]}
+            >
               <View style={styles.logoInner}>
-                <Ionicons name="home" size={70} color={Colors.primaryGreen} />
+                <Ionicons name="home" size={70} color={colors.primary} />
               </View>
             </Animated.View>
           </View>
@@ -416,7 +423,6 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: "#FFFFFF",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",

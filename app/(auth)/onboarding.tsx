@@ -65,9 +65,11 @@ const slides: Slide[] = [
 const AnimatedIcon = ({
   iconName,
   isActive,
+  colors,
 }: {
   iconName: keyof typeof Ionicons.glyphMap;
   isActive: boolean;
+  colors: any;
 }) => {
   const floatY = useSharedValue(0);
   const scale = useSharedValue(1);
@@ -118,9 +120,11 @@ const AnimatedIcon = ({
 
   return (
     <Animated.View style={[styles.iconWrapper, animatedStyle]}>
-      <View style={styles.iconGlow} />
-      <View style={styles.iconCircle}>
-        <Ionicons name={iconName} size={80} color={Colors.primaryGreen} />
+      <View
+        style={[styles.iconGlow, { backgroundColor: `${colors.primary}15` }]}
+      />
+      <View style={[styles.iconCircle, { backgroundColor: colors.surface }]}>
+        <Ionicons name={iconName} size={80} color={colors.primary} />
       </View>
     </Animated.View>
   );
@@ -299,11 +303,22 @@ export default function OnboardingScreen() {
                 {/* Illustration Container */}
                 <View style={styles.illustrationContainer}>
                   <View style={styles.illustrationBackground}>
-                    <View style={styles.illustrationRing1} />
-                    <View style={styles.illustrationRing2} />
+                    <View
+                      style={[
+                        styles.illustrationRing1,
+                        { borderColor: `${colors.primary}15` },
+                      ]}
+                    />
+                    <View
+                      style={[
+                        styles.illustrationRing2,
+                        { borderColor: `${colors.primary}20` },
+                      ]}
+                    />
                     <AnimatedIcon
                       iconName={slide.iconName}
                       isActive={currentSlide === index}
+                      colors={colors}
                     />
                   </View>
                 </View>
@@ -503,7 +518,6 @@ const styles = StyleSheet.create({
     height: "100%",
     borderRadius: SCREEN_WIDTH * 0.35,
     borderWidth: 1,
-    borderColor: "rgba(34, 197, 94, 0.1)",
   },
   illustrationRing2: {
     position: "absolute",
@@ -511,7 +525,6 @@ const styles = StyleSheet.create({
     height: "80%",
     borderRadius: SCREEN_WIDTH * 0.28,
     borderWidth: 1,
-    borderColor: "rgba(34, 197, 94, 0.15)",
     borderStyle: "dashed",
   },
   iconWrapper: {
@@ -523,18 +536,16 @@ const styles = StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: 80,
-    backgroundColor: "rgba(34, 197, 94, 0.1)",
   },
   iconCircle: {
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: Colors.surface,
     justifyContent: "center",
     alignItems: "center",
     ...Platform.select({
       ios: {
-        shadowColor: Colors.primaryGreen,
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.15,
         shadowRadius: 20,
