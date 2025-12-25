@@ -792,7 +792,11 @@ export default function UserManagementScreen() {
                     >
                       <Ionicons name="eye" size={20} color="#3B82F6" />
                     </View>
-                    <Text style={styles.sheetActionText}>View Profile</Text>
+                    <Text
+                      style={[styles.sheetActionText, { color: colors.text }]}
+                    >
+                      View Profile
+                    </Text>
                     <Ionicons
                       name="chevron-forward"
                       size={18}
