@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   FloatingHeader,
   HeaderActionButton,
@@ -168,6 +169,7 @@ const TOP_LISTINGS = [
 export default function OwnerDashboardScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = React.useCallback(() => {
@@ -226,12 +228,22 @@ export default function OwnerDashboardScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
         </View>
 
         {/* Floating Sticky Header */}
@@ -239,8 +251,14 @@ export default function OwnerDashboardScreen() {
         <FloatingHeader
           leftContent={
             <View style={styles.greetingContainer}>
-              <Text style={styles.greeting}>Hi, Kofi 👋</Text>
-              <Text style={styles.subGreeting}>Manage your properties</Text>
+              <Text style={[styles.greeting, { color: colors.text }]}>
+                Hi, Kofi 👋
+              </Text>
+              <Text
+                style={[styles.subGreeting, { color: colors.textSecondary }]}
+              >
+                Manage your properties
+              </Text>
             </View>
           }
           rightContent={
@@ -273,47 +291,107 @@ export default function OwnerDashboardScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={Colors.primaryGreen}
+              tintColor={colors.primary}
             />
           }
         >
           {/* Owner Stats Banner */}
-          <View style={styles.statsBanner}>
+          <View
+            style={[
+              styles.statsBanner,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
             <View style={styles.quickStatsRow}>
               <View style={styles.quickStat}>
-                <View style={styles.quickStatIcon}>
+                <View
+                  style={[
+                    styles.quickStatIcon,
+                    { backgroundColor: `${colors.primary}15` },
+                  ]}
+                >
                   <Ionicons
                     name="wallet-outline"
                     size={18}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                 </View>
-                <Text style={styles.quickStatValue}>GHS 2.5M</Text>
-                <Text style={styles.quickStatLabel}>Total Value</Text>
+                <Text style={[styles.quickStatValue, { color: colors.text }]}>
+                  GHS 2.5M
+                </Text>
+                <Text
+                  style={[
+                    styles.quickStatLabel,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Total Value
+                </Text>
               </View>
-              <View style={styles.quickStatDivider} />
+              <View
+                style={[
+                  styles.quickStatDivider,
+                  { backgroundColor: colors.divider },
+                ]}
+              />
               <View style={styles.quickStat}>
-                <View style={styles.quickStatIcon}>
+                <View
+                  style={[
+                    styles.quickStatIcon,
+                    { backgroundColor: `${colors.primary}15` },
+                  ]}
+                >
                   <Ionicons
                     name="home-outline"
                     size={18}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                 </View>
-                <Text style={styles.quickStatValue}>5</Text>
-                <Text style={styles.quickStatLabel}>Properties</Text>
+                <Text style={[styles.quickStatValue, { color: colors.text }]}>
+                  5
+                </Text>
+                <Text
+                  style={[
+                    styles.quickStatLabel,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Properties
+                </Text>
               </View>
-              <View style={styles.quickStatDivider} />
+              <View
+                style={[
+                  styles.quickStatDivider,
+                  { backgroundColor: colors.divider },
+                ]}
+              />
               <View style={styles.quickStat}>
-                <View style={styles.quickStatIcon}>
+                <View
+                  style={[
+                    styles.quickStatIcon,
+                    { backgroundColor: `${colors.primary}15` },
+                  ]}
+                >
                   <Ionicons
                     name="chatbubble-outline"
                     size={18}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                 </View>
-                <Text style={styles.quickStatValue}>48</Text>
-                <Text style={styles.quickStatLabel}>Inquiries</Text>
+                <Text style={[styles.quickStatValue, { color: colors.text }]}>
+                  48
+                </Text>
+                <Text
+                  style={[
+                    styles.quickStatLabel,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Inquiries
+                </Text>
               </View>
             </View>
           </View>
@@ -322,7 +400,13 @@ export default function OwnerDashboardScreen() {
             {QUICK_ACTIONS.map((action) => (
               <TouchableOpacity
                 key={action.id}
-                style={styles.quickActionCard}
+                style={[
+                  styles.quickActionCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
                 activeOpacity={0.8}
                 onPress={() => {
                   if (action.route) {
@@ -338,7 +422,9 @@ export default function OwnerDashboardScreen() {
                 >
                   <Ionicons name={action.icon} size={24} color={action.color} />
                 </View>
-                <Text style={styles.quickActionLabel}>{action.label}</Text>
+                <Text style={[styles.quickActionLabel, { color: colors.text }]}>
+                  {action.label}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -346,9 +432,13 @@ export default function OwnerDashboardScreen() {
           {/* Stats Grid */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Performance Overview</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Performance Overview
+              </Text>
               <TouchableOpacity activeOpacity={0.7}>
-                <Text style={styles.seeAll}>This Month</Text>
+                <Text style={[styles.seeAll, { color: colors.primary }]}>
+                  This Month
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -356,7 +446,13 @@ export default function OwnerDashboardScreen() {
               {STATS.map((stat) => (
                 <TouchableOpacity
                   key={stat.id}
-                  style={styles.statCard}
+                  style={[
+                    styles.statCard,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                  ]}
                   activeOpacity={0.8}
                   onPress={() => {
                     if (stat.id === "inquiries") {
@@ -398,8 +494,14 @@ export default function OwnerDashboardScreen() {
                       </Text>
                     </View>
                   </View>
-                  <Text style={styles.statValue}>{stat.value}</Text>
-                  <Text style={styles.statLabel}>{stat.label}</Text>
+                  <Text style={[styles.statValue, { color: colors.text }]}>
+                    {stat.value}
+                  </Text>
+                  <Text
+                    style={[styles.statLabel, { color: colors.textSecondary }]}
+                  >
+                    {stat.label}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -407,43 +509,78 @@ export default function OwnerDashboardScreen() {
 
           {/* Subscription Card */}
           <TouchableOpacity
-            style={styles.subscriptionCard}
+            style={[
+              styles.subscriptionCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
             activeOpacity={0.9}
             onPress={() => router.push("/subscription-plans")}
           >
             <View style={styles.subscriptionContent}>
               <View style={styles.subscriptionHeader}>
                 <View>
-                  <View style={styles.planBadge}>
-                    <Ionicons
-                      name="diamond"
-                      size={12}
-                      color={Colors.primaryGreen}
-                    />
-                    <Text style={styles.planBadgeText}>
+                  <View
+                    style={[
+                      styles.planBadge,
+                      { backgroundColor: `${colors.primary}15` },
+                    ]}
+                  >
+                    <Ionicons name="diamond" size={12} color={colors.primary} />
+                    <Text
+                      style={[styles.planBadgeText, { color: colors.primary }]}
+                    >
                       {SUBSCRIPTION.plan}
                     </Text>
                   </View>
-                  <Text style={styles.subscriptionTitle}>
+                  <Text
+                    style={[styles.subscriptionTitle, { color: colors.text }]}
+                  >
                     Your Subscription
                   </Text>
                 </View>
-                <View style={styles.daysCircle}>
-                  <Text style={styles.daysNumber}>
+                <View
+                  style={[
+                    styles.daysCircle,
+                    {
+                      backgroundColor: `${colors.primary}15`,
+                      borderColor: `${colors.primary}30`,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.daysNumber, { color: colors.primary }]}>
                     {SUBSCRIPTION.daysRemaining}
                   </Text>
-                  <Text style={styles.daysLabel}>days left</Text>
+                  <Text
+                    style={[styles.daysLabel, { color: colors.textSecondary }]}
+                  >
+                    days left
+                  </Text>
                 </View>
               </View>
 
               <View style={styles.subscriptionProgress}>
                 <View style={styles.progressHeader}>
-                  <Text style={styles.progressLabel}>Listings Used</Text>
-                  <Text style={styles.progressValue}>
+                  <Text
+                    style={[
+                      styles.progressLabel,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    Listings Used
+                  </Text>
+                  <Text style={[styles.progressValue, { color: colors.text }]}>
                     {SUBSCRIPTION.listingsUsed}/{SUBSCRIPTION.listingsTotal}
                   </Text>
                 </View>
-                <View style={styles.progressBar}>
+                <View
+                  style={[
+                    styles.progressBar,
+                    { backgroundColor: colors.divider },
+                  ]}
+                >
                   <View
                     style={[
                       styles.progressFill,
@@ -453,17 +590,30 @@ export default function OwnerDashboardScreen() {
                             SUBSCRIPTION.listingsTotal) *
                           100
                         }%`,
+                        backgroundColor: colors.primary,
                       },
                     ]}
                   />
                 </View>
               </View>
 
-              <View style={styles.subscriptionFooter}>
-                <Text style={styles.expiryText}>
+              <View
+                style={[
+                  styles.subscriptionFooter,
+                  { borderTopColor: colors.divider },
+                ]}
+              >
+                <Text
+                  style={[styles.expiryText, { color: colors.textSecondary }]}
+                >
                   Expires: {SUBSCRIPTION.expiresDate}
                 </Text>
-                <TouchableOpacity style={styles.upgradeButton}>
+                <TouchableOpacity
+                  style={[
+                    styles.upgradeButton,
+                    { backgroundColor: colors.primary },
+                  ]}
+                >
                   <Text style={styles.upgradeButtonText}>Upgrade</Text>
                   <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
                 </TouchableOpacity>
@@ -474,12 +624,16 @@ export default function OwnerDashboardScreen() {
           {/* Recent Inquiries Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Recent Inquiries</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Recent Inquiries
+              </Text>
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => router.push("/(owner-tabs)/inquiries")}
               >
-                <Text style={styles.seeAll}>See All →</Text>
+                <Text style={[styles.seeAll, { color: colors.primary }]}>
+                  See All →
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -487,7 +641,13 @@ export default function OwnerDashboardScreen() {
               {RECENT_INQUIRIES.map((inquiry) => (
                 <TouchableOpacity
                   key={inquiry.id}
-                  style={styles.inquiryCard}
+                  style={[
+                    styles.inquiryCard,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                  ]}
                   activeOpacity={0.8}
                   onPress={() => {
                     router.push("/(owner-tabs)/inquiries");
@@ -498,19 +658,53 @@ export default function OwnerDashboardScreen() {
                       source={{ uri: inquiry.buyer.avatar }}
                       style={styles.inquiryAvatar}
                     />
-                    {inquiry.unread && <View style={styles.unreadDot} />}
+                    {inquiry.unread && (
+                      <View
+                        style={[
+                          styles.unreadDot,
+                          {
+                            backgroundColor: colors.primary,
+                            borderColor: colors.surface,
+                          },
+                        ]}
+                      />
+                    )}
                   </View>
                   <View style={styles.inquiryContent}>
                     <View style={styles.inquiryHeader}>
-                      <Text style={styles.inquiryBuyerName}>
+                      <Text
+                        style={[
+                          styles.inquiryBuyerName,
+                          { color: colors.text },
+                        ]}
+                      >
                         {inquiry.buyer.name}
                       </Text>
-                      <Text style={styles.inquiryTime}>{inquiry.time}</Text>
+                      <Text
+                        style={[
+                          styles.inquiryTime,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        {inquiry.time}
+                      </Text>
                     </View>
-                    <Text style={styles.inquiryProperty} numberOfLines={1}>
+                    <Text
+                      style={[
+                        styles.inquiryProperty,
+                        { color: colors.primary },
+                      ]}
+                      numberOfLines={1}
+                    >
                       {inquiry.property}
                     </Text>
-                    <Text style={styles.inquiryMessage} numberOfLines={1}>
+                    <Text
+                      style={[
+                        styles.inquiryMessage,
+                        { color: colors.textSecondary },
+                      ]}
+                      numberOfLines={1}
+                    >
                       {inquiry.message}
                     </Text>
                   </View>
@@ -522,12 +716,16 @@ export default function OwnerDashboardScreen() {
           {/* Top Performing Listings */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Top Listings</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Top Listings
+              </Text>
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => router.push("/(owner-tabs)/my-listings")}
               >
-                <Text style={styles.seeAll}>See All →</Text>
+                <Text style={[styles.seeAll, { color: colors.primary }]}>
+                  See All →
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -539,7 +737,10 @@ export default function OwnerDashboardScreen() {
               keyExtractor={(item) => item.id}
               renderItem={({ item: listing }) => (
                 <TouchableOpacity
-                  style={styles.listingCard}
+                  style={[
+                    styles.listingCard,
+                    { backgroundColor: colors.surface },
+                  ]}
                   activeOpacity={0.8}
                   onPress={() =>
                     router.push(`/owner-listing/${listing.id}` as any)
@@ -603,7 +804,7 @@ export default function OwnerDashboardScreen() {
           onPress={() => router.push("/(owner-tabs)/add-listing")}
         >
           <LinearGradient
-            colors={[Colors.primaryGreen, "#2E7D32"]}
+            colors={[colors.primary, colors.primaryDark]}
             style={styles.floatingAddButtonGradient}
           >
             <Ionicons name="add" size={28} color="#FFFFFF" />
@@ -617,7 +818,6 @@ export default function OwnerDashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   // Decorative Background
   decorativeBackground: {
@@ -635,8 +835,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: Colors.primaryLight,
-    opacity: 0.08,
   },
   circle2: {
     position: "absolute",
@@ -645,8 +843,6 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     borderRadius: 200,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
   },
   // Header
   greetingContainer: {
@@ -656,13 +852,11 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 24,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: 2,
   },
   subGreeting: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
   },
   actionButtonsContainer: {
     flexDirection: "row",
@@ -692,10 +886,8 @@ const styles = StyleSheet.create({
   statsBanner: {
     marginBottom: Spacing.xl,
     borderRadius: 16,
-    backgroundColor: Colors.surface,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -719,7 +911,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: `${Colors.primaryGreen}10`,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: Spacing.xs,
@@ -728,17 +919,14 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: 2,
   },
   quickStatLabel: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
   },
   quickStatDivider: {
     width: 1,
-    backgroundColor: Colors.divider,
     marginVertical: 8,
   },
   // Content
@@ -757,10 +945,10 @@ const styles = StyleSheet.create({
   },
   quickActionCard: {
     alignItems: "center",
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.md,
     width: "23%",
+    borderWidth: 1,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -785,7 +973,6 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     fontSize: 11,
     fontWeight: "600",
-    color: Colors.textPrimary,
     textAlign: "center",
   },
   // Section
@@ -802,13 +989,11 @@ const styles = StyleSheet.create({
     ...Typography.titleLarge,
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   seeAll: {
     ...Typography.labelMedium,
     fontSize: 13,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
   // Stats Grid
   statsGrid: {
@@ -818,11 +1003,9 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: "47.5%",
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   statHeader: {
     flexDirection: "row",
@@ -854,22 +1037,18 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 24,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: 2,
   },
   statLabel: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   // Subscription Card
   subscriptionCard: {
     marginBottom: Spacing.xl,
     borderRadius: 16,
     overflow: "hidden",
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -895,7 +1074,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: `${Colors.primaryGreen}15`,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
     borderRadius: 8,
@@ -905,35 +1083,29 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     fontSize: 11,
     fontWeight: "600",
-    color: Colors.primaryGreen,
     letterSpacing: 0.3,
   },
   subscriptionTitle: {
     ...Typography.titleMedium,
     fontSize: 15,
     fontWeight: "600",
-    color: Colors.textPrimary,
   },
   daysCircle: {
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: `${Colors.primaryGreen}10`,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: `${Colors.primaryGreen}30`,
   },
   daysNumber: {
     ...Typography.titleLarge,
     fontSize: 16,
     fontWeight: "700",
-    color: Colors.primaryGreen,
   },
   daysLabel: {
     ...Typography.caption,
     fontSize: 9,
-    color: Colors.textSecondary,
     marginTop: -2,
   },
   subscriptionProgress: {
@@ -947,23 +1119,19 @@ const styles = StyleSheet.create({
   progressLabel: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   progressValue: {
     ...Typography.caption,
     fontSize: 12,
     fontWeight: "600",
-    color: Colors.textPrimary,
   },
   progressBar: {
     height: 6,
-    backgroundColor: Colors.divider,
     borderRadius: 3,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    backgroundColor: Colors.primaryGreen,
     borderRadius: 3,
   },
   subscriptionFooter: {
@@ -972,18 +1140,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.divider,
   },
   expiryText: {
     ...Typography.bodyMedium,
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   upgradeButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: Colors.primaryGreen,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: 20,
@@ -1001,11 +1166,9 @@ const styles = StyleSheet.create({
   inquiryCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   inquiryLeft: {
     position: "relative",
@@ -1023,9 +1186,7 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: Colors.primaryGreen,
     borderWidth: 2,
-    borderColor: Colors.surface,
   },
   inquiryContent: {
     flex: 1,
@@ -1040,23 +1201,19 @@ const styles = StyleSheet.create({
     ...Typography.titleMedium,
     fontSize: 15,
     fontWeight: "600",
-    color: Colors.textPrimary,
   },
   inquiryTime: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
   },
   inquiryProperty: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.primaryGreen,
     marginBottom: 2,
   },
   inquiryMessage: {
     ...Typography.bodyMedium,
     fontSize: 13,
-    color: Colors.textSecondary,
   },
   // Listings
   listingsContainer: {
@@ -1068,7 +1225,6 @@ const styles = StyleSheet.create({
     height: 260,
     borderRadius: 20,
     overflow: "hidden",
-    backgroundColor: Colors.surface,
   },
   listingImage: {
     width: "100%",
