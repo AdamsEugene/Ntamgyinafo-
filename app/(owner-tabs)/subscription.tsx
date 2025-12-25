@@ -12,7 +12,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import { FloatingHeader } from "@/components/FloatingHeader";
 
 // Current subscription mock data
@@ -90,6 +91,7 @@ const PLANS: Plan[] = [
 export default function OwnerSubscriptionScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 
   const handleSelectPlan = (planId: string) => {
@@ -125,8 +127,20 @@ export default function OwnerSubscriptionScreen() {
         key={plan.id}
         style={[
           styles.planCard,
-          isSelected && styles.planCardSelected,
-          isCurrent && styles.planCardCurrent,
+          {
+            backgroundColor: colors.surface,
+            borderColor: isSelected
+              ? colors.primary
+              : isCurrent
+              ? colors.textSecondary
+              : colors.divider,
+          },
+          isSelected && {
+            backgroundColor: `${colors.primary}08`,
+          },
+          isCurrent && {
+            opacity: 0.7,
+          },
         ]}
         activeOpacity={0.8}
         onPress={() => handleSelectPlan(plan.id)}
@@ -156,20 +170,30 @@ export default function OwnerSubscriptionScreen() {
         <View style={styles.planHeader}>
           <View style={styles.planNameRow}>
             <Text
-              style={[styles.planName, isSelected && styles.planNameSelected]}
+              style={[
+                styles.planName,
+                { color: colors.text },
+                isSelected && { color: colors.primary },
+              ]}
             >
               {plan.name}
             </Text>
             <View
               style={[
                 styles.listingsBadge,
-                isSelected && styles.listingsBadgeSelected,
+                {
+                  backgroundColor: isSelected
+                    ? colors.primary
+                    : `${colors.primary}15`,
+                },
               ]}
             >
               <Text
                 style={[
                   styles.listingsBadgeText,
-                  isSelected && styles.listingsBadgeTextSelected,
+                  {
+                    color: isSelected ? "#FFFFFF" : colors.primary,
+                  },
                 ]}
               >
                 {plan.listings} listings
@@ -178,34 +202,52 @@ export default function OwnerSubscriptionScreen() {
           </View>
 
           <View style={styles.priceRow}>
-            <Text style={styles.currency}>GHS</Text>
-            <Text style={[styles.price, isSelected && styles.priceSelected]}>
+            <Text style={[styles.currency, { color: colors.textSecondary }]}>
+              GHS
+            </Text>
+            <Text
+              style={[
+                styles.price,
+                { color: colors.text },
+                isSelected && { color: colors.primary },
+              ]}
+            >
               {plan.price}
             </Text>
-            <Text style={styles.duration}>/{plan.duration}</Text>
+            <Text style={[styles.duration, { color: colors.textSecondary }]}>
+              /{plan.duration}
+            </Text>
           </View>
         </View>
 
         {/* Features */}
-        <View style={styles.featuresContainer}>
+        <View
+          style={[styles.featuresContainer, { borderTopColor: colors.divider }]}
+        >
           {plan.features.map((feature, index) => (
             <View key={index} style={styles.featureRow}>
               <View
                 style={[
                   styles.featureIcon,
-                  isSelected && styles.featureIconSelected,
+                  {
+                    backgroundColor: isSelected
+                      ? colors.primary
+                      : `${colors.primary}15`,
+                  },
                 ]}
               >
                 <Ionicons
                   name="checkmark"
                   size={12}
-                  color={isSelected ? "#FFFFFF" : Colors.primaryGreen}
+                  color={isSelected ? "#FFFFFF" : colors.primary}
                 />
               </View>
               <Text
                 style={[
                   styles.featureText,
-                  isSelected && styles.featureTextSelected,
+                  {
+                    color: isSelected ? colors.text : colors.textSecondary,
+                  },
                 ]}
               >
                 {feature}
@@ -215,19 +257,28 @@ export default function OwnerSubscriptionScreen() {
         </View>
 
         {/* Selection Indicator */}
-        <View style={styles.selectionRow}>
+        <View style={[styles.selectionRow, { borderTopColor: colors.divider }]}>
           <View
             style={[
               styles.radioOuter,
-              isSelected && styles.radioOuterSelected,
-              isCurrent && styles.radioOuterCurrent,
+              {
+                borderColor: isCurrent
+                  ? colors.textSecondary
+                  : isSelected
+                  ? colors.primary
+                  : colors.divider,
+              },
             ]}
           >
             {(isSelected || isCurrent) && (
               <View
                 style={[
                   styles.radioInner,
-                  isCurrent && styles.radioInnerCurrent,
+                  {
+                    backgroundColor: isCurrent
+                      ? colors.textSecondary
+                      : colors.primary,
+                  },
                 ]}
               />
             )}
@@ -235,8 +286,15 @@ export default function OwnerSubscriptionScreen() {
           <Text
             style={[
               styles.selectText,
-              isSelected && styles.selectTextSelected,
-              isCurrent && styles.selectTextCurrent,
+              {
+                color: isCurrent
+                  ? colors.textSecondary
+                  : isSelected
+                  ? colors.primary
+                  : colors.textSecondary,
+              },
+              isSelected && { fontWeight: "600" },
+              isCurrent && { fontStyle: "italic" },
             ]}
           >
             {isCurrent
@@ -252,12 +310,22 @@ export default function OwnerSubscriptionScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
         </View>
 
         {/* Floating Sticky Header */}
@@ -281,41 +349,85 @@ export default function OwnerSubscriptionScreen() {
         >
           {/* Current Subscription Card */}
           {CURRENT_SUBSCRIPTION.isActive && (
-            <View style={styles.currentSubscriptionCard}>
+            <View
+              style={[
+                styles.currentSubscriptionCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.primary,
+                },
+              ]}
+            >
               <View style={styles.currentSubHeader}>
-                <View style={styles.currentSubIcon}>
-                  <Ionicons
-                    name="diamond"
-                    size={24}
-                    color={Colors.primaryGreen}
-                  />
+                <View
+                  style={[
+                    styles.currentSubIcon,
+                    { backgroundColor: `${colors.primary}15` },
+                  ]}
+                >
+                  <Ionicons name="diamond" size={24} color={colors.primary} />
                 </View>
                 <View style={styles.currentSubInfo}>
-                  <Text style={styles.currentSubTitle}>
+                  <Text
+                    style={[styles.currentSubTitle, { color: colors.text }]}
+                  >
                     {CURRENT_SUBSCRIPTION.plan} Plan
                   </Text>
-                  <Text style={styles.currentSubExpiry}>
+                  <Text
+                    style={[
+                      styles.currentSubExpiry,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
                     Expires {CURRENT_SUBSCRIPTION.expiresDate}
                   </Text>
                 </View>
-                <View style={styles.currentSubDays}>
-                  <Text style={styles.currentSubDaysValue}>
+                <View
+                  style={[
+                    styles.currentSubDays,
+                    { backgroundColor: `${colors.primary}15` },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.currentSubDaysValue,
+                      { color: colors.primary },
+                    ]}
+                  >
                     {CURRENT_SUBSCRIPTION.daysRemaining}
                   </Text>
-                  <Text style={styles.currentSubDaysLabel}>days left</Text>
+                  <Text
+                    style={[
+                      styles.currentSubDaysLabel,
+                      { color: colors.primary },
+                    ]}
+                  >
+                    days left
+                  </Text>
                 </View>
               </View>
 
               {/* Usage Progress */}
-              <View style={styles.usageContainer}>
+              <View
+                style={[
+                  styles.usageContainer,
+                  { borderTopColor: colors.divider },
+                ]}
+              >
                 <View style={styles.usageHeader}>
-                  <Text style={styles.usageLabel}>Listings Used</Text>
-                  <Text style={styles.usageValue}>
+                  <Text
+                    style={[styles.usageLabel, { color: colors.textSecondary }]}
+                  >
+                    Listings Used
+                  </Text>
+                  <Text style={[styles.usageValue, { color: colors.text }]}>
                     {CURRENT_SUBSCRIPTION.listingsUsed}/
                     {CURRENT_SUBSCRIPTION.listingsTotal}
                   </Text>
                 </View>
-                <View style={styles.usageBar}>
+                <View
+                  style={[styles.usageBar, { backgroundColor: colors.divider }]}
+                >
                   <View
                     style={[
                       styles.usageProgress,
@@ -325,6 +437,7 @@ export default function OwnerSubscriptionScreen() {
                             CURRENT_SUBSCRIPTION.listingsTotal) *
                           100
                         }%`,
+                        backgroundColor: colors.primary,
                       },
                     ]}
                   />
@@ -335,12 +448,12 @@ export default function OwnerSubscriptionScreen() {
 
           {/* Title */}
           <View style={styles.titleSection}>
-            <Text style={styles.title}>
+            <Text style={[styles.title, { color: colors.text }]}>
               {CURRENT_SUBSCRIPTION.isActive
                 ? "Upgrade Your Plan"
                 : "Choose a Plan"}
             </Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
               Select the best plan for your property listing needs
             </Text>
           </View>
@@ -349,13 +462,20 @@ export default function OwnerSubscriptionScreen() {
           <View style={styles.plansContainer}>{PLANS.map(renderPlanCard)}</View>
 
           {/* Security Note */}
-          <View style={styles.securityNote}>
+          <View
+            style={[
+              styles.securityNote,
+              { backgroundColor: `${colors.primary}08` },
+            ]}
+          >
             <Ionicons
               name="shield-checkmark"
               size={20}
-              color={Colors.primaryGreen}
+              color={colors.primary}
             />
-            <Text style={styles.securityNoteText}>
+            <Text
+              style={[styles.securityNoteText, { color: colors.textSecondary }]}
+            >
               Secure payment powered by Paystack. Your payment information is
               encrypted and secure.
             </Text>
@@ -364,7 +484,14 @@ export default function OwnerSubscriptionScreen() {
 
         {/* Fixed Continue Button */}
         <View
-          style={[styles.footer, { paddingBottom: insets.bottom + Spacing.md }]}
+          style={[
+            styles.footer,
+            {
+              paddingBottom: insets.bottom + Spacing.md,
+              backgroundColor: colors.background,
+              borderTopColor: colors.divider,
+            },
+          ]}
         >
           <TouchableOpacity
             style={[
@@ -378,8 +505,8 @@ export default function OwnerSubscriptionScreen() {
             <LinearGradient
               colors={
                 selectedPlan
-                  ? [Colors.primaryGreen, "#2E7D32"]
-                  : [Colors.textSecondary, Colors.textSecondary]
+                  ? [colors.primary, colors.primaryDark]
+                  : [colors.divider, colors.divider]
               }
               style={styles.continueButtonGradient}
             >
@@ -402,7 +529,6 @@ export default function OwnerSubscriptionScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   // Decorative Background
   decorativeBackground: {
@@ -420,8 +546,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: Colors.primaryLight,
-    opacity: 0.08,
   },
   circle2: {
     position: "absolute",
@@ -430,8 +554,6 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     borderRadius: 200,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
   },
   // Header
   headerLeft: {
@@ -444,7 +566,6 @@ const styles = StyleSheet.create({
     ...Typography.titleLarge,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   scrollView: {
     flex: 1,
@@ -456,15 +577,12 @@ const styles = StyleSheet.create({
 
   // Current Subscription Card
   currentSubscriptionCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 20,
     padding: Spacing.lg,
     marginBottom: Spacing.xl,
     borderWidth: 1,
-    borderColor: Colors.primaryGreen,
     ...Platform.select({
       ios: {
-        shadowColor: Colors.primaryGreen,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.15,
         shadowRadius: 12,
@@ -483,7 +601,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: `${Colors.primaryGreen}15`,
     alignItems: "center",
     justifyContent: "center",
     marginRight: Spacing.md,
@@ -495,17 +612,14 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   currentSubExpiry: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   currentSubDays: {
     alignItems: "center",
-    backgroundColor: `${Colors.primaryGreen}15`,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: 12,
@@ -514,17 +628,14 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.primaryGreen,
   },
   currentSubDaysLabel: {
     ...Typography.caption,
     fontSize: 10,
-    color: Colors.primaryGreen,
   },
   usageContainer: {
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.divider,
   },
   usageHeader: {
     flexDirection: "row",
@@ -534,23 +645,19 @@ const styles = StyleSheet.create({
   usageLabel: {
     ...Typography.bodyMedium,
     fontSize: 13,
-    color: Colors.textSecondary,
   },
   usageValue: {
     ...Typography.labelMedium,
     fontSize: 13,
     fontWeight: "600",
-    color: Colors.textPrimary,
   },
   usageBar: {
     height: 8,
-    backgroundColor: Colors.divider,
     borderRadius: 4,
     overflow: "hidden",
   },
   usageProgress: {
     height: "100%",
-    backgroundColor: Colors.primaryGreen,
     borderRadius: 4,
   },
 
@@ -562,13 +669,11 @@ const styles = StyleSheet.create({
     ...Typography.headlineLarge,
     fontSize: 24,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   subtitle: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
   },
 
   // Plan Cards
@@ -576,11 +681,9 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   planCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 20,
     padding: Spacing.lg,
     borderWidth: 2,
-    borderColor: Colors.divider,
     position: "relative",
     overflow: "hidden",
     ...Platform.select({
@@ -595,14 +698,8 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  planCardSelected: {
-    borderColor: Colors.primaryGreen,
-    backgroundColor: `${Colors.primaryGreen}08`,
-  },
-  planCardCurrent: {
-    borderColor: Colors.textSecondary,
-    opacity: 0.7,
-  },
+  planCardSelected: {},
+  planCardCurrent: {},
   popularBadge: {
     position: "absolute",
     top: 0,
@@ -610,7 +707,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: Colors.accentOrange,
+    backgroundColor: "#F59E0B",
     paddingHorizontal: Spacing.md,
     paddingVertical: 6,
     borderBottomLeftRadius: 12,
@@ -648,7 +745,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: Colors.textSecondary,
+    backgroundColor: "#6B7280",
     paddingHorizontal: Spacing.md,
     paddingVertical: 6,
     borderBottomLeftRadius: 12,
@@ -673,29 +770,20 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
-  planNameSelected: {
-    color: Colors.primaryGreen,
-  },
+  planNameSelected: {},
   listingsBadge: {
-    backgroundColor: `${Colors.primaryGreen}15`,
     paddingHorizontal: Spacing.md,
     paddingVertical: 4,
     borderRadius: 10,
   },
-  listingsBadgeSelected: {
-    backgroundColor: Colors.primaryGreen,
-  },
+  listingsBadgeSelected: {},
   listingsBadgeText: {
     ...Typography.caption,
     fontSize: 11,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
-  listingsBadgeTextSelected: {
-    color: "#FFFFFF",
-  },
+  listingsBadgeTextSelected: {},
   priceRow: {
     flexDirection: "row",
     alignItems: "baseline",
@@ -703,22 +791,17 @@ const styles = StyleSheet.create({
   currency: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
     marginRight: 4,
   },
   price: {
     ...Typography.displayMedium,
     fontSize: 36,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
-  priceSelected: {
-    color: Colors.primaryGreen,
-  },
+  priceSelected: {},
   duration: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
     marginLeft: 4,
   },
   featuresContainer: {
@@ -726,7 +809,6 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.divider,
   },
   featureRow: {
     flexDirection: "row",
@@ -737,67 +819,45 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: `${Colors.primaryGreen}15`,
     alignItems: "center",
     justifyContent: "center",
   },
-  featureIconSelected: {
-    backgroundColor: Colors.primaryGreen,
-  },
+  featureIconSelected: {},
   featureText: {
     ...Typography.bodyMedium,
     fontSize: 13,
-    color: Colors.textSecondary,
     flex: 1,
   },
-  featureTextSelected: {
-    color: Colors.textPrimary,
-  },
+  featureTextSelected: {},
   selectionRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.sm,
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.divider,
   },
   radioOuter: {
     width: 22,
     height: 22,
     borderRadius: 11,
     borderWidth: 2,
-    borderColor: Colors.divider,
     alignItems: "center",
     justifyContent: "center",
   },
-  radioOuterSelected: {
-    borderColor: Colors.primaryGreen,
-  },
-  radioOuterCurrent: {
-    borderColor: Colors.textSecondary,
-  },
+  radioOuterSelected: {},
+  radioOuterCurrent: {},
   radioInner: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: Colors.primaryGreen,
   },
-  radioInnerCurrent: {
-    backgroundColor: Colors.textSecondary,
-  },
+  radioInnerCurrent: {},
   selectText: {
     ...Typography.bodyMedium,
     fontSize: 13,
-    color: Colors.textSecondary,
   },
-  selectTextSelected: {
-    color: Colors.primaryGreen,
-    fontWeight: "600",
-  },
-  selectTextCurrent: {
-    color: Colors.textSecondary,
-    fontStyle: "italic",
-  },
+  selectTextSelected: {},
+  selectTextCurrent: {},
 
   // Security Note
   securityNote: {
@@ -806,13 +866,11 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     marginTop: Spacing.xl,
     padding: Spacing.md,
-    backgroundColor: `${Colors.primaryGreen}08`,
     borderRadius: 12,
   },
   securityNoteText: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
     flex: 1,
     lineHeight: 18,
   },
@@ -826,9 +884,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.md,
-    backgroundColor: Colors.background,
     borderTopWidth: 1,
-    borderTopColor: Colors.divider,
   },
   continueButton: {
     borderRadius: 16,
