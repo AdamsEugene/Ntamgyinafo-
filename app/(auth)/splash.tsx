@@ -16,6 +16,7 @@ import Animated, {
   interpolateColor,
 } from "react-native-reanimated";
 import { Colors, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 

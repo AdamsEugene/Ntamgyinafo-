@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -123,6 +124,7 @@ const FloatingParticle = ({ index }: { index: number }) => {
 export default function WelcomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
 
   // Animation values
   const logoScale = useRef(new Animated.Value(0)).current;
@@ -313,13 +315,33 @@ export default function WelcomeScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View
+        style={[
+          styles.container,
+          { paddingTop: insets.top, backgroundColor: colors.background },
+        ]}
+      >
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
-          <View style={styles.circle3} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle3,
+              { backgroundColor: colors.primary, opacity: 0.03 },
+            ]}
+          />
         </View>
 
         {/* Floating Particles */}
@@ -366,11 +388,12 @@ export default function WelcomeScreen() {
                 styles.logoCircle,
                 {
                   transform: [{ scale: logoScale }, { rotate: logoRotation }],
+                  backgroundColor: colors.surface,
                 },
               ]}
             >
               <View style={styles.logoInner}>
-                <Ionicons name="home" size={52} color={Colors.primaryGreen} />
+                <Ionicons name="home" size={52} color={colors.primary} />
               </View>
             </Animated.View>
           </View>
@@ -383,6 +406,7 @@ export default function WelcomeScreen() {
                 {
                   opacity: titleOpacity,
                   transform: [{ translateY: titleTranslateY }],
+                  color: colors.text,
                 },
               ]}
             >
@@ -390,9 +414,21 @@ export default function WelcomeScreen() {
             </Animated.Text>
 
             <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <View style={styles.dividerDot} />
-              <View style={styles.dividerLine} />
+              <View
+                style={[
+                  styles.dividerLine,
+                  { backgroundColor: colors.primary },
+                ]}
+              />
+              <View
+                style={[styles.dividerDot, { backgroundColor: colors.primary }]}
+              />
+              <View
+                style={[
+                  styles.dividerLine,
+                  { backgroundColor: colors.primary },
+                ]}
+              />
             </View>
 
             <Animated.Text
@@ -400,6 +436,7 @@ export default function WelcomeScreen() {
                 styles.tagline,
                 {
                   opacity: taglineOpacity,
+                  color: colors.textSecondary,
                 },
               ]}
             >
@@ -416,7 +453,10 @@ export default function WelcomeScreen() {
               }}
             >
               <TouchableOpacity
-                style={styles.primaryButton}
+                style={[
+                  styles.primaryButton,
+                  { backgroundColor: colors.primary },
+                ]}
                 onPress={() => router.push("/(auth)/login")}
                 activeOpacity={0.9}
               >
@@ -434,16 +474,26 @@ export default function WelcomeScreen() {
               }}
             >
               <TouchableOpacity
-                style={styles.secondaryButton}
+                style={[
+                  styles.secondaryButton,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
                 onPress={() => router.push("/(auth)/register")}
                 activeOpacity={0.9}
               >
-                <Text style={styles.secondaryButtonText}>Create Account</Text>
+                <Text
+                  style={[styles.secondaryButtonText, { color: colors.text }]}
+                >
+                  Create Account
+                </Text>
                 <View style={styles.buttonIconSecondary}>
                   <Ionicons
                     name="person-add-outline"
                     size={18}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                 </View>
               </TouchableOpacity>
@@ -457,11 +507,13 @@ export default function WelcomeScreen() {
               style={styles.guestLink}
               activeOpacity={0.7}
             >
-              <Text style={styles.guestText}>Explore as Guest</Text>
+              <Text style={[styles.guestText, { color: colors.textSecondary }]}>
+                Explore as Guest
+              </Text>
               <Ionicons
                 name="chevron-forward"
                 size={16}
-                color={Colors.textSecondary}
+                color={colors.textSecondary}
               />
             </TouchableOpacity>
           </Animated.View>
@@ -471,7 +523,12 @@ export default function WelcomeScreen() {
         <View
           style={[styles.bottomDecoration, { paddingBottom: insets.bottom }]}
         >
-          <View style={styles.bottomLine} />
+          <View
+            style={[
+              styles.bottomLine,
+              { backgroundColor: colors.textSecondary },
+            ]}
+          />
         </View>
       </View>
     </>

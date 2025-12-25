@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -26,6 +27,7 @@ type Role = "buyer" | "owner" | null;
 export default function RegisterScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [fullName, setFullName] = useState("John Doe");
   const [phone, setPhone] = useState("+233 24 123 4567");
   const [password, setPassword] = useState("password123");
@@ -342,17 +344,32 @@ export default function RegisterScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? "light" : "dark"} />
       <KeyboardAvoidingView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
-          <View style={styles.circle3} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle3,
+              { backgroundColor: colors.primary, opacity: 0.03 },
+            ]}
+          />
         </View>
 
         {/* Header */}
@@ -368,17 +385,20 @@ export default function RegisterScreen() {
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             activeOpacity={0.8}
           >
-            <View style={styles.backButtonCircle}>
-              <Ionicons
-                name="arrow-back"
-                size={20}
-                color={Colors.textPrimary}
-              />
+            <View
+              style={[
+                styles.backButtonCircle,
+                { backgroundColor: colors.surface },
+              ]}
+            >
+              <Ionicons name="arrow-back" size={20} color={colors.text} />
             </View>
           </TouchableOpacity>
 
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>Create Account</Text>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>
+              Create Account
+            </Text>
           </View>
 
           <View style={styles.headerSpacer} />
@@ -418,6 +438,7 @@ export default function RegisterScreen() {
                   styles.logoCircle,
                   {
                     transform: [{ scale: logoScale }, { rotate: logoRotation }],
+                    backgroundColor: colors.surface,
                   },
                 ]}
               >
@@ -425,7 +446,7 @@ export default function RegisterScreen() {
                   <Ionicons
                     name="person-add"
                     size={28}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                 </View>
               </Animated.View>
@@ -441,8 +462,10 @@ export default function RegisterScreen() {
                 },
               ]}
             >
-              <Text style={styles.title}>Join Ntamgyinafoɔ</Text>
-              <Text style={styles.subtitle}>
+              <Text style={[styles.title, { color: colors.text }]}>
+                Join Ntamgyinafoɔ
+              </Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
                 Create your account to get started
               </Text>
             </Animated.View>
@@ -454,26 +477,36 @@ export default function RegisterScreen() {
                 {
                   opacity: formOpacity,
                   transform: [{ translateY: formTranslateY }],
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
                 },
               ]}
             >
               {/* Full Name Input */}
-              <Text style={styles.inputLabel}>Full Name</Text>
+              <Text
+                style={[styles.inputLabel, { color: colors.textSecondary }]}
+              >
+                Full Name
+              </Text>
               <View
                 style={[
                   styles.inputContainer,
+                  {
+                    backgroundColor: colors.background,
+                    borderColor: colors.divider,
+                  },
                   fullNameError ? styles.inputContainerError : null,
                 ]}
               >
                 <Ionicons
                   name="person-outline"
                   size={20}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder="Enter your full name"
-                  placeholderTextColor={Colors.textSecondary}
+                  placeholderTextColor={colors.textSecondary}
                   value={fullName}
                   onChangeText={(text) => {
                     setFullName(text);
@@ -489,22 +522,30 @@ export default function RegisterScreen() {
               ) : null}
 
               {/* Phone Number Input */}
-              <Text style={styles.inputLabel}>Phone Number</Text>
+              <Text
+                style={[styles.inputLabel, { color: colors.textSecondary }]}
+              >
+                Phone Number
+              </Text>
               <View
                 style={[
                   styles.inputContainer,
+                  {
+                    backgroundColor: colors.background,
+                    borderColor: colors.divider,
+                  },
                   phoneError ? styles.inputContainerError : null,
                 ]}
               >
                 <Ionicons
                   name="call-outline"
                   size={20}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder="+233 XX XXX XXXX"
-                  placeholderTextColor={Colors.textSecondary}
+                  placeholderTextColor={colors.textSecondary}
                   value={phone}
                   onChangeText={formatPhoneNumber}
                   keyboardType="phone-pad"
@@ -517,22 +558,30 @@ export default function RegisterScreen() {
               ) : null}
 
               {/* Password Input */}
-              <Text style={styles.inputLabel}>Password</Text>
+              <Text
+                style={[styles.inputLabel, { color: colors.textSecondary }]}
+              >
+                Password
+              </Text>
               <View
                 style={[
                   styles.inputContainer,
+                  {
+                    backgroundColor: colors.background,
+                    borderColor: colors.divider,
+                  },
                   passwordError ? styles.inputContainerError : null,
                 ]}
               >
                 <Ionicons
                   name="lock-closed-outline"
                   size={20}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder="Create password (min 6 characters)"
-                  placeholderTextColor={Colors.textSecondary}
+                  placeholderTextColor={colors.textSecondary}
                   value={password}
                   onChangeText={(text) => {
                     setPassword(text);
@@ -553,7 +602,7 @@ export default function RegisterScreen() {
                   <Ionicons
                     name={showPassword ? "eye-off-outline" : "eye-outline"}
                     size={20}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
@@ -562,22 +611,30 @@ export default function RegisterScreen() {
               ) : null}
 
               {/* Confirm Password Input */}
-              <Text style={styles.inputLabel}>Confirm Password</Text>
+              <Text
+                style={[styles.inputLabel, { color: colors.textSecondary }]}
+              >
+                Confirm Password
+              </Text>
               <View
                 style={[
                   styles.inputContainer,
+                  {
+                    backgroundColor: colors.background,
+                    borderColor: colors.divider,
+                  },
                   confirmPasswordError ? styles.inputContainerError : null,
                 ]}
               >
                 <Ionicons
                   name="lock-closed-outline"
                   size={20}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder="Re-enter password"
-                  placeholderTextColor={Colors.textSecondary}
+                  placeholderTextColor={colors.textSecondary}
                   value={confirmPassword}
                   onChangeText={(text) => {
                     setConfirmPassword(text);
@@ -597,7 +654,7 @@ export default function RegisterScreen() {
                       showConfirmPassword ? "eye-off-outline" : "eye-outline"
                     }
                     size={20}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
@@ -607,7 +664,9 @@ export default function RegisterScreen() {
 
               {/* Role Selection */}
               <View style={styles.roleSection}>
-                <Text style={styles.roleTitle}>I am a:</Text>
+                <Text style={[styles.roleTitle, { color: colors.text }]}>
+                  I am a:
+                </Text>
                 {roleError ? (
                   <Text style={styles.roleError}>{roleError}</Text>
                 ) : null}
@@ -616,7 +675,14 @@ export default function RegisterScreen() {
                   <TouchableOpacity
                     style={[
                       styles.roleCard,
-                      role === "buyer" && styles.roleCardSelected,
+                      {
+                        backgroundColor: colors.background,
+                        borderColor: colors.divider,
+                      },
+                      role === "buyer" && [
+                        styles.roleCardSelected,
+                        { borderColor: colors.primary },
+                      ],
                     ]}
                     onPress={() => {
                       setRole("buyer");
@@ -635,21 +701,30 @@ export default function RegisterScreen() {
                         size={24}
                         color={
                           role === "buyer"
-                            ? Colors.primaryGreen
-                            : Colors.textSecondary
+                            ? colors.primary
+                            : colors.textSecondary
                         }
                       />
                     </View>
                     <Text
                       style={[
                         styles.roleCardText,
-                        role === "buyer" && styles.roleCardTextSelected,
+                        { color: colors.textSecondary },
+                        role === "buyer" && [
+                          styles.roleCardTextSelected,
+                          { color: colors.text },
+                        ],
                       ]}
                     >
                       Buyer / Tenant
                     </Text>
                     {role === "buyer" && (
-                      <View style={styles.roleCheckmark}>
+                      <View
+                        style={[
+                          styles.roleCheckmark,
+                          { backgroundColor: colors.primary },
+                        ]}
+                      >
                         <Ionicons name="checkmark" size={14} color="#FFFFFF" />
                       </View>
                     )}
@@ -658,7 +733,14 @@ export default function RegisterScreen() {
                   <TouchableOpacity
                     style={[
                       styles.roleCard,
-                      role === "owner" && styles.roleCardSelected,
+                      {
+                        backgroundColor: colors.background,
+                        borderColor: colors.divider,
+                      },
+                      role === "owner" && [
+                        styles.roleCardSelected,
+                        { borderColor: colors.primary },
+                      ],
                     ]}
                     onPress={() => {
                       setRole("owner");
@@ -677,21 +759,30 @@ export default function RegisterScreen() {
                         size={24}
                         color={
                           role === "owner"
-                            ? Colors.primaryGreen
-                            : Colors.textSecondary
+                            ? colors.primary
+                            : colors.textSecondary
                         }
                       />
                     </View>
                     <Text
                       style={[
                         styles.roleCardText,
-                        role === "owner" && styles.roleCardTextSelected,
+                        { color: colors.textSecondary },
+                        role === "owner" && [
+                          styles.roleCardTextSelected,
+                          { color: colors.text },
+                        ],
                       ]}
                     >
                       Property Owner
                     </Text>
                     {role === "owner" && (
-                      <View style={styles.roleCheckmark}>
+                      <View
+                        style={[
+                          styles.roleCheckmark,
+                          { backgroundColor: colors.primary },
+                        ]}
+                      >
                         <Ionicons name="checkmark" size={14} color="#FFFFFF" />
                       </View>
                     )}
@@ -703,6 +794,7 @@ export default function RegisterScreen() {
               <TouchableOpacity
                 style={[
                   styles.continueButton,
+                  { backgroundColor: colors.primary },
                   !isFormValid() && styles.continueButtonDisabled,
                 ]}
                 onPress={handleContinue}
@@ -718,18 +810,29 @@ export default function RegisterScreen() {
 
             {/* Footer */}
             <Animated.View style={[styles.footer, { opacity: footerOpacity }]}>
-              <Text style={styles.footerText}>
+              <Text
+                style={[styles.footerText, { color: colors.textSecondary }]}
+              >
                 By continuing, you agree to our{" "}
               </Text>
               <TouchableOpacity onPress={handleTermsPress} activeOpacity={0.7}>
-                <Text style={styles.linkText}>Terms</Text>
+                <Text style={[styles.linkText, { color: colors.primary }]}>
+                  Terms
+                </Text>
               </TouchableOpacity>
-              <Text style={styles.footerText}> and </Text>
+              <Text
+                style={[styles.footerText, { color: colors.textSecondary }]}
+              >
+                {" "}
+                and{" "}
+              </Text>
               <TouchableOpacity
                 onPress={handlePrivacyPress}
                 activeOpacity={0.7}
               >
-                <Text style={styles.linkText}>Privacy Policy</Text>
+                <Text style={[styles.linkText, { color: colors.primary }]}>
+                  Privacy Policy
+                </Text>
               </TouchableOpacity>
             </Animated.View>
 
@@ -737,12 +840,16 @@ export default function RegisterScreen() {
             <Animated.View
               style={[styles.loginSection, { opacity: footerOpacity }]}
             >
-              <Text style={styles.loginText}>Already have an account? </Text>
+              <Text style={[styles.loginText, { color: colors.textSecondary }]}>
+                Already have an account?{" "}
+              </Text>
               <TouchableOpacity
                 onPress={() => router.push("/(auth)/login")}
                 activeOpacity={0.7}
               >
-                <Text style={styles.loginLink}>Sign In</Text>
+                <Text style={[styles.loginLink, { color: colors.primary }]}>
+                  Sign In
+                </Text>
               </TouchableOpacity>
             </Animated.View>
           </View>

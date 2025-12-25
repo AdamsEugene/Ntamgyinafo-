@@ -20,6 +20,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import { LocationSelector } from "@/components/LocationSelector";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -46,6 +47,7 @@ export default function RoleSelectionScreen() {
     role?: string;
   }>();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
 
   const role = (params.role as "buyer" | "owner") || "buyer";
 
@@ -283,17 +285,32 @@ export default function RoleSelectionScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? "light" : "dark"} />
       <KeyboardAvoidingView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
-          <View style={styles.circle3} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle3,
+              { backgroundColor: colors.primary, opacity: 0.03 },
+            ]}
+          />
         </View>
 
         {/* Header */}
@@ -310,12 +327,13 @@ export default function RoleSelectionScreen() {
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               activeOpacity={0.8}
             >
-              <View style={styles.backButtonCircle}>
-                <Ionicons
-                  name="arrow-back"
-                  size={20}
-                  color={Colors.textPrimary}
-                />
+              <View
+                style={[
+                  styles.backButtonCircle,
+                  { backgroundColor: colors.surface },
+                ]}
+              >
+                <Ionicons name="arrow-back" size={20} color={colors.text} />
               </View>
             </TouchableOpacity>
           ) : (
@@ -325,12 +343,13 @@ export default function RoleSelectionScreen() {
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               activeOpacity={0.8}
             >
-              <View style={styles.backButtonCircle}>
-                <Ionicons
-                  name="arrow-back"
-                  size={20}
-                  color={Colors.textPrimary}
-                />
+              <View
+                style={[
+                  styles.backButtonCircle,
+                  { backgroundColor: colors.surface },
+                ]}
+              >
+                <Ionicons name="arrow-back" size={20} color={colors.text} />
               </View>
             </TouchableOpacity>
           )}
@@ -344,7 +363,11 @@ export default function RoleSelectionScreen() {
               disabled={!canProceedToNext()}
               style={[
                 styles.nextButtonHeader,
-                !canProceedToNext() && styles.nextButtonHeaderDisabled,
+                { backgroundColor: colors.primary },
+                !canProceedToNext() && [
+                  styles.nextButtonHeaderDisabled,
+                  { backgroundColor: colors.divider },
+                ],
               ]}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               activeOpacity={0.9}
@@ -352,7 +375,7 @@ export default function RoleSelectionScreen() {
               <Text
                 style={[
                   styles.nextButtonHeaderText,
-                  !canProceedToNext() && styles.nextButtonHeaderTextDisabled,
+                  !canProceedToNext() && { color: colors.textSecondary },
                 ]}
               >
                 {currentStep === BUYER_STEPS.length ? "Finish" : "Next"}
@@ -364,7 +387,7 @@ export default function RoleSelectionScreen() {
                     : "arrow-forward"
                 }
                 size={16}
-                color={canProceedToNext() ? "#FFFFFF" : "#9E9E9E"}
+                color={canProceedToNext() ? "#FFFFFF" : colors.textSecondary}
               />
             </TouchableOpacity>
           )}
@@ -386,23 +409,43 @@ export default function RoleSelectionScreen() {
                 },
               ]}
             >
-              <View style={styles.titleIconContainer}>
-                <View style={styles.titleIconInner}>
+              <View
+                style={[
+                  styles.titleIconContainer,
+                  { backgroundColor: colors.surface },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.titleIconInner,
+                    { backgroundColor: `${colors.primary}15` },
+                  ]}
+                >
                   <Ionicons
                     name={isBuyer ? "person-outline" : "briefcase-outline"}
                     size={28}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                 </View>
               </View>
-              <Text style={styles.title}>Complete Your Profile</Text>
-              <View style={styles.roleBadgeContainer}>
+              <Text style={[styles.title, { color: colors.text }]}>
+                Complete Your Profile
+              </Text>
+              <View
+                style={[
+                  styles.roleBadgeContainer,
+                  {
+                    backgroundColor: `${colors.primary}15`,
+                    borderColor: `${colors.primary}30`,
+                  },
+                ]}
+              >
                 <Ionicons
                   name={isBuyer ? "search-outline" : "home-outline"}
                   size={14}
-                  color={Colors.primaryGreen}
+                  color={colors.primary}
                 />
-                <Text style={styles.roleBadge}>
+                <Text style={[styles.roleBadge, { color: colors.primary }]}>
                   {isBuyer ? "Buyer/Tenant" : "Property Owner"}
                 </Text>
               </View>
@@ -416,16 +459,25 @@ export default function RoleSelectionScreen() {
                   {
                     opacity: formOpacity,
                     transform: [{ translateY: formTranslateY }],
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
                   },
                 ]}
               >
                 {/* Progress Indicator */}
                 <View style={styles.progressContainer}>
                   <View style={styles.progressHeader}>
-                    <Text style={styles.progressText}>
+                    <Text
+                      style={[
+                        styles.progressText,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
                       Step {currentStep} of {BUYER_STEPS.length}
                     </Text>
-                    <Text style={styles.progressLabel}>
+                    <Text
+                      style={[styles.progressLabel, { color: colors.text }]}
+                    >
                       {BUYER_STEPS[currentStep - 1].title}
                     </Text>
                   </View>
@@ -435,7 +487,11 @@ export default function RoleSelectionScreen() {
                         key={step.id}
                         style={[
                           styles.progressStep,
-                          currentStep >= step.id && styles.progressStepActive,
+                          { backgroundColor: colors.divider },
+                          currentStep >= step.id && [
+                            styles.progressStepActive,
+                            { backgroundColor: colors.primary },
+                          ],
                           currentStep === step.id && styles.progressStepCurrent,
                         ]}
                       />
@@ -450,18 +506,30 @@ export default function RoleSelectionScreen() {
                   {currentStep === 1 && (
                     <View style={styles.stepView}>
                       <View style={styles.stepHeader}>
-                        <View style={styles.stepIconContainer}>
+                        <View
+                          style={[
+                            styles.stepIconContainer,
+                            { backgroundColor: `${colors.primary}15` },
+                          ]}
+                        >
                           <Ionicons
                             name="location"
                             size={24}
-                            color={Colors.primaryGreen}
+                            color={colors.primary}
                           />
                         </View>
                         <View style={styles.stepHeaderText}>
-                          <Text style={styles.stepTitle}>
+                          <Text
+                            style={[styles.stepTitle, { color: colors.text }]}
+                          >
                             Select Preferred Locations
                           </Text>
-                          <Text style={styles.stepDescription}>
+                          <Text
+                            style={[
+                              styles.stepDescription,
+                              { color: colors.textSecondary },
+                            ]}
+                          >
                             Choose locations where you&apos;d like to find
                             properties
                           </Text>
@@ -477,9 +545,14 @@ export default function RoleSelectionScreen() {
                         <Ionicons
                           name="information-circle-outline"
                           size={14}
-                          color={Colors.textSecondary}
+                          color={colors.textSecondary}
                         />
-                        <Text style={styles.locationHintText}>
+                        <Text
+                          style={[
+                            styles.locationHintText,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
                           Scroll to see more locations
                         </Text>
                       </View>
@@ -489,16 +562,30 @@ export default function RoleSelectionScreen() {
                   {currentStep === 2 && (
                     <View style={styles.stepView}>
                       <View style={styles.stepHeader}>
-                        <View style={styles.stepIconContainer}>
+                        <View
+                          style={[
+                            styles.stepIconContainer,
+                            { backgroundColor: `${colors.primary}15` },
+                          ]}
+                        >
                           <Ionicons
                             name="wallet"
                             size={24}
-                            color={Colors.primaryGreen}
+                            color={colors.primary}
                           />
                         </View>
                         <View style={styles.stepHeaderText}>
-                          <Text style={styles.stepTitle}>Set Your Budget</Text>
-                          <Text style={styles.stepDescription}>
+                          <Text
+                            style={[styles.stepTitle, { color: colors.text }]}
+                          >
+                            Set Your Budget
+                          </Text>
+                          <Text
+                            style={[
+                              styles.stepDescription,
+                              { color: colors.textSecondary },
+                            ]}
+                          >
                             Enter your budget range (optional)
                           </Text>
                         </View>
@@ -506,7 +593,12 @@ export default function RoleSelectionScreen() {
 
                       {/* Budget Presets */}
                       <View style={styles.budgetPresetsContainer}>
-                        <Text style={styles.budgetPresetsTitle}>
+                        <Text
+                          style={[
+                            styles.budgetPresetsTitle,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
                           Quick Select
                         </Text>
                         <View style={styles.budgetPresets}>
@@ -532,8 +624,14 @@ export default function RoleSelectionScreen() {
                                 key={index}
                                 style={[
                                   styles.budgetPresetButton,
-                                  isSelected &&
-                                    styles.budgetPresetButtonSelected,
+                                  {
+                                    backgroundColor: colors.background,
+                                    borderColor: colors.divider,
+                                  },
+                                  isSelected && {
+                                    backgroundColor: colors.primary,
+                                    borderColor: colors.primary,
+                                  },
                                 ]}
                                 onPress={() => {
                                   setMinBudget(preset.min);
@@ -544,8 +642,8 @@ export default function RoleSelectionScreen() {
                                 <Text
                                   style={[
                                     styles.budgetPresetText,
-                                    isSelected &&
-                                      styles.budgetPresetTextSelected,
+                                    { color: colors.text },
+                                    isSelected && { color: "#FFFFFF" },
                                   ]}
                                 >
                                   {preset.label}
@@ -557,50 +655,116 @@ export default function RoleSelectionScreen() {
                       </View>
 
                       {/* Budget Input Card */}
-                      <View style={styles.budgetCard}>
+                      <View
+                        style={[
+                          styles.budgetCard,
+                          {
+                            backgroundColor: colors.background,
+                            borderColor: colors.divider,
+                          },
+                        ]}
+                      >
                         <View style={styles.budgetCardHeader}>
                           <Ionicons
                             name="options-outline"
                             size={20}
-                            color={Colors.primaryGreen}
+                            color={colors.primary}
                           />
-                          <Text style={styles.budgetCardTitle}>
+                          <Text
+                            style={[
+                              styles.budgetCardTitle,
+                              { color: colors.text },
+                            ]}
+                          >
                             Custom Range
                           </Text>
                         </View>
                         <View style={styles.budgetInputsContainer}>
                           <View style={styles.budgetInput}>
-                            <Text style={styles.budgetInputLabelText}>
+                            <Text
+                              style={[
+                                styles.budgetInputLabelText,
+                                { color: colors.textSecondary },
+                              ]}
+                            >
                               Minimum
                             </Text>
-                            <View style={styles.budgetInputWrapper}>
-                              <Text style={styles.currencySymbol}>GHS</Text>
+                            <View
+                              style={[
+                                styles.budgetInputWrapper,
+                                {
+                                  backgroundColor: colors.surface,
+                                  borderColor: colors.divider,
+                                },
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.currencySymbol,
+                                  { color: colors.primary },
+                                ]}
+                              >
+                                GHS
+                              </Text>
                               <RNTextInput
                                 placeholder="0"
                                 value={minBudget}
                                 onChangeText={setMinBudget}
                                 keyboardType="numeric"
-                                style={styles.budgetInputField}
-                                placeholderTextColor={Colors.textSecondary}
+                                style={[
+                                  styles.budgetInputField,
+                                  { color: colors.text },
+                                ]}
+                                placeholderTextColor={colors.textSecondary}
                               />
                             </View>
                           </View>
                           <View style={styles.budgetDivider}>
-                            <Text style={styles.budgetDividerText}>to</Text>
+                            <Text
+                              style={[
+                                styles.budgetDividerText,
+                                { color: colors.textSecondary },
+                              ]}
+                            >
+                              to
+                            </Text>
                           </View>
                           <View style={styles.budgetInput}>
-                            <Text style={styles.budgetInputLabelText}>
+                            <Text
+                              style={[
+                                styles.budgetInputLabelText,
+                                { color: colors.textSecondary },
+                              ]}
+                            >
                               Maximum
                             </Text>
-                            <View style={styles.budgetInputWrapper}>
-                              <Text style={styles.currencySymbol}>GHS</Text>
+                            <View
+                              style={[
+                                styles.budgetInputWrapper,
+                                {
+                                  backgroundColor: colors.surface,
+                                  borderColor: colors.divider,
+                                },
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.currencySymbol,
+                                  { color: colors.primary },
+                                ]}
+                              >
+                                GHS
+                              </Text>
                               <RNTextInput
                                 placeholder="No limit"
                                 value={maxBudget}
                                 onChangeText={setMaxBudget}
                                 keyboardType="numeric"
-                                style={styles.budgetInputField}
-                                placeholderTextColor={Colors.textSecondary}
+                                style={[
+                                  styles.budgetInputField,
+                                  { color: colors.text },
+                                ]}
+                                placeholderTextColor={colors.textSecondary}
                               />
                             </View>
                           </View>
@@ -612,15 +776,22 @@ export default function RoleSelectionScreen() {
                   {currentStep === 3 && (
                     <View style={styles.stepView}>
                       <View style={styles.stepHeader}>
-                        <View style={styles.stepIconContainer}>
+                        <View
+                          style={[
+                            styles.stepIconContainer,
+                            { backgroundColor: `${colors.primary}15` },
+                          ]}
+                        >
                           <Ionicons
                             name="grid"
                             size={24}
-                            color={Colors.primaryGreen}
+                            color={colors.primary}
                           />
                         </View>
                         <View style={styles.stepHeaderText}>
-                          <Text style={styles.stepTitle}>
+                          <Text
+                            style={[styles.stepTitle, { color: colors.text }]}
+                          >
                             Property Type Interest
                           </Text>
                           <Text style={styles.stepDescription}>
@@ -639,7 +810,14 @@ export default function RoleSelectionScreen() {
                               key={propertyType.name}
                               style={[
                                 styles.propertyTypeCard,
-                                isSelected && styles.propertyTypeCardSelected,
+                                {
+                                  backgroundColor: colors.background,
+                                  borderColor: colors.divider,
+                                },
+                                isSelected && {
+                                  borderColor: colors.primary,
+                                  backgroundColor: `${colors.primary}10`,
+                                },
                               ]}
                               onPress={() =>
                                 togglePropertyType(propertyType.name)
@@ -649,8 +827,12 @@ export default function RoleSelectionScreen() {
                               <View
                                 style={[
                                   styles.propertyTypeIconContainer,
-                                  isSelected &&
-                                    styles.propertyTypeIconContainerSelected,
+                                  {
+                                    backgroundColor: `${colors.textSecondary}15`,
+                                  },
+                                  isSelected && {
+                                    backgroundColor: `${colors.primary}15`,
+                                  },
                                 ]}
                               >
                                 <Ionicons
@@ -658,16 +840,16 @@ export default function RoleSelectionScreen() {
                                   size={32}
                                   color={
                                     isSelected
-                                      ? Colors.primaryGreen
-                                      : Colors.textSecondary
+                                      ? colors.primary
+                                      : colors.textSecondary
                                   }
                                 />
                               </View>
                               <Text
                                 style={[
                                   styles.propertyTypeLabel,
-                                  isSelected &&
-                                    styles.propertyTypeLabelSelected,
+                                  { color: colors.text },
+                                  isSelected && { color: colors.primary },
                                 ]}
                               >
                                 {propertyType.name}
@@ -677,7 +859,7 @@ export default function RoleSelectionScreen() {
                                   <Ionicons
                                     name="checkmark-circle"
                                     size={24}
-                                    color={Colors.primaryGreen}
+                                    color={colors.primary}
                                   />
                                 </View>
                               )}
@@ -691,25 +873,45 @@ export default function RoleSelectionScreen() {
                   {currentStep === 4 && (
                     <View style={styles.stepView}>
                       <View style={styles.stepHeader}>
-                        <View style={styles.stepIconContainer}>
+                        <View
+                          style={[
+                            styles.stepIconContainer,
+                            { backgroundColor: `${colors.primary}15` },
+                          ]}
+                        >
                           <Ionicons
                             name="camera"
                             size={24}
-                            color={Colors.primaryGreen}
+                            color={colors.primary}
                           />
                         </View>
                         <View style={styles.stepHeaderText}>
-                          <Text style={styles.stepTitle}>
+                          <Text
+                            style={[styles.stepTitle, { color: colors.text }]}
+                          >
                             Profile Photo <Text style={styles.required}>*</Text>
                           </Text>
-                          <Text style={styles.stepDescription}>
+                          <Text
+                            style={[
+                              styles.stepDescription,
+                              { color: colors.textSecondary },
+                            ]}
+                          >
                             Add a profile photo to help others recognize you
                           </Text>
                         </View>
                       </View>
 
                       {/* Photo Upload Card */}
-                      <View style={styles.photoUploadCard}>
+                      <View
+                        style={[
+                          styles.photoUploadCard,
+                          {
+                            backgroundColor: colors.background,
+                            borderColor: colors.divider,
+                          },
+                        ]}
+                      >
                         {profilePhoto ? (
                           <View style={styles.photoPreviewContainer}>
                             <Image
@@ -729,7 +931,10 @@ export default function RoleSelectionScreen() {
                               />
                             </TouchableOpacity>
                             <TouchableOpacity
-                              style={styles.photoRemoveButton}
+                              style={[
+                                styles.photoRemoveButton,
+                                { backgroundColor: colors.surface },
+                              ]}
                               onPress={() => {
                                 setProfilePhoto(null);
                               }}
@@ -737,7 +942,7 @@ export default function RoleSelectionScreen() {
                               <Ionicons
                                 name="close-circle"
                                 size={24}
-                                color={Colors.textSecondary}
+                                color={colors.textSecondary}
                               />
                             </TouchableOpacity>
                           </View>
@@ -753,9 +958,17 @@ export default function RoleSelectionScreen() {
                               <Ionicons
                                 name="camera-outline"
                                 size={56}
-                                color={Colors.primaryGreen}
+                                color={colors.primary}
                               />
-                              <View style={styles.photoUploadIconBadge}>
+                              <View
+                                style={[
+                                  styles.photoUploadIconBadge,
+                                  {
+                                    backgroundColor: colors.primary,
+                                    borderColor: colors.background,
+                                  },
+                                ]}
+                              >
                                 <Ionicons
                                   name="add"
                                   size={20}
@@ -763,10 +976,20 @@ export default function RoleSelectionScreen() {
                                 />
                               </View>
                             </View>
-                            <Text style={styles.photoUploadText}>
+                            <Text
+                              style={[
+                                styles.photoUploadText,
+                                { color: colors.text },
+                              ]}
+                            >
                               Tap to add photo
                             </Text>
-                            <Text style={styles.photoUploadHint}>
+                            <Text
+                              style={[
+                                styles.photoUploadHint,
+                                { color: colors.textSecondary },
+                              ]}
+                            >
                               Use camera or choose from gallery
                             </Text>
                           </TouchableOpacity>
@@ -777,40 +1000,68 @@ export default function RoleSelectionScreen() {
                       {!profilePhoto && (
                         <View style={styles.photoOptionsContainer}>
                           <TouchableOpacity
-                            style={styles.photoOptionButton}
+                            style={[
+                              styles.photoOptionButton,
+                              {
+                                backgroundColor: colors.background,
+                                borderColor: colors.divider,
+                              },
+                            ]}
                             onPress={() => pickImageFromCamera(setProfilePhoto)}
                             activeOpacity={0.7}
                           >
-                            <View style={styles.photoOptionIcon}>
+                            <View
+                              style={[
+                                styles.photoOptionIcon,
+                                { backgroundColor: `${colors.primary}15` },
+                              ]}
+                            >
                               <Ionicons
                                 name="camera"
                                 size={22}
-                                color={Colors.primaryGreen}
+                                color={colors.primary}
                               />
                             </View>
                             <Text
-                              style={styles.photoOptionText}
+                              style={[
+                                styles.photoOptionText,
+                                { color: colors.text },
+                              ]}
                               numberOfLines={1}
                             >
                               Camera
                             </Text>
                           </TouchableOpacity>
                           <TouchableOpacity
-                            style={styles.photoOptionButton}
+                            style={[
+                              styles.photoOptionButton,
+                              {
+                                backgroundColor: colors.background,
+                                borderColor: colors.divider,
+                              },
+                            ]}
                             onPress={() =>
                               pickImageFromGallery(setProfilePhoto)
                             }
                             activeOpacity={0.7}
                           >
-                            <View style={styles.photoOptionIcon}>
+                            <View
+                              style={[
+                                styles.photoOptionIcon,
+                                { backgroundColor: `${colors.primary}15` },
+                              ]}
+                            >
                               <Ionicons
                                 name="images-outline"
                                 size={22}
-                                color={Colors.primaryGreen}
+                                color={colors.primary}
                               />
                             </View>
                             <Text
-                              style={styles.photoOptionText}
+                              style={[
+                                styles.photoOptionText,
+                                { color: colors.text },
+                              ]}
                               numberOfLines={1}
                             >
                               Gallery
@@ -820,7 +1071,15 @@ export default function RoleSelectionScreen() {
                       )}
 
                       {/* Tips */}
-                      <View style={styles.photoTipsContainer}>
+                      <View
+                        style={[
+                          styles.photoTipsContainer,
+                          {
+                            backgroundColor: `${colors.primary}10`,
+                            borderColor: colors.primary,
+                          },
+                        ]}
+                      >
                         <View style={styles.photoTipsHeader}>
                           <Ionicons
                             name="bulb-outline"

@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import { OTPInput } from "@/components/ui/OTPInput";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -27,6 +28,7 @@ export default function OTPVerificationScreen() {
     role?: string;
   }>();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -299,17 +301,32 @@ export default function OTPVerificationScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? "light" : "dark"} />
       <KeyboardAvoidingView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
-          <View style={styles.circle3} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle3,
+              { backgroundColor: colors.primary, opacity: 0.03 },
+            ]}
+          />
         </View>
 
         {/* Header */}
@@ -325,17 +342,20 @@ export default function OTPVerificationScreen() {
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             activeOpacity={0.8}
           >
-            <View style={styles.backButtonCircle}>
-              <Ionicons
-                name="arrow-back"
-                size={20}
-                color={Colors.textPrimary}
-              />
+            <View
+              style={[
+                styles.backButtonCircle,
+                { backgroundColor: colors.surface },
+              ]}
+            >
+              <Ionicons name="arrow-back" size={20} color={colors.text} />
             </View>
           </TouchableOpacity>
 
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>Verification</Text>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>
+              Verification
+            </Text>
           </View>
 
           <View style={styles.headerSpacer} />
@@ -371,6 +391,7 @@ export default function OTPVerificationScreen() {
                   styles.logoCircle,
                   {
                     transform: [{ scale: logoScale }, { rotate: logoRotation }],
+                    backgroundColor: colors.surface,
                   },
                 ]}
               >
@@ -378,7 +399,7 @@ export default function OTPVerificationScreen() {
                   <Ionicons
                     name="shield-checkmark"
                     size={32}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                 </View>
               </Animated.View>
@@ -394,8 +415,10 @@ export default function OTPVerificationScreen() {
                 },
               ]}
             >
-              <Text style={styles.title}>Verify Phone</Text>
-              <Text style={styles.subtitle}>
+              <Text style={[styles.title, { color: colors.text }]}>
+                Verify Phone
+              </Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
                 We sent a code to {formatPhoneNumber(phoneNumber)}
               </Text>
             </Animated.View>
@@ -407,6 +430,8 @@ export default function OTPVerificationScreen() {
                 {
                   opacity: formOpacity,
                   transform: [{ translateY: formTranslateY }],
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
                 },
               ]}
             >
@@ -426,15 +451,23 @@ export default function OTPVerificationScreen() {
 
               {/* Resend Section */}
               <View style={styles.resendContainer}>
-                <Text style={styles.resendText}>
+                <Text
+                  style={[styles.resendText, { color: colors.textSecondary }]}
+                >
                   Didn&apos;t receive code?{" "}
                 </Text>
                 {canResend ? (
                   <TouchableOpacity onPress={handleResend} activeOpacity={0.7}>
-                    <Text style={styles.resendButton}>Resend</Text>
+                    <Text
+                      style={[styles.resendButton, { color: colors.primary }]}
+                    >
+                      Resend
+                    </Text>
                   </TouchableOpacity>
                 ) : (
-                  <Text style={styles.resendCooldown}>
+                  <Text
+                    style={[styles.resendCooldown, { color: colors.primary }]}
+                  >
                     Resend in {formatTime(resendCooldown)}
                   </Text>
                 )}
@@ -444,6 +477,7 @@ export default function OTPVerificationScreen() {
               <TouchableOpacity
                 style={[
                   styles.verifyButton,
+                  { backgroundColor: colors.primary },
                   (otp.length !== 4 || isLoading) &&
                     styles.verifyButtonDisabled,
                 ]}
@@ -472,9 +506,13 @@ export default function OTPVerificationScreen() {
                 <Ionicons
                   name="pencil-outline"
                   size={16}
-                  color={Colors.primaryGreen}
+                  color={colors.primary}
                 />
-                <Text style={styles.changePhoneText}>Change Phone Number</Text>
+                <Text
+                  style={[styles.changePhoneText, { color: colors.primary }]}
+                >
+                  Change Phone Number
+                </Text>
               </TouchableOpacity>
             </Animated.View>
           </View>

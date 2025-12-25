@@ -24,6 +24,7 @@ import Animated, {
   FadeIn,
 } from "react-native-reanimated";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -129,9 +130,13 @@ const AnimatedIcon = ({
 const PageIndicator = ({
   total,
   current,
+  colors,
+  isDark,
 }: {
   total: number;
   current: number;
+  colors: any;
+  isDark: boolean;
 }) => {
   return (
     <View style={styles.pageIndicator}>
@@ -145,7 +150,9 @@ const PageIndicator = ({
               {
                 width: isActive ? 32 : 10,
                 backgroundColor: isActive
-                  ? Colors.primaryGreen
+                  ? colors.primary
+                  : isDark
+                  ? "rgba(255, 255, 255, 0.2)"
                   : "rgba(0, 0, 0, 0.15)",
               },
             ]}
@@ -161,6 +168,7 @@ export default function OnboardingScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
 
   // Animation values
   const buttonScale = useSharedValue(1);
@@ -216,13 +224,28 @@ export default function OnboardingScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
-          <View style={styles.circle3} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle3,
+              { backgroundColor: colors.primary, opacity: 0.03 },
+            ]}
+          />
         </View>
 
         {/* Floating Skip Button */}
@@ -232,15 +255,29 @@ export default function OnboardingScreen() {
         >
           <TouchableOpacity
             onPress={handleSkip}
-            style={styles.skipButton}
+            style={[
+              styles.skipButton,
+              { backgroundColor: colors.surface, borderColor: colors.divider },
+            ]}
             activeOpacity={0.8}
           >
-            <Text style={styles.skipText}>Skip</Text>
-            <View style={styles.skipIconContainer}>
+            <Text style={[styles.skipText, { color: colors.textSecondary }]}>
+              Skip
+            </Text>
+            <View
+              style={[
+                styles.skipIconContainer,
+                {
+                  backgroundColor: isDark
+                    ? "rgba(34, 197, 94, 0.2)"
+                    : "rgba(34, 197, 94, 0.1)",
+                },
+              ]}
+            >
               <Ionicons
                 name="chevron-forward"
                 size={14}
-                color={Colors.primaryGreen}
+                color={colors.primary}
               />
             </View>
           </TouchableOpacity>
@@ -273,15 +310,38 @@ export default function OnboardingScreen() {
 
                 {/* Text Content */}
                 <View style={styles.textContent}>
-                  <View style={styles.slideNumberBadge}>
-                    <Text style={styles.slideNumberText}>
+                  <View
+                    style={[
+                      styles.slideNumberBadge,
+                      {
+                        backgroundColor: isDark
+                          ? "rgba(34, 197, 94, 0.2)"
+                          : "rgba(34, 197, 94, 0.1)",
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.slideNumberText,
+                        { color: colors.primary },
+                      ]}
+                    >
                       {index + 1} of {slides.length}
                     </Text>
                   </View>
 
-                  <Text style={styles.title}>{slide.title}</Text>
+                  <Text style={[styles.title, { color: colors.text }]}>
+                    {slide.title}
+                  </Text>
 
-                  <Text style={styles.description}>{slide.description}</Text>
+                  <Text
+                    style={[
+                      styles.description,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    {slide.description}
+                  </Text>
                 </View>
               </Animated.View>
             </View>
@@ -296,12 +356,17 @@ export default function OnboardingScreen() {
           ]}
         >
           {/* Page Indicator */}
-          <PageIndicator total={slides.length} current={currentSlide} />
+          <PageIndicator
+            total={slides.length}
+            current={currentSlide}
+            colors={colors}
+            isDark={isDark}
+          />
 
           {/* Next Button */}
           <Animated.View style={[styles.buttonContainer, buttonStyle]}>
             <TouchableOpacity
-              style={styles.nextButton}
+              style={[styles.nextButton, { backgroundColor: colors.primary }]}
               onPress={goToNext}
               activeOpacity={0.9}
             >
@@ -318,7 +383,7 @@ export default function OnboardingScreen() {
                       : "arrow-forward"
                   }
                   size={20}
-                  color={Colors.primaryGreen}
+                  color={colors.primary}
                 />
               </View>
             </TouchableOpacity>

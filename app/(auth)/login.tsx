@@ -17,12 +17,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function LoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [phone, setPhone] = useState("+233 24 123 4567");
   const [password, setPassword] = useState("password123");
   const [phoneError, setPhoneError] = useState("");
@@ -275,17 +277,32 @@ export default function LoginScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? "light" : "dark"} />
       <KeyboardAvoidingView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
-          <View style={styles.circle3} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle3,
+              { backgroundColor: colors.primary, opacity: 0.03 },
+            ]}
+          />
         </View>
 
         {/* Header */}
@@ -301,17 +318,20 @@ export default function LoginScreen() {
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             activeOpacity={0.8}
           >
-            <View style={styles.backButtonCircle}>
-              <Ionicons
-                name="arrow-back"
-                size={20}
-                color={Colors.textPrimary}
-              />
+            <View
+              style={[
+                styles.backButtonCircle,
+                { backgroundColor: colors.surface },
+              ]}
+            >
+              <Ionicons name="arrow-back" size={20} color={colors.text} />
             </View>
           </TouchableOpacity>
 
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>Sign In</Text>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>
+              Sign In
+            </Text>
           </View>
 
           <View style={styles.headerSpacer} />
@@ -351,11 +371,12 @@ export default function LoginScreen() {
                   styles.logoCircle,
                   {
                     transform: [{ scale: logoScale }, { rotate: logoRotation }],
+                    backgroundColor: colors.surface,
                   },
                 ]}
               >
                 <View style={styles.logoInner}>
-                  <Ionicons name="home" size={28} color={Colors.primaryGreen} />
+                  <Ionicons name="home" size={28} color={colors.primary} />
                 </View>
               </Animated.View>
             </View>
@@ -370,8 +391,10 @@ export default function LoginScreen() {
                 },
               ]}
             >
-              <Text style={styles.title}>Welcome Back</Text>
-              <Text style={styles.subtitle}>
+              <Text style={[styles.title, { color: colors.text }]}>
+                Welcome Back
+              </Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
                 Sign in to continue your journey
               </Text>
             </Animated.View>
@@ -383,26 +406,36 @@ export default function LoginScreen() {
                 {
                   opacity: formOpacity,
                   transform: [{ translateY: formTranslateY }],
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
                 },
               ]}
             >
               {/* Phone Number Input */}
-              <Text style={styles.inputLabel}>Phone Number</Text>
+              <Text
+                style={[styles.inputLabel, { color: colors.textSecondary }]}
+              >
+                Phone Number
+              </Text>
               <View
                 style={[
                   styles.inputContainer,
+                  {
+                    backgroundColor: colors.background,
+                    borderColor: colors.divider,
+                  },
                   phoneError ? styles.inputContainerError : null,
                 ]}
               >
                 <Ionicons
                   name="call-outline"
                   size={20}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder="+233 XX XXX XXXX"
-                  placeholderTextColor={Colors.textSecondary}
+                  placeholderTextColor={colors.textSecondary}
                   value={phone}
                   onChangeText={formatPhoneNumber}
                   keyboardType="phone-pad"
@@ -415,22 +448,30 @@ export default function LoginScreen() {
               ) : null}
 
               {/* Password Input */}
-              <Text style={styles.inputLabel}>Password</Text>
+              <Text
+                style={[styles.inputLabel, { color: colors.textSecondary }]}
+              >
+                Password
+              </Text>
               <View
                 style={[
                   styles.inputContainer,
+                  {
+                    backgroundColor: colors.background,
+                    borderColor: colors.divider,
+                  },
                   passwordError ? styles.inputContainerError : null,
                 ]}
               >
                 <Ionicons
                   name="lock-closed-outline"
                   size={20}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder="Enter your password"
-                  placeholderTextColor={Colors.textSecondary}
+                  placeholderTextColor={colors.textSecondary}
                   value={password}
                   onChangeText={(text) => {
                     setPassword(text);
@@ -448,7 +489,7 @@ export default function LoginScreen() {
                   <Ionicons
                     name={showPassword ? "eye-off-outline" : "eye-outline"}
                     size={20}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
@@ -462,12 +503,19 @@ export default function LoginScreen() {
                 style={styles.forgotPasswordContainer}
                 activeOpacity={0.7}
               >
-                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                <Text
+                  style={[styles.forgotPasswordText, { color: colors.primary }]}
+                >
+                  Forgot Password?
+                </Text>
               </TouchableOpacity>
 
               {/* Sign In Button */}
               <TouchableOpacity
-                style={styles.signInButton}
+                style={[
+                  styles.signInButton,
+                  { backgroundColor: colors.primary },
+                ]}
                 onPress={handleLogin}
                 activeOpacity={0.9}
                 disabled={isLoading}
@@ -491,14 +539,18 @@ export default function LoginScreen() {
 
             {/* Footer */}
             <Animated.View style={[styles.footer, { opacity: footerOpacity }]}>
-              <Text style={styles.footerText}>
+              <Text
+                style={[styles.footerText, { color: colors.textSecondary }]}
+              >
                 Don&apos;t have an account?{" "}
               </Text>
               <TouchableOpacity
                 onPress={() => router.push("/(auth)/register")}
                 activeOpacity={0.7}
               >
-                <Text style={styles.registerLink}>Register</Text>
+                <Text style={[styles.registerLink, { color: colors.primary }]}>
+                  Register
+                </Text>
               </TouchableOpacity>
             </Animated.View>
 
@@ -507,29 +559,46 @@ export default function LoginScreen() {
               style={[styles.demoSection, { opacity: demoOpacity }]}
             >
               <View style={styles.demoHeader}>
-                <View style={styles.demoLine} />
-                <Text style={styles.demoTitle}>Quick Demo Access</Text>
-                <View style={styles.demoLine} />
+                <View
+                  style={[styles.demoLine, { backgroundColor: colors.divider }]}
+                />
+                <Text
+                  style={[styles.demoTitle, { color: colors.textSecondary }]}
+                >
+                  Quick Demo Access
+                </Text>
+                <View
+                  style={[styles.demoLine, { backgroundColor: colors.divider }]}
+                />
               </View>
 
               <View style={styles.demoButtons}>
                 <TouchableOpacity
-                  style={styles.demoBuyerButton}
+                  style={[
+                    styles.demoBuyerButton,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                  ]}
                   onPress={() => router.replace("/(tabs)")}
                   activeOpacity={0.8}
                 >
                   <View style={styles.demoIconContainer}>
-                    <Ionicons
-                      name="search"
-                      size={18}
-                      color={Colors.primaryGreen}
-                    />
+                    <Ionicons name="search" size={18} color={colors.primary} />
                   </View>
-                  <Text style={styles.demoBuyerText}>Buyer</Text>
+                  <Text
+                    style={[styles.demoBuyerText, { color: colors.primary }]}
+                  >
+                    Buyer
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.demoOwnerButton}
+                  style={[
+                    styles.demoOwnerButton,
+                    { backgroundColor: colors.primary },
+                  ]}
                   onPress={() => router.replace("/(owner-tabs)")}
                   activeOpacity={0.8}
                 >

@@ -15,12 +15,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function PendingVerificationScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
 
   // Animation values
   const iconScale = useRef(new Animated.Value(0)).current;
@@ -230,13 +232,28 @@ export default function PendingVerificationScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
-          <View style={styles.circle3} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle3,
+              { backgroundColor: colors.primary, opacity: 0.03 },
+            ]}
+          />
         </View>
 
         <ScrollView
@@ -256,6 +273,7 @@ export default function PendingVerificationScreen() {
                   styles.ring3,
                   {
                     transform: [{ scale: ring3Scale }, { scale: pulseAnim }],
+                    borderColor: `${colors.primary}10`,
                   },
                 ]}
               />
@@ -265,6 +283,7 @@ export default function PendingVerificationScreen() {
                   styles.ring2,
                   {
                     transform: [{ scale: ring2Scale }],
+                    borderColor: `${colors.primary}15`,
                   },
                 ]}
               />
@@ -274,6 +293,7 @@ export default function PendingVerificationScreen() {
                   styles.ring1,
                   {
                     transform: [{ scale: ring1Scale }],
+                    borderColor: `${colors.primary}20`,
                   },
                 ]}
               />
@@ -284,6 +304,7 @@ export default function PendingVerificationScreen() {
                   styles.iconCircle,
                   {
                     transform: [{ scale: iconScale }, { rotate: iconRotation }],
+                    backgroundColor: colors.surface,
                   },
                 ]}
               >
@@ -291,7 +312,7 @@ export default function PendingVerificationScreen() {
                   <Ionicons
                     name="hourglass-outline"
                     size={40}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                 </View>
               </Animated.View>
@@ -307,7 +328,9 @@ export default function PendingVerificationScreen() {
                 },
               ]}
             >
-              <Text style={styles.title}>Verification Pending</Text>
+              <Text style={[styles.title, { color: colors.text }]}>
+                Verification Pending
+              </Text>
               <View style={styles.statusBadge}>
                 <View style={styles.statusDot} />
                 <Text style={styles.statusText}>Under Review</Text>
@@ -316,7 +339,10 @@ export default function PendingVerificationScreen() {
 
             {/* Message */}
             <Animated.Text
-              style={[styles.message, { opacity: messageOpacity }]}
+              style={[
+                styles.message,
+                { opacity: messageOpacity, color: colors.textSecondary },
+              ]}
             >
               Your account is being reviewed by our team. We&apos;ll notify you
               once the verification is complete.
@@ -329,19 +355,44 @@ export default function PendingVerificationScreen() {
                 {
                   opacity: card1Opacity,
                   transform: [{ translateY: card1TranslateY }],
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
                 },
               ]}
             >
-              <View style={styles.timeCardIcon}>
-                <Ionicons name="time" size={24} color={Colors.primaryGreen} />
+              <View
+                style={[
+                  styles.timeCardIcon,
+                  { backgroundColor: `${colors.primary}15` },
+                ]}
+              >
+                <Ionicons name="time" size={24} color={colors.primary} />
               </View>
               <View style={styles.timeCardContent}>
-                <Text style={styles.timeCardTitle}>Estimated Time</Text>
-                <Text style={styles.timeCardText}>24-48 hours</Text>
+                <Text
+                  style={[
+                    styles.timeCardTitle,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Estimated Time
+                </Text>
+                <Text style={[styles.timeCardText, { color: colors.text }]}>
+                  24-48 hours
+                </Text>
               </View>
-              <View style={styles.timeCardBadge}>
-                <Ionicons name="flash" size={14} color={Colors.primaryGreen} />
-                <Text style={styles.timeCardBadgeText}>Fast</Text>
+              <View
+                style={[
+                  styles.timeCardBadge,
+                  { backgroundColor: `${colors.primary}15` },
+                ]}
+              >
+                <Ionicons name="flash" size={14} color={colors.primary} />
+                <Text
+                  style={[styles.timeCardBadgeText, { color: colors.primary }]}
+                >
+                  Fast
+                </Text>
               </View>
             </Animated.View>
 
@@ -352,51 +403,112 @@ export default function PendingVerificationScreen() {
                 {
                   opacity: card2Opacity,
                   transform: [{ translateY: card2TranslateY }],
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
                 },
               ]}
             >
               <View style={styles.infoCardHeader}>
-                <View style={styles.infoCardIconContainer}>
+                <View
+                  style={[
+                    styles.infoCardIconContainer,
+                    { backgroundColor: `${colors.primary}15` },
+                  ]}
+                >
                   <Ionicons
                     name="list-outline"
                     size={20}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                 </View>
-                <Text style={styles.infoCardTitle}>What Happens Next?</Text>
+                <Text style={[styles.infoCardTitle, { color: colors.text }]}>
+                  What Happens Next?
+                </Text>
               </View>
               <View style={styles.infoList}>
                 <View style={styles.infoItem}>
-                  <View style={styles.infoStepNumber}>
+                  <View
+                    style={[
+                      styles.infoStepNumber,
+                      { backgroundColor: colors.primary },
+                    ]}
+                  >
                     <Text style={styles.infoStepText}>1</Text>
                   </View>
                   <View style={styles.infoItemContent}>
-                    <Text style={styles.infoItemTitle}>Document Review</Text>
-                    <Text style={styles.infoItemText}>
+                    <Text
+                      style={[styles.infoItemTitle, { color: colors.text }]}
+                    >
+                      Document Review
+                    </Text>
+                    <Text
+                      style={[
+                        styles.infoItemText,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
                       Our team verifies your documents
                     </Text>
                   </View>
                 </View>
-                <View style={styles.infoConnector} />
+                <View
+                  style={[
+                    styles.infoConnector,
+                    { backgroundColor: `${colors.primary}30` },
+                  ]}
+                />
                 <View style={styles.infoItem}>
-                  <View style={styles.infoStepNumber}>
+                  <View
+                    style={[
+                      styles.infoStepNumber,
+                      { backgroundColor: colors.primary },
+                    ]}
+                  >
                     <Text style={styles.infoStepText}>2</Text>
                   </View>
                   <View style={styles.infoItemContent}>
-                    <Text style={styles.infoItemTitle}>Get Notified</Text>
-                    <Text style={styles.infoItemText}>
+                    <Text
+                      style={[styles.infoItemTitle, { color: colors.text }]}
+                    >
+                      Get Notified
+                    </Text>
+                    <Text
+                      style={[
+                        styles.infoItemText,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
                       Receive notification when approved
                     </Text>
                   </View>
                 </View>
-                <View style={styles.infoConnector} />
+                <View
+                  style={[
+                    styles.infoConnector,
+                    { backgroundColor: `${colors.primary}30` },
+                  ]}
+                />
                 <View style={styles.infoItem}>
-                  <View style={styles.infoStepNumber}>
+                  <View
+                    style={[
+                      styles.infoStepNumber,
+                      { backgroundColor: colors.primary },
+                    ]}
+                  >
                     <Text style={styles.infoStepText}>3</Text>
                   </View>
                   <View style={styles.infoItemContent}>
-                    <Text style={styles.infoItemTitle}>Start Listing</Text>
-                    <Text style={styles.infoItemText}>
+                    <Text
+                      style={[styles.infoItemTitle, { color: colors.text }]}
+                    >
+                      Start Listing
+                    </Text>
+                    <Text
+                      style={[
+                        styles.infoItemText,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
                       List your properties and find tenants
                     </Text>
                   </View>
@@ -409,22 +521,37 @@ export default function PendingVerificationScreen() {
               style={[styles.actionsContainer, { opacity: buttonsOpacity }]}
             >
               <TouchableOpacity
-                style={styles.supportButton}
+                style={[
+                  styles.supportButton,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.primary,
+                  },
+                ]}
                 onPress={handleContactSupport}
                 activeOpacity={0.8}
               >
-                <View style={styles.supportButtonIcon}>
+                <View
+                  style={[
+                    styles.supportButtonIcon,
+                    { backgroundColor: `${colors.primary}15` },
+                  ]}
+                >
                   <Ionicons
                     name="chatbubble-ellipses-outline"
                     size={20}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                 </View>
-                <Text style={styles.supportButtonText}>Contact Support</Text>
+                <Text
+                  style={[styles.supportButtonText, { color: colors.primary }]}
+                >
+                  Contact Support
+                </Text>
                 <Ionicons
                   name="chevron-forward"
                   size={18}
-                  color={Colors.primaryGreen}
+                  color={colors.primary}
                 />
               </TouchableOpacity>
 
@@ -436,9 +563,16 @@ export default function PendingVerificationScreen() {
                 <Ionicons
                   name="log-out-outline"
                   size={18}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
-                <Text style={styles.logoutButtonText}>Sign Out</Text>
+                <Text
+                  style={[
+                    styles.logoutButtonText,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Sign Out
+                </Text>
               </TouchableOpacity>
             </Animated.View>
           </View>

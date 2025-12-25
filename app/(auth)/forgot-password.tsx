@@ -17,12 +17,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -243,17 +245,32 @@ export default function ForgotPasswordScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? "light" : "dark"} />
       <KeyboardAvoidingView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
-          <View style={styles.circle3} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle3,
+              { backgroundColor: colors.primary, opacity: 0.03 },
+            ]}
+          />
         </View>
 
         {/* Header */}
@@ -269,17 +286,20 @@ export default function ForgotPasswordScreen() {
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             activeOpacity={0.8}
           >
-            <View style={styles.backButtonCircle}>
-              <Ionicons
-                name="arrow-back"
-                size={20}
-                color={Colors.textPrimary}
-              />
+            <View
+              style={[
+                styles.backButtonCircle,
+                { backgroundColor: colors.surface },
+              ]}
+            >
+              <Ionicons name="arrow-back" size={20} color={colors.text} />
             </View>
           </TouchableOpacity>
 
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>Reset Password</Text>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>
+              Reset Password
+            </Text>
           </View>
 
           <View style={styles.headerSpacer} />
@@ -319,6 +339,7 @@ export default function ForgotPasswordScreen() {
                   styles.logoCircle,
                   {
                     transform: [{ scale: logoScale }, { rotate: logoRotation }],
+                    backgroundColor: colors.surface,
                   },
                 ]}
               >
@@ -326,7 +347,7 @@ export default function ForgotPasswordScreen() {
                   <Ionicons
                     name="lock-closed-outline"
                     size={28}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                 </View>
               </Animated.View>
@@ -342,8 +363,10 @@ export default function ForgotPasswordScreen() {
                 },
               ]}
             >
-              <Text style={styles.title}>Forgot Password?</Text>
-              <Text style={styles.subtitle}>
+              <Text style={[styles.title, { color: colors.text }]}>
+                Forgot Password?
+              </Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
                 Enter your phone number and we&apos;ll send you a code to reset
                 your password
               </Text>
@@ -356,26 +379,36 @@ export default function ForgotPasswordScreen() {
                 {
                   opacity: formOpacity,
                   transform: [{ translateY: formTranslateY }],
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
                 },
               ]}
             >
               {/* Phone Number Input */}
-              <Text style={styles.inputLabel}>Phone Number</Text>
+              <Text
+                style={[styles.inputLabel, { color: colors.textSecondary }]}
+              >
+                Phone Number
+              </Text>
               <View
                 style={[
                   styles.inputContainer,
+                  {
+                    backgroundColor: colors.background,
+                    borderColor: colors.divider,
+                  },
                   phoneError ? styles.inputContainerError : null,
                 ]}
               >
                 <Ionicons
                   name="call-outline"
                   size={20}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder="+233 XX XXX XXXX"
-                  placeholderTextColor={Colors.textSecondary}
+                  placeholderTextColor={colors.textSecondary}
                   value={phone}
                   onChangeText={formatPhoneNumber}
                   keyboardType="phone-pad"
@@ -392,6 +425,7 @@ export default function ForgotPasswordScreen() {
               <TouchableOpacity
                 style={[
                   styles.submitButton,
+                  { backgroundColor: colors.primary },
                   (isLoading || !phone.trim()) && styles.submitButtonDisabled,
                 ]}
                 onPress={handleSendResetCode}
@@ -416,12 +450,12 @@ export default function ForgotPasswordScreen() {
                 style={styles.backToLoginButton}
                 activeOpacity={0.7}
               >
-                <Ionicons
-                  name="arrow-back"
-                  size={16}
-                  color={Colors.primaryGreen}
-                />
-                <Text style={styles.backToLoginText}>Back to Login</Text>
+                <Ionicons name="arrow-back" size={16} color={colors.primary} />
+                <Text
+                  style={[styles.backToLoginText, { color: colors.primary }]}
+                >
+                  Back to Login
+                </Text>
               </TouchableOpacity>
             </Animated.View>
           </View>
