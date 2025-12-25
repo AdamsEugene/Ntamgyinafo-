@@ -881,7 +881,7 @@ export default function BuyerHomeScreen() {
               ]}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Ionicons name="close" size={24} color={Colors.textPrimary} />
+              <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
           <View style={styles.locationSelectorWrapper}>
