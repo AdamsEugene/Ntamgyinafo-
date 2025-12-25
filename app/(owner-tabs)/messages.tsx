@@ -447,7 +447,12 @@ export default function MessagesScreen() {
                   numberOfLines={1}
                 >
                   {item.lastMessage.isFromMe && (
-                    <Text style={[styles.youPrefix, { color: colors.textSecondary }]}>
+                    <Text
+                      style={[
+                        styles.youPrefix,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
                       You:{" "}
                     </Text>
                   )}
@@ -525,10 +530,7 @@ export default function MessagesScreen() {
                 icon="search-outline"
                 onPress={() => setIsSearching(!isSearching)}
               />
-              <HeaderActionButton
-                icon="create-outline"
-                onPress={() => {}}
-              />
+              <HeaderActionButton icon="create-outline" onPress={() => {}} />
             </>
           }
         />
@@ -606,7 +608,9 @@ export default function MessagesScreen() {
               <Text style={[styles.emptyTitle, { color: colors.text }]}>
                 {searchQuery ? "No Results Found" : "No Messages Yet"}
               </Text>
-              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+              <Text
+                style={[styles.emptySubtitle, { color: colors.textSecondary }]}
+              >
                 {searchQuery
                   ? "Try searching with different keywords"
                   : "Messages from potential buyers will appear here"}

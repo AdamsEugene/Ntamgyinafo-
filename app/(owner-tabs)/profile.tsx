@@ -13,7 +13,8 @@ import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   FloatingHeader,
   HeaderActionButton,
@@ -96,6 +97,7 @@ const MENU_ITEMS = [
 export default function OwnerProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
 
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
@@ -112,12 +114,22 @@ export default function OwnerProfileScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
         </View>
 
         {/* Floating Sticky Header */}
@@ -146,82 +158,137 @@ export default function OwnerProfileScreen() {
           {/* Profile Header */}
           <View style={styles.profileHeader}>
             <View style={styles.avatarContainer}>
-              <Image source={{ uri: USER.avatar }} style={styles.avatar} />
+              <Image
+                source={{ uri: USER.avatar }}
+                style={[styles.avatar, { borderColor: colors.primary }]}
+              />
               {USER.verified && (
-                <View style={styles.verifiedBadge}>
+                <View
+                  style={[
+                    styles.verifiedBadge,
+                    {
+                      backgroundColor: colors.primary,
+                      borderColor: colors.background,
+                    },
+                  ]}
+                >
                   <Ionicons name="checkmark" size={14} color="#FFFFFF" />
                 </View>
               )}
             </View>
 
-            <Text style={styles.userName}>{USER.name}</Text>
-            <View style={styles.roleBadge}>
-              <Ionicons name="home" size={12} color={Colors.primaryGreen} />
-              <Text style={styles.roleBadgeText}>Property Owner</Text>
+            <Text style={[styles.userName, { color: colors.text }]}>
+              {USER.name}
+            </Text>
+            <View
+              style={[
+                styles.roleBadge,
+                { backgroundColor: `${colors.primary}15` },
+              ]}
+            >
+              <Ionicons name="home" size={12} color={colors.primary} />
+              <Text style={[styles.roleBadgeText, { color: colors.primary }]}>
+                Property Owner
+              </Text>
             </View>
-            <Text style={styles.memberSince}>
+            <Text style={[styles.memberSince, { color: colors.textSecondary }]}>
               Member since {USER.memberSince}
             </Text>
 
             <TouchableOpacity
-              style={styles.editButton}
+              style={[styles.editButton, { borderColor: colors.primary }]}
               activeOpacity={0.7}
               onPress={() => router.push("/edit-profile" as any)}
             >
               <Ionicons
                 name="create-outline"
                 size={18}
-                color={Colors.primaryGreen}
+                color={colors.primary}
               />
-              <Text style={styles.editButtonText}>Edit Profile</Text>
+              <Text style={[styles.editButtonText, { color: colors.primary }]}>
+                Edit Profile
+              </Text>
             </TouchableOpacity>
           </View>
 
           {/* Stats */}
-          <View style={styles.statsContainer}>
+          <View
+            style={[
+              styles.statsContainer,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
             <View style={styles.statItem}>
               <View
                 style={[
                   styles.statIconBg,
-                  { backgroundColor: `${Colors.primaryGreen}15` },
+                  { backgroundColor: `${colors.primary}15` },
                 ]}
               >
-                <Ionicons name="home" size={18} color={Colors.primaryGreen} />
+                <Ionicons name="home" size={18} color={colors.primary} />
               </View>
-              <Text style={styles.statValue}>{USER.stats.listings}</Text>
-              <Text style={styles.statLabel}>Listings</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>
+                {USER.stats.listings}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                Listings
+              </Text>
             </View>
-            <View style={styles.statDivider} />
+            <View
+              style={[styles.statDivider, { backgroundColor: colors.divider }]}
+            />
             <View style={styles.statItem}>
               <View
                 style={[styles.statIconBg, { backgroundColor: "#3B82F615" }]}
               >
                 <Ionicons name="eye" size={18} color="#3B82F6" />
               </View>
-              <Text style={styles.statValue}>
+              <Text style={[styles.statValue, { color: colors.text }]}>
                 {USER.stats.views.toLocaleString()}
               </Text>
-              <Text style={styles.statLabel}>Views</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                Views
+              </Text>
             </View>
-            <View style={styles.statDivider} />
+            <View
+              style={[styles.statDivider, { backgroundColor: colors.divider }]}
+            />
             <View style={styles.statItem}>
               <View
                 style={[styles.statIconBg, { backgroundColor: "#F59E0B15" }]}
               >
                 <Ionicons name="chatbubble" size={18} color="#F59E0B" />
               </View>
-              <Text style={styles.statValue}>{USER.stats.inquiries}</Text>
-              <Text style={styles.statLabel}>Inquiries</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>
+                {USER.stats.inquiries}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                Inquiries
+              </Text>
             </View>
           </View>
 
           {/* Menu Items */}
-          <View style={styles.menuContainer}>
+          <View
+            style={[
+              styles.menuContainer,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
             {MENU_ITEMS.map((item, index) => (
               <TouchableOpacity
                 key={item.id}
                 style={[
                   styles.menuItem,
+                  {
+                    borderBottomColor: colors.divider,
+                  },
                   index === MENU_ITEMS.length - 1 && styles.menuItemLast,
                 ]}
                 activeOpacity={0.7}
@@ -232,26 +299,41 @@ export default function OwnerProfileScreen() {
                 }}
               >
                 <View style={styles.menuItemLeft}>
-                  <View style={styles.menuIconContainer}>
-                    <Ionicons
-                      name={item.icon}
-                      size={22}
-                      color={Colors.textPrimary}
-                    />
+                  <View
+                    style={[
+                      styles.menuIconContainer,
+                      { backgroundColor: colors.background },
+                    ]}
+                  >
+                    <Ionicons name={item.icon} size={22} color={colors.text} />
                   </View>
-                  <Text style={styles.menuItemLabel}>{item.label}</Text>
+                  <Text style={[styles.menuItemLabel, { color: colors.text }]}>
+                    {item.label}
+                  </Text>
                 </View>
 
                 <View style={styles.menuItemRight}>
                   {item.badge && (
-                    <View style={styles.menuBadge}>
-                      <Text style={styles.menuBadgeText}>{item.badge}</Text>
+                    <View
+                      style={[
+                        styles.menuBadge,
+                        { backgroundColor: `${colors.primary}15` },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.menuBadgeText,
+                          { color: colors.primary },
+                        ]}
+                      >
+                        {item.badge}
+                      </Text>
                     </View>
                   )}
                   <Ionicons
                     name="chevron-forward"
                     size={20}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                   />
                 </View>
               </TouchableOpacity>
@@ -260,7 +342,13 @@ export default function OwnerProfileScreen() {
 
           {/* Logout Button */}
           <TouchableOpacity
-            style={styles.logoutButton}
+            style={[
+              styles.logoutButton,
+              {
+                backgroundColor: colors.surface,
+                borderColor: "#FF3B30",
+              },
+            ]}
             onPress={handleLogout}
             activeOpacity={0.7}
           >
@@ -269,7 +357,9 @@ export default function OwnerProfileScreen() {
           </TouchableOpacity>
 
           {/* App Version */}
-          <Text style={styles.versionText}>Version 1.0.0</Text>
+          <Text style={[styles.versionText, { color: colors.textSecondary }]}>
+            Version 1.0.0
+          </Text>
         </ScrollView>
       </View>
     </>
@@ -279,7 +369,6 @@ export default function OwnerProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   // Decorative Background
   decorativeBackground: {
@@ -297,8 +386,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: Colors.primaryLight,
-    opacity: 0.08,
   },
   circle2: {
     position: "absolute",
@@ -307,8 +394,6 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     borderRadius: 200,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
   },
   // Header
   headerLeft: {
@@ -321,7 +406,6 @@ const styles = StyleSheet.create({
     ...Typography.titleLarge,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   scrollView: {
     flex: 1,
@@ -344,7 +428,6 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     borderWidth: 3,
-    borderColor: Colors.primaryGreen,
   },
   verifiedBadge: {
     position: "absolute",
@@ -353,24 +436,20 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: Colors.primaryGreen,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 3,
-    borderColor: Colors.background,
   },
   userName: {
     ...Typography.headlineMedium,
     fontSize: 24,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   roleBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: `${Colors.primaryGreen}15`,
     paddingHorizontal: Spacing.md,
     paddingVertical: 6,
     borderRadius: 20,
@@ -380,12 +459,10 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 12,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
   memberSince: {
     ...Typography.bodyMedium,
     fontSize: 13,
-    color: Colors.textSecondary,
     marginBottom: Spacing.md,
   },
   editButton: {
@@ -396,23 +473,19 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.primaryGreen,
   },
   editButtonText: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
   // Stats
   statsContainer: {
     flexDirection: "row",
-    backgroundColor: Colors.surface,
     borderRadius: 20,
     padding: Spacing.lg,
     marginBottom: Spacing.xl,
     borderWidth: 1,
-    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -441,27 +514,22 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 22,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: 2,
   },
   statLabel: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
   },
   statDivider: {
     width: 1,
     height: 60,
-    backgroundColor: Colors.divider,
     alignSelf: "center",
   },
   // Menu
   menuContainer: {
-    backgroundColor: Colors.surface,
     borderRadius: 20,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: Colors.divider,
     marginBottom: Spacing.xl,
     ...Platform.select({
       ios: {
@@ -482,7 +550,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
   },
   menuItemLast: {
     borderBottomWidth: 0,
@@ -496,7 +563,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: Colors.background,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -504,7 +570,6 @@ const styles = StyleSheet.create({
     ...Typography.bodyMedium,
     fontSize: 15,
     fontWeight: "500",
-    color: Colors.textPrimary,
   },
   menuItemRight: {
     flexDirection: "row",
@@ -512,7 +577,6 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   menuBadge: {
-    backgroundColor: `${Colors.primaryGreen}15`,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
     borderRadius: 8,
@@ -521,7 +585,6 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     fontSize: 11,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
   // Logout
   logoutButton: {
@@ -529,11 +592,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: Spacing.sm,
-    backgroundColor: Colors.surface,
     paddingVertical: Spacing.lg,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#FF3B30",
     marginBottom: Spacing.xl,
   },
   logoutButtonText: {
@@ -545,7 +606,6 @@ const styles = StyleSheet.create({
   versionText: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
     textAlign: "center",
   },
 });
