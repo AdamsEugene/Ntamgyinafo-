@@ -313,6 +313,11 @@ export default function SearchResultsScreen() {
     <>
       <StatusBar style={isDark ? "light" : "dark"} />
       <View style={[styles.container, { backgroundColor: colors.background }]}>
+        {/* Decorative Background Elements */}
+        <View style={styles.decorativeBackground}>
+          <View style={styles.circle1} />
+          <View style={styles.circle2} />
+        </View>
         {/* Floating Header with Blur */}
         <FloatingHeader
           title="Search Results"
@@ -646,6 +651,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  decorativeBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+  },
+  circle1: {
+    position: "absolute",
+    top: -100,
+    right: -100,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: Colors.primaryLight,
+    opacity: 0.08,
+  },
+  circle2: {
+    position: "absolute",
+    bottom: -150,
+    left: -150,
+    width: 400,
+    height: 400,
+    borderRadius: 200,
+    backgroundColor: Colors.primaryGreen,
+    opacity: 0.05,
   },
   headerTitleText: {
     ...Typography.titleLarge,
