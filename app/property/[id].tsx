@@ -24,6 +24,7 @@ import {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import { getDetailedProperty } from "@/constants/mockData";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -74,6 +75,7 @@ export default function PropertyDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
   const id = params.id;
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSaved, setIsSaved] = useState(false);
@@ -244,7 +246,7 @@ export default function PropertyDetailScreen() {
   return (
     <>
       <StatusBar style="light" />
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <ScrollView
           ref={scrollViewRef}
           style={styles.scrollView}
@@ -308,12 +310,13 @@ export default function PropertyDetailScreen() {
                 style={styles.headerButton}
                 activeOpacity={0.7}
               >
-                <View style={styles.headerButtonBackground}>
-                  <Ionicons
-                    name="arrow-back"
-                    size={22}
-                    color={Colors.textPrimary}
-                  />
+                <View
+                  style={[
+                    styles.headerButtonBackground,
+                    { backgroundColor: colors.surface },
+                  ]}
+                >
+                  <Ionicons name="arrow-back" size={22} color={colors.text} />
                 </View>
               </TouchableOpacity>
 
@@ -325,11 +328,16 @@ export default function PropertyDetailScreen() {
                   style={styles.headerButton}
                   activeOpacity={0.7}
                 >
-                  <View style={styles.headerButtonBackground}>
+                  <View
+                    style={[
+                      styles.headerButtonBackground,
+                      { backgroundColor: colors.surface },
+                    ]}
+                  >
                     <Ionicons
                       name="share-outline"
                       size={22}
-                      color={Colors.textPrimary}
+                      color={colors.text}
                     />
                   </View>
                 </TouchableOpacity>
@@ -338,11 +346,16 @@ export default function PropertyDetailScreen() {
                   style={styles.headerButton}
                   activeOpacity={0.7}
                 >
-                  <View style={styles.headerButtonBackground}>
+                  <View
+                    style={[
+                      styles.headerButtonBackground,
+                      { backgroundColor: colors.surface },
+                    ]}
+                  >
                     <Ionicons
                       name={isSaved ? "heart" : "heart-outline"}
                       size={22}
-                      color={isSaved ? "#FF3B30" : Colors.textPrimary}
+                      color={isSaved ? "#FF3B30" : colors.text}
                     />
                   </View>
                 </TouchableOpacity>
@@ -413,10 +426,23 @@ export default function PropertyDetailScreen() {
           </View>
 
           {/* Property Info */}
-          <View style={styles.propertyInfo}>
+          <View
+            style={[
+              styles.propertyInfo,
+              { backgroundColor: colors.background },
+            ]}
+          >
             <View style={styles.propertyTypeRow}>
               {property.propertyType && (
-                <View style={styles.typeBadge}>
+                <View
+                  style={[
+                    styles.typeBadge,
+                    {
+                      backgroundColor: `${colors.primary}15`,
+                      borderColor: `${colors.primary}30`,
+                    },
+                  ]}
+                >
                   <Ionicons
                     name={
                       property.propertyType === "house"
@@ -428,9 +454,11 @@ export default function PropertyDetailScreen() {
                         : "storefront-outline"
                     }
                     size={14}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
-                  <Text style={styles.typeBadgeText}>
+                  <Text
+                    style={[styles.typeBadgeText, { color: colors.primary }]}
+                  >
                     {property.propertyType.charAt(0).toUpperCase() +
                       property.propertyType.slice(1)}
                   </Text>
@@ -439,6 +467,7 @@ export default function PropertyDetailScreen() {
               <View
                 style={[
                   styles.transactionBadge,
+                  { backgroundColor: colors.primary },
                   property.transactionType === "rent" && styles.rentBadge,
                 ]}
               >
@@ -447,7 +476,9 @@ export default function PropertyDetailScreen() {
                 </Text>
               </View>
             </View>
-            <Text style={styles.propertyTitle}>{property.title}</Text>
+            <Text style={[styles.propertyTitle, { color: colors.text }]}>
+              {property.title}
+            </Text>
             <TouchableOpacity
               style={styles.locationRow}
               onPress={() => {
@@ -462,75 +493,145 @@ export default function PropertyDetailScreen() {
               <Ionicons
                 name="location-outline"
                 size={16}
-                color={Colors.primaryGreen}
+                color={colors.primary}
               />
-              <Text
-                style={[styles.locationText, { color: Colors.primaryGreen }]}
-              >
+              <Text style={[styles.locationText, { color: colors.primary }]}>
                 {property.location}
               </Text>
               <Ionicons
                 name="chevron-forward"
                 size={16}
-                color={Colors.primaryGreen}
+                color={colors.primary}
               />
             </TouchableOpacity>
             <View style={styles.priceRow}>
-              <Text style={styles.price}>{formatPrice(property.price)}</Text>
+              <Text style={[styles.price, { color: colors.primary }]}>
+                {formatPrice(property.price)}
+              </Text>
               {property.negotiable && (
-                <View style={styles.negotiableBadge}>
-                  <Text style={styles.negotiableText}>Negotiable</Text>
+                <View
+                  style={[
+                    styles.negotiableBadge,
+                    {
+                      backgroundColor: `${colors.primary}15`,
+                      borderColor: `${colors.primary}30`,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.negotiableText, { color: colors.primary }]}
+                  >
+                    Negotiable
+                  </Text>
                 </View>
               )}
             </View>
             {property.propertyId && (
-              <View style={styles.propertyIdRow}>
-                <Text style={styles.propertyIdLabel}>Property ID:</Text>
-                <Text style={styles.propertyIdText}>{property.propertyId}</Text>
+              <View
+                style={[
+                  styles.propertyIdRow,
+                  { borderTopColor: colors.divider },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.propertyIdLabel,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Property ID:
+                </Text>
+                <Text style={[styles.propertyIdText, { color: colors.text }]}>
+                  {property.propertyId}
+                </Text>
               </View>
             )}
           </View>
 
           {/* Quick Stats */}
           <View style={styles.quickStats}>
-            <View style={styles.statCard}>
-              <Ionicons
-                name="bed-outline"
-                size={24}
-                color={Colors.primaryGreen}
-              />
-              <Text style={styles.statValue}>{property.bedrooms}</Text>
-              <Text style={styles.statLabel}>Beds</Text>
+            <View
+              style={[
+                styles.statCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
+              <Ionicons name="bed-outline" size={24} color={colors.primary} />
+              <Text style={[styles.statValue, { color: colors.text }]}>
+                {property.bedrooms}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                Beds
+              </Text>
             </View>
-            <View style={styles.statCard}>
-              <Ionicons
-                name="water-outline"
-                size={24}
-                color={Colors.primaryGreen}
-              />
-              <Text style={styles.statValue}>{property.bathrooms}</Text>
-              <Text style={styles.statLabel}>Baths</Text>
+            <View
+              style={[
+                styles.statCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
+              <Ionicons name="water-outline" size={24} color={colors.primary} />
+              <Text style={[styles.statValue, { color: colors.text }]}>
+                {property.bathrooms}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                Baths
+              </Text>
             </View>
             {property.plotSize && (
-              <View style={styles.statCard}>
+              <View
+                style={[
+                  styles.statCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
+              >
                 <Ionicons
                   name="resize-outline"
                   size={24}
-                  color={Colors.primaryGreen}
+                  color={colors.primary}
                 />
-                <Text style={styles.statValue}>{property.plotSize}</Text>
-                <Text style={styles.statLabel}>Plot Size</Text>
+                <Text style={[styles.statValue, { color: colors.text }]}>
+                  {property.plotSize}
+                </Text>
+                <Text
+                  style={[styles.statLabel, { color: colors.textSecondary }]}
+                >
+                  Plot Size
+                </Text>
               </View>
             )}
             {property.propertySize && (
-              <View style={styles.statCard}>
+              <View
+                style={[
+                  styles.statCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
+              >
                 <Ionicons
                   name="square-outline"
                   size={24}
-                  color={Colors.primaryGreen}
+                  color={colors.primary}
                 />
-                <Text style={styles.statValue}>{property.propertySize}</Text>
-                <Text style={styles.statLabel}>m²</Text>
+                <Text style={[styles.statValue, { color: colors.text }]}>
+                  {property.propertySize}
+                </Text>
+                <Text
+                  style={[styles.statLabel, { color: colors.textSecondary }]}
+                >
+                  m²
+                </Text>
               </View>
             )}
           </View>
@@ -540,48 +641,101 @@ export default function PropertyDetailScreen() {
             property.propertySize ||
             property.listedDate) && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Property Details</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Property Details
+              </Text>
               <View style={styles.detailsGrid}>
                 {property.yearBuilt && (
-                  <View style={styles.detailItem}>
+                  <View
+                    style={[
+                      styles.detailItem,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.divider,
+                      },
+                    ]}
+                  >
                     <Ionicons
                       name="calendar-outline"
                       size={20}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
                     <View style={styles.detailContent}>
-                      <Text style={styles.detailLabel}>Year Built</Text>
-                      <Text style={styles.detailValue}>
+                      <Text
+                        style={[
+                          styles.detailLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Year Built
+                      </Text>
+                      <Text
+                        style={[styles.detailValue, { color: colors.text }]}
+                      >
                         {property.yearBuilt}
                       </Text>
                     </View>
                   </View>
                 )}
                 {property.propertySize && (
-                  <View style={styles.detailItem}>
+                  <View
+                    style={[
+                      styles.detailItem,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.divider,
+                      },
+                    ]}
+                  >
                     <Ionicons
                       name="expand-outline"
                       size={20}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
                     <View style={styles.detailContent}>
-                      <Text style={styles.detailLabel}>Property Size</Text>
-                      <Text style={styles.detailValue}>
+                      <Text
+                        style={[
+                          styles.detailLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Property Size
+                      </Text>
+                      <Text
+                        style={[styles.detailValue, { color: colors.text }]}
+                      >
                         {property.propertySize} m²
                       </Text>
                     </View>
                   </View>
                 )}
                 {property.listedDate && (
-                  <View style={styles.detailItem}>
+                  <View
+                    style={[
+                      styles.detailItem,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.divider,
+                      },
+                    ]}
+                  >
                     <Ionicons
                       name="time-outline"
                       size={20}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
                     <View style={styles.detailContent}>
-                      <Text style={styles.detailLabel}>Listed</Text>
-                      <Text style={styles.detailValue}>
+                      <Text
+                        style={[
+                          styles.detailLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Listed
+                      </Text>
+                      <Text
+                        style={[styles.detailValue, { color: colors.text }]}
+                      >
                         {new Date(property.listedDate).toLocaleDateString(
                           "en-US",
                           {
@@ -601,86 +755,168 @@ export default function PropertyDetailScreen() {
           {/* Property Features */}
           {property.features && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Features</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Features
+              </Text>
               <View style={styles.featuresGrid}>
                 {property.features.furnished && (
-                  <View style={styles.featureItem}>
+                  <View
+                    style={[
+                      styles.featureItem,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: `${colors.primary}15`,
+                      },
+                    ]}
+                  >
                     <Ionicons
                       name="checkmark-circle"
                       size={20}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
-                    <Text style={styles.featureText}>Furnished</Text>
+                    <Text style={[styles.featureText, { color: colors.text }]}>
+                      Furnished
+                    </Text>
                   </View>
                 )}
                 {property.features.airConditioning && (
-                  <View style={styles.featureItem}>
+                  <View
+                    style={[
+                      styles.featureItem,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: `${colors.primary}15`,
+                      },
+                    ]}
+                  >
                     <Ionicons
                       name="checkmark-circle"
                       size={20}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
-                    <Text style={styles.featureText}>Air Conditioning</Text>
+                    <Text style={[styles.featureText, { color: colors.text }]}>
+                      Air Conditioning
+                    </Text>
                   </View>
                 )}
                 {property.features.heating && (
-                  <View style={styles.featureItem}>
+                  <View
+                    style={[
+                      styles.featureItem,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: `${colors.primary}15`,
+                      },
+                    ]}
+                  >
                     <Ionicons
                       name="checkmark-circle"
                       size={20}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
-                    <Text style={styles.featureText}>Heating</Text>
+                    <Text style={[styles.featureText, { color: colors.text }]}>
+                      Heating
+                    </Text>
                   </View>
                 )}
                 {property.features.balcony && (
-                  <View style={styles.featureItem}>
+                  <View
+                    style={[
+                      styles.featureItem,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: `${colors.primary}15`,
+                      },
+                    ]}
+                  >
                     <Ionicons
                       name="checkmark-circle"
                       size={20}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
-                    <Text style={styles.featureText}>Balcony</Text>
+                    <Text style={[styles.featureText, { color: colors.text }]}>
+                      Balcony
+                    </Text>
                   </View>
                 )}
                 {property.features.garden && (
-                  <View style={styles.featureItem}>
+                  <View
+                    style={[
+                      styles.featureItem,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: `${colors.primary}15`,
+                      },
+                    ]}
+                  >
                     <Ionicons
                       name="checkmark-circle"
                       size={20}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
-                    <Text style={styles.featureText}>Garden</Text>
+                    <Text style={[styles.featureText, { color: colors.text }]}>
+                      Garden
+                    </Text>
                   </View>
                 )}
                 {property.features.garage && (
-                  <View style={styles.featureItem}>
+                  <View
+                    style={[
+                      styles.featureItem,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: `${colors.primary}15`,
+                      },
+                    ]}
+                  >
                     <Ionicons
                       name="checkmark-circle"
                       size={20}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
-                    <Text style={styles.featureText}>Garage</Text>
+                    <Text style={[styles.featureText, { color: colors.text }]}>
+                      Garage
+                    </Text>
                   </View>
                 )}
                 {property.features.elevator && (
-                  <View style={styles.featureItem}>
+                  <View
+                    style={[
+                      styles.featureItem,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: `${colors.primary}15`,
+                      },
+                    ]}
+                  >
                     <Ionicons
                       name="checkmark-circle"
                       size={20}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
-                    <Text style={styles.featureText}>Elevator</Text>
+                    <Text style={[styles.featureText, { color: colors.text }]}>
+                      Elevator
+                    </Text>
                   </View>
                 )}
                 {property.features.swimmingPool && (
-                  <View style={styles.featureItem}>
+                  <View
+                    style={[
+                      styles.featureItem,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: `${colors.primary}15`,
+                      },
+                    ]}
+                  >
                     <Ionicons
                       name="checkmark-circle"
                       size={20}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
-                    <Text style={styles.featureText}>Swimming Pool</Text>
+                    <Text style={[styles.featureText, { color: colors.text }]}>
+                      Swimming Pool
+                    </Text>
                   </View>
                 )}
               </View>
@@ -689,10 +925,20 @@ export default function PropertyDetailScreen() {
 
           {/* Description */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Description</Text>
-            <View style={styles.descriptionCard}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Description
+            </Text>
+            <View
+              style={[
+                styles.descriptionCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               <Text
-                style={styles.description}
+                style={[styles.description, { color: colors.text }]}
                 numberOfLines={showFullDescription ? undefined : 4}
               >
                 {property.description}
@@ -700,15 +946,20 @@ export default function PropertyDetailScreen() {
               {property.description.length > 150 && (
                 <TouchableOpacity
                   onPress={() => setShowFullDescription(!showFullDescription)}
-                  style={styles.readMoreButton}
+                  style={[
+                    styles.readMoreButton,
+                    { borderTopColor: colors.divider },
+                  ]}
                 >
-                  <Text style={styles.readMoreText}>
+                  <Text
+                    style={[styles.readMoreText, { color: colors.primary }]}
+                  >
                     {showFullDescription ? "Show Less" : "Read More"}
                   </Text>
                   <Ionicons
                     name={showFullDescription ? "chevron-up" : "chevron-down"}
                     size={16}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                 </TouchableOpacity>
               )}
@@ -717,18 +968,36 @@ export default function PropertyDetailScreen() {
 
           {/* Amenities */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Amenities</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Amenities
+            </Text>
             <View style={styles.amenitiesGrid}>
               {property.amenities.map((amenity, index) => (
-                <View key={index} style={styles.amenityItem}>
-                  <View style={styles.amenityIconBg}>
+                <View
+                  key={index}
+                  style={[
+                    styles.amenityItem,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.amenityIconBg,
+                      { backgroundColor: `${colors.primary}15` },
+                    ]}
+                  >
                     <Ionicons
                       name="checkmark"
                       size={14}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
                   </View>
-                  <Text style={styles.amenityText}>{amenity}</Text>
+                  <Text style={[styles.amenityText, { color: colors.text }]}>
+                    {amenity}
+                  </Text>
                 </View>
               ))}
             </View>
@@ -737,14 +1006,18 @@ export default function PropertyDetailScreen() {
           {/* Image Gallery Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Photos & Media</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Photos & Media
+              </Text>
               <TouchableOpacity
                 onPress={() => {
                   router.push(`/property/${property.id}/gallery?tab=photos`);
                 }}
                 activeOpacity={0.7}
               >
-                <Text style={styles.viewButton}>View All</Text>
+                <Text style={[styles.viewButton, { color: colors.primary }]}>
+                  View All
+                </Text>
               </TouchableOpacity>
             </View>
             <ScrollView
@@ -755,7 +1028,13 @@ export default function PropertyDetailScreen() {
               {property.images.slice(0, 6).map((image, index) => (
                 <TouchableOpacity
                   key={index}
-                  style={styles.galleryImageWrapper}
+                  style={[
+                    styles.galleryImageWrapper,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                  ]}
                   onPress={() => {
                     router.push(
                       `/property/${property.id}/gallery?tab=photos&index=${index}`
@@ -776,7 +1055,13 @@ export default function PropertyDetailScreen() {
             </ScrollView>
             <View style={styles.mediaButtonsRow}>
               <TouchableOpacity
-                style={styles.mediaButton}
+                style={[
+                  styles.mediaButton,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: `${colors.primary}30`,
+                  },
+                ]}
                 onPress={() => {
                   router.push(`/property/${property.id}/gallery?tab=photos`);
                 }}
@@ -785,14 +1070,22 @@ export default function PropertyDetailScreen() {
                 <Ionicons
                   name="camera-outline"
                   size={18}
-                  color={Colors.primaryGreen}
+                  color={colors.primary}
                 />
-                <Text style={styles.mediaButtonText}>
+                <Text
+                  style={[styles.mediaButtonText, { color: colors.primary }]}
+                >
                   {property.images.length} Photos
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.mediaButton}
+                style={[
+                  styles.mediaButton,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: `${colors.primary}30`,
+                  },
+                ]}
                 onPress={() => {
                   router.push(`/property/${property.id}/gallery?tab=videos`);
                 }}
@@ -801,12 +1094,22 @@ export default function PropertyDetailScreen() {
                 <Ionicons
                   name="videocam-outline"
                   size={18}
-                  color={Colors.primaryGreen}
+                  color={colors.primary}
                 />
-                <Text style={styles.mediaButtonText}>3 Videos</Text>
+                <Text
+                  style={[styles.mediaButtonText, { color: colors.primary }]}
+                >
+                  3 Videos
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.mediaButton}
+                style={[
+                  styles.mediaButton,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: `${colors.primary}30`,
+                  },
+                ]}
                 onPress={() => {
                   router.push(`/property/${property.id}/360`);
                 }}
@@ -815,9 +1118,13 @@ export default function PropertyDetailScreen() {
                 <Ionicons
                   name="cube-outline"
                   size={18}
-                  color={Colors.primaryGreen}
+                  color={colors.primary}
                 />
-                <Text style={styles.mediaButtonText}>360° View</Text>
+                <Text
+                  style={[styles.mediaButtonText, { color: colors.primary }]}
+                >
+                  360° View
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -825,7 +1132,9 @@ export default function PropertyDetailScreen() {
           {/* Location Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Location</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Location
+              </Text>
               <TouchableOpacity
                 onPress={() => {
                   // Navigate to full map view
@@ -836,11 +1145,19 @@ export default function PropertyDetailScreen() {
                   );
                 }}
               >
-                <Text style={styles.viewButton}>View</Text>
+                <Text style={[styles.viewButton, { color: colors.primary }]}>
+                  View
+                </Text>
               </TouchableOpacity>
             </View>
             <TouchableOpacity
-              style={styles.mapPreview}
+              style={[
+                styles.mapPreview,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
               onPress={() => {
                 const lat = property.latitude || 5.6037;
                 const lng = property.longitude || -0.187;
@@ -880,47 +1197,87 @@ export default function PropertyDetailScreen() {
                   />
                 </MapView>
               ) : (
-                <View style={styles.mapPlaceholder}>
+                <View
+                  style={[
+                    styles.mapPlaceholder,
+                    { backgroundColor: colors.surface },
+                  ]}
+                >
                   <Ionicons
                     name="map-outline"
                     size={48}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                   />
-                  <Text style={styles.mapPlaceholderText}>Map Preview</Text>
+                  <Text
+                    style={[
+                      styles.mapPlaceholderText,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    Map Preview
+                  </Text>
                 </View>
               )}
             </TouchableOpacity>
-            <Text style={styles.addressText}>{property.address}</Text>
+            <Text style={[styles.addressText, { color: colors.textSecondary }]}>
+              {property.address}
+            </Text>
           </View>
 
           {/* Listed By Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Listed By</Text>
-            <View style={styles.ownerCard}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Listed By
+            </Text>
+            <View
+              style={[
+                styles.ownerCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: `${colors.primary}20`,
+                },
+              ]}
+            >
               <View style={styles.ownerAvatarContainer}>
                 <Image
                   source={{ uri: property.owner.avatar }}
-                  style={styles.ownerAvatar}
+                  style={[
+                    styles.ownerAvatar,
+                    { borderColor: `${colors.primary}30` },
+                  ]}
                 />
                 {property.owner.verified && (
-                  <View style={styles.verifiedBadge}>
+                  <View
+                    style={[
+                      styles.verifiedBadge,
+                      { backgroundColor: colors.primary },
+                    ]}
+                  >
                     <Ionicons name="checkmark" size={10} color="#FFFFFF" />
                   </View>
                 )}
               </View>
               <View style={styles.ownerInfo}>
-                <Text style={styles.ownerName}>{property.owner.name}</Text>
+                <Text style={[styles.ownerName, { color: colors.text }]}>
+                  {property.owner.name}
+                </Text>
                 {property.owner.verified && (
                   <View style={styles.verifiedTextRow}>
                     <Ionicons
                       name="shield-checkmark"
                       size={14}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
-                    <Text style={styles.verifiedText}>Verified Owner</Text>
+                    <Text
+                      style={[styles.verifiedText, { color: colors.primary }]}
+                    >
+                      Verified Owner
+                    </Text>
                   </View>
                 )}
-                <Text style={styles.memberSince}>
+                <Text
+                  style={[styles.memberSince, { color: colors.textSecondary }]}
+                >
                   Member since {property.owner.memberSince}
                 </Text>
               </View>
@@ -929,12 +1286,15 @@ export default function PropertyDetailScreen() {
                   // TODO: Navigate to owner profile when implemented
                   console.log("Navigate to profile:", property.owner.id);
                 }}
-                style={styles.viewProfileButton}
+                style={[
+                  styles.viewProfileButton,
+                  { backgroundColor: `${colors.primary}15` },
+                ]}
               >
                 <Ionicons
                   name="arrow-forward"
                   size={18}
-                  color={Colors.primaryGreen}
+                  color={colors.primary}
                 />
               </TouchableOpacity>
             </View>
@@ -948,12 +1308,18 @@ export default function PropertyDetailScreen() {
             {
               paddingBottom: insets.bottom + Spacing.md,
               paddingTop: Spacing.md,
+              backgroundColor: colors.surface,
+              borderTopColor: colors.divider,
             },
           ]}
         >
           <TouchableOpacity
             onPress={handleCall}
-            style={[styles.actionButton, styles.callButton]}
+            style={[
+              styles.actionButton,
+              styles.callButton,
+              { backgroundColor: colors.primary },
+            ]}
             activeOpacity={0.8}
           >
             <View style={styles.actionButtonIconBg}>
@@ -963,17 +1329,24 @@ export default function PropertyDetailScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleChat}
-            style={[styles.actionButton, styles.chatButton]}
+            style={[
+              styles.actionButton,
+              styles.chatButton,
+              { backgroundColor: colors.surface, borderColor: colors.primary },
+            ]}
             activeOpacity={0.8}
           >
-            <View style={styles.chatButtonIconBg}>
-              <Ionicons
-                name="chatbubbles"
-                size={18}
-                color={Colors.primaryGreen}
-              />
+            <View
+              style={[
+                styles.chatButtonIconBg,
+                { backgroundColor: `${colors.primary}15` },
+              ]}
+            >
+              <Ionicons name="chatbubbles" size={18} color={colors.primary} />
             </View>
-            <Text style={styles.chatButtonText}>Message</Text>
+            <Text style={[styles.chatButtonText, { color: colors.primary }]}>
+              Message
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -988,49 +1361,80 @@ export default function PropertyDetailScreen() {
           // Optional: handle dismiss if needed
         }}
         backdropComponent={renderChatBackdrop}
-        backgroundStyle={styles.chatBottomSheet}
-        handleIndicatorStyle={styles.handleIndicator}
+        backgroundStyle={[
+          styles.chatBottomSheet,
+          { backgroundColor: colors.surface },
+        ]}
+        handleIndicatorStyle={[
+          styles.handleIndicator,
+          { backgroundColor: colors.textSecondary },
+        ]}
       >
         <BottomSheetView style={styles.chatSheetContent}>
-          <Text style={styles.chatSheetTitle}>Choose how to contact</Text>
+          <Text style={[styles.chatSheetTitle, { color: colors.text }]}>
+            Choose how to contact
+          </Text>
 
           {/* In-App Chat Option */}
           <TouchableOpacity
-            style={styles.chatOption}
+            style={[
+              styles.chatOption,
+              { backgroundColor: colors.surface, borderColor: colors.primary },
+            ]}
             onPress={handleChatInApp}
             activeOpacity={0.7}
           >
-            <View style={styles.chatOptionIcon}>
-              <Ionicons
-                name="chatbubbles"
-                size={24}
-                color={Colors.primaryGreen}
-              />
+            <View
+              style={[
+                styles.chatOptionIcon,
+                { backgroundColor: `${colors.primary}15` },
+              ]}
+            >
+              <Ionicons name="chatbubbles" size={24} color={colors.primary} />
             </View>
             <View style={styles.chatOptionContent}>
-              <Text style={styles.chatOptionTitle}>Chat in-app</Text>
-              <Text style={styles.chatOptionSubtitle}>
+              <Text style={[styles.chatOptionTitle, { color: colors.text }]}>
+                Chat in-app
+              </Text>
+              <Text
+                style={[
+                  styles.chatOptionSubtitle,
+                  { color: colors.textSecondary },
+                ]}
+              >
                 Send messages within the app
               </Text>
             </View>
             <Ionicons
               name="chevron-forward"
               size={20}
-              color={Colors.textSecondary}
+              color={colors.textSecondary}
             />
           </TouchableOpacity>
 
           {/* Divider */}
           <View style={styles.chatDivider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>Or use external apps</Text>
-            <View style={styles.dividerLine} />
+            <View
+              style={[styles.dividerLine, { backgroundColor: colors.divider }]}
+            />
+            <Text style={[styles.dividerText, { color: colors.textSecondary }]}>
+              Or use external apps
+            </Text>
+            <View
+              style={[styles.dividerLine, { backgroundColor: colors.divider }]}
+            />
           </View>
 
           {/* External Chat Apps */}
           <View style={styles.externalAppsContainer}>
             <TouchableOpacity
-              style={styles.externalAppOption}
+              style={[
+                styles.externalAppOption,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
               onPress={() =>
                 handleChatViaApp(
                   "whatsapp",
@@ -1040,11 +1444,19 @@ export default function PropertyDetailScreen() {
               activeOpacity={0.7}
             >
               <Ionicons name="logo-whatsapp" size={28} color="#25D366" />
-              <Text style={styles.externalAppText}>WhatsApp</Text>
+              <Text style={[styles.externalAppText, { color: colors.text }]}>
+                WhatsApp
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.externalAppOption}
+              style={[
+                styles.externalAppOption,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
               onPress={() =>
                 handleChatViaApp(
                   "telegram",
@@ -1054,26 +1466,38 @@ export default function PropertyDetailScreen() {
               activeOpacity={0.7}
             >
               <Ionicons name="paper-plane" size={28} color="#0088cc" />
-              <Text style={styles.externalAppText}>Telegram</Text>
+              <Text style={[styles.externalAppText, { color: colors.text }]}>
+                Telegram
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.externalAppOption}
+              style={[
+                styles.externalAppOption,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
               onPress={() =>
                 handleChatViaApp("sms", property.owner.phone || "+233123456789")
               }
               activeOpacity={0.7}
             >
-              <Ionicons
-                name="chatbubble"
-                size={28}
-                color={Colors.primaryGreen}
-              />
-              <Text style={styles.externalAppText}>SMS</Text>
+              <Ionicons name="chatbubble" size={28} color={colors.primary} />
+              <Text style={[styles.externalAppText, { color: colors.text }]}>
+                SMS
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.externalAppOption}
+              style={[
+                styles.externalAppOption,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
               onPress={() =>
                 handleChatViaApp(
                   "call",
@@ -1082,8 +1506,10 @@ export default function PropertyDetailScreen() {
               }
               activeOpacity={0.7}
             >
-              <Ionicons name="call" size={28} color={Colors.primaryGreen} />
-              <Text style={styles.externalAppText}>Call</Text>
+              <Ionicons name="call" size={28} color={colors.primary} />
+              <Text style={[styles.externalAppText, { color: colors.text }]}>
+                Call
+              </Text>
             </TouchableOpacity>
           </View>
         </BottomSheetView>
