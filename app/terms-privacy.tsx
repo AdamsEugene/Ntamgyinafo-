@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import { FloatingHeader } from "@/components/FloatingHeader";
 
 type Tab = "terms" | "privacy";
@@ -115,21 +116,15 @@ const PRIVACY_SECTIONS: Section[] = [
 export default function TermsPrivacyScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<Tab>("terms");
 
   const sections = activeTab === "terms" ? TERMS_SECTIONS : PRIVACY_SECTIONS;
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
-        {/* Decorative Background Elements */}
-        <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
-        </View>
-
-        {/* Floating Sticky Header */}
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Floating Header with Blur */}
         <FloatingHeader
           title="Terms & Privacy"
@@ -138,21 +133,35 @@ export default function TermsPrivacyScreen() {
         />
 
         {/* Tabs */}
-        <View style={[styles.tabsContainer, { top: 70 + insets.top }]}>
-          <View style={styles.tabs}>
+        <View
+          style={[
+            styles.tabsContainer,
+            { top: 70 + insets.top, backgroundColor: colors.background },
+          ]}
+        >
+          <View
+            style={[
+              styles.tabs,
+              { backgroundColor: colors.surface, borderColor: colors.divider },
+            ]}
+          >
             <TouchableOpacity
-              style={[styles.tab, activeTab === "terms" && styles.tabActive]}
+              style={[
+                styles.tab,
+                activeTab === "terms" && { backgroundColor: colors.primary },
+              ]}
               onPress={() => setActiveTab("terms")}
               activeOpacity={0.7}
             >
               <Ionicons
                 name="document-text"
                 size={18}
-                color={activeTab === "terms" ? "#FFFFFF" : Colors.textSecondary}
+                color={activeTab === "terms" ? "#FFFFFF" : colors.textSecondary}
               />
               <Text
                 style={[
                   styles.tabText,
+                  { color: colors.textSecondary },
                   activeTab === "terms" && styles.tabTextActive,
                 ]}
               >
@@ -160,7 +169,10 @@ export default function TermsPrivacyScreen() {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.tab, activeTab === "privacy" && styles.tabActive]}
+              style={[
+                styles.tab,
+                activeTab === "privacy" && { backgroundColor: colors.primary },
+              ]}
               onPress={() => setActiveTab("privacy")}
               activeOpacity={0.7}
             >
@@ -168,12 +180,13 @@ export default function TermsPrivacyScreen() {
                 name="shield-checkmark"
                 size={18}
                 color={
-                  activeTab === "privacy" ? "#FFFFFF" : Colors.textSecondary
+                  activeTab === "privacy" ? "#FFFFFF" : colors.textSecondary
                 }
               />
               <Text
                 style={[
                   styles.tabText,
+                  { color: colors.textSecondary },
                   activeTab === "privacy" && styles.tabTextActive,
                 ]}
               >
@@ -199,26 +212,34 @@ export default function TermsPrivacyScreen() {
             <Ionicons
               name="time-outline"
               size={14}
-              color={Colors.textSecondary}
+              color={colors.textSecondary}
             />
-            <Text style={styles.lastUpdatedText}>
+            <Text style={[styles.lastUpdatedText, { color: colors.textSecondary }]}>
               Last updated: December 2024
             </Text>
           </View>
 
           {/* Intro */}
-          <View style={styles.introCard}>
+          <View
+            style={[
+              styles.introCard,
+              {
+                backgroundColor: `${colors.primary}10`,
+                borderColor: `${colors.primary}20`,
+              },
+            ]}
+          >
             <Ionicons
               name={
                 activeTab === "terms" ? "document-text" : "shield-checkmark"
               }
               size={28}
-              color={Colors.primaryGreen}
+              color={colors.primary}
             />
-            <Text style={styles.introTitle}>
+            <Text style={[styles.introTitle, { color: colors.text }]}>
               {activeTab === "terms" ? "Terms of Service" : "Privacy Policy"}
             </Text>
-            <Text style={styles.introText}>
+            <Text style={[styles.introText, { color: colors.textSecondary }]}>
               {activeTab === "terms"
                 ? "Please read these terms carefully before using Ntamgyinafoɔ. By using our app, you agree to these terms."
                 : "Your privacy is important to us. This policy explains how we collect, use, and protect your information."}
@@ -227,27 +248,40 @@ export default function TermsPrivacyScreen() {
 
           {/* Sections */}
           {sections.map((section, index) => (
-            <View key={index} style={styles.section}>
-              <Text style={styles.sectionTitle}>{section.title}</Text>
-              <Text style={styles.sectionContent}>{section.content}</Text>
+            <View
+              key={index}
+              style={[
+                styles.section,
+                { backgroundColor: colors.surface, borderColor: colors.divider },
+              ]}
+            >
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                {section.title}
+              </Text>
+              <Text style={[styles.sectionContent, { color: colors.textSecondary }]}>
+                {section.content}
+              </Text>
             </View>
           ))}
 
           {/* Contact CTA */}
-          <View style={styles.contactCard}>
-            <Ionicons
-              name="help-circle"
-              size={32}
-              color={Colors.primaryGreen}
-            />
-            <Text style={styles.contactTitle}>Have Questions?</Text>
-            <Text style={styles.contactText}>
+          <View
+            style={[
+              styles.contactCard,
+              { backgroundColor: colors.surface, borderColor: colors.divider },
+            ]}
+          >
+            <Ionicons name="help-circle" size={32} color={colors.primary} />
+            <Text style={[styles.contactTitle, { color: colors.text }]}>
+              Have Questions?
+            </Text>
+            <Text style={[styles.contactText, { color: colors.textSecondary }]}>
               If you have any questions about our{" "}
               {activeTab === "terms" ? "Terms of Service" : "Privacy Policy"},
               please contact us.
             </Text>
             <TouchableOpacity
-              style={styles.contactButton}
+              style={[styles.contactButton, { backgroundColor: colors.primary }]}
               onPress={() => router.push("/help-support")}
               activeOpacity={0.8}
             >

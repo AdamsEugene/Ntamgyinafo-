@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import { FloatingHeader } from "@/components/FloatingHeader";
 
 interface PlanFeature {
@@ -90,6 +91,7 @@ const CURRENT_PLAN: string | null = null;
 export default function SubscriptionPlansScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(
     CURRENT_PLAN || "standard"
   );
@@ -116,9 +118,13 @@ export default function SubscriptionPlansScreen() {
         key={plan.id}
         style={[
           styles.planCard,
-          isSelected && styles.planCardSelected,
-          plan.isPopular && styles.planCardPopular,
-          plan.isPremium && styles.planCardPremium,
+          { backgroundColor: colors.surface, borderColor: colors.divider },
+          isSelected && {
+            borderColor: colors.primary,
+            backgroundColor: `${colors.primary}08`,
+          },
+          plan.isPopular && { borderColor: "#F59E0B" },
+          plan.isPremium && { borderColor: "#8B5CF6" },
         ]}
         onPress={() => handleSelectPlan(plan.id)}
         activeOpacity={0.8}
@@ -128,7 +134,7 @@ export default function SubscriptionPlansScreen() {
           <View
             style={[
               styles.planBadge,
-              { backgroundColor: plan.badgeColor || Colors.primaryGreen },
+              { backgroundColor: plan.badgeColor || colors.primary },
             ]}
           >
             {plan.badgeIcon && (
@@ -140,7 +146,9 @@ export default function SubscriptionPlansScreen() {
 
         {/* Current Plan Badge */}
         {isCurrent && (
-          <View style={styles.currentBadge}>
+          <View
+            style={[styles.currentBadge, { backgroundColor: colors.primary }]}
+          >
             <Ionicons name="checkmark-circle" size={14} color="#FFFFFF" />
             <Text style={styles.currentBadgeText}>Current Plan</Text>
           </View>
@@ -149,30 +157,54 @@ export default function SubscriptionPlansScreen() {
         {/* Selection indicator */}
         <View style={styles.selectionIndicator}>
           <View
-            style={[styles.radioOuter, isSelected && styles.radioOuterSelected]}
+            style={[
+              styles.radioOuter,
+              { borderColor: colors.divider },
+              isSelected && { borderColor: colors.primary },
+            ]}
           >
-            {isSelected && <View style={styles.radioInner} />}
+            {isSelected && (
+              <View
+                style={[styles.radioInner, { backgroundColor: colors.primary }]}
+              />
+            )}
           </View>
         </View>
 
         {/* Plan Header */}
         <View style={styles.planHeader}>
           <Text
-            style={[styles.planName, isSelected && styles.planNameSelected]}
+            style={[
+              styles.planName,
+              { color: colors.text },
+              isSelected && { color: colors.primary },
+            ]}
           >
             {plan.name}
           </Text>
           <View style={styles.priceContainer}>
-            <Text style={styles.currency}>GHS</Text>
-            <Text style={[styles.price, isSelected && styles.priceSelected]}>
+            <Text style={[styles.currency, { color: colors.textSecondary }]}>
+              GHS
+            </Text>
+            <Text
+              style={[
+                styles.price,
+                { color: colors.text },
+                isSelected && { color: colors.primary },
+              ]}
+            >
               {plan.price}
             </Text>
-            <Text style={styles.duration}>/{plan.duration}</Text>
+            <Text style={[styles.duration, { color: colors.textSecondary }]}>
+              /{plan.duration}
+            </Text>
           </View>
         </View>
 
         {/* Divider */}
-        <View style={styles.planDivider} />
+        <View
+          style={[styles.planDivider, { backgroundColor: colors.divider }]}
+        />
 
         {/* Features */}
         <View style={styles.featuresContainer}>
@@ -182,20 +214,23 @@ export default function SubscriptionPlansScreen() {
                 style={[
                   styles.featureIcon,
                   feature.included
-                    ? styles.featureIconIncluded
-                    : styles.featureIconExcluded,
+                    ? { backgroundColor: `${colors.primary}15` }
+                    : { backgroundColor: `${colors.textSecondary}15` },
                 ]}
               >
                 <Ionicons
                   name={feature.included ? "checkmark" : "close"}
                   size={14}
-                  color={feature.included ? Colors.primaryGreen : "#9CA3AF"}
+                  color={
+                    feature.included ? colors.primary : colors.textSecondary
+                  }
                 />
               </View>
               <Text
                 style={[
                   styles.featureText,
-                  !feature.included && styles.featureTextExcluded,
+                  { color: colors.text },
+                  !feature.included && { color: colors.textSecondary },
                 ]}
               >
                 {feature.text}
@@ -208,14 +243,8 @@ export default function SubscriptionPlansScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
-
-      {/* Decorative Background Elements */}
-      <View style={styles.decorativeBackground}>
-        <View style={styles.circle1} />
-        <View style={styles.circle2} />
-      </View>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? "light" : "dark"} />
 
       {/* Floating Header with Blur */}
       <FloatingHeader
@@ -237,14 +266,16 @@ export default function SubscriptionPlansScreen() {
         <View style={styles.heroSection}>
           <View style={styles.heroIconContainer}>
             <LinearGradient
-              colors={[Colors.primaryGreen, "#10B981"]}
+              colors={[colors.primary, "#10B981"]}
               style={styles.heroIconGradient}
             >
               <Ionicons name="rocket" size={40} color="#FFFFFF" />
             </LinearGradient>
           </View>
-          <Text style={styles.heroTitle}>Unlock Full Access</Text>
-          <Text style={styles.heroSubtitle}>
+          <Text style={[styles.heroTitle, { color: colors.text }]}>
+            Unlock Full Access
+          </Text>
+          <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>
             Get unlimited access to property details, owner contacts, and
             exclusive features
           </Text>
@@ -256,13 +287,20 @@ export default function SubscriptionPlansScreen() {
         </View>
 
         {/* Features Comparison Note */}
-        <View style={styles.comparisonNote}>
+        <View
+          style={[
+            styles.comparisonNote,
+            { backgroundColor: `${colors.textSecondary}15` },
+          ]}
+        >
           <Ionicons
             name="information-circle"
             size={20}
-            color={Colors.textSecondary}
+            color={colors.textSecondary}
           />
-          <Text style={styles.comparisonNoteText}>
+          <Text
+            style={[styles.comparisonNoteText, { color: colors.textSecondary }]}
+          >
             All plans include basic property browsing and search functionality
           </Text>
         </View>
@@ -275,13 +313,18 @@ export default function SubscriptionPlansScreen() {
       <View
         style={[
           styles.bottomContainer,
-          { paddingBottom: Math.max(insets.bottom, Spacing.lg) },
+          {
+            paddingBottom: Math.max(insets.bottom, Spacing.lg),
+            backgroundColor: colors.background,
+            borderTopColor: colors.divider,
+          },
         ]}
       >
         <TouchableOpacity
           style={[
             styles.continueButton,
-            !selectedPlan && styles.continueButtonDisabled,
+            { backgroundColor: colors.primary },
+            !selectedPlan && { backgroundColor: colors.divider },
           ]}
           onPress={handleContinue}
           activeOpacity={0.8}
@@ -300,9 +343,13 @@ export default function SubscriptionPlansScreen() {
           <Ionicons
             name="shield-checkmark"
             size={16}
-            color={Colors.textSecondary}
+            color={colors.textSecondary}
           />
-          <Text style={styles.secureNoteText}>Secure payment via Paystack</Text>
+          <Text
+            style={[styles.secureNoteText, { color: colors.textSecondary }]}
+          >
+            Secure payment via Paystack
+          </Text>
         </View>
       </View>
     </View>

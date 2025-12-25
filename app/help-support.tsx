@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import { FloatingHeader } from "@/components/FloatingHeader";
 
 interface FAQItem {
@@ -80,6 +81,7 @@ const FAQ_ITEMS: FAQItem[] = [
 export default function HelpSupportScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showContactForm, setShowContactForm] = useState(false);
@@ -147,34 +149,42 @@ export default function HelpSupportScreen() {
     return (
       <TouchableOpacity
         key={item.id}
-        style={[styles.faqItem, isExpanded && styles.faqItemExpanded]}
+        style={[
+          styles.faqItem,
+          { backgroundColor: colors.surface, borderColor: colors.divider },
+          isExpanded && { borderColor: colors.primary },
+        ]}
         onPress={() => setExpandedFAQ(isExpanded ? null : item.id)}
         activeOpacity={0.7}
       >
         <View style={styles.faqHeader}>
-          <Text style={styles.faqQuestion}>{item.question}</Text>
+          <Text style={[styles.faqQuestion, { color: colors.text }]}>
+            {item.question}
+          </Text>
           <Ionicons
             name={isExpanded ? "chevron-up" : "chevron-down"}
             size={20}
-            color={Colors.textSecondary}
+            color={colors.textSecondary}
           />
         </View>
-        {isExpanded && <Text style={styles.faqAnswer}>{item.answer}</Text>}
+        {isExpanded && (
+          <Text
+            style={[
+              styles.faqAnswer,
+              { color: colors.textSecondary, borderTopColor: colors.divider },
+            ]}
+          >
+            {item.answer}
+          </Text>
+        )}
       </TouchableOpacity>
     );
   };
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
-        {/* Decorative Background Elements */}
-        <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
-        </View>
-
-        {/* Floating Sticky Header */}
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Floating Header with Blur */}
         <FloatingHeader
           title="Help & Support"
@@ -195,12 +205,17 @@ export default function HelpSupportScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Search */}
-          <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color={Colors.textSecondary} />
+          <View
+            style={[
+              styles.searchContainer,
+              { backgroundColor: colors.surface, borderColor: colors.divider },
+            ]}
+          >
+            <Ionicons name="search" size={20} color={colors.textSecondary} />
             <TextInput
-              style={styles.searchInput}
+              style={[styles.searchInput, { color: colors.text }]}
               placeholder="Search for help..."
-              placeholderTextColor={Colors.textSecondary}
+              placeholderTextColor={colors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
@@ -209,19 +224,27 @@ export default function HelpSupportScreen() {
                 <Ionicons
                   name="close-circle"
                   size={20}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
               </TouchableOpacity>
             )}
           </View>
 
           {/* Quick Contact Options */}
-          <Text style={styles.sectionTitle}>Contact Us</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Contact Us
+          </Text>
           <View style={styles.contactOptions}>
             {contactOptions.map((option) => (
               <TouchableOpacity
                 key={option.id}
-                style={styles.contactOption}
+                style={[
+                  styles.contactOption,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
                 onPress={option.onPress}
                 activeOpacity={0.7}
               >
@@ -233,15 +256,27 @@ export default function HelpSupportScreen() {
                 >
                   <Ionicons name={option.icon} size={24} color={option.color} />
                 </View>
-                <Text style={styles.contactTitle}>{option.title}</Text>
-                <Text style={styles.contactSubtitle}>{option.subtitle}</Text>
+                <Text style={[styles.contactTitle, { color: colors.text }]}>
+                  {option.title}
+                </Text>
+                <Text
+                  style={[
+                    styles.contactSubtitle,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  {option.subtitle}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
 
           {/* Contact Form Toggle */}
           <TouchableOpacity
-            style={styles.contactFormToggle}
+            style={[
+              styles.contactFormToggle,
+              { backgroundColor: colors.surface, borderColor: colors.divider },
+            ]}
             onPress={() => setShowContactForm(!showContactForm)}
             activeOpacity={0.7}
           >
@@ -249,36 +284,65 @@ export default function HelpSupportScreen() {
               <Ionicons
                 name="chatbox-ellipses"
                 size={22}
-                color={Colors.primaryGreen}
+                color={colors.primary}
               />
-              <Text style={styles.contactFormToggleText}>
+              <Text
+                style={[styles.contactFormToggleText, { color: colors.text }]}
+              >
                 Send us a message
               </Text>
             </View>
             <Ionicons
               name={showContactForm ? "chevron-up" : "chevron-down"}
               size={20}
-              color={Colors.textSecondary}
+              color={colors.textSecondary}
             />
           </TouchableOpacity>
 
           {/* Contact Form */}
           {showContactForm && (
-            <View style={styles.contactForm}>
-              <Text style={styles.inputLabel}>Subject</Text>
+            <View
+              style={[
+                styles.contactForm,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
+              <Text style={[styles.inputLabel, { color: colors.text }]}>
+                Subject
+              </Text>
               <TextInput
-                style={styles.textInput}
+                style={[
+                  styles.textInput,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.divider,
+                    color: colors.text,
+                  },
+                ]}
                 placeholder="What's this about?"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 value={formSubject}
                 onChangeText={setFormSubject}
               />
 
-              <Text style={styles.inputLabel}>Message</Text>
+              <Text style={[styles.inputLabel, { color: colors.text }]}>
+                Message
+              </Text>
               <TextInput
-                style={[styles.textInput, styles.textArea]}
+                style={[
+                  styles.textInput,
+                  styles.textArea,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.divider,
+                    color: colors.text,
+                  },
+                ]}
                 placeholder="Describe your issue or question..."
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 value={formMessage}
                 onChangeText={setFormMessage}
                 multiline
@@ -287,7 +351,10 @@ export default function HelpSupportScreen() {
               />
 
               <TouchableOpacity
-                style={styles.submitButton}
+                style={[
+                  styles.submitButton,
+                  { backgroundColor: colors.primary },
+                ]}
                 onPress={handleSubmitForm}
                 activeOpacity={0.8}
               >
@@ -298,7 +365,9 @@ export default function HelpSupportScreen() {
           )}
 
           {/* FAQ Section */}
-          <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Frequently Asked Questions
+          </Text>
           <View style={styles.faqContainer}>
             {filteredFAQs.length > 0 ? (
               filteredFAQs.map(renderFAQItem)
@@ -307,10 +376,17 @@ export default function HelpSupportScreen() {
                 <Ionicons
                   name="search"
                   size={40}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
-                <Text style={styles.noResultsText}>No results found</Text>
-                <Text style={styles.noResultsSubtext}>
+                <Text style={[styles.noResultsText, { color: colors.text }]}>
+                  No results found
+                </Text>
+                <Text
+                  style={[
+                    styles.noResultsSubtext,
+                    { color: colors.textSecondary },
+                  ]}
+                >
                   Try a different search or contact us directly
                 </Text>
               </View>
@@ -318,14 +394,29 @@ export default function HelpSupportScreen() {
           </View>
 
           {/* Still Need Help */}
-          <View style={styles.needHelpCard}>
-            <Ionicons name="help-buoy" size={40} color={Colors.primaryGreen} />
-            <Text style={styles.needHelpTitle}>Still need help?</Text>
-            <Text style={styles.needHelpText}>
+          <View
+            style={[
+              styles.needHelpCard,
+              {
+                backgroundColor: `${colors.primary}10`,
+                borderColor: `${colors.primary}20`,
+              },
+            ]}
+          >
+            <Ionicons name="help-buoy" size={40} color={colors.primary} />
+            <Text style={[styles.needHelpTitle, { color: colors.text }]}>
+              Still need help?
+            </Text>
+            <Text
+              style={[styles.needHelpText, { color: colors.textSecondary }]}
+            >
               Our support team is available Monday to Friday, 9 AM - 6 PM GMT.
             </Text>
             <TouchableOpacity
-              style={styles.needHelpButton}
+              style={[
+                styles.needHelpButton,
+                { backgroundColor: colors.primary },
+              ]}
               onPress={() => Linking.openURL("mailto:support@ntamgyinafo.com")}
               activeOpacity={0.8}
             >

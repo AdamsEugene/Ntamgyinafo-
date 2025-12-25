@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import { FloatingHeader } from "@/components/FloatingHeader";
 
 interface SocialLink {
@@ -93,18 +94,12 @@ const STATS = [
 export default function AboutScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
-        {/* Decorative Background Elements */}
-        <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
-        </View>
-
-        {/* Floating Sticky Header */}
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Floating Header with Blur */}
         <FloatingHeader
           title="About"
@@ -125,24 +120,60 @@ export default function AboutScreen() {
         >
           {/* Hero Section */}
           <View style={styles.heroSection}>
-            <View style={styles.logoContainer}>
-              <Ionicons name="home" size={48} color={Colors.primaryGreen} />
+            <View
+              style={[
+                styles.logoContainer,
+                {
+                  backgroundColor: `${colors.primary}15`,
+                  borderColor: colors.primary,
+                },
+              ]}
+            >
+              <Ionicons name="home" size={48} color={colors.primary} />
             </View>
-            <Text style={styles.appName}>Ntamgyinafoɔ</Text>
-            <Text style={styles.tagline}>Find. Visit. Own.</Text>
-            <Text style={styles.version}>Version 1.0.0</Text>
+            <Text style={[styles.appName, { color: colors.primary }]}>
+              Ntamgyinafoɔ
+            </Text>
+            <Text style={[styles.tagline, { color: colors.textSecondary }]}>
+              Find. Visit. Own.
+            </Text>
+            <Text
+              style={[
+                styles.version,
+                {
+                  backgroundColor: colors.surface,
+                  color: colors.textSecondary,
+                },
+              ]}
+            >
+              Version 1.0.0
+            </Text>
           </View>
 
           {/* Mission Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Our Mission</Text>
-            <View style={styles.missionCard}>
-              <Text style={styles.missionText}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Our Mission
+            </Text>
+            <View
+              style={[
+                styles.missionCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
+              <Text
+                style={[styles.missionText, { color: colors.textSecondary }]}
+              >
                 To revolutionize the real estate market in Ghana by connecting
                 property seekers with verified owners through a seamless,
                 transparent, and trustworthy platform.
               </Text>
-              <Text style={styles.missionText}>
+              <Text
+                style={[styles.missionText, { color: colors.textSecondary }]}
+              >
                 We believe everyone deserves access to quality housing
                 information. That&apos;s why we&apos;re building the most
                 comprehensive property database in Ghana, complete with photos,
@@ -153,12 +184,29 @@ export default function AboutScreen() {
 
           {/* Stats Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Our Impact</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Our Impact
+            </Text>
             <View style={styles.statsGrid}>
               {STATS.map((stat) => (
-                <View key={stat.label} style={styles.statCard}>
-                  <Text style={styles.statValue}>{stat.value}</Text>
-                  <Text style={styles.statLabel}>{stat.label}</Text>
+                <View
+                  key={stat.label}
+                  style={[
+                    styles.statCard,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.statValue, { color: colors.primary }]}>
+                    {stat.value}
+                  </Text>
+                  <Text
+                    style={[styles.statLabel, { color: colors.textSecondary }]}
+                  >
+                    {stat.label}
+                  </Text>
                 </View>
               ))}
             </View>
@@ -166,66 +214,119 @@ export default function AboutScreen() {
 
           {/* Features Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>What Makes Us Different</Text>
-            <View style={styles.featuresContainer}>
-              <View style={styles.featureItem}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              What Makes Us Different
+            </Text>
+            <View
+              style={[
+                styles.featuresContainer,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.featureItem,
+                  { borderBottomColor: colors.divider },
+                ]}
+              >
                 <View
                   style={[styles.featureIcon, { backgroundColor: "#3B82F615" }]}
                 >
                   <Ionicons name="shield-checkmark" size={24} color="#3B82F6" />
                 </View>
                 <View style={styles.featureContent}>
-                  <Text style={styles.featureTitle}>Verified Listings</Text>
-                  <Text style={styles.featureDesc}>
+                  <Text style={[styles.featureTitle, { color: colors.text }]}>
+                    Verified Listings
+                  </Text>
+                  <Text
+                    style={[
+                      styles.featureDesc,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
                     All properties are reviewed before going live
                   </Text>
                 </View>
               </View>
 
-              <View style={styles.featureItem}>
+              <View
+                style={[
+                  styles.featureItem,
+                  { borderBottomColor: colors.divider },
+                ]}
+              >
                 <View
                   style={[styles.featureIcon, { backgroundColor: "#8B5CF615" }]}
                 >
                   <Ionicons name="cube" size={24} color="#8B5CF6" />
                 </View>
                 <View style={styles.featureContent}>
-                  <Text style={styles.featureTitle}>360° Virtual Tours</Text>
-                  <Text style={styles.featureDesc}>
+                  <Text style={[styles.featureTitle, { color: colors.text }]}>
+                    360° Virtual Tours
+                  </Text>
+                  <Text
+                    style={[
+                      styles.featureDesc,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
                     Explore properties from anywhere
                   </Text>
                 </View>
               </View>
 
-              <View style={styles.featureItem}>
+              <View
+                style={[
+                  styles.featureItem,
+                  { borderBottomColor: colors.divider },
+                ]}
+              >
                 <View
                   style={[styles.featureIcon, { backgroundColor: "#F59E0B15" }]}
                 >
                   <Ionicons name="location" size={24} color="#F59E0B" />
                 </View>
                 <View style={styles.featureContent}>
-                  <Text style={styles.featureTitle}>Exact GPS Locations</Text>
-                  <Text style={styles.featureDesc}>
+                  <Text style={[styles.featureTitle, { color: colors.text }]}>
+                    Exact GPS Locations
+                  </Text>
+                  <Text
+                    style={[
+                      styles.featureDesc,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
                     Navigate directly to properties
                   </Text>
                 </View>
               </View>
 
-              <View style={styles.featureItem}>
+              <View style={[styles.featureItem, { borderBottomWidth: 0 }]}>
                 <View
                   style={[
                     styles.featureIcon,
-                    { backgroundColor: `${Colors.primaryGreen}15` },
+                    { backgroundColor: `${colors.primary}15` },
                   ]}
                 >
                   <Ionicons
                     name="chatbubbles"
                     size={24}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                 </View>
                 <View style={styles.featureContent}>
-                  <Text style={styles.featureTitle}>Direct Communication</Text>
-                  <Text style={styles.featureDesc}>
+                  <Text style={[styles.featureTitle, { color: colors.text }]}>
+                    Direct Communication
+                  </Text>
+                  <Text
+                    style={[
+                      styles.featureDesc,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
                     Chat and call property owners directly
                   </Text>
                 </View>
@@ -235,20 +336,37 @@ export default function AboutScreen() {
 
           {/* Team Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Meet the Team</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Meet the Team
+            </Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.teamContainer}
             >
               {TEAM_MEMBERS.map((member) => (
-                <View key={member.id} style={styles.teamCard}>
+                <View
+                  key={member.id}
+                  style={[
+                    styles.teamCard,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                  ]}
+                >
                   <Image
                     source={{ uri: member.avatar }}
-                    style={styles.teamAvatar}
+                    style={[styles.teamAvatar, { borderColor: colors.primary }]}
                   />
-                  <Text style={styles.teamName}>{member.name}</Text>
-                  <Text style={styles.teamRole}>{member.role}</Text>
+                  <Text style={[styles.teamName, { color: colors.text }]}>
+                    {member.name}
+                  </Text>
+                  <Text
+                    style={[styles.teamRole, { color: colors.textSecondary }]}
+                  >
+                    {member.role}
+                  </Text>
                 </View>
               ))}
             </ScrollView>
@@ -256,7 +374,9 @@ export default function AboutScreen() {
 
           {/* Social Links */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Follow Us</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Follow Us
+            </Text>
             <View style={styles.socialLinks}>
               {SOCIAL_LINKS.map((link) => (
                 <TouchableOpacity
@@ -284,9 +404,11 @@ export default function AboutScreen() {
               <Ionicons
                 name="document-text-outline"
                 size={18}
-                color={Colors.primaryGreen}
+                color={colors.primary}
               />
-              <Text style={styles.footerLinkText}>Terms & Privacy</Text>
+              <Text style={[styles.footerLinkText, { color: colors.primary }]}>
+                Terms & Privacy
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -294,19 +416,23 @@ export default function AboutScreen() {
               onPress={() => Linking.openURL("https://ntamgyinafo.com")}
               activeOpacity={0.7}
             >
-              <Ionicons
-                name="globe-outline"
-                size={18}
-                color={Colors.primaryGreen}
-              />
-              <Text style={styles.footerLinkText}>Visit Website</Text>
+              <Ionicons name="globe-outline" size={18} color={colors.primary} />
+              <Text style={[styles.footerLinkText, { color: colors.primary }]}>
+                Visit Website
+              </Text>
             </TouchableOpacity>
           </View>
 
           {/* Copyright */}
           <View style={styles.copyright}>
-            <Text style={styles.copyrightText}>Made with ❤️ in Ghana</Text>
-            <Text style={styles.copyrightText}>
+            <Text
+              style={[styles.copyrightText, { color: colors.textSecondary }]}
+            >
+              Made with ❤️ in Ghana
+            </Text>
+            <Text
+              style={[styles.copyrightText, { color: colors.textSecondary }]}
+            >
               © 2024 Ntamgyinafoɔ. All rights reserved.
             </Text>
           </View>

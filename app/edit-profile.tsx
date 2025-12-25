@@ -17,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // Mock user data
 const INITIAL_USER = {
@@ -30,6 +31,7 @@ const INITIAL_USER = {
 export default function EditProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
 
   const [name, setName] = useState(INITIAL_USER.name);
   const [email, setEmail] = useState(INITIAL_USER.email);
@@ -129,31 +131,39 @@ export default function EditProfileScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
-        {/* Decorative Background Elements */}
-        <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
-        </View>
-
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Header */}
-        <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+        <View
+          style={[
+            styles.header,
+            {
+              paddingTop: insets.top + Spacing.md,
+              backgroundColor: colors.background,
+            },
+          ]}
+        >
           <TouchableOpacity
             onPress={handleBack}
-            style={styles.backButton}
+            style={[
+              styles.backButton,
+              { backgroundColor: colors.surface, borderColor: colors.divider },
+            ]}
             activeOpacity={0.7}
           >
-            <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
 
-          <Text style={styles.headerTitle}>Edit Profile</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>
+            Edit Profile
+          </Text>
 
           <TouchableOpacity
             onPress={handleSave}
             style={[
               styles.saveButton,
-              !hasChanges && styles.saveButtonDisabled,
+              { backgroundColor: colors.primary },
+              !hasChanges && { backgroundColor: colors.divider },
             ]}
             activeOpacity={0.7}
             disabled={!hasChanges || isSaving}
@@ -161,7 +171,7 @@ export default function EditProfileScreen() {
             <Text
               style={[
                 styles.saveButtonText,
-                !hasChanges && styles.saveButtonTextDisabled,
+                !hasChanges && { color: colors.textSecondary },
               ]}
             >
               {isSaving ? "Saving..." : "Save"}
@@ -187,9 +197,18 @@ export default function EditProfileScreen() {
             {/* Avatar Section */}
             <View style={styles.avatarSection}>
               <View style={styles.avatarContainer}>
-                <Image source={{ uri: avatar }} style={styles.avatar} />
+                <Image
+                  source={{ uri: avatar }}
+                  style={[styles.avatar, { borderColor: colors.primary }]}
+                />
                 <TouchableOpacity
-                  style={styles.cameraButton}
+                  style={[
+                    styles.cameraButton,
+                    {
+                      backgroundColor: colors.primary,
+                      borderColor: colors.background,
+                    },
+                  ]}
                   onPress={handleChangePhoto}
                   activeOpacity={0.8}
                 >
@@ -201,27 +220,46 @@ export default function EditProfileScreen() {
                 style={styles.changePhotoButton}
                 activeOpacity={0.7}
               >
-                <Text style={styles.changePhotoText}>Change Photo</Text>
+                <Text
+                  style={[styles.changePhotoText, { color: colors.primary }]}
+                >
+                  Change Photo
+                </Text>
               </TouchableOpacity>
             </View>
 
             {/* Form Fields */}
-            <View style={styles.formContainer}>
+            <View
+              style={[
+                styles.formContainer,
+                { backgroundColor: colors.surface, borderColor: colors.divider },
+              ]}
+            >
               {/* Full Name */}
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Full Name</Text>
-                <View style={styles.inputWrapper}>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>
+                  Full Name
+                </Text>
+                <View
+                  style={[
+                    styles.inputWrapper,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.divider,
+                    },
+                  ]}
+                >
                   <Ionicons
                     name="person-outline"
                     size={20}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                   />
                   <TextInput
-                    style={styles.textInput}
+                    style={[styles.textInput, { color: colors.text }]}
                     value={name}
                     onChangeText={setName}
                     placeholder="Enter your full name"
-                    placeholderTextColor={Colors.textSecondary}
+                    placeholderTextColor={colors.textSecondary}
                     autoCapitalize="words"
                   />
                 </View>
@@ -229,41 +267,76 @@ export default function EditProfileScreen() {
 
               {/* Phone Number (Read-only) */}
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Phone Number</Text>
-                <View style={[styles.inputWrapper, styles.inputReadOnly]}>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>
+                  Phone Number
+                </Text>
+                <View
+                  style={[
+                    styles.inputWrapper,
+                    styles.inputReadOnly,
+                    {
+                      backgroundColor: `${colors.divider}50`,
+                      borderColor: colors.divider,
+                    },
+                  ]}
+                >
                   <Ionicons
                     name="call-outline"
                     size={20}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                   />
-                  <Text style={styles.readOnlyText}>{INITIAL_USER.phone}</Text>
-                  <View style={styles.verifiedTag}>
+                  <Text
+                    style={[styles.readOnlyText, { color: colors.textSecondary }]}
+                  >
+                    {INITIAL_USER.phone}
+                  </Text>
+                  <View
+                    style={[
+                      styles.verifiedTag,
+                      { backgroundColor: colors.primary },
+                    ]}
+                  >
                     <Ionicons name="checkmark" size={12} color="#FFFFFF" />
                     <Text style={styles.verifiedTagText}>Verified</Text>
                   </View>
                 </View>
-                <Text style={styles.helperText}>
+                <Text
+                  style={[styles.helperText, { color: colors.textSecondary }]}
+                >
                   Phone number cannot be changed
                 </Text>
               </View>
 
               {/* Email */}
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>
-                  Email <Text style={styles.optionalText}>(Optional)</Text>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>
+                  Email{" "}
+                  <Text
+                    style={[styles.optionalText, { color: colors.textSecondary }]}
+                  >
+                    (Optional)
+                  </Text>
                 </Text>
-                <View style={styles.inputWrapper}>
+                <View
+                  style={[
+                    styles.inputWrapper,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.divider,
+                    },
+                  ]}
+                >
                   <Ionicons
                     name="mail-outline"
                     size={20}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                   />
                   <TextInput
-                    style={styles.textInput}
+                    style={[styles.textInput, { color: colors.text }]}
                     value={email}
                     onChangeText={setEmail}
                     placeholder="Enter your email"
-                    placeholderTextColor={Colors.textSecondary}
+                    placeholderTextColor={colors.textSecondary}
                     keyboardType="email-address"
                     autoCapitalize="none"
                   />
@@ -272,23 +345,39 @@ export default function EditProfileScreen() {
 
               {/* Bio */}
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>
-                  Bio <Text style={styles.optionalText}>(Optional)</Text>
+                <Text style={[styles.inputLabel, { color: colors.text }]}>
+                  Bio{" "}
+                  <Text
+                    style={[styles.optionalText, { color: colors.textSecondary }]}
+                  >
+                    (Optional)
+                  </Text>
                 </Text>
-                <View style={[styles.inputWrapper, styles.textAreaWrapper]}>
+                <View
+                  style={[
+                    styles.inputWrapper,
+                    styles.textAreaWrapper,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.divider,
+                    },
+                  ]}
+                >
                   <TextInput
-                    style={[styles.textInput, styles.textArea]}
+                    style={[styles.textInput, styles.textArea, { color: colors.text }]}
                     value={bio}
                     onChangeText={setBio}
                     placeholder="Tell us a bit about yourself..."
-                    placeholderTextColor={Colors.textSecondary}
+                    placeholderTextColor={colors.textSecondary}
                     multiline
                     numberOfLines={4}
                     maxLength={200}
                     textAlignVertical="top"
                   />
                 </View>
-                <Text style={styles.charCount}>{bio.length}/200</Text>
+                <Text style={[styles.charCount, { color: colors.textSecondary }]}>
+                  {bio.length}/200
+                </Text>
               </View>
             </View>
 
@@ -296,7 +385,8 @@ export default function EditProfileScreen() {
             <TouchableOpacity
               style={[
                 styles.saveChangesButton,
-                !hasChanges && styles.saveChangesButtonDisabled,
+                { backgroundColor: colors.primary },
+                !hasChanges && { backgroundColor: colors.divider },
               ]}
               onPress={handleSave}
               activeOpacity={0.8}

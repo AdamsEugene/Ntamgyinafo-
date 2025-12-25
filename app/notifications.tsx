@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Swipeable } from "react-native-gesture-handler";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import { FloatingHeader } from "@/components/FloatingHeader";
 
 interface Notification {
@@ -153,6 +154,7 @@ const NOTIFICATION_COLORS: Record<Notification["type"], string> = {
 export default function NotificationsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [notifications, setNotifications] =
     useState<Notification[]>(MOCK_NOTIFICATIONS);
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
@@ -257,13 +259,18 @@ export default function NotificationsScreen() {
         <TouchableOpacity
           style={[
             styles.notificationItem,
-            !item.isRead && styles.notificationItemUnread,
+            { backgroundColor: colors.surface },
+            !item.isRead && { backgroundColor: `${colors.primary}08` },
           ]}
           onPress={() => handleNotificationPress(item)}
           activeOpacity={0.7}
         >
           {/* Unread Indicator */}
-          {!item.isRead && <View style={styles.unreadDot} />}
+          {!item.isRead && (
+            <View
+              style={[styles.unreadDot, { backgroundColor: colors.primary }]}
+            />
+          )}
 
           {/* Icon */}
           <View
@@ -281,18 +288,27 @@ export default function NotificationsScreen() {
               <Text
                 style={[
                   styles.notificationTitle,
+                  { color: colors.text },
                   !item.isRead && styles.notificationTitleUnread,
                 ]}
                 numberOfLines={1}
               >
                 {item.title}
               </Text>
-              <Text style={styles.notificationTime}>{item.time}</Text>
+              <Text
+                style={[
+                  styles.notificationTime,
+                  { color: colors.textSecondary },
+                ]}
+              >
+                {item.time}
+              </Text>
             </View>
             <Text
               style={[
                 styles.notificationMessage,
-                !item.isRead && styles.notificationMessageUnread,
+                { color: colors.textSecondary },
+                !item.isRead && { color: colors.text },
               ]}
               numberOfLines={2}
             >
@@ -305,7 +321,7 @@ export default function NotificationsScreen() {
             <Ionicons
               name="chevron-forward"
               size={18}
-              color={Colors.textSecondary}
+              color={colors.textSecondary}
               style={styles.notificationArrow}
             />
           )}
@@ -316,17 +332,22 @@ export default function NotificationsScreen() {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <View style={styles.emptyIconContainer}>
+      <View
+        style={[
+          styles.emptyIconContainer,
+          { backgroundColor: colors.surface, borderColor: colors.divider },
+        ]}
+      >
         <Ionicons
           name="notifications-off-outline"
           size={64}
-          color={Colors.textSecondary}
+          color={colors.textSecondary}
         />
       </View>
-      <Text style={styles.emptyTitle}>
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>
         {activeTab === "unread" ? "All Caught Up!" : "No Notifications"}
       </Text>
-      <Text style={styles.emptyMessage}>
+      <Text style={[styles.emptyMessage, { color: colors.textSecondary }]}>
         {activeTab === "unread"
           ? "You've read all your notifications"
           : "You don't have any notifications yet.\nWe'll notify you when something happens."}
@@ -336,15 +357,8 @@ export default function NotificationsScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
-        {/* Decorative Background Elements */}
-        <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
-        </View>
-
-        {/* Floating Sticky Header */}
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Floating Header with Blur */}
         <FloatingHeader
           title="Notifications"
@@ -360,21 +374,35 @@ export default function NotificationsScreen() {
                 <Ionicons
                   name="checkmark-done"
                   size={18}
-                  color={Colors.primaryGreen}
+                  color={colors.primary}
                 />
-                <Text style={styles.markAllReadText}>Mark All Read</Text>
+                <Text
+                  style={[styles.markAllReadText, { color: colors.primary }]}
+                >
+                  Mark All Read
+                </Text>
               </TouchableOpacity>
             ) : undefined
           }
         />
 
         {/* Filter Tabs */}
-        <View style={[styles.filterTabsContainer, { top: 70 + insets.top }]}>
-          <View style={styles.filterTabs}>
+        <View
+          style={[
+            styles.filterTabsContainer,
+            { top: 70 + insets.top, backgroundColor: colors.background },
+          ]}
+        >
+          <View
+            style={[
+              styles.filterTabs,
+              { backgroundColor: colors.surface, borderColor: colors.divider },
+            ]}
+          >
             <TouchableOpacity
               style={[
                 styles.filterTab,
-                activeTab === "all" && styles.filterTabActive,
+                activeTab === "all" && { backgroundColor: colors.primary },
               ]}
               onPress={() => setActiveTab("all")}
               activeOpacity={0.7}
@@ -382,6 +410,7 @@ export default function NotificationsScreen() {
               <Text
                 style={[
                   styles.filterTabText,
+                  { color: colors.textSecondary },
                   activeTab === "all" && styles.filterTabTextActive,
                 ]}
               >
@@ -391,7 +420,7 @@ export default function NotificationsScreen() {
             <TouchableOpacity
               style={[
                 styles.filterTab,
-                activeTab === "unread" && styles.filterTabActive,
+                activeTab === "unread" && { backgroundColor: colors.primary },
               ]}
               onPress={() => setActiveTab("unread")}
               activeOpacity={0.7}
@@ -399,6 +428,7 @@ export default function NotificationsScreen() {
               <Text
                 style={[
                   styles.filterTabText,
+                  { color: colors.textSecondary },
                   activeTab === "unread" && styles.filterTabTextActive,
                 ]}
               >
@@ -431,11 +461,15 @@ export default function NotificationsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor={Colors.primaryGreen}
+              tintColor={colors.primary}
               progressViewOffset={120 + insets.top}
             />
           }
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ItemSeparatorComponent={() => (
+            <View
+              style={[styles.separator, { backgroundColor: colors.divider }]}
+            />
+          )}
         />
       </View>
     </>
