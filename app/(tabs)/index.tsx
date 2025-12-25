@@ -201,18 +201,27 @@ export default function BuyerHomeScreen() {
               style={styles.locationContainer}
               activeOpacity={0.7}
             >
-              <View style={styles.locationIconContainer}>
-                <Ionicons
-                  name="location"
-                  size={18}
-                  color={Colors.primaryGreen}
-                />
+              <View
+                style={[
+                  styles.locationIconContainer,
+                  { backgroundColor: `${colors.primary}15` },
+                ]}
+              >
+                <Ionicons name="location" size={18} color={colors.primary} />
               </View>
-              <Text style={styles.location} numberOfLines={1}>
+              <Text
+                style={[styles.location, { color: colors.text }]}
+                numberOfLines={1}
+              >
                 {selectedLocation}
               </Text>
               {hasMultipleLocations && (
-                <View style={styles.locationBadge}>
+                <View
+                  style={[
+                    styles.locationBadge,
+                    { backgroundColor: colors.primary },
+                  ]}
+                >
                   <Text style={styles.locationBadgeText}>
                     +{selectedLocations.length - 1}
                   </Text>
@@ -221,7 +230,7 @@ export default function BuyerHomeScreen() {
               <Ionicons
                 name="chevron-down"
                 size={16}
-                color={Colors.textSecondary}
+                color={colors.textSecondary}
               />
             </TouchableOpacity>
           }
@@ -256,8 +265,12 @@ export default function BuyerHomeScreen() {
         >
           {/* Welcome Section */}
           <View style={styles.welcomeSection}>
-            <Text style={styles.welcomeText}>Hello, Kofi 👋</Text>
-            <Text style={styles.welcomeSubtext}>
+            <Text style={[styles.welcomeText, { color: colors.text }]}>
+              Hello, Kofi 👋
+            </Text>
+            <Text
+              style={[styles.welcomeSubtext, { color: colors.textSecondary }]}
+            >
               Find your dream property today
             </Text>
           </View>
@@ -265,23 +278,41 @@ export default function BuyerHomeScreen() {
           {/* Quick Stats */}
           <View style={styles.quickStatsContainer}>
             {QUICK_STATS.map((stat) => (
-              <View key={stat.id} style={styles.quickStatCard}>
-                <View style={styles.quickStatIcon}>
-                  <Ionicons
-                    name={stat.icon}
-                    size={18}
-                    color={Colors.primaryGreen}
-                  />
+              <View
+                key={stat.id}
+                style={[
+                  styles.quickStatCard,
+                  { backgroundColor: colors.surface },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.quickStatIcon,
+                    { backgroundColor: `${colors.primary}15` },
+                  ]}
+                >
+                  <Ionicons name={stat.icon} size={18} color={colors.primary} />
                 </View>
-                <Text style={styles.quickStatValue}>{stat.value}</Text>
-                <Text style={styles.quickStatLabel}>{stat.label}</Text>
+                <Text style={[styles.quickStatValue, { color: colors.text }]}>
+                  {stat.value}
+                </Text>
+                <Text
+                  style={[
+                    styles.quickStatLabel,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  {stat.label}
+                </Text>
               </View>
             ))}
           </View>
 
           {/* Categories Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Categories</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Categories
+            </Text>
             <FlatList
               data={CATEGORIES}
               horizontal
@@ -290,20 +321,30 @@ export default function BuyerHomeScreen() {
               keyExtractor={(item) => item.id}
               renderItem={({ item: category }) => (
                 <TouchableOpacity
-                  style={styles.categoryCard}
+                  style={[
+                    styles.categoryCard,
+                    { backgroundColor: colors.surface },
+                  ]}
                   onPress={() => router.push(`/category/${category.id}`)}
                   activeOpacity={0.8}
                 >
                   <View style={styles.categoryIconContainer}>
-                    <View style={styles.categoryIconBackground}>
+                    <View
+                      style={[
+                        styles.categoryIconBackground,
+                        { backgroundColor: `${colors.primary}12` },
+                      ]}
+                    >
                       <Ionicons
                         name={category.icon}
                         size={32}
-                        color={Colors.primaryGreen}
+                        color={colors.primary}
                       />
                     </View>
                   </View>
-                  <Text style={styles.categoryLabel}>{category.label}</Text>
+                  <Text style={[styles.categoryLabel, { color: colors.text }]}>
+                    {category.label}
+                  </Text>
                 </TouchableOpacity>
               )}
             />
@@ -312,12 +353,16 @@ export default function BuyerHomeScreen() {
           {/* Featured Properties Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Featured Properties</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Featured Properties
+              </Text>
               <TouchableOpacity
                 onPress={() => router.push("/featured-properties")}
                 activeOpacity={0.7}
               >
-                <Text style={styles.seeAll}>See All →</Text>
+                <Text style={[styles.seeAll, { color: colors.primary }]}>
+                  See All →
+                </Text>
               </TouchableOpacity>
             </View>
             <FlatList
@@ -328,7 +373,10 @@ export default function BuyerHomeScreen() {
               keyExtractor={(item) => item.id}
               renderItem={({ item: property }) => (
                 <TouchableOpacity
-                  style={styles.featuredCard}
+                  style={[
+                    styles.featuredCard,
+                    { backgroundColor: colors.surface },
+                  ]}
                   onPress={() => router.push(`/property/${property.id}`)}
                   activeOpacity={0.9}
                 >
@@ -343,7 +391,10 @@ export default function BuyerHomeScreen() {
                     />
                     <View style={styles.featuredImageOverlay} />
                     <TouchableOpacity
-                      style={styles.saveButton}
+                      style={[
+                        styles.saveButton,
+                        { backgroundColor: colors.surface },
+                      ]}
                       onPress={() => toggleSave(property.id)}
                       activeOpacity={0.7}
                     >
@@ -356,48 +407,74 @@ export default function BuyerHomeScreen() {
                         size={22}
                         color={
                           savedProperties.has(property.id)
-                            ? "#FF3B30"
-                            : Colors.textPrimary
+                            ? colors.error
+                            : colors.text
                         }
                       />
                     </TouchableOpacity>
                     {property.bedrooms && property.bathrooms && (
-                      <View style={styles.featuredBadge}>
+                      <View
+                        style={[
+                          styles.featuredBadge,
+                          { backgroundColor: colors.surface },
+                        ]}
+                      >
                         <Ionicons
                           name="bed-outline"
                           size={14}
-                          color={Colors.textPrimary}
+                          color={colors.text}
                         />
-                        <Text style={styles.featuredBadgeText}>
+                        <Text
+                          style={[
+                            styles.featuredBadgeText,
+                            { color: colors.text },
+                          ]}
+                        >
                           {property.bedrooms}
                         </Text>
                         <Ionicons
                           name="water-outline"
                           size={14}
-                          color={Colors.textPrimary}
+                          color={colors.text}
                           style={{ marginLeft: Spacing.xs }}
                         />
-                        <Text style={styles.featuredBadgeText}>
+                        <Text
+                          style={[
+                            styles.featuredBadgeText,
+                            { color: colors.text },
+                          ]}
+                        >
                           {property.bathrooms}
                         </Text>
                       </View>
                     )}
                   </View>
                   <View style={styles.featuredContent}>
-                    <Text style={styles.featuredTitle} numberOfLines={2}>
+                    <Text
+                      style={[styles.featuredTitle, { color: colors.text }]}
+                      numberOfLines={2}
+                    >
                       {property.title}
                     </Text>
                     <View style={styles.featuredLocationRow}>
                       <Ionicons
                         name="location-outline"
                         size={14}
-                        color={Colors.textSecondary}
+                        color={colors.textSecondary}
                       />
-                      <Text style={styles.featuredLocation} numberOfLines={1}>
+                      <Text
+                        style={[
+                          styles.featuredLocation,
+                          { color: colors.textSecondary },
+                        ]}
+                        numberOfLines={1}
+                      >
                         {property.location}
                       </Text>
                     </View>
-                    <Text style={styles.featuredPrice}>
+                    <Text
+                      style={[styles.featuredPrice, { color: colors.primary }]}
+                    >
                       {formatPrice(property.price)}
                     </Text>
                   </View>
@@ -409,19 +486,26 @@ export default function BuyerHomeScreen() {
           {/* Near You Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Near You</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Near You
+              </Text>
               <TouchableOpacity
                 onPress={() => router.push("/near-you-properties")}
                 activeOpacity={0.7}
               >
-                <Text style={styles.seeAll}>See All →</Text>
+                <Text style={[styles.seeAll, { color: colors.primary }]}>
+                  See All →
+                </Text>
               </TouchableOpacity>
             </View>
             <View style={styles.nearYouContainer}>
               {NEAR_YOU_PROPERTIES.map((property) => (
                 <TouchableOpacity
                   key={property.id}
-                  style={styles.nearYouCard}
+                  style={[
+                    styles.nearYouCard,
+                    { backgroundColor: colors.surface },
+                  ]}
                   onPress={() => router.push(`/property/${property.id}`)}
                   activeOpacity={0.8}
                 >
@@ -439,7 +523,12 @@ export default function BuyerHomeScreen() {
                       onPress={() => toggleSave(property.id)}
                       activeOpacity={0.7}
                     >
-                      <View style={styles.nearYouSaveButtonBackground}>
+                      <View
+                        style={[
+                          styles.nearYouSaveButtonBackground,
+                          { backgroundColor: colors.surface },
+                        ]}
+                      >
                         <Ionicons
                           name={
                             savedProperties.has(property.id)
@@ -449,53 +538,76 @@ export default function BuyerHomeScreen() {
                           size={20}
                           color={
                             savedProperties.has(property.id)
-                              ? "#FF3B30"
-                              : Colors.textPrimary
+                              ? colors.error
+                              : colors.text
                           }
                         />
                       </View>
                     </TouchableOpacity>
                     {property.bedrooms && property.bathrooms && (
-                      <View style={styles.nearYouBadge}>
+                      <View
+                        style={[
+                          styles.nearYouBadge,
+                          { backgroundColor: colors.surface },
+                        ]}
+                      >
                         <Ionicons
                           name="bed-outline"
                           size={12}
-                          color={Colors.textPrimary}
+                          color={colors.text}
                         />
-                        <Text style={styles.nearYouBadgeText}>
+                        <Text
+                          style={[
+                            styles.nearYouBadgeText,
+                            { color: colors.text },
+                          ]}
+                        >
                           {property.bedrooms}
                         </Text>
                         <Ionicons
                           name="water-outline"
                           size={12}
-                          color={Colors.textPrimary}
+                          color={colors.text}
                           style={{ marginLeft: Spacing.xs }}
                         />
-                        <Text style={styles.nearYouBadgeText}>
+                        <Text
+                          style={[
+                            styles.nearYouBadgeText,
+                            { color: colors.text },
+                          ]}
+                        >
                           {property.bathrooms}
                         </Text>
                       </View>
                     )}
                   </View>
                   <View style={styles.nearYouContent}>
-                    <Text style={styles.nearYouTitle} numberOfLines={2}>
+                    <Text
+                      style={[styles.nearYouTitle, { color: colors.text }]}
+                      numberOfLines={2}
+                    >
                       {property.title}
                     </Text>
                     <View style={styles.nearYouLocation}>
                       <Ionicons
                         name="location-outline"
                         size={14}
-                        color={Colors.textSecondary}
+                        color={colors.textSecondary}
                       />
                       <Text
-                        style={styles.nearYouLocationText}
+                        style={[
+                          styles.nearYouLocationText,
+                          { color: colors.textSecondary },
+                        ]}
                         numberOfLines={1}
                       >
                         {property.location}
                       </Text>
                     </View>
                     <View style={styles.nearYouFooter}>
-                      <Text style={styles.nearYouPrice}>
+                      <Text
+                        style={[styles.nearYouPrice, { color: colors.primary }]}
+                      >
                         {formatPrice(property.price)}
                       </Text>
                     </View>
@@ -508,12 +620,16 @@ export default function BuyerHomeScreen() {
           {/* Popular Areas Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Popular Areas</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Popular Areas
+              </Text>
               <TouchableOpacity
                 onPress={() => router.push("/popular-areas")}
                 activeOpacity={0.7}
               >
-                <Text style={styles.seeAll}>See All →</Text>
+                <Text style={[styles.seeAll, { color: colors.primary }]}>
+                  See All →
+                </Text>
               </TouchableOpacity>
             </View>
             <FlatList
@@ -524,7 +640,10 @@ export default function BuyerHomeScreen() {
               keyExtractor={(item) => item.id}
               renderItem={({ item: area }) => (
                 <TouchableOpacity
-                  style={styles.popularAreaCard}
+                  style={[
+                    styles.popularAreaCard,
+                    { backgroundColor: colors.surface },
+                  ]}
                   onPress={() => {
                     router.push("/(tabs)/search");
                   }}
@@ -538,14 +657,25 @@ export default function BuyerHomeScreen() {
                   >
                     <Ionicons name={area.icon} size={28} color={area.color} />
                   </View>
-                  <Text style={styles.popularAreaName}>{area.name}</Text>
+                  <Text
+                    style={[styles.popularAreaName, { color: colors.text }]}
+                  >
+                    {area.name}
+                  </Text>
                   <View style={styles.popularAreaCountContainer}>
                     <Ionicons
                       name="home-outline"
                       size={12}
-                      color={Colors.textSecondary}
+                      color={colors.textSecondary}
                     />
-                    <Text style={styles.popularAreaCount}>{area.count}</Text>
+                    <Text
+                      style={[
+                        styles.popularAreaCount,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      {area.count}
+                    </Text>
                   </View>
                 </TouchableOpacity>
               )}
@@ -555,19 +685,26 @@ export default function BuyerHomeScreen() {
           {/* New Listings Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>New Listings</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                New Listings
+              </Text>
               <TouchableOpacity
                 onPress={() => router.push("/new-listings")}
                 activeOpacity={0.7}
               >
-                <Text style={styles.seeAll}>See All →</Text>
+                <Text style={[styles.seeAll, { color: colors.primary }]}>
+                  See All →
+                </Text>
               </TouchableOpacity>
             </View>
             <View style={styles.nearYouContainer}>
               {NEW_LISTINGS.map((property) => (
                 <TouchableOpacity
                   key={property.id}
-                  style={styles.nearYouCard}
+                  style={[
+                    styles.nearYouCard,
+                    { backgroundColor: colors.surface },
+                  ]}
                   onPress={() => router.push(`/property/${property.id}`)}
                   activeOpacity={0.8}
                 >
@@ -580,7 +717,12 @@ export default function BuyerHomeScreen() {
                         sharedTransitionTag: `property-image-${property.id}`,
                       }}
                     />
-                    <View style={styles.newBadge}>
+                    <View
+                      style={[
+                        styles.newBadge,
+                        { backgroundColor: colors.primary },
+                      ]}
+                    >
                       <Text style={styles.newBadgeText}>NEW</Text>
                     </View>
                     <TouchableOpacity
@@ -588,7 +730,12 @@ export default function BuyerHomeScreen() {
                       onPress={() => toggleSave(property.id)}
                       activeOpacity={0.7}
                     >
-                      <View style={styles.nearYouSaveButtonBackground}>
+                      <View
+                        style={[
+                          styles.nearYouSaveButtonBackground,
+                          { backgroundColor: colors.surface },
+                        ]}
+                      >
                         <Ionicons
                           name={
                             savedProperties.has(property.id)
@@ -598,53 +745,76 @@ export default function BuyerHomeScreen() {
                           size={20}
                           color={
                             savedProperties.has(property.id)
-                              ? "#FF3B30"
-                              : Colors.textPrimary
+                              ? colors.error
+                              : colors.text
                           }
                         />
                       </View>
                     </TouchableOpacity>
                     {property.bedrooms && property.bathrooms && (
-                      <View style={styles.nearYouBadge}>
+                      <View
+                        style={[
+                          styles.nearYouBadge,
+                          { backgroundColor: colors.surface },
+                        ]}
+                      >
                         <Ionicons
                           name="bed-outline"
                           size={12}
-                          color={Colors.textPrimary}
+                          color={colors.text}
                         />
-                        <Text style={styles.nearYouBadgeText}>
+                        <Text
+                          style={[
+                            styles.nearYouBadgeText,
+                            { color: colors.text },
+                          ]}
+                        >
                           {property.bedrooms}
                         </Text>
                         <Ionicons
                           name="water-outline"
                           size={12}
-                          color={Colors.textPrimary}
+                          color={colors.text}
                           style={{ marginLeft: Spacing.xs }}
                         />
-                        <Text style={styles.nearYouBadgeText}>
+                        <Text
+                          style={[
+                            styles.nearYouBadgeText,
+                            { color: colors.text },
+                          ]}
+                        >
                           {property.bathrooms}
                         </Text>
                       </View>
                     )}
                   </View>
                   <View style={styles.nearYouContent}>
-                    <Text style={styles.nearYouTitle} numberOfLines={2}>
+                    <Text
+                      style={[styles.nearYouTitle, { color: colors.text }]}
+                      numberOfLines={2}
+                    >
                       {property.title}
                     </Text>
                     <View style={styles.nearYouLocation}>
                       <Ionicons
                         name="location-outline"
                         size={14}
-                        color={Colors.textSecondary}
+                        color={colors.textSecondary}
                       />
                       <Text
-                        style={styles.nearYouLocationText}
+                        style={[
+                          styles.nearYouLocationText,
+                          { color: colors.textSecondary },
+                        ]}
                         numberOfLines={1}
                       >
                         {property.location}
                       </Text>
                     </View>
                     <View style={styles.nearYouFooter}>
-                      <Text style={styles.nearYouPrice}>
+                      <Text
+                        style={[styles.nearYouPrice, { color: colors.primary }]}
+                      >
                         {formatPrice(property.price)}
                       </Text>
                     </View>
@@ -663,14 +833,22 @@ export default function BuyerHomeScreen() {
         snapPoints={snapPoints}
         enablePanDownToClose
         backdropComponent={renderBackdrop}
-        backgroundStyle={styles.bottomSheetBackground}
+        backgroundStyle={[
+          styles.bottomSheetBackground,
+          { backgroundColor: colors.surface },
+        ]}
       >
         <BottomSheetView style={styles.bottomSheetContent}>
           <View style={styles.bottomSheetHeader}>
-            <Text style={styles.bottomSheetTitle}>Select Location</Text>
+            <Text style={[styles.bottomSheetTitle, { color: colors.text }]}>
+              Select Location
+            </Text>
             <TouchableOpacity
               onPress={() => locationSheetRef.current?.dismiss()}
-              style={styles.closeButton}
+              style={[
+                styles.closeButton,
+                { backgroundColor: colors.inputBackground },
+              ]}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <Ionicons name="close" size={24} color={Colors.textPrimary} />

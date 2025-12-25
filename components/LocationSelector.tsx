@@ -12,6 +12,7 @@ import {
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -68,6 +69,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
   selectedLocations,
   onLocationsChange,
 }) => {
+  const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [showMap, setShowMap] = useState(false);
   const mapRef = useRef<MapView>(null);
@@ -104,19 +106,24 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
     <View style={styles.container}>
       {/* Search and Map Toggle */}
       <View style={styles.header}>
-        <View style={styles.searchContainer}>
+        <View
+          style={[
+            styles.searchContainer,
+            { backgroundColor: colors.inputBackground },
+          ]}
+        >
           <Ionicons
             name="search-outline"
             size={18}
-            color={Colors.textSecondary}
+            color={colors.textSecondary}
             style={styles.searchIcon}
           />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.text }]}
             placeholder="Search locations..."
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholderTextColor={Colors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity
@@ -126,24 +133,29 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
               <Ionicons
                 name="close-circle"
                 size={18}
-                color={Colors.textSecondary}
+                color={colors.textSecondary}
               />
             </TouchableOpacity>
           )}
         </View>
         <TouchableOpacity
-          style={[styles.mapButton, showMap && styles.mapButtonActive]}
+          style={[
+            styles.mapButton,
+            { borderColor: colors.primary },
+            showMap && { backgroundColor: colors.primary },
+          ]}
           onPress={() => setShowMap(!showMap)}
           activeOpacity={0.8}
         >
           <Ionicons
             name={showMap ? "list-outline" : "map-outline"}
             size={18}
-            color={showMap ? "#FFFFFF" : Colors.primaryGreen}
+            color={showMap ? "#FFFFFF" : colors.primary}
           />
           <Text
             style={[
               styles.mapButtonText,
+              { color: colors.primary },
               showMap && styles.mapButtonTextActive,
             ]}
           >
@@ -167,18 +179,27 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                 : "square-outline"
             }
             size={18}
-            color={Colors.primaryGreen}
+            color={colors.primary}
           />
-          <Text style={styles.selectAllText}>
+          <Text style={[styles.selectAllText, { color: colors.text }]}>
             {selectedLocations.length === filteredLocations.length &&
             filteredLocations.length > 0
               ? "Deselect All"
               : "Select All"}
           </Text>
         </TouchableOpacity>
-        <View style={styles.selectedBadge}>
-          <Text style={styles.selectedCount}>{selectedLocations.length}</Text>
-          <Text style={styles.selectedLabel}>selected</Text>
+        <View
+          style={[
+            styles.selectedBadge,
+            { backgroundColor: `${colors.primary}15` },
+          ]}
+        >
+          <Text style={[styles.selectedCount, { color: colors.primary }]}>
+            {selectedLocations.length}
+          </Text>
+          <Text style={[styles.selectedLabel, { color: colors.textSecondary }]}>
+            selected
+          </Text>
         </View>
       </View>
 
@@ -224,19 +245,29 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                   title={location.name}
                   description={isSelected ? "Selected" : "Tap to select"}
                   onPress={() => handleMarkerPress(location.name)}
-                  pinColor={isSelected ? Colors.primaryGreen : "#999999"}
+                  pinColor={isSelected ? colors.primary : "#999999"}
                 />
               );
             })}
           </MapView>
           {/* Map Instructions Overlay */}
-          <View style={styles.mapInstructions}>
+          <View
+            style={[
+              styles.mapInstructions,
+              { backgroundColor: colors.surface },
+            ]}
+          >
             <Ionicons
               name="finger-print-outline"
               size={16}
-              color={Colors.primaryGreen}
+              color={colors.primary}
             />
-            <Text style={styles.mapInstructionsText}>
+            <Text
+              style={[
+                styles.mapInstructionsText,
+                { color: colors.textSecondary },
+              ]}
+            >
               Tap markers to select locations
             </Text>
           </View>
@@ -254,15 +285,24 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
         >
           {filteredLocations.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <View style={styles.emptyIconContainer}>
+              <View
+                style={[
+                  styles.emptyIconContainer,
+                  { backgroundColor: `${colors.textSecondary}15` },
+                ]}
+              >
                 <Ionicons
                   name="location-outline"
                   size={48}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
               </View>
-              <Text style={styles.emptyText}>No locations found</Text>
-              <Text style={styles.emptySubtext}>
+              <Text style={[styles.emptyText, { color: colors.text }]}>
+                No locations found
+              </Text>
+              <Text
+                style={[styles.emptySubtext, { color: colors.textSecondary }]}
+              >
                 Try searching for a different city
               </Text>
             </View>
@@ -274,7 +314,8 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                   key={item}
                   style={[
                     styles.locationItem,
-                    isSelected && styles.locationItemSelected,
+                    { borderBottomColor: colors.divider },
+                    isSelected && { backgroundColor: `${colors.primary}08` },
                     index === filteredLocations.length - 1 &&
                       styles.locationItemLast,
                   ]}
@@ -284,21 +325,21 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                   <View
                     style={[
                       styles.locationIconContainer,
-                      isSelected && styles.locationIconContainerSelected,
+                      { backgroundColor: `${colors.textSecondary}12` },
+                      isSelected && { backgroundColor: `${colors.primary}15` },
                     ]}
                   >
                     <Ionicons
                       name={isSelected ? "location" : "location-outline"}
                       size={18}
-                      color={
-                        isSelected ? Colors.primaryGreen : Colors.textSecondary
-                      }
+                      color={isSelected ? colors.primary : colors.textSecondary}
                     />
                   </View>
                   <Text
                     style={[
                       styles.locationText,
-                      isSelected && styles.locationTextSelected,
+                      { color: colors.text },
+                      isSelected && { color: colors.primary },
                     ]}
                   >
                     {item}
@@ -306,7 +347,11 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                   <View
                     style={[
                       styles.checkbox,
-                      isSelected && styles.checkboxSelected,
+                      { borderColor: colors.divider },
+                      isSelected && {
+                        backgroundColor: colors.primary,
+                        borderColor: colors.primary,
+                      },
                     ]}
                   >
                     {isSelected && (

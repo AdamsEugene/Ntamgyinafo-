@@ -33,6 +33,7 @@ import {
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   FloatingHeader,
   HeaderActionButton,
@@ -97,6 +98,7 @@ const BOTTOM_NAV_TABS: TabItem[] = [
 export default function MapScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { colors, isDark } = useTheme();
   const mapRef = useRef<RNMapView>(null);
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const filterSheetRef = useRef<BottomSheetModal>(null);
@@ -425,8 +427,8 @@ export default function MapScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Floating Header with Blur */}
         <FloatingHeader
           title="Map View"
@@ -459,8 +461,8 @@ export default function MapScreen() {
           showsTraffic={false}
           onPress={handleMapPress}
           // Clustering configuration
-          clusterColor={Colors.primaryGreen}
-          clusterTextColor={Colors.surface}
+          clusterColor={colors.primary}
+          clusterTextColor={colors.surface}
           clusterFontFamily={Platform.OS === "ios" ? "System" : "Roboto"}
           radius={50}
           extent={512}
@@ -597,23 +599,23 @@ export default function MapScreen() {
               <Circle
                 center={circleCenter}
                 radius={getDistanceInMeters(distanceFilter) * 1.08}
-                strokeColor={`${Colors.primaryGreen}40`}
-                fillColor={`${Colors.primaryGreen}08`}
+                strokeColor={`${colors.primary}40`}
+                fillColor={`${colors.primary}08`}
                 strokeWidth={1}
               />
               {/* Main circle */}
               <Circle
                 center={circleCenter}
                 radius={getDistanceInMeters(distanceFilter)}
-                strokeColor={Colors.primaryGreen}
-                fillColor={`${Colors.primaryGreen}18`}
+                strokeColor={colors.primary}
+                fillColor={`${colors.primary}18`}
                 strokeWidth={3}
               />
               {/* Inner glow circle */}
               <Circle
                 center={circleCenter}
                 radius={getDistanceInMeters(distanceFilter) * 0.92}
-                strokeColor={`${Colors.primaryGreen}60`}
+                strokeColor={`${colors.primary}60`}
                 fillColor="transparent"
                 strokeWidth={1}
               />
@@ -662,7 +664,7 @@ export default function MapScreen() {
                     }}
                     activeOpacity={0.7}
                   >
-                    <Ionicons name="close" size={18} color={Colors.surface} />
+                    <Ionicons name="close" size={18} color="#FFFFFF" />
                   </TouchableOpacity>
 
                   {/* Save Button */}
@@ -680,8 +682,8 @@ export default function MapScreen() {
                       size={18}
                       color={
                         savedProperties.has(selectedProperty.id)
-                          ? "#EF4444"
-                          : Colors.surface
+                          ? colors.error
+                          : "#FFFFFF"
                       }
                     />
                   </TouchableOpacity>
@@ -696,11 +698,7 @@ export default function MapScreen() {
                   {/* Image Count Badge */}
                   {(selectedProperty.images?.length || 0) > 0 && (
                     <View style={styles.popupImageCountBadge}>
-                      <Ionicons
-                        name="images"
-                        size={12}
-                        color={Colors.surface}
-                      />
+                      <Ionicons name="images" size={12} color="#FFFFFF" />
                       <Text style={styles.popupImageCountText}>
                         {(selectedProperty.images?.length || 0) + 1}
                       </Text>
@@ -710,18 +708,28 @@ export default function MapScreen() {
               </TouchableOpacity>
 
               {/* Content */}
-              <View style={styles.popupContent}>
-                <Text style={styles.popupTitle} numberOfLines={2}>
+              <View
+                style={[
+                  styles.popupContent,
+                  { backgroundColor: colors.surface },
+                ]}
+              >
+                <Text
+                  style={[styles.popupTitle, { color: colors.text }]}
+                  numberOfLines={2}
+                >
                   {selectedProperty.title}
                 </Text>
 
                 <View style={styles.popupLocationRow}>
-                  <Ionicons
-                    name="location"
-                    size={14}
-                    color={Colors.primaryGreen}
-                  />
-                  <Text style={styles.popupLocation} numberOfLines={1}>
+                  <Ionicons name="location" size={14} color={colors.primary} />
+                  <Text
+                    style={[
+                      styles.popupLocation,
+                      { color: colors.textSecondary },
+                    ]}
+                    numberOfLines={1}
+                  >
                     {selectedProperty.location}
                   </Text>
                 </View>
@@ -730,19 +738,34 @@ export default function MapScreen() {
                 {(selectedProperty.bedrooms || selectedProperty.bathrooms) && (
                   <View style={styles.popupStatsRow}>
                     {selectedProperty.bedrooms && (
-                      <View style={styles.popupStatBadge}>
+                      <View
+                        style={[
+                          styles.popupStatBadge,
+                          { backgroundColor: colors.inputBackground },
+                        ]}
+                      >
                         <Ionicons
                           name="bed-outline"
                           size={14}
-                          color={Colors.textSecondary}
+                          color={colors.textSecondary}
                         />
-                        <Text style={styles.popupStatText}>
+                        <Text
+                          style={[
+                            styles.popupStatText,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
                           {selectedProperty.bedrooms} Beds
                         </Text>
                       </View>
                     )}
                     {selectedProperty.bathrooms && (
-                      <View style={styles.popupStatBadge}>
+                      <View
+                        style={[
+                          styles.popupStatBadge,
+                          { backgroundColor: colors.inputBackground },
+                        ]}
+                      >
                         <Ionicons
                           name="water-outline"
                           size={14}

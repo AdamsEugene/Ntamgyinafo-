@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   FilterBottomSheet,
   type FilterOptions,
@@ -40,6 +41,7 @@ interface Filter {
 export default function SearchScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [savedProperties, setSavedProperties] = useState<Set<string>>(
@@ -133,12 +135,12 @@ export default function SearchScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
+          <View style={[styles.circle1, { backgroundColor: `${colors.primary}15` }]} />
+          <View style={[styles.circle2, { backgroundColor: `${colors.accent}10` }]} />
         </View>
 
         {/* Floating Header with Blur */}
@@ -181,8 +183,8 @@ export default function SearchScreen() {
             <View style={styles.filtersBar}>
               <View style={styles.filtersChips}>
                 {filters.propertyTypes && filters.propertyTypes.length > 0 && (
-                  <View style={styles.filterChip}>
-                    <Text style={styles.filterChipText}>
+                  <View style={[styles.filterChip, { backgroundColor: colors.surface }]}>
+                    <Text style={[styles.filterChipText, { color: colors.text }]}>
                       {filters.propertyTypes.join(", ")}
                     </Text>
                     <TouchableOpacity
@@ -193,14 +195,14 @@ export default function SearchScreen() {
                       <Ionicons
                         name="close-circle"
                         size={16}
-                        color={Colors.textSecondary}
+                        color={colors.textSecondary}
                       />
                     </TouchableOpacity>
                   </View>
                 )}
                 {filters.transactionType && (
-                  <View style={styles.filterChip}>
-                    <Text style={styles.filterChipText}>
+                  <View style={[styles.filterChip, { backgroundColor: colors.surface }]}>
+                    <Text style={[styles.filterChipText, { color: colors.text }]}>
                       {filters.transactionType === "buy" ? "Buy" : "Rent"}
                     </Text>
                     <TouchableOpacity
@@ -211,15 +213,15 @@ export default function SearchScreen() {
                       <Ionicons
                         name="close-circle"
                         size={16}
-                        color={Colors.textSecondary}
+                        color={colors.textSecondary}
                       />
                     </TouchableOpacity>
                   </View>
                 )}
                 {filters.bedrooms !== null &&
                   filters.bedrooms !== undefined && (
-                    <View style={styles.filterChip}>
-                      <Text style={styles.filterChipText}>
+                    <View style={[styles.filterChip, { backgroundColor: colors.surface }]}>
+                      <Text style={[styles.filterChipText, { color: colors.text }]}>
                         {filters.bedrooms === 5 ? "5+" : filters.bedrooms} Beds
                       </Text>
                       <TouchableOpacity
@@ -230,14 +232,14 @@ export default function SearchScreen() {
                         <Ionicons
                           name="close-circle"
                           size={16}
-                          color={Colors.textSecondary}
+                          color={colors.textSecondary}
                         />
                       </TouchableOpacity>
                     </View>
                   )}
                 {filters.amenities && filters.amenities.length > 0 && (
-                  <View style={styles.filterChip}>
-                    <Text style={styles.filterChipText}>
+                  <View style={[styles.filterChip, { backgroundColor: colors.surface }]}>
+                    <Text style={[styles.filterChipText, { color: colors.text }]}>
                       {filters.amenities.length} Amenities
                     </Text>
                     <TouchableOpacity
@@ -248,14 +250,14 @@ export default function SearchScreen() {
                       <Ionicons
                         name="close-circle"
                         size={16}
-                        color={Colors.textSecondary}
+                        color={colors.textSecondary}
                       />
                     </TouchableOpacity>
                   </View>
                 )}
                 {filters.minPrice !== undefined && (
-                  <View style={styles.filterChip}>
-                    <Text style={styles.filterChipText}>
+                  <View style={[styles.filterChip, { backgroundColor: colors.surface }]}>
+                    <Text style={[styles.filterChipText, { color: colors.text }]}>
                       Min: {formatPrice(filters.minPrice)}
                     </Text>
                     <TouchableOpacity
@@ -266,14 +268,14 @@ export default function SearchScreen() {
                       <Ionicons
                         name="close-circle"
                         size={16}
-                        color={Colors.textSecondary}
+                        color={colors.textSecondary}
                       />
                     </TouchableOpacity>
                   </View>
                 )}
                 {filters.maxPrice !== undefined && (
-                  <View style={styles.filterChip}>
-                    <Text style={styles.filterChipText}>
+                  <View style={[styles.filterChip, { backgroundColor: colors.surface }]}>
+                    <Text style={[styles.filterChipText, { color: colors.text }]}>
                       Max: {formatPrice(filters.maxPrice)}
                     </Text>
                     <TouchableOpacity
@@ -284,14 +286,14 @@ export default function SearchScreen() {
                       <Ionicons
                         name="close-circle"
                         size={16}
-                        color={Colors.textSecondary}
+                        color={colors.textSecondary}
                       />
                     </TouchableOpacity>
                   </View>
                 )}
                 {filters.bedrooms !== undefined && (
-                  <View style={styles.filterChip}>
-                    <Text style={styles.filterChipText}>
+                  <View style={[styles.filterChip, { backgroundColor: colors.surface }]}>
+                    <Text style={[styles.filterChipText, { color: colors.text }]}>
                       {filters.bedrooms} Beds
                     </Text>
                     <TouchableOpacity
@@ -302,7 +304,7 @@ export default function SearchScreen() {
                       <Ionicons
                         name="close-circle"
                         size={16}
-                        color={Colors.textSecondary}
+                        color={colors.textSecondary}
                       />
                     </TouchableOpacity>
                   </View>
@@ -313,14 +315,14 @@ export default function SearchScreen() {
                 style={styles.clearAllButton}
                 activeOpacity={0.7}
               >
-                <Text style={styles.clearAllText}>Clear All</Text>
+                <Text style={[styles.clearAllText, { color: colors.error }]}>Clear All</Text>
               </TouchableOpacity>
             </View>
           )}
 
           {/* Results Count */}
           <View style={styles.resultsHeader}>
-            <Text style={styles.resultsCount}>
+            <Text style={[styles.resultsCount, { color: colors.textSecondary }]}>
               {filteredProperties.length} properties found
             </Text>
           </View>
@@ -358,10 +360,10 @@ export default function SearchScreen() {
               <Ionicons
                 name="search-outline"
                 size={64}
-                color={Colors.textSecondary}
+                color={colors.textSecondary}
               />
-              <Text style={styles.emptyStateTitle}>No properties found</Text>
-              <Text style={styles.emptyStateText}>
+              <Text style={[styles.emptyStateTitle, { color: colors.text }]}>No properties found</Text>
+              <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>
                 Try adjusting your search or filters
               </Text>
             </View>

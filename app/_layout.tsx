@@ -232,11 +232,11 @@ function RootLayoutContent() {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <BottomSheetModalProvider>
-        <ThemeProvider>
+      <ThemeProvider>
+        <BottomSheetModalProvider>
           <RootLayoutContent />
-        </ThemeProvider>
-      </BottomSheetModalProvider>
+        </BottomSheetModalProvider>
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }
