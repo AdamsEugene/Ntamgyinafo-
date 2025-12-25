@@ -157,6 +157,9 @@ export default function BuyerMessagesScreen() {
   const [isSearching, setIsSearching] = useState(false);
   const swipeableRefs = useRef<{ [key: string]: Swipeable | null }>({});
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _isDark = isDark; // Used for StatusBar
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => {
@@ -265,7 +268,11 @@ export default function BuyerMessagesScreen() {
       <TouchableOpacity
         style={[
           styles.conversationCard,
-          item.isPinned && styles.conversationCardPinned,
+          {
+            backgroundColor: colors.surface,
+            borderBottomColor: colors.divider,
+          },
+          item.isPinned && { backgroundColor: `${colors.primary}08` },
         ]}
         activeOpacity={0.7}
         onPress={() => handleChatPress(item)}
@@ -273,9 +280,21 @@ export default function BuyerMessagesScreen() {
         {/* Avatar with Online Status */}
         <View style={styles.avatarContainer}>
           <Image source={{ uri: item.user.avatar }} style={styles.avatar} />
-          {item.user.isOnline && <View style={styles.onlineIndicator} />}
+          {item.user.isOnline && (
+            <View
+              style={[
+                styles.onlineIndicator,
+                {
+                  backgroundColor: colors.primary,
+                  borderColor: colors.surface,
+                },
+              ]}
+            />
+          )}
           {item.user.isVerified && (
-            <View style={styles.verifiedBadge}>
+            <View
+              style={[styles.verifiedBadge, { borderColor: colors.surface }]}
+            >
               <Ionicons name="checkmark" size={8} color="#FFFFFF" />
             </View>
           )}
@@ -290,13 +309,14 @@ export default function BuyerMessagesScreen() {
                 <Ionicons
                   name="pin"
                   size={14}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                   style={styles.pinIcon}
                 />
               )}
               <Text
                 style={[
                   styles.userName,
+                  { color: colors.text },
                   item.unreadCount > 0 && styles.userNameUnread,
                 ]}
                 numberOfLines={1}
@@ -314,14 +334,18 @@ export default function BuyerMessagesScreen() {
                     size={16}
                     color={
                       item.lastMessage.isRead
-                        ? Colors.primaryGreen
-                        : Colors.textSecondary
+                        ? colors.primary
+                        : colors.textSecondary
                     }
                   />
                 </View>
               )}
               <Text
-                style={[styles.time, item.unreadCount > 0 && styles.timeUnread]}
+                style={[
+                  styles.time,
+                  { color: colors.textSecondary },
+                  item.unreadCount > 0 && { color: colors.primary },
+                ]}
               >
                 {item.lastMessage.time}
               </Text>
@@ -331,8 +355,11 @@ export default function BuyerMessagesScreen() {
           {/* Property Context */}
           {item.property && (
             <View style={styles.propertyContext}>
-              <Ionicons name="home" size={10} color={Colors.primaryGreen} />
-              <Text style={styles.propertyTitle} numberOfLines={1}>
+              <Ionicons name="home" size={10} color={colors.primary} />
+              <Text
+                style={[styles.propertyTitle, { color: colors.primary }]}
+                numberOfLines={1}
+              >
                 {item.property.title}
               </Text>
             </View>
@@ -343,23 +370,51 @@ export default function BuyerMessagesScreen() {
             <View style={styles.messagePreviewContainer}>
               {item.isTyping ? (
                 <View style={styles.typingIndicator}>
-                  <Text style={styles.typingText}>typing</Text>
+                  <Text style={[styles.typingText, { color: colors.primary }]}>
+                    typing
+                  </Text>
                   <View style={styles.typingDots}>
-                    <View style={[styles.typingDot, styles.typingDot1]} />
-                    <View style={[styles.typingDot, styles.typingDot2]} />
-                    <View style={[styles.typingDot, styles.typingDot3]} />
+                    <View
+                      style={[
+                        styles.typingDot,
+                        styles.typingDot1,
+                        { backgroundColor: colors.primary },
+                      ]}
+                    />
+                    <View
+                      style={[
+                        styles.typingDot,
+                        styles.typingDot2,
+                        { backgroundColor: colors.primary },
+                      ]}
+                    />
+                    <View
+                      style={[
+                        styles.typingDot,
+                        styles.typingDot3,
+                        { backgroundColor: colors.primary },
+                      ]}
+                    />
                   </View>
                 </View>
               ) : (
                 <Text
                   style={[
                     styles.lastMessage,
-                    item.unreadCount > 0 && styles.lastMessageUnread,
+                    { color: colors.textSecondary },
+                    item.unreadCount > 0 && { color: colors.text },
                   ]}
                   numberOfLines={1}
                 >
                   {item.lastMessage.isFromMe && (
-                    <Text style={styles.youPrefix}>You: </Text>
+                    <Text
+                      style={[
+                        styles.youPrefix,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      You:{" "}
+                    </Text>
                   )}
                   {item.lastMessage.text}
                 </Text>
@@ -372,7 +427,7 @@ export default function BuyerMessagesScreen() {
                 <Ionicons
                   name="notifications-off"
                   size={16}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                   style={styles.mutedIcon}
                 />
               )}
@@ -380,7 +435,8 @@ export default function BuyerMessagesScreen() {
                 <View
                   style={[
                     styles.unreadBadge,
-                    item.isMuted && styles.unreadBadgeMuted,
+                    { backgroundColor: colors.primary },
+                    item.isMuted && { backgroundColor: colors.textSecondary },
                   ]}
                 >
                   <Text style={styles.unreadBadgeText}>
@@ -397,14 +453,8 @@ export default function BuyerMessagesScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
-        {/* Decorative Background Elements */}
-        <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
-        </View>
-
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Floating Header with Blur */}
         <FloatingHeader
           title="Messages"
@@ -424,12 +474,20 @@ export default function BuyerMessagesScreen() {
         {/* Search Bar */}
         {isSearching && (
           <View style={[styles.searchContainer, { top: 70 + insets.top }]}>
-            <View style={styles.searchInputContainer}>
-              <Ionicons name="search" size={18} color={Colors.textSecondary} />
+            <View
+              style={[
+                styles.searchInputContainer,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
+              <Ionicons name="search" size={18} color={colors.textSecondary} />
               <TextInput
-                style={styles.searchInput}
+                style={[styles.searchInput, { color: colors.text }]}
                 placeholder="Search messages..."
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 autoFocus
@@ -439,7 +497,7 @@ export default function BuyerMessagesScreen() {
                   <Ionicons
                     name="close-circle"
                     size={18}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                   />
                 </TouchableOpacity>
               )}
@@ -463,22 +521,32 @@ export default function BuyerMessagesScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={Colors.primaryGreen}
+              tintColor={colors.primary}
             />
           }
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <View style={styles.emptyIconContainer}>
+              <View
+                style={[
+                  styles.emptyIconContainer,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
+              >
                 <Ionicons
                   name="chatbubbles-outline"
                   size={56}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
               </View>
-              <Text style={styles.emptyTitle}>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>
                 {searchQuery ? "No Results Found" : "No Messages Yet"}
               </Text>
-              <Text style={styles.emptySubtitle}>
+              <Text
+                style={[styles.emptySubtitle, { color: colors.textSecondary }]}
+              >
                 {searchQuery
                   ? "Try searching with different keywords"
                   : "Messages from property owners will appear here"}

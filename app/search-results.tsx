@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   FilterBottomSheet,
   type FilterOptions,
@@ -133,6 +134,7 @@ export default function SearchResultsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
+  const { colors, isDark } = useTheme();
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [savedProperties, setSavedProperties] = useState<Set<string>>(
     new Set(["2", "5"])
@@ -309,8 +311,8 @@ export default function SearchResultsScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Floating Header with Blur */}
         <FloatingHeader
           title="Search Results"
@@ -348,17 +350,23 @@ export default function SearchResultsScreen() {
           ]}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.primary}
+            />
           }
         >
           {/* Breadcrumb */}
           <View style={styles.breadcrumbContainer}>
-            <Text style={styles.breadcrumb}>{buildBreadcrumb()}</Text>
+            <Text style={[styles.breadcrumb, { color: colors.textSecondary }]}>
+              {buildBreadcrumb()}
+            </Text>
           </View>
 
           {/* Results Count */}
           <View style={styles.resultsHeader}>
-            <Text style={styles.resultsCount}>
+            <Text style={[styles.resultsCount, { color: colors.text }]}>
               {filteredProperties.length} properties found
             </Text>
           </View>
@@ -400,9 +408,13 @@ export default function SearchResultsScreen() {
               activeOpacity={0.7}
             >
               {loadingMore ? (
-                <Text style={styles.loadMoreText}>Loading...</Text>
+                <Text style={[styles.loadMoreText, { color: colors.primary }]}>
+                  Loading...
+                </Text>
               ) : (
-                <Text style={styles.loadMoreText}>Load More</Text>
+                <Text style={[styles.loadMoreText, { color: colors.primary }]}>
+                  Load More
+                </Text>
               )}
             </TouchableOpacity>
           )}
@@ -426,13 +438,24 @@ export default function SearchResultsScreen() {
             ),
             []
           )}
-          backgroundStyle={styles.bottomSheetBackground}
-          handleIndicatorStyle={styles.handleIndicator}
+          backgroundStyle={[
+            styles.bottomSheetBackground,
+            { backgroundColor: colors.surface },
+          ]}
+          handleIndicatorStyle={[
+            styles.handleIndicator,
+            { backgroundColor: colors.textSecondary },
+          ]}
         >
           <BottomSheetView style={styles.menuSheetContent}>
-            <Text style={styles.menuSheetTitle}>Options</Text>
+            <Text style={[styles.menuSheetTitle, { color: colors.text }]}>
+              Options
+            </Text>
             <TouchableOpacity
-              style={styles.menuOption}
+              style={[
+                styles.menuOption,
+                { backgroundColor: colors.inputBackground },
+              ]}
               onPress={() => {
                 setShowMenuSheet(false);
                 setTimeout(() => setShowSortSheet(true), 300);
@@ -442,43 +465,56 @@ export default function SearchResultsScreen() {
               <Ionicons
                 name="swap-vertical-outline"
                 size={24}
-                color={Colors.textPrimary}
+                color={colors.text}
               />
               <View style={styles.menuOptionContent}>
-                <Text style={styles.menuOptionTitle}>Sort</Text>
-                <Text style={styles.menuOptionSubtitle}>
+                <Text style={[styles.menuOptionTitle, { color: colors.text }]}>
+                  Sort
+                </Text>
+                <Text
+                  style={[
+                    styles.menuOptionSubtitle,
+                    { color: colors.textSecondary },
+                  ]}
+                >
                   {SORT_OPTIONS.find((opt) => opt.value === sortOption)?.label}
                 </Text>
               </View>
               <Ionicons
                 name="chevron-forward"
                 size={20}
-                color={Colors.textSecondary}
+                color={colors.textSecondary}
               />
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.menuOption}
+              style={[
+                styles.menuOption,
+                { backgroundColor: colors.inputBackground },
+              ]}
               onPress={() => {
                 setShowMenuSheet(false);
                 router.push("/(tabs)/map");
               }}
               activeOpacity={0.7}
             >
-              <Ionicons
-                name="map-outline"
-                size={24}
-                color={Colors.textPrimary}
-              />
+              <Ionicons name="map-outline" size={24} color={colors.text} />
               <View style={styles.menuOptionContent}>
-                <Text style={styles.menuOptionTitle}>Map View</Text>
-                <Text style={styles.menuOptionSubtitle}>
+                <Text style={[styles.menuOptionTitle, { color: colors.text }]}>
+                  Map View
+                </Text>
+                <Text
+                  style={[
+                    styles.menuOptionSubtitle,
+                    { color: colors.textSecondary },
+                  ]}
+                >
                   View properties on map
                 </Text>
               </View>
               <Ionicons
                 name="chevron-forward"
                 size={20}
-                color={Colors.textSecondary}
+                color={colors.textSecondary}
               />
             </TouchableOpacity>
           </BottomSheetView>
@@ -502,17 +538,30 @@ export default function SearchResultsScreen() {
             ),
             []
           )}
-          backgroundStyle={styles.bottomSheetBackground}
-          handleIndicatorStyle={styles.handleIndicator}
+          backgroundStyle={[
+            styles.bottomSheetBackground,
+            { backgroundColor: colors.surface },
+          ]}
+          handleIndicatorStyle={[
+            styles.handleIndicator,
+            { backgroundColor: colors.textSecondary },
+          ]}
         >
           <BottomSheetView style={styles.sortSheetContent}>
-            <View style={styles.sortSheetHeader}>
-              <Text style={styles.sortSheetTitle}>Sort By</Text>
+            <View
+              style={[
+                styles.sortSheetHeader,
+                { borderBottomColor: colors.divider },
+              ]}
+            >
+              <Text style={[styles.sortSheetTitle, { color: colors.text }]}>
+                Sort By
+              </Text>
               <TouchableOpacity
                 onPress={() => setShowSortSheet(false)}
                 activeOpacity={0.7}
               >
-                <Ionicons name="close" size={24} color={Colors.textPrimary} />
+                <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
             <View style={styles.sortOptions}>
@@ -523,7 +572,14 @@ export default function SearchResultsScreen() {
                     key={option.value}
                     style={[
                       styles.sortOption,
-                      isSelected && styles.sortOptionSelected,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.divider,
+                      },
+                      isSelected && {
+                        backgroundColor: colors.primary,
+                        borderColor: colors.primary,
+                      },
                     ]}
                     onPress={() => {
                       setSortOption(option.value);
@@ -534,6 +590,7 @@ export default function SearchResultsScreen() {
                     <Text
                       style={[
                         styles.sortOptionText,
+                        { color: colors.text },
                         isSelected && styles.sortOptionTextSelected,
                       ]}
                     >
