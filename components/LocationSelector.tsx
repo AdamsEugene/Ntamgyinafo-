@@ -109,7 +109,10 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
         <View
           style={[
             styles.searchContainer,
-            { backgroundColor: colors.inputBackground },
+            {
+              backgroundColor: colors.inputBackground,
+              borderColor: colors.divider,
+            },
           ]}
         >
           <Ionicons
@@ -141,7 +144,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
         <TouchableOpacity
           style={[
             styles.mapButton,
-            { borderColor: colors.primary },
+            { borderColor: colors.primary, backgroundColor: colors.surface },
             showMap && { backgroundColor: colors.primary },
           ]}
           onPress={() => setShowMap(!showMap)}
@@ -314,8 +317,14 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                   key={item}
                   style={[
                     styles.locationItem,
-                    { borderBottomColor: colors.divider },
-                    isSelected && { backgroundColor: `${colors.primary}08` },
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                    isSelected && {
+                      backgroundColor: `${colors.primary}12`,
+                      borderColor: colors.primary,
+                    },
                     index === filteredLocations.length - 1 &&
                       styles.locationItemLast,
                   ]}
@@ -347,7 +356,10 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
                   <View
                     style={[
                       styles.checkbox,
-                      { borderColor: colors.divider },
+                      {
+                        borderColor: colors.divider,
+                        backgroundColor: colors.surface,
+                      },
                       isSelected && {
                         backgroundColor: colors.primary,
                         borderColor: colors.primary,
