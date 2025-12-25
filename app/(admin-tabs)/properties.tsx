@@ -21,7 +21,8 @@ import {
   BottomSheetView,
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   FloatingHeader,
   HeaderActionButton,
@@ -168,7 +169,7 @@ const FILTER_OPTIONS: {
     id: "approved",
     label: "Approved",
     icon: "checkmark-circle",
-    color: Colors.primaryGreen,
+    color: "#4CAF50",
   },
   { id: "rejected", label: "Rejected", icon: "close-circle", color: "#EF4444" },
 ];
@@ -186,6 +187,7 @@ const REJECTION_REASONS = [
 export default function PropertyQueueScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [properties, setProperties] = useState<Property[]>(MOCK_PROPERTIES);
   const [activeFilter, setActiveFilter] = useState<FilterTab>("pending");
   const [searchQuery, setSearchQuery] = useState("");
@@ -296,15 +298,23 @@ export default function PropertyQueueScreen() {
   const getStatusStyle = (status: Property["status"]) => {
     switch (status) {
       case "pending":
-        return { bg: "#FEF3C7", text: "#F59E0B", icon: "time" };
+        return {
+          bg: isDark ? "#78350F" : "#FEF3C7",
+          text: "#F59E0B",
+          icon: "time",
+        };
       case "approved":
         return {
-          bg: `${Colors.primaryGreen}15`,
-          text: Colors.primaryGreen,
+          bg: `${colors.primary}15`,
+          text: colors.primary,
           icon: "checkmark-circle",
         };
       case "rejected":
-        return { bg: "#FEE2E2", text: "#EF4444", icon: "close-circle" };
+        return {
+          bg: isDark ? "#7F1D1D" : "#FEE2E2",
+          text: "#EF4444",
+          icon: "close-circle",
+        };
     }
   };
 
@@ -313,7 +323,13 @@ export default function PropertyQueueScreen() {
 
     return (
       <TouchableOpacity
-        style={styles.propertyCard}
+        style={[
+          styles.propertyCard,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.divider,
+          },
+        ]}
         activeOpacity={0.7}
         onPress={() => {
           setSelectedProperty(item);
@@ -353,26 +369,44 @@ export default function PropertyQueueScreen() {
 
         <View style={styles.propertyContent}>
           {/* Property Info */}
-          <Text style={styles.propertyTitle} numberOfLines={1}>
+          <Text
+            style={[styles.propertyTitle, { color: colors.text }]}
+            numberOfLines={1}
+          >
             {item.title}
           </Text>
           <View style={styles.propertyLocation}>
-            <Ionicons name="location" size={14} color={Colors.primaryGreen} />
-            <Text style={styles.propertyLocationText} numberOfLines={1}>
+            <Ionicons name="location" size={14} color={colors.primary} />
+            <Text
+              style={[
+                styles.propertyLocationText,
+                { color: colors.textSecondary },
+              ]}
+              numberOfLines={1}
+            >
               {item.location}
             </Text>
           </View>
-          <Text style={styles.propertyPrice}>{item.price}</Text>
+          <Text style={[styles.propertyPrice, { color: colors.primary }]}>
+            {item.price}
+          </Text>
 
           {/* Property Meta */}
           <View style={styles.propertyMeta}>
-            <View style={styles.propertyTypeTag}>
+            <View
+              style={[
+                styles.propertyTypeTag,
+                { backgroundColor: `${colors.primary}15` },
+              ]}
+            >
               <Ionicons
                 name={getTypeIcon(item.type) as any}
                 size={14}
-                color={Colors.primaryGreen}
+                color={colors.primary}
               />
-              <Text style={styles.propertyTypeText}>
+              <Text
+                style={[styles.propertyTypeText, { color: colors.primary }]}
+              >
                 {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
               </Text>
             </View>
@@ -381,9 +415,14 @@ export default function PropertyQueueScreen() {
                 <Ionicons
                   name="bed-outline"
                   size={14}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
-                <Text style={styles.propertyMetaText}>
+                <Text
+                  style={[
+                    styles.propertyMetaText,
+                    { color: colors.textSecondary },
+                  ]}
+                >
                   {item.bedrooms} Beds
                 </Text>
               </View>
@@ -393,9 +432,14 @@ export default function PropertyQueueScreen() {
                 <Ionicons
                   name="water-outline"
                   size={14}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
-                <Text style={styles.propertyMetaText}>
+                <Text
+                  style={[
+                    styles.propertyMetaText,
+                    { color: colors.textSecondary },
+                  ]}
+                >
                   {item.bathrooms} Baths
                 </Text>
               </View>
@@ -403,38 +447,59 @@ export default function PropertyQueueScreen() {
           </View>
 
           {/* Owner Info */}
-          <View style={styles.ownerInfo}>
+          <View style={[styles.ownerInfo, { borderTopColor: colors.divider }]}>
             <View style={styles.ownerLeft}>
               <Image
                 source={{ uri: item.owner.avatar }}
-                style={styles.ownerAvatar}
+                style={[styles.ownerAvatar, { borderColor: colors.divider }]}
               />
               <View>
                 <View style={styles.ownerNameRow}>
-                  <Text style={styles.ownerName}>{item.owner.name}</Text>
+                  <Text style={[styles.ownerName, { color: colors.text }]}>
+                    {item.owner.name}
+                  </Text>
                   {item.owner.isVerified && (
                     <Ionicons
                       name="checkmark-circle"
                       size={14}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
                   )}
                 </View>
-                <Text style={styles.submittedTime}>{item.submittedAt}</Text>
+                <Text
+                  style={[
+                    styles.submittedTime,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  {item.submittedAt}
+                </Text>
               </View>
             </View>
-            <View style={styles.viewButton}>
+            <View
+              style={[
+                styles.viewButton,
+                { backgroundColor: colors.background },
+              ]}
+            >
               <Ionicons
                 name="chevron-forward"
                 size={18}
-                color={Colors.textSecondary}
+                color={colors.textSecondary}
               />
             </View>
           </View>
 
           {/* Rejection Reason */}
           {item.status === "rejected" && item.reason && (
-            <View style={styles.rejectionReason}>
+            <View
+              style={[
+                styles.rejectionReason,
+                {
+                  backgroundColor: isDark ? "#7F1D1D" : "#FEE2E2",
+                },
+              ]}
+            >
               <Ionicons name="alert-circle" size={16} color="#EF4444" />
               <Text style={styles.rejectionReasonText}>{item.reason}</Text>
             </View>
@@ -446,12 +511,22 @@ export default function PropertyQueueScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
         </View>
 
         {/* Floating Sticky Header */}
@@ -474,7 +549,15 @@ export default function PropertyQueueScreen() {
         />
 
         {/* Active Filter Indicator */}
-        <View style={[styles.activeFilterBar, { top: 70 + insets.top }]}>
+        <View
+          style={[
+            styles.activeFilterBar,
+            {
+              top: 70 + insets.top,
+              backgroundColor: colors.background,
+            },
+          ]}
+        >
           <View
             style={[
               styles.activeFilterChip,
@@ -504,7 +587,7 @@ export default function PropertyQueueScreen() {
               </TouchableOpacity>
             )}
           </View>
-          <Text style={styles.resultsCount}>
+          <Text style={[styles.resultsCount, { color: colors.textSecondary }]}>
             {filteredProperties.length}{" "}
             {filteredProperties.length === 1 ? "property" : "properties"}
           </Text>
@@ -528,31 +611,51 @@ export default function PropertyQueueScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor={Colors.primaryGreen}
+              tintColor={colors.primary}
               progressViewOffset={120 + insets.top}
             />
           }
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <View style={styles.emptyIconContainer}>
+              <View
+                style={[
+                  styles.emptyIconContainer,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
+              >
                 <Ionicons
                   name="home-outline"
                   size={48}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
               </View>
-              <Text style={styles.emptyTitle}>No Properties Found</Text>
-              <Text style={styles.emptyMessage}>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                No Properties Found
+              </Text>
+              <Text
+                style={[styles.emptyMessage, { color: colors.textSecondary }]}
+              >
                 {searchQuery
                   ? "Try a different search term"
                   : "No properties match the current filter"}
               </Text>
               {activeFilter !== "all" && (
                 <TouchableOpacity
-                  style={styles.clearFilterButton}
+                  style={[
+                    styles.clearFilterButton,
+                    { borderColor: colors.primary },
+                  ]}
                   onPress={() => setActiveFilter("all")}
                 >
-                  <Text style={styles.clearFilterButtonText}>
+                  <Text
+                    style={[
+                      styles.clearFilterButtonText,
+                      { color: colors.primary },
+                    ]}
+                  >
                     View All Properties
                   </Text>
                 </TouchableOpacity>
@@ -576,11 +679,19 @@ export default function PropertyQueueScreen() {
           index={0}
           snapPoints={["45%"]}
           backdropComponent={renderBackdrop}
-          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+          handleIndicatorStyle={{ backgroundColor: colors.divider }}
+          backgroundStyle={{ backgroundColor: colors.surface }}
         >
           <BottomSheetScrollView style={styles.filterSheetContent}>
-            <Text style={styles.filterSheetTitle}>Filter Properties</Text>
-            <Text style={styles.filterSheetSubtitle}>
+            <Text style={[styles.filterSheetTitle, { color: colors.text }]}>
+              Filter Properties
+            </Text>
+            <Text
+              style={[
+                styles.filterSheetSubtitle,
+                { color: colors.textSecondary },
+              ]}
+            >
               Select a status to filter listings
             </Text>
 
@@ -590,8 +701,14 @@ export default function PropertyQueueScreen() {
                   key={option.id}
                   style={[
                     styles.filterOption,
-                    activeFilter === option.id && styles.filterOptionActive,
-                    activeFilter === option.id && { borderColor: option.color },
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                    activeFilter === option.id && {
+                      borderColor: option.color,
+                      backgroundColor: `${option.color}08`,
+                    },
                   ]}
                   onPress={() => {
                     setActiveFilter(option.id);
@@ -619,8 +736,11 @@ export default function PropertyQueueScreen() {
                   <Text
                     style={[
                       styles.filterOptionText,
-                      activeFilter === option.id &&
-                        styles.filterOptionTextActive,
+                      { color: colors.textSecondary },
+                      activeFilter === option.id && {
+                        color: colors.text,
+                        fontWeight: "600",
+                      },
                     ]}
                   >
                     {option.label}
@@ -644,12 +764,18 @@ export default function PropertyQueueScreen() {
           index={0}
           snapPoints={["55%"]}
           backdropComponent={renderBackdrop}
-          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+          handleIndicatorStyle={{ backgroundColor: colors.divider }}
+          backgroundStyle={{ backgroundColor: colors.surface }}
         >
           <BottomSheetView style={styles.sheetContent}>
             {selectedProperty && (
               <>
-                <View style={styles.sheetHeader}>
+                <View
+                  style={[
+                    styles.sheetHeader,
+                    { borderBottomColor: colors.divider },
+                  ]}
+                >
                   <Image
                     source={{ uri: selectedProperty.images[0] }}
                     style={styles.sheetPropertyImage}
@@ -677,13 +803,29 @@ export default function PropertyQueueScreen() {
                           selectedProperty.status.slice(1)}
                       </Text>
                     </View>
-                    <Text style={styles.sheetPropertyTitle} numberOfLines={2}>
+                    <Text
+                      style={[
+                        styles.sheetPropertyTitle,
+                        { color: colors.text },
+                      ]}
+                      numberOfLines={2}
+                    >
                       {selectedProperty.title}
                     </Text>
-                    <Text style={styles.sheetPropertyPrice}>
+                    <Text
+                      style={[
+                        styles.sheetPropertyPrice,
+                        { color: colors.primary },
+                      ]}
+                    >
                       {selectedProperty.price}
                     </Text>
-                    <Text style={styles.sheetPropertyLocation}>
+                    <Text
+                      style={[
+                        styles.sheetPropertyLocation,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
                       {selectedProperty.location}
                     </Text>
                   </View>
@@ -706,11 +848,15 @@ export default function PropertyQueueScreen() {
                     >
                       <Ionicons name="eye" size={20} color="#3B82F6" />
                     </View>
-                    <Text style={styles.sheetActionText}>View Details</Text>
+                    <Text
+                      style={[styles.sheetActionText, { color: colors.text }]}
+                    >
+                      View Details
+                    </Text>
                     <Ionicons
                       name="chevron-forward"
                       size={18}
-                      color={Colors.textSecondary}
+                      color={colors.textSecondary}
                     />
                   </TouchableOpacity>
 
@@ -724,22 +870,27 @@ export default function PropertyQueueScreen() {
                         <View
                           style={[
                             styles.sheetActionIcon,
-                            { backgroundColor: `${Colors.primaryGreen}15` },
+                            { backgroundColor: `${colors.primary}15` },
                           ]}
                         >
                           <Ionicons
                             name="checkmark-circle"
                             size={20}
-                            color={Colors.primaryGreen}
+                            color={colors.primary}
                           />
                         </View>
-                        <Text style={styles.sheetActionText}>
+                        <Text
+                          style={[
+                            styles.sheetActionText,
+                            { color: colors.text },
+                          ]}
+                        >
                           Approve Listing
                         </Text>
                         <Ionicons
                           name="chevron-forward"
                           size={18}
-                          color={Colors.textSecondary}
+                          color={colors.textSecondary}
                         />
                       </TouchableOpacity>
 
@@ -751,7 +902,9 @@ export default function PropertyQueueScreen() {
                         <View
                           style={[
                             styles.sheetActionIcon,
-                            { backgroundColor: "#FEE2E2" },
+                            {
+                              backgroundColor: isDark ? "#7F1D1D" : "#FEE2E2",
+                            },
                           ]}
                         >
                           <Ionicons
@@ -785,18 +938,22 @@ export default function PropertyQueueScreen() {
                     <View
                       style={[
                         styles.sheetActionIcon,
-                        { backgroundColor: "#F3E8FF" },
+                        {
+                          backgroundColor: isDark ? "#581C87" : "#F3E8FF",
+                        },
                       ]}
                     >
                       <Ionicons name="person" size={20} color="#8B5CF6" />
                     </View>
-                    <Text style={styles.sheetActionText}>
+                    <Text
+                      style={[styles.sheetActionText, { color: colors.text }]}
+                    >
                       View Owner Profile
                     </Text>
                     <Ionicons
                       name="chevron-forward"
                       size={18}
-                      color={Colors.textSecondary}
+                      color={colors.textSecondary}
                     />
                   </TouchableOpacity>
                 </View>
@@ -811,11 +968,19 @@ export default function PropertyQueueScreen() {
           index={0}
           snapPoints={["70%"]}
           backdropComponent={renderBackdrop}
-          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+          handleIndicatorStyle={{ backgroundColor: colors.divider }}
+          backgroundStyle={{ backgroundColor: colors.surface }}
         >
           <BottomSheetScrollView style={styles.rejectSheetContent}>
-            <Text style={styles.rejectSheetTitle}>Select Rejection Reason</Text>
-            <Text style={styles.rejectSheetSubtitle}>
+            <Text style={[styles.rejectSheetTitle, { color: colors.text }]}>
+              Select Rejection Reason
+            </Text>
+            <Text
+              style={[
+                styles.rejectSheetSubtitle,
+                { color: colors.textSecondary },
+              ]}
+            >
               The owner will be notified with this reason
             </Text>
 
@@ -824,7 +989,14 @@ export default function PropertyQueueScreen() {
                 key={reason}
                 style={[
                   styles.reasonOption,
-                  selectedReason === reason && styles.reasonOptionActive,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                  selectedReason === reason && {
+                    borderColor: colors.primary,
+                    backgroundColor: `${colors.primary}08`,
+                  },
                 ]}
                 onPress={() => setSelectedReason(reason)}
                 activeOpacity={0.7}
@@ -838,14 +1010,18 @@ export default function PropertyQueueScreen() {
                   size={22}
                   color={
                     selectedReason === reason
-                      ? Colors.primaryGreen
-                      : Colors.textSecondary
+                      ? colors.primary
+                      : colors.textSecondary
                   }
                 />
                 <Text
                   style={[
                     styles.reasonText,
-                    selectedReason === reason && styles.reasonTextActive,
+                    { color: colors.textSecondary },
+                    selectedReason === reason && {
+                      color: colors.text,
+                      fontWeight: "500",
+                    },
                   ]}
                 >
                   {reason}
@@ -856,7 +1032,10 @@ export default function PropertyQueueScreen() {
             <TouchableOpacity
               style={[
                 styles.rejectButton,
-                !selectedReason && styles.rejectButtonDisabled,
+                { backgroundColor: "#EF4444" },
+                !selectedReason && {
+                  backgroundColor: colors.divider,
+                },
               ]}
               onPress={handleReject}
               disabled={!selectedReason}
@@ -874,7 +1053,6 @@ export default function PropertyQueueScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   decorativeBackground: {
     position: "absolute",
@@ -891,8 +1069,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: Colors.primaryLight,
-    opacity: 0.08,
   },
   circle2: {
     position: "absolute",
@@ -901,8 +1077,6 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     borderRadius: 200,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
   },
   headerLeft: {
     flexDirection: "row",
@@ -914,7 +1088,6 @@ const styles = StyleSheet.create({
     ...Typography.titleLarge,
     fontSize: 22,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   headerBadge: {
     backgroundColor: "#EF4444",
@@ -942,7 +1115,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: Colors.background,
   },
   activeFilterChip: {
     flexDirection: "row",
@@ -960,7 +1132,6 @@ const styles = StyleSheet.create({
   resultsCount: {
     ...Typography.bodyMedium,
     fontSize: 13,
-    color: Colors.textSecondary,
   },
   // List
   listContent: {
@@ -969,12 +1140,10 @@ const styles = StyleSheet.create({
   },
   // Property Card
   propertyCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 20,
     overflow: "hidden",
     marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -1034,7 +1203,6 @@ const styles = StyleSheet.create({
     ...Typography.titleMedium,
     fontSize: 17,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: 6,
   },
   propertyLocation: {
@@ -1046,14 +1214,12 @@ const styles = StyleSheet.create({
   propertyLocationText: {
     ...Typography.bodyMedium,
     fontSize: 13,
-    color: Colors.textSecondary,
     flex: 1,
   },
   propertyPrice: {
     ...Typography.headlineMedium,
     fontSize: 20,
     fontWeight: "800",
-    color: Colors.primaryGreen,
     marginBottom: Spacing.md,
   },
   propertyMeta: {
@@ -1067,7 +1233,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: `${Colors.primaryGreen}15`,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 10,
@@ -1076,7 +1241,6 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     fontSize: 11,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
   propertyMetaItem: {
     flexDirection: "row",
@@ -1086,7 +1250,6 @@ const styles = StyleSheet.create({
   propertyMetaText: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   ownerInfo: {
     flexDirection: "row",
@@ -1094,7 +1257,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.divider,
   },
   ownerLeft: {
     flexDirection: "row",
@@ -1106,7 +1268,6 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     borderWidth: 2,
-    borderColor: Colors.divider,
   },
   ownerNameRow: {
     flexDirection: "row",
@@ -1117,19 +1278,16 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 13,
     fontWeight: "600",
-    color: Colors.textPrimary,
   },
   submittedTime: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
     marginTop: 1,
   },
   viewButton: {
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: Colors.background,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1139,7 +1297,6 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: Spacing.md,
     padding: Spacing.md,
-    backgroundColor: "#FEE2E2",
     borderRadius: 12,
   },
   rejectionReasonText: {
@@ -1159,24 +1316,20 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: Colors.surface,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   emptyTitle: {
     ...Typography.titleMedium,
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   emptyMessage: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
     textAlign: "center",
   },
   clearFilterButton: {
@@ -1185,13 +1338,11 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.primaryGreen,
   },
   clearFilterButtonText: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
   // Filter Sheet
   filterSheetContent: {
@@ -1201,13 +1352,11 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 22,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   filterSheetSubtitle: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
     marginBottom: Spacing.xl,
   },
   filterOptions: {
@@ -1218,13 +1367,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: Spacing.md,
     padding: Spacing.md,
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.divider,
-  },
-  filterOptionActive: {
-    backgroundColor: `${Colors.primaryGreen}08`,
   },
   filterOptionIcon: {
     width: 44,
@@ -1236,12 +1380,7 @@ const styles = StyleSheet.create({
   filterOptionText: {
     ...Typography.bodyMedium,
     fontSize: 15,
-    color: Colors.textSecondary,
     flex: 1,
-  },
-  filterOptionTextActive: {
-    color: Colors.textPrimary,
-    fontWeight: "600",
   },
   // Bottom Sheet
   sheetContent: {
@@ -1253,7 +1392,6 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
     paddingBottom: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
   },
   sheetPropertyImage: {
     width: 90,
@@ -1279,19 +1417,16 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 15,
     fontWeight: "600",
-    color: Colors.textPrimary,
     marginBottom: 4,
   },
   sheetPropertyPrice: {
     ...Typography.headlineMedium,
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.primaryGreen,
   },
   sheetPropertyLocation: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   sheetActions: {
@@ -1316,7 +1451,6 @@ const styles = StyleSheet.create({
     ...Typography.bodyMedium,
     fontSize: 15,
     fontWeight: "500",
-    color: Colors.textPrimary,
     flex: 1,
   },
   // Reject Sheet
@@ -1327,13 +1461,11 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 22,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   rejectSheetSubtitle: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
     marginBottom: Spacing.xl,
   },
   reasonOption: {
@@ -1342,35 +1474,20 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.md,
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     marginBottom: Spacing.sm,
     borderWidth: 1,
-    borderColor: Colors.divider,
-  },
-  reasonOptionActive: {
-    borderColor: Colors.primaryGreen,
-    backgroundColor: `${Colors.primaryGreen}08`,
   },
   reasonText: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
     flex: 1,
   },
-  reasonTextActive: {
-    color: Colors.textPrimary,
-    fontWeight: "500",
-  },
   rejectButton: {
-    backgroundColor: "#EF4444",
     paddingVertical: Spacing.lg,
     borderRadius: 16,
     marginTop: Spacing.lg,
     alignItems: "center",
-  },
-  rejectButtonDisabled: {
-    backgroundColor: Colors.divider,
   },
   rejectButtonText: {
     ...Typography.labelLarge,

@@ -13,7 +13,8 @@ import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   FloatingHeader,
   HeaderActionButton,
@@ -30,6 +31,7 @@ const ADMIN_PROFILE = {
 export default function AdminProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
 
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
@@ -118,12 +120,22 @@ export default function AdminProfileScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
         </View>
 
         {/* Floating Sticky Header */}
@@ -150,74 +162,155 @@ export default function AdminProfileScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Profile Card */}
-          <View style={styles.profileCard}>
+          <View
+            style={[
+              styles.profileCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
             <View style={styles.avatarContainer}>
               <Image
                 source={{ uri: ADMIN_PROFILE.avatar }}
-                style={styles.avatar}
+                style={[styles.avatar, { borderColor: colors.primary }]}
               />
-              <View style={styles.adminBadge}>
+              <View
+                style={[styles.adminBadge, { borderColor: colors.surface }]}
+              >
                 <Ionicons name="shield-checkmark" size={12} color="#FFFFFF" />
               </View>
             </View>
             <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>{ADMIN_PROFILE.name}</Text>
+              <Text style={[styles.profileName, { color: colors.text }]}>
+                {ADMIN_PROFILE.name}
+              </Text>
               <View style={styles.roleBadge}>
                 <Text style={styles.roleBadgeText}>{ADMIN_PROFILE.role}</Text>
               </View>
-              <Text style={styles.profileEmail}>{ADMIN_PROFILE.email}</Text>
+              <Text
+                style={[styles.profileEmail, { color: colors.textSecondary }]}
+              >
+                {ADMIN_PROFILE.email}
+              </Text>
             </View>
             <TouchableOpacity
-              style={styles.editButton}
+              style={[styles.editButton, { borderColor: colors.primary }]}
               onPress={() => router.push("/edit-profile")}
               activeOpacity={0.7}
             >
-              <Ionicons name="pencil" size={16} color={Colors.primaryGreen} />
-              <Text style={styles.editButtonText}>Edit</Text>
+              <Ionicons name="pencil" size={16} color={colors.primary} />
+              <Text style={[styles.editButtonText, { color: colors.primary }]}>
+                Edit
+              </Text>
             </TouchableOpacity>
           </View>
 
           {/* Last Login */}
-          <View style={styles.lastLoginCard}>
+          <View
+            style={[
+              styles.lastLoginCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
             <Ionicons
               name="time-outline"
               size={16}
-              color={Colors.textSecondary}
+              color={colors.textSecondary}
             />
-            <Text style={styles.lastLoginText}>
+            <Text
+              style={[styles.lastLoginText, { color: colors.textSecondary }]}
+            >
               Last login: {ADMIN_PROFILE.lastLogin}
             </Text>
           </View>
 
           {/* Quick Stats */}
-          <View style={styles.quickStats}>
+          <View
+            style={[
+              styles.quickStats,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
             <View style={styles.quickStatItem}>
-              <Text style={styles.quickStatValue}>12,458</Text>
-              <Text style={styles.quickStatLabel}>Total Users</Text>
+              <Text style={[styles.quickStatValue, { color: colors.text }]}>
+                12,458
+              </Text>
+              <Text
+                style={[styles.quickStatLabel, { color: colors.textSecondary }]}
+              >
+                Total Users
+              </Text>
             </View>
-            <View style={styles.quickStatDivider} />
+            <View
+              style={[
+                styles.quickStatDivider,
+                { backgroundColor: colors.divider },
+              ]}
+            />
             <View style={styles.quickStatItem}>
-              <Text style={styles.quickStatValue}>3,892</Text>
-              <Text style={styles.quickStatLabel}>Properties</Text>
+              <Text style={[styles.quickStatValue, { color: colors.text }]}>
+                3,892
+              </Text>
+              <Text
+                style={[styles.quickStatLabel, { color: colors.textSecondary }]}
+              >
+                Properties
+              </Text>
             </View>
-            <View style={styles.quickStatDivider} />
+            <View
+              style={[
+                styles.quickStatDivider,
+                { backgroundColor: colors.divider },
+              ]}
+            />
             <View style={styles.quickStatItem}>
-              <Text style={styles.quickStatValue}>48</Text>
-              <Text style={styles.quickStatLabel}>Pending</Text>
+              <Text style={[styles.quickStatValue, { color: colors.text }]}>
+                48
+              </Text>
+              <Text
+                style={[styles.quickStatLabel, { color: colors.textSecondary }]}
+              >
+                Pending
+              </Text>
             </View>
           </View>
 
           {/* Menu Sections */}
           {MENU_SECTIONS.map((section) => (
             <View key={section.title} style={styles.menuSection}>
-              <Text style={styles.menuSectionTitle}>{section.title}</Text>
-              <View style={styles.menuCard}>
+              <Text
+                style={[
+                  styles.menuSectionTitle,
+                  { color: colors.textSecondary },
+                ]}
+              >
+                {section.title}
+              </Text>
+              <View
+                style={[
+                  styles.menuCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
+              >
                 {section.items.map((item, index) => (
                   <TouchableOpacity
                     key={item.id}
                     style={[
                       styles.menuItem,
-                      index < section.items.length - 1 && styles.menuItemBorder,
+                      index < section.items.length - 1 && {
+                        borderBottomColor: colors.divider,
+                      },
                     ]}
                     onPress={() => {
                       if (item.route) {
@@ -229,16 +322,20 @@ export default function AdminProfileScreen() {
                     <View
                       style={[
                         styles.menuItemIcon,
-                        { backgroundColor: `${Colors.primaryGreen}15` },
+                        { backgroundColor: `${colors.primary}15` },
                       ]}
                     >
                       <Ionicons
                         name={item.icon}
                         size={20}
-                        color={Colors.primaryGreen}
+                        color={colors.primary}
                       />
                     </View>
-                    <Text style={styles.menuItemLabel}>{item.label}</Text>
+                    <Text
+                      style={[styles.menuItemLabel, { color: colors.text }]}
+                    >
+                      {item.label}
+                    </Text>
                     {"badge" in item && item.badge && (
                       <View style={styles.menuItemBadge}>
                         <Text style={styles.menuItemBadgeText}>
@@ -249,7 +346,7 @@ export default function AdminProfileScreen() {
                     <Ionicons
                       name="chevron-forward"
                       size={18}
-                      color={Colors.textSecondary}
+                      color={colors.textSecondary}
                     />
                   </TouchableOpacity>
                 ))}
@@ -259,7 +356,12 @@ export default function AdminProfileScreen() {
 
           {/* Logout Button */}
           <TouchableOpacity
-            style={styles.logoutButton}
+            style={[
+              styles.logoutButton,
+              {
+                backgroundColor: isDark ? "#7F1D1D" : "#FEE2E2",
+              },
+            ]}
             onPress={handleLogout}
             activeOpacity={0.8}
           >
@@ -268,7 +370,9 @@ export default function AdminProfileScreen() {
           </TouchableOpacity>
 
           {/* Version */}
-          <Text style={styles.versionText}>Admin Panel v1.0.0</Text>
+          <Text style={[styles.versionText, { color: colors.textSecondary }]}>
+            Admin Panel v1.0.0
+          </Text>
         </ScrollView>
       </View>
     </>
@@ -278,7 +382,6 @@ export default function AdminProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   decorativeBackground: {
     position: "absolute",
@@ -295,8 +398,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: Colors.primaryLight,
-    opacity: 0.08,
   },
   circle2: {
     position: "absolute",
@@ -305,8 +406,6 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     borderRadius: 200,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
   },
   headerLeft: {
     flexDirection: "row",
@@ -318,7 +417,6 @@ const styles = StyleSheet.create({
     ...Typography.titleLarge,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   scrollView: {
     flex: 1,
@@ -329,12 +427,10 @@ const styles = StyleSheet.create({
   },
   // Profile Card
   profileCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 20,
     padding: Spacing.xl,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: Colors.divider,
     marginBottom: Spacing.md,
     ...Platform.select({
       ios: {
@@ -357,7 +453,6 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     borderWidth: 3,
-    borderColor: Colors.primaryGreen,
   },
   adminBadge: {
     position: "absolute",
@@ -370,7 +465,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
-    borderColor: Colors.surface,
   },
   profileInfo: {
     alignItems: "center",
@@ -380,7 +474,6 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   roleBadge: {
@@ -399,7 +492,6 @@ const styles = StyleSheet.create({
   profileEmail: {
     ...Typography.bodyMedium,
     fontSize: 13,
-    color: Colors.textSecondary,
   },
   editButton: {
     flexDirection: "row",
@@ -409,13 +501,11 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.primaryGreen,
   },
   editButtonText: {
     ...Typography.labelMedium,
     fontSize: 13,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
   // Last Login
   lastLoginCard: {
@@ -423,27 +513,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: Colors.surface,
     borderRadius: 12,
     padding: Spacing.md,
     marginBottom: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   lastLoginText: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   // Quick Stats
   quickStats: {
     flexDirection: "row",
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.lg,
     marginBottom: Spacing.xl,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   quickStatItem: {
     flex: 1,
@@ -453,18 +538,15 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   quickStatLabel: {
     ...Typography.caption,
     fontSize: 10,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   quickStatDivider: {
     width: 1,
     height: "100%",
-    backgroundColor: Colors.divider,
   },
   // Menu Sections
   menuSection: {
@@ -474,28 +556,21 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 12,
     fontWeight: "600",
-    color: Colors.textSecondary,
     marginBottom: Spacing.sm,
     marginLeft: Spacing.xs,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   menuCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
     padding: Spacing.md,
     gap: Spacing.md,
-  },
-  menuItemBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
   },
   menuItemIcon: {
     width: 40,
@@ -508,7 +583,6 @@ const styles = StyleSheet.create({
     ...Typography.bodyMedium,
     fontSize: 15,
     fontWeight: "500",
-    color: Colors.textPrimary,
     flex: 1,
   },
   menuItemBadge: {
@@ -530,7 +604,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: Spacing.sm,
-    backgroundColor: "#FEE2E2",
     borderRadius: 16,
     paddingVertical: Spacing.lg,
     marginTop: Spacing.md,
@@ -545,7 +618,6 @@ const styles = StyleSheet.create({
   versionText: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
     textAlign: "center",
     marginTop: Spacing.lg,
   },

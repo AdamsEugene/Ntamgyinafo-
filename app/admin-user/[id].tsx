@@ -282,7 +282,7 @@ export default function AdminUserProfileScreen() {
       } else {
         Alert.alert("Error", `${app} is not installed on this device`);
       }
-    } catch (error) {
+    } catch {
       Alert.alert("Error", `Unable to open ${app}`);
     }
   };
@@ -1045,7 +1045,14 @@ export default function AdminUserProfileScreen() {
                 >
                   <Ionicons name="logo-whatsapp" size={24} color="#25D366" />
                 </View>
-                <Text style={styles.externalAppText}>WhatsApp</Text>
+                <Text
+                  style={[
+                    styles.externalAppText,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  WhatsApp
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.externalApp}

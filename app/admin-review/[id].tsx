@@ -21,7 +21,8 @@ import {
   BottomSheetView,
   BottomSheetTextInput,
 } from "@gorhom/bottom-sheet";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import { FloatingHeader } from "@/components/FloatingHeader";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -169,6 +170,7 @@ export default function AdminPropertyReviewScreen() {
   const router = useRouter();
   useLocalSearchParams(); // id available for API call
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const rejectSheetRef = useRef<BottomSheetModal>(null);
   const documentPreviewRef = useRef<BottomSheetModal>(null);
 
@@ -320,12 +322,22 @@ export default function AdminPropertyReviewScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
         </View>
 
         {/* Floating Sticky Header */}
@@ -443,40 +455,40 @@ export default function AdminPropertyReviewScreen() {
 
           {/* Property Title & Price */}
           <View style={styles.titleSection}>
-            <View style={styles.typeTag}>
+            <View style={[styles.typeTag, { backgroundColor: colors.primary }]}>
               <Text style={styles.typeTagText}>
                 For {property.transactionType === "sale" ? "Sale" : "Rent"}
               </Text>
             </View>
-            <Text style={styles.propertyTitle}>{property.title}</Text>
+            <Text style={[styles.propertyTitle, { color: colors.text }]}>
+              {property.title}
+            </Text>
             <View style={styles.locationRow}>
-              <Ionicons name="location" size={16} color={Colors.primaryGreen} />
-              <Text style={styles.locationText}>{property.location}</Text>
+              <Ionicons name="location" size={16} color={colors.primary} />
+              <Text style={[styles.locationText, { color: colors.textSecondary }]}>
+                {property.location}
+              </Text>
             </View>
-            <Text style={styles.priceText}>{formatPrice(property.price)}</Text>
+            <Text style={[styles.priceText, { color: colors.primary }]}>
+              {formatPrice(property.price)}
+            </Text>
             {property.negotiable && (
-              <Text style={styles.negotiableText}>Price is negotiable</Text>
+              <Text style={[styles.negotiableText, { color: colors.textSecondary }]}>
+                Price is negotiable
+              </Text>
             )}
           </View>
 
           {/* Quick Stats */}
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <Ionicons
-                name="bed-outline"
-                size={22}
-                color={Colors.primaryGreen}
-              />
+              <Ionicons name="bed-outline" size={22} color={colors.primary} />
               <Text style={styles.statValue}>{property.bedrooms}</Text>
               <Text style={styles.statLabel}>Beds</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Ionicons
-                name="water-outline"
-                size={22}
-                color={Colors.primaryGreen}
-              />
+              <Ionicons name="water-outline" size={22} color={colors.primary} />
               <Text style={styles.statValue}>{property.bathrooms}</Text>
               <Text style={styles.statLabel}>Baths</Text>
             </View>
@@ -485,7 +497,7 @@ export default function AdminPropertyReviewScreen() {
               <Ionicons
                 name="expand-outline"
                 size={22}
-                color={Colors.primaryGreen}
+                color={colors.primary}
               />
               <Text style={styles.statValue}>
                 {property.area.toLocaleString()}
@@ -494,11 +506,7 @@ export default function AdminPropertyReviewScreen() {
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Ionicons
-                name="car-outline"
-                size={22}
-                color={Colors.primaryGreen}
-              />
+              <Ionicons name="car-outline" size={22} color={colors.primary} />
               <Text style={styles.statValue}>{property.parkingSpaces}</Text>
               <Text style={styles.statLabel}>Parking</Text>
             </View>
@@ -506,51 +514,122 @@ export default function AdminPropertyReviewScreen() {
 
           {/* Description */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Description</Text>
-            <View style={styles.sectionCard}>
-              <Text style={styles.descriptionText}>{property.description}</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Description
+            </Text>
+            <View
+              style={[
+                styles.sectionCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
+              <Text style={[styles.descriptionText, { color: colors.text }]}>
+                {property.description}
+              </Text>
             </View>
           </View>
 
           {/* Property Details */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Property Details</Text>
-            <View style={styles.sectionCard}>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Property Type</Text>
-                <Text style={styles.detailValue}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Property Details
+            </Text>
+            <View
+              style={[
+                styles.sectionCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.detailRow,
+                  { borderBottomColor: colors.divider },
+                ]}
+              >
+                <Text
+                  style={[styles.detailLabel, { color: colors.textSecondary }]}
+                >
+                  Property Type
+                </Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>
                   {property.type.charAt(0).toUpperCase() +
                     property.type.slice(1)}
                 </Text>
               </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Year Built</Text>
-                <Text style={styles.detailValue}>{property.yearBuilt}</Text>
+              <View
+                style={[
+                  styles.detailRow,
+                  { borderBottomColor: colors.divider },
+                ]}
+              >
+                <Text
+                  style={[styles.detailLabel, { color: colors.textSecondary }]}
+                >
+                  Year Built
+                </Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>
+                  {property.yearBuilt}
+                </Text>
               </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Full Address</Text>
-                <Text style={styles.detailValue}>{property.address}</Text>
+              <View
+                style={[
+                  styles.detailRow,
+                  { borderBottomColor: colors.divider },
+                ]}
+              >
+                <Text
+                  style={[styles.detailLabel, { color: colors.textSecondary }]}
+                >
+                  Full Address
+                </Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>
+                  {property.address}
+                </Text>
               </View>
               <View style={[styles.detailRow, { borderBottomWidth: 0 }]}>
-                <Text style={styles.detailLabel}>Submitted</Text>
-                <Text style={styles.detailValue}>{property.submittedAt}</Text>
+                <Text
+                  style={[styles.detailLabel, { color: colors.textSecondary }]}
+                >
+                  Submitted
+                </Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>
+                  {property.submittedAt}
+                </Text>
               </View>
             </View>
           </View>
 
           {/* Amenities */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Amenities</Text>
-            <View style={styles.sectionCard}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Amenities
+            </Text>
+            <View
+              style={[
+                styles.sectionCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               <View style={styles.amenitiesGrid}>
                 {property.amenities.map((amenity, index) => (
                   <View key={index} style={styles.amenityItem}>
                     <Ionicons
                       name="checkmark-circle"
                       size={18}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
-                    <Text style={styles.amenityText}>{amenity}</Text>
+                    <Text style={[styles.amenityText, { color: colors.text }]}>
+                      {amenity}
+                    </Text>
                   </View>
                 ))}
               </View>
@@ -560,7 +639,9 @@ export default function AdminPropertyReviewScreen() {
           {/* Videos */}
           {property.videos.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Videos</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Videos
+              </Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {property.videos.map((video, index) => (
                   <TouchableOpacity
@@ -597,7 +678,7 @@ export default function AdminPropertyReviewScreen() {
                   <Ionicons
                     name="cube-outline"
                     size={20}
-                    color={Colors.primaryGreen}
+                    color={colors.primary}
                   />
                   <Text style={styles.virtualTourText}>
                     360° Virtual Tour Available
@@ -605,7 +686,7 @@ export default function AdminPropertyReviewScreen() {
                   <Ionicons
                     name="chevron-forward"
                     size={18}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                   />
                 </TouchableOpacity>
               )}
@@ -615,20 +696,33 @@ export default function AdminPropertyReviewScreen() {
           {/* Documents */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Documents</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Documents
+              </Text>
               <View style={styles.docStats}>
-                <Text style={styles.docStatsText}>
+                <Text
+                  style={[styles.docStatsText, { color: colors.textSecondary }]}
+                >
                   {property.documents.filter((d) => d.verified).length}/
                   {property.documents.length} Verified
                 </Text>
               </View>
             </View>
-            <View style={styles.sectionCard}>
+            <View
+              style={[
+                styles.sectionCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               {property.documents.map((doc, index) => (
                 <TouchableOpacity
                   key={doc.id}
                   style={[
                     styles.documentRow,
+                    { borderBottomColor: colors.divider },
                     index === property.documents.length - 1 && {
                       borderBottomWidth: 0,
                     },
@@ -636,28 +730,39 @@ export default function AdminPropertyReviewScreen() {
                   onPress={() => handleDocumentPress(doc)}
                   activeOpacity={0.7}
                 >
-                  <View style={styles.documentIcon}>
+                  <View
+                    style={[
+                      styles.documentIcon,
+                      {
+                        backgroundColor: doc.verified
+                          ? `${colors.primary}15`
+                          : isDark
+                          ? "#78350F"
+                          : "#FEF3C7",
+                      },
+                    ]}
+                  >
                     <Ionicons
                       name={getDocIcon(doc.type) as any}
                       size={20}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
                   </View>
                   <View style={styles.documentInfo}>
-                    <Text style={styles.documentName}>{doc.name}</Text>
+                    <Text style={[styles.documentName, { color: colors.text }]}>
+                      {doc.name}
+                    </Text>
                     <View style={styles.documentStatus}>
                       <Ionicons
                         name={doc.verified ? "checkmark-circle" : "time"}
                         size={14}
-                        color={doc.verified ? Colors.primaryGreen : "#F59E0B"}
+                        color={doc.verified ? colors.primary : "#F59E0B"}
                       />
                       <Text
                         style={[
                           styles.documentStatusText,
                           {
-                            color: doc.verified
-                              ? Colors.primaryGreen
-                              : "#F59E0B",
+                            color: doc.verified ? colors.primary : "#F59E0B",
                           },
                         ]}
                       >
@@ -668,7 +773,7 @@ export default function AdminPropertyReviewScreen() {
                   <Ionicons
                     name="eye-outline"
                     size={20}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                   />
                 </TouchableOpacity>
               ))}
@@ -677,40 +782,74 @@ export default function AdminPropertyReviewScreen() {
 
           {/* Owner Information */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Property Owner</Text>
-            <View style={styles.ownerCard}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Property Owner
+            </Text>
+            <View
+              style={[
+                styles.ownerCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               <Image
                 source={{ uri: property.owner.avatar }}
-                style={styles.ownerAvatar}
+                style={[styles.ownerAvatar, { borderColor: colors.divider }]}
               />
               <View style={styles.ownerInfo}>
                 <View style={styles.ownerNameRow}>
-                  <Text style={styles.ownerName}>{property.owner.name}</Text>
+                  <Text style={[styles.ownerName, { color: colors.text }]}>
+                    {property.owner.name}
+                  </Text>
                   {property.owner.isVerified && (
                     <Ionicons
                       name="checkmark-circle"
                       size={16}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
                   )}
                 </View>
-                <Text style={styles.ownerMeta}>
+                <Text
+                  style={[styles.ownerMeta, { color: colors.textSecondary }]}
+                >
                   {property.owner.totalListings} listings • Joined{" "}
                   {property.owner.joinedDate}
                 </Text>
               </View>
-              <TouchableOpacity style={styles.ownerViewButton}>
-                <Text style={styles.ownerViewButtonText}>View Profile</Text>
+              <TouchableOpacity
+                style={[
+                  styles.ownerViewButton,
+                  { backgroundColor: colors.background },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.ownerViewButtonText,
+                    { color: colors.primary },
+                  ]}
+                >
+                  View Profile
+                </Text>
               </TouchableOpacity>
             </View>
-            <View style={styles.ownerContactCard}>
+            <View
+              style={[
+                styles.ownerContactCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               <View style={styles.ownerContactRow}>
                 <Ionicons
                   name="call-outline"
                   size={18}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
-                <Text style={styles.ownerContactText}>
+                <Text style={[styles.ownerContactText, { color: colors.text }]}>
                   {property.owner.phone}
                 </Text>
               </View>
@@ -718,9 +857,9 @@ export default function AdminPropertyReviewScreen() {
                 <Ionicons
                   name="mail-outline"
                   size={18}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
-                <Text style={styles.ownerContactText}>
+                <Text style={[styles.ownerContactText, { color: colors.text }]}>
                   {property.owner.email}
                 </Text>
               </View>
@@ -728,11 +867,26 @@ export default function AdminPropertyReviewScreen() {
           </View>
 
           {/* Review Notes */}
-          <View style={styles.reviewNotesCard}>
+          <View
+            style={[
+              styles.reviewNotesCard,
+              {
+                backgroundColor: isDark ? "#1E3A8A" : "#DBEAFE",
+                borderColor: "#3B82F6",
+              },
+            ]}
+          >
             <Ionicons name="information-circle" size={22} color="#3B82F6" />
             <View style={styles.reviewNotesContent}>
-              <Text style={styles.reviewNotesTitle}>Review Checklist</Text>
-              <Text style={styles.reviewNotesText}>
+              <Text style={[styles.reviewNotesTitle, { color: "#3B82F6" }]}>
+                Review Checklist
+              </Text>
+              <Text
+                style={[
+                  styles.reviewNotesText,
+                  { color: isDark ? "#DBEAFE" : "#1E3A8A" },
+                ]}
+              >
                 • Verify all images are clear and genuine{"\n"}• Check document
                 authenticity{"\n"}• Confirm pricing is market-appropriate{"\n"}•
                 Validate property details accuracy
@@ -745,11 +899,20 @@ export default function AdminPropertyReviewScreen() {
         <View
           style={[
             styles.actionBar,
-            { paddingBottom: insets.bottom + Spacing.md },
+            {
+              paddingBottom: insets.bottom + Spacing.md,
+              backgroundColor: colors.surface,
+              borderTopColor: colors.divider,
+            },
           ]}
         >
           <TouchableOpacity
-            style={styles.rejectButton}
+            style={[
+              styles.rejectButton,
+              {
+                backgroundColor: isDark ? "#7F1D1D" : "#FEE2E2",
+              },
+            ]}
             onPress={() => rejectSheetRef.current?.present()}
             activeOpacity={0.8}
             disabled={isApproving}
@@ -758,7 +921,13 @@ export default function AdminPropertyReviewScreen() {
             <Text style={styles.rejectButtonText}>Reject</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.approveButton, isApproving && styles.buttonDisabled]}
+            style={[
+              styles.approveButton,
+              { backgroundColor: colors.primary },
+              isApproving && {
+                backgroundColor: colors.divider,
+              },
+            ]}
             onPress={handleApprove}
             activeOpacity={0.8}
             disabled={isApproving}
@@ -780,11 +949,16 @@ export default function AdminPropertyReviewScreen() {
           index={0}
           snapPoints={["75%"]}
           backdropComponent={renderBackdrop}
-          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+          handleIndicatorStyle={{ backgroundColor: colors.divider }}
+          backgroundStyle={{ backgroundColor: colors.surface }}
         >
-          <BottomSheetView style={styles.rejectSheetContent}>
-            <Text style={styles.rejectSheetTitle}>Reject Listing</Text>
-            <Text style={styles.rejectSheetSubtitle}>
+          <BottomSheetView
+            style={[styles.rejectSheetContent, { backgroundColor: colors.surface }]}
+          >
+            <Text style={[styles.rejectSheetTitle, { color: colors.text }]}>
+              Reject Listing
+            </Text>
+            <Text style={[styles.rejectSheetSubtitle, { color: colors.textSecondary }]}>
               Select a reason for rejection. The property owner will be
               notified.
             </Text>
@@ -798,7 +972,14 @@ export default function AdminPropertyReviewScreen() {
                   key={reason}
                   style={[
                     styles.reasonOption,
-                    selectedReason === reason && styles.reasonOptionActive,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                    selectedReason === reason && {
+                      borderColor: colors.primary,
+                      backgroundColor: `${colors.primary}08`,
+                    },
                   ]}
                   onPress={() => setSelectedReason(reason)}
                   activeOpacity={0.7}
@@ -812,14 +993,18 @@ export default function AdminPropertyReviewScreen() {
                     size={22}
                     color={
                       selectedReason === reason
-                        ? Colors.primaryGreen
-                        : Colors.textSecondary
+                        ? colors.primary
+                        : colors.textSecondary
                     }
                   />
                   <Text
                     style={[
                       styles.reasonText,
-                      selectedReason === reason && styles.reasonTextActive,
+                      { color: colors.textSecondary },
+                      selectedReason === reason && {
+                        color: colors.text,
+                        fontWeight: "600",
+                      },
                     ]}
                   >
                     {reason}
@@ -829,9 +1014,16 @@ export default function AdminPropertyReviewScreen() {
 
               {selectedReason === "Other (please specify)" && (
                 <BottomSheetTextInput
-                  style={styles.customReasonInput}
+                  style={[
+                    styles.customReasonInput,
+                    {
+                      backgroundColor: colors.background,
+                      borderColor: colors.divider,
+                      color: colors.text,
+                    },
+                  ]}
                   placeholder="Enter reason for rejection..."
-                  placeholderTextColor={Colors.textSecondary}
+                  placeholderTextColor={colors.textSecondary}
                   value={customReason}
                   onChangeText={setCustomReason}
                   multiline
@@ -843,7 +1035,12 @@ export default function AdminPropertyReviewScreen() {
             <TouchableOpacity
               style={[
                 styles.confirmRejectButton,
-                (!selectedReason || isRejecting) && styles.buttonDisabled,
+                {
+                  backgroundColor: colors.error,
+                },
+                (!selectedReason || isRejecting) && {
+                  backgroundColor: colors.divider,
+                },
               ]}
               onPress={handleReject}
               disabled={!selectedReason || isRejecting}
@@ -862,9 +1059,15 @@ export default function AdminPropertyReviewScreen() {
           index={0}
           snapPoints={["90%"]}
           backdropComponent={renderBackdrop}
-          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+          handleIndicatorStyle={{ backgroundColor: colors.divider }}
+          backgroundStyle={{ backgroundColor: colors.surface }}
         >
-          <BottomSheetView style={styles.docPreviewContainer}>
+          <BottomSheetView
+            style={[
+              styles.docPreviewContainer,
+              { backgroundColor: colors.surface },
+            ]}
+          >
             {selectedDocument && (
               <>
                 {/* Document Header */}
@@ -874,19 +1077,34 @@ export default function AdminPropertyReviewScreen() {
                       <Ionicons
                         name={getDocIcon(selectedDocument.type) as any}
                         size={24}
-                        color={Colors.primaryGreen}
+                        color={colors.primary}
                       />
                     </View>
                     <View style={styles.docPreviewTitleInfo}>
-                      <Text style={styles.docPreviewTitle}>
+                      <Text style={[styles.docPreviewTitle, { color: colors.text }]}>
                         {selectedDocument.name}
                       </Text>
                       <View style={styles.docPreviewMeta}>
-                        <Text style={styles.docPreviewMetaText}>
+                        <Text
+                          style={[
+                            styles.docPreviewMetaText,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
                           {selectedDocument.fileSize}
                         </Text>
-                        <View style={styles.docPreviewMetaDot} />
-                        <Text style={styles.docPreviewMetaText}>
+                        <View
+                          style={[
+                            styles.docPreviewMetaDot,
+                            { backgroundColor: colors.divider },
+                          ]}
+                        />
+                        <Text
+                          style={[
+                            styles.docPreviewMetaText,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
                           {selectedDocument.uploadedAt}
                         </Text>
                       </View>
@@ -897,7 +1115,9 @@ export default function AdminPropertyReviewScreen() {
                       styles.docPreviewStatusBadge,
                       {
                         backgroundColor: selectedDocument.verified
-                          ? `${Colors.primaryGreen}15`
+                          ? `${colors.primary}15`
+                          : isDark
+                          ? "#78350F"
                           : "#FEF3C7",
                       },
                     ]}
@@ -908,9 +1128,7 @@ export default function AdminPropertyReviewScreen() {
                       }
                       size={16}
                       color={
-                        selectedDocument.verified
-                          ? Colors.primaryGreen
-                          : "#F59E0B"
+                        selectedDocument.verified ? colors.primary : "#F59E0B"
                       }
                     />
                     <Text
@@ -918,7 +1136,7 @@ export default function AdminPropertyReviewScreen() {
                         styles.docPreviewStatusText,
                         {
                           color: selectedDocument.verified
-                            ? Colors.primaryGreen
+                            ? colors.primary
                             : "#F59E0B",
                         },
                       ]}
@@ -985,7 +1203,7 @@ export default function AdminPropertyReviewScreen() {
                     <Ionicons
                       name="download-outline"
                       size={20}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
                     <Text style={styles.docPreviewDownloadText}>Download</Text>
                   </TouchableOpacity>
@@ -1007,7 +1225,12 @@ export default function AdminPropertyReviewScreen() {
                       <TouchableOpacity
                         style={[
                           styles.docPreviewVerifyButton,
-                          isVerifyingDoc && styles.buttonDisabled,
+                          {
+                            backgroundColor: colors.primary,
+                          },
+                          isVerifyingDoc && {
+                            backgroundColor: colors.divider,
+                          },
                         ]}
                         onPress={handleVerifyDocument}
                         disabled={isVerifyingDoc}
@@ -1024,13 +1247,22 @@ export default function AdminPropertyReviewScreen() {
                       </TouchableOpacity>
                     </View>
                   ) : (
-                    <View style={styles.docVerifiedBanner}>
+                    <View
+                      style={[
+                        styles.docVerifiedBanner,
+                        {
+                          backgroundColor: `${colors.primary}15`,
+                        },
+                      ]}
+                    >
                       <Ionicons
                         name="shield-checkmark"
                         size={22}
-                        color={Colors.primaryGreen}
+                        color={colors.primary}
                       />
-                      <Text style={styles.docVerifiedText}>
+                      <Text
+                        style={[styles.docVerifiedText, { color: colors.primary }]}
+                      >
                         This document has been verified
                       </Text>
                     </View>
@@ -1048,7 +1280,6 @@ export default function AdminPropertyReviewScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   decorativeBackground: {
     position: "absolute",
@@ -1065,8 +1296,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: Colors.primaryLight,
-    opacity: 0.08,
   },
   circle2: {
     position: "absolute",
@@ -1075,8 +1304,6 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     borderRadius: 200,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
   },
   // Header
   headerLeft: {
@@ -1089,13 +1316,11 @@ const styles = StyleSheet.create({
     ...Typography.titleLarge,
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   pendingBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#FEF3C7",
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 12,
@@ -1190,7 +1415,6 @@ const styles = StyleSheet.create({
   },
   typeTag: {
     alignSelf: "flex-start",
-    backgroundColor: Colors.primaryGreen,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -1206,7 +1430,6 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 22,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: 8,
   },
   locationRow: {
@@ -1218,18 +1441,15 @@ const styles = StyleSheet.create({
   locationText: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
   },
   priceText: {
     ...Typography.headlineLarge,
     fontSize: 28,
     fontWeight: "800",
-    color: Colors.primaryGreen,
   },
   negotiableText: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
     marginTop: 4,
   },
   // Stats Row
@@ -1237,12 +1457,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.lg,
     marginBottom: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   statItem: {
     alignItems: "center",
@@ -1252,18 +1470,15 @@ const styles = StyleSheet.create({
     ...Typography.titleMedium,
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginTop: 4,
   },
   statLabel: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
   },
   statDivider: {
     width: 1,
     height: 40,
-    backgroundColor: Colors.divider,
   },
   // Section
   section: {
@@ -1279,20 +1494,16 @@ const styles = StyleSheet.create({
     ...Typography.titleMedium,
     fontSize: 16,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: Spacing.md,
   },
   sectionCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   descriptionText: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
     lineHeight: 22,
   },
   // Detail Row
@@ -1302,19 +1513,16 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
   },
   detailLabel: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
     flex: 1,
   },
   detailValue: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.textPrimary,
     flex: 1.5,
     textAlign: "right",
   },
@@ -1333,7 +1541,6 @@ const styles = StyleSheet.create({
   amenityText: {
     ...Typography.bodyMedium,
     fontSize: 13,
-    color: Colors.textPrimary,
   },
   // Videos
   videoThumbnail: {
@@ -1380,23 +1587,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.sm,
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     padding: Spacing.md,
     marginTop: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   virtualTourText: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.primaryGreen,
     flex: 1,
   },
   // Documents
   docStats: {
-    backgroundColor: `${Colors.primaryGreen}15`,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 10,
@@ -1405,7 +1608,6 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     fontSize: 11,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
   documentRow: {
     flexDirection: "row",
@@ -1413,13 +1615,11 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
   },
   documentIcon: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: `${Colors.primaryGreen}15`,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1430,7 +1630,6 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.textPrimary,
     marginBottom: 2,
   },
   documentStatus: {
@@ -1448,11 +1647,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.md,
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.divider,
     marginBottom: Spacing.sm,
   },
   ownerAvatar: {
@@ -1472,17 +1669,14 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 16,
     fontWeight: "600",
-    color: Colors.textPrimary,
   },
   ownerMeta: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   ownerViewButton: {
     borderWidth: 1,
-    borderColor: Colors.primaryGreen,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: 10,
@@ -1491,14 +1685,11 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 12,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
   ownerContactCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.divider,
     gap: Spacing.sm,
   },
   ownerContactRow: {
@@ -1509,7 +1700,6 @@ const styles = StyleSheet.create({
   ownerContactText: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textPrimary,
   },
   // Review Notes
   reviewNotesCard: {
@@ -1548,9 +1738,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
-    backgroundColor: Colors.background,
     borderTopWidth: 1,
-    borderTopColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -1587,7 +1775,6 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     paddingVertical: Spacing.lg,
     borderRadius: 16,
-    backgroundColor: Colors.primaryGreen,
   },
   approveButtonText: {
     ...Typography.labelLarge,
@@ -1607,13 +1794,11 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 22,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   rejectSheetSubtitle: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
     marginBottom: Spacing.xl,
   },
   reasonsList: {
@@ -1625,35 +1810,26 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.md,
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     marginBottom: Spacing.sm,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   reasonOptionActive: {
-    borderColor: Colors.primaryGreen,
-    backgroundColor: `${Colors.primaryGreen}08`,
   },
   reasonText: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
     flex: 1,
   },
   reasonTextActive: {
-    color: Colors.textPrimary,
     fontWeight: "500",
   },
   customReasonInput: {
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.divider,
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textPrimary,
     minHeight: 80,
     textAlignVertical: "top",
     marginTop: Spacing.sm,
@@ -1692,7 +1868,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: `${Colors.primaryGreen}15`,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1703,7 +1878,6 @@ const styles = StyleSheet.create({
     ...Typography.titleMedium,
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: 4,
   },
   docPreviewMeta: {
@@ -1714,13 +1888,11 @@ const styles = StyleSheet.create({
   docPreviewMetaText: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   docPreviewMetaDot: {
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: Colors.textSecondary,
   },
   docPreviewStatusBadge: {
     flexDirection: "row",
@@ -1739,9 +1911,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 16,
     overflow: "hidden",
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.divider,
     marginBottom: Spacing.lg,
     position: "relative",
   },
@@ -1763,11 +1933,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   docPreviewInfoCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.divider,
     marginBottom: Spacing.lg,
   },
   docPreviewInfoRow: {
@@ -1776,18 +1944,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
   },
   docPreviewInfoLabel: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
   },
   docPreviewInfoValue: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.textPrimary,
   },
   docPreviewActions: {
     gap: Spacing.md,
@@ -1799,13 +1964,11 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     paddingVertical: Spacing.md,
     borderRadius: 14,
-    backgroundColor: `${Colors.primaryGreen}15`,
   },
   docPreviewDownloadText: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
   docPreviewVerifyActions: {
     flexDirection: "row",
@@ -1835,7 +1998,6 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     paddingVertical: Spacing.lg,
     borderRadius: 14,
-    backgroundColor: Colors.primaryGreen,
   },
   docPreviewVerifyText: {
     ...Typography.labelMedium,
@@ -1850,14 +2012,11 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     paddingVertical: Spacing.lg,
     borderRadius: 14,
-    backgroundColor: `${Colors.primaryGreen}10`,
     borderWidth: 1,
-    borderColor: `${Colors.primaryGreen}30`,
   },
   docVerifiedText: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
 });

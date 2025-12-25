@@ -19,7 +19,8 @@ import {
   BottomSheetScrollView,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   FloatingHeader,
   HeaderActionButton,
@@ -168,7 +169,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
 
 const STATUS_OPTIONS: { id: StatusFilter; label: string; color: string }[] = [
   { id: "all", label: "All Status", color: "#3B82F6" },
-  { id: "completed", label: "Completed", color: Colors.primaryGreen },
+  { id: "completed", label: "Completed", color: "#4CAF50" },
   { id: "pending", label: "Pending", color: "#F59E0B" },
   { id: "failed", label: "Failed", color: "#EF4444" },
   { id: "refunded", label: "Refunded", color: "#8B5CF6" },
@@ -184,6 +185,7 @@ const TYPE_OPTIONS: { id: TypeFilter; label: string }[] = [
 export default function AllTransactionsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const filterSheetRef = useRef<BottomSheetModal>(null);
   const detailSheetRef = useRef<BottomSheetModal>(null);
 
@@ -244,16 +246,28 @@ export default function AllTransactionsScreen() {
     switch (status) {
       case "completed":
         return {
-          bg: `${Colors.primaryGreen}15`,
-          text: Colors.primaryGreen,
+          bg: `${colors.primary}15`,
+          text: colors.primary,
           icon: "checkmark-circle",
         };
       case "pending":
-        return { bg: "#FEF3C7", text: "#F59E0B", icon: "time" };
+        return {
+          bg: isDark ? "#78350F" : "#FEF3C7",
+          text: "#F59E0B",
+          icon: "time",
+        };
       case "failed":
-        return { bg: "#FEE2E2", text: "#EF4444", icon: "close-circle" };
+        return {
+          bg: isDark ? "#7F1D1D" : "#FEE2E2",
+          text: "#EF4444",
+          icon: "close-circle",
+        };
       case "refunded":
-        return { bg: "#F3E8FF", text: "#8B5CF6", icon: "arrow-undo" };
+        return {
+          bg: isDark ? "#581C87" : "#F3E8FF",
+          text: "#8B5CF6",
+          icon: "arrow-undo",
+        };
     }
   };
 
@@ -289,7 +303,13 @@ export default function AllTransactionsScreen() {
 
     return (
       <TouchableOpacity
-        style={styles.transactionCard}
+        style={[
+          styles.transactionCard,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.divider,
+          },
+        ]}
         activeOpacity={0.7}
         onPress={() => handleTransactionPress(item)}
       >
@@ -297,23 +317,26 @@ export default function AllTransactionsScreen() {
         <View
           style={[
             styles.transactionIcon,
-            { backgroundColor: `${Colors.primaryGreen}15` },
+            { backgroundColor: `${colors.primary}15` },
           ]}
         >
           <Ionicons
             name={getTypeIcon(item.type) as any}
             size={20}
-            color={Colors.primaryGreen}
+            color={colors.primary}
           />
         </View>
 
         {/* Content */}
         <View style={styles.transactionContent}>
           <View style={styles.transactionHeader}>
-            <Text style={styles.transactionUser}>{item.user}</Text>
+            <Text style={[styles.transactionUser, { color: colors.text }]}>
+              {item.user}
+            </Text>
             <Text
               style={[
                 styles.transactionAmount,
+                { color: colors.primary },
                 item.type === "refund" && { color: "#EF4444" },
               ]}
             >
@@ -322,26 +345,41 @@ export default function AllTransactionsScreen() {
           </View>
 
           <View style={styles.transactionMeta}>
-            <View style={styles.planBadge}>
-              <Text style={styles.planBadgeText}>
+            <View
+              style={[styles.planBadge, { backgroundColor: colors.background }]}
+            >
+              <Text
+                style={[styles.planBadgeText, { color: colors.textSecondary }]}
+              >
                 {item.plan ||
                   item.type.charAt(0).toUpperCase() + item.type.slice(1)}
               </Text>
             </View>
-            <View style={styles.paymentMethod}>
+            <View
+              style={[
+                styles.paymentMethod,
+                { backgroundColor: colors.background },
+              ]}
+            >
               <Ionicons
                 name={getPaymentMethodIcon(item.paymentMethod) as any}
                 size={12}
-                color={Colors.textSecondary}
+                color={colors.textSecondary}
               />
             </View>
-            <Text style={styles.transactionDate}>
+            <Text
+              style={[styles.transactionDate, { color: colors.textSecondary }]}
+            >
               {item.date} • {item.time}
             </Text>
           </View>
 
           <View style={styles.transactionFooter}>
-            <Text style={styles.transactionRef}>{item.reference}</Text>
+            <Text
+              style={[styles.transactionRef, { color: colors.textSecondary }]}
+            >
+              {item.reference}
+            </Text>
             <View
               style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}
             >
@@ -373,12 +411,22 @@ export default function AllTransactionsScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
         </View>
 
         {/* Floating Sticky Header */}
@@ -398,33 +446,62 @@ export default function AllTransactionsScreen() {
 
         {/* Summary Cards */}
         <View style={[styles.summaryContainer, { top: 70 + insets.top }]}>
-          <View style={styles.summaryCard}>
+          <View
+            style={[
+              styles.summaryCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
             <View
               style={[
                 styles.summaryIcon,
-                { backgroundColor: `${Colors.primaryGreen}15` },
+                { backgroundColor: `${colors.primary}15` },
               ]}
             >
               <Ionicons
                 name="checkmark-circle"
                 size={18}
-                color={Colors.primaryGreen}
+                color={colors.primary}
               />
             </View>
             <View>
-              <Text style={styles.summaryLabel}>Completed</Text>
-              <Text style={styles.summaryValue}>
+              <Text
+                style={[styles.summaryLabel, { color: colors.textSecondary }]}
+              >
+                Completed
+              </Text>
+              <Text style={[styles.summaryValue, { color: colors.text }]}>
                 ₵{completedTotal.toFixed(2)}
               </Text>
             </View>
           </View>
-          <View style={styles.summaryCard}>
-            <View style={[styles.summaryIcon, { backgroundColor: "#FEF3C7" }]}>
+          <View
+            style={[
+              styles.summaryCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.summaryIcon,
+                { backgroundColor: isDark ? "#78350F" : "#FEF3C7" },
+              ]}
+            >
               <Ionicons name="time" size={18} color="#F59E0B" />
             </View>
             <View>
-              <Text style={styles.summaryLabel}>Pending</Text>
-              <Text style={styles.summaryValue}>
+              <Text
+                style={[styles.summaryLabel, { color: colors.textSecondary }]}
+              >
+                Pending
+              </Text>
+              <Text style={[styles.summaryValue, { color: colors.text }]}>
                 ₵{pendingTotal.toFixed(2)}
               </Text>
             </View>
@@ -482,7 +559,9 @@ export default function AllTransactionsScreen() {
                 </TouchableOpacity>
               </View>
             )}
-            <Text style={styles.resultsCount}>
+            <Text
+              style={[styles.resultsCount, { color: colors.textSecondary }]}
+            >
               {filteredTransactions.length} results
             </Text>
           </View>
@@ -509,34 +588,54 @@ export default function AllTransactionsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor={Colors.primaryGreen}
+              tintColor={colors.primary}
               progressViewOffset={140 + insets.top}
             />
           }
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <View style={styles.emptyIconContainer}>
+              <View
+                style={[
+                  styles.emptyIconContainer,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
+              >
                 <Ionicons
                   name="receipt-outline"
                   size={48}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
               </View>
-              <Text style={styles.emptyTitle}>No Transactions Found</Text>
-              <Text style={styles.emptyMessage}>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                No Transactions Found
+              </Text>
+              <Text
+                style={[styles.emptyMessage, { color: colors.textSecondary }]}
+              >
                 {searchQuery
                   ? "Try a different search term"
                   : "No transactions match the current filters"}
               </Text>
               {(statusFilter !== "all" || typeFilter !== "all") && (
                 <TouchableOpacity
-                  style={styles.clearFiltersButton}
+                  style={[
+                    styles.clearFiltersButton,
+                    { borderColor: colors.primary },
+                  ]}
                   onPress={() => {
                     setStatusFilter("all");
                     setTypeFilter("all");
                   }}
                 >
-                  <Text style={styles.clearFiltersButtonText}>
+                  <Text
+                    style={[
+                      styles.clearFiltersButtonText,
+                      { color: colors.primary },
+                    ]}
+                  >
                     Clear Filters
                   </Text>
                 </TouchableOpacity>
@@ -560,21 +659,37 @@ export default function AllTransactionsScreen() {
           index={0}
           snapPoints={["60%"]}
           backdropComponent={renderBackdrop}
-          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+          handleIndicatorStyle={{ backgroundColor: colors.divider }}
+          backgroundStyle={{ backgroundColor: colors.surface }}
         >
           <BottomSheetScrollView style={styles.filterSheetContent}>
-            <Text style={styles.filterSheetTitle}>Filter Transactions</Text>
+            <Text style={[styles.filterSheetTitle, { color: colors.text }]}>
+              Filter Transactions
+            </Text>
 
             {/* Status Filter */}
-            <Text style={styles.filterSectionTitle}>Status</Text>
+            <Text
+              style={[
+                styles.filterSectionTitle,
+                { color: colors.textSecondary },
+              ]}
+            >
+              Status
+            </Text>
             <View style={styles.filterOptions}>
               {STATUS_OPTIONS.map((option) => (
                 <TouchableOpacity
                   key={option.id}
                   style={[
                     styles.filterOption,
-                    statusFilter === option.id && styles.filterOptionActive,
-                    statusFilter === option.id && { borderColor: option.color },
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                    statusFilter === option.id && {
+                      borderColor: option.color,
+                      backgroundColor: `${option.color}08`,
+                    },
                   ]}
                   onPress={() => setStatusFilter(option.id)}
                   activeOpacity={0.7}
@@ -588,8 +703,11 @@ export default function AllTransactionsScreen() {
                   <Text
                     style={[
                       styles.filterOptionText,
-                      statusFilter === option.id &&
-                        styles.filterOptionTextActive,
+                      { color: colors.textSecondary },
+                      statusFilter === option.id && {
+                        color: colors.text,
+                        fontWeight: "600",
+                      },
                     ]}
                   >
                     {option.label}
@@ -602,14 +720,28 @@ export default function AllTransactionsScreen() {
             </View>
 
             {/* Type Filter */}
-            <Text style={styles.filterSectionTitle}>Transaction Type</Text>
+            <Text
+              style={[
+                styles.filterSectionTitle,
+                { color: colors.textSecondary },
+              ]}
+            >
+              Transaction Type
+            </Text>
             <View style={styles.filterOptions}>
               {TYPE_OPTIONS.map((option) => (
                 <TouchableOpacity
                   key={option.id}
                   style={[
                     styles.filterOption,
-                    typeFilter === option.id && styles.filterOptionActive,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                    typeFilter === option.id && {
+                      borderColor: colors.primary,
+                      backgroundColor: `${colors.primary}08`,
+                    },
                   ]}
                   onPress={() => setTypeFilter(option.id)}
                   activeOpacity={0.7}
@@ -617,7 +749,11 @@ export default function AllTransactionsScreen() {
                   <Text
                     style={[
                       styles.filterOptionText,
-                      typeFilter === option.id && styles.filterOptionTextActive,
+                      { color: colors.textSecondary },
+                      typeFilter === option.id && {
+                        color: colors.text,
+                        fontWeight: "600",
+                      },
                     ]}
                   >
                     {option.label}
@@ -626,7 +762,7 @@ export default function AllTransactionsScreen() {
                     <Ionicons
                       name="checkmark"
                       size={18}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
                   )}
                 </TouchableOpacity>
@@ -635,7 +771,7 @@ export default function AllTransactionsScreen() {
 
             {/* Apply Button */}
             <TouchableOpacity
-              style={styles.applyButton}
+              style={[styles.applyButton, { backgroundColor: colors.primary }]}
               onPress={() => filterSheetRef.current?.dismiss()}
               activeOpacity={0.8}
             >
@@ -652,7 +788,14 @@ export default function AllTransactionsScreen() {
                 }}
                 activeOpacity={0.7}
               >
-                <Text style={styles.clearButtonText}>Clear All Filters</Text>
+                <Text
+                  style={[
+                    styles.clearButtonText,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Clear All Filters
+                </Text>
               </TouchableOpacity>
             )}
           </BottomSheetScrollView>
@@ -664,27 +807,33 @@ export default function AllTransactionsScreen() {
           index={0}
           snapPoints={["55%"]}
           backdropComponent={renderBackdrop}
-          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+          handleIndicatorStyle={{ backgroundColor: colors.divider }}
+          backgroundStyle={{ backgroundColor: colors.surface }}
         >
           <BottomSheetView style={styles.detailSheetContent}>
             {selectedTransaction && (
               <>
                 {/* Header */}
-                <View style={styles.detailHeader}>
+                <View
+                  style={[
+                    styles.detailHeader,
+                    { borderBottomColor: colors.divider },
+                  ]}
+                >
                   <View
                     style={[
                       styles.detailIconContainer,
-                      { backgroundColor: `${Colors.primaryGreen}15` },
+                      { backgroundColor: `${colors.primary}15` },
                     ]}
                   >
                     <Ionicons
                       name={getTypeIcon(selectedTransaction.type) as any}
                       size={28}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
                   </View>
                   <View style={styles.detailHeaderInfo}>
-                    <Text style={styles.detailAmount}>
+                    <Text style={[styles.detailAmount, { color: colors.text }]}>
                       {selectedTransaction.amount}
                     </Text>
                     <View
@@ -721,59 +870,134 @@ export default function AllTransactionsScreen() {
                 </View>
 
                 {/* Details List */}
-                <View style={styles.detailsList}>
-                  <View style={styles.detailRow}>
+                <View
+                  style={[
+                    styles.detailsList,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.detailRow,
+                      { borderBottomColor: colors.divider },
+                    ]}
+                  >
                     <View style={styles.detailRowLeft}>
-                      <View style={styles.detailRowIcon}>
+                      <View
+                        style={[
+                          styles.detailRowIcon,
+                          { backgroundColor: colors.background },
+                        ]}
+                      >
                         <Ionicons
                           name="person-outline"
                           size={18}
-                          color={Colors.textSecondary}
+                          color={colors.textSecondary}
                         />
                       </View>
-                      <Text style={styles.detailRowLabel}>Customer</Text>
+                      <Text
+                        style={[
+                          styles.detailRowLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Customer
+                      </Text>
                     </View>
-                    <Text style={styles.detailRowValue}>
+                    <Text
+                      style={[styles.detailRowValue, { color: colors.text }]}
+                    >
                       {selectedTransaction.user}
                     </Text>
                   </View>
 
-                  <View style={styles.detailRow}>
+                  <View
+                    style={[
+                      styles.detailRow,
+                      { borderBottomColor: colors.divider },
+                    ]}
+                  >
                     <View style={styles.detailRowLeft}>
-                      <View style={styles.detailRowIcon}>
+                      <View
+                        style={[
+                          styles.detailRowIcon,
+                          { backgroundColor: colors.background },
+                        ]}
+                      >
                         <Ionicons
                           name="ribbon-outline"
                           size={18}
-                          color={Colors.textSecondary}
+                          color={colors.textSecondary}
                         />
                       </View>
-                      <Text style={styles.detailRowLabel}>Plan</Text>
+                      <Text
+                        style={[
+                          styles.detailRowLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Plan
+                      </Text>
                     </View>
-                    <Text style={styles.detailRowValue}>
+                    <Text
+                      style={[styles.detailRowValue, { color: colors.text }]}
+                    >
                       {selectedTransaction.plan || "N/A"}
                     </Text>
                   </View>
 
-                  <View style={styles.detailRow}>
+                  <View
+                    style={[
+                      styles.detailRow,
+                      { borderBottomColor: colors.divider },
+                    ]}
+                  >
                     <View style={styles.detailRowLeft}>
-                      <View style={styles.detailRowIcon}>
+                      <View
+                        style={[
+                          styles.detailRowIcon,
+                          { backgroundColor: colors.background },
+                        ]}
+                      >
                         <Ionicons
                           name="pricetag-outline"
                           size={18}
-                          color={Colors.textSecondary}
+                          color={colors.textSecondary}
                         />
                       </View>
-                      <Text style={styles.detailRowLabel}>Type</Text>
+                      <Text
+                        style={[
+                          styles.detailRowLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Type
+                      </Text>
                     </View>
-                    <Text style={styles.detailRowValue}>
+                    <Text
+                      style={[styles.detailRowValue, { color: colors.text }]}
+                    >
                       {selectedTransaction.type.charAt(0).toUpperCase() +
                         selectedTransaction.type.slice(1)}
                     </Text>
                   </View>
 
-                  <View style={styles.detailRow}>
+                  <View
+                    style={[
+                      styles.detailRow,
+                      { borderBottomColor: colors.divider },
+                    ]}
+                  >
                     <View style={styles.detailRowLeft}>
-                      <View style={styles.detailRowIcon}>
+                      <View
+                        style={[
+                          styles.detailRowIcon,
+                          { backgroundColor: colors.background },
+                        ]}
+                      >
                         <Ionicons
                           name={
                             getPaymentMethodIcon(
@@ -781,12 +1005,21 @@ export default function AllTransactionsScreen() {
                             ) as any
                           }
                           size={18}
-                          color={Colors.textSecondary}
+                          color={colors.textSecondary}
                         />
                       </View>
-                      <Text style={styles.detailRowLabel}>Payment Method</Text>
+                      <Text
+                        style={[
+                          styles.detailRowLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Payment Method
+                      </Text>
                     </View>
-                    <Text style={styles.detailRowValue}>
+                    <Text
+                      style={[styles.detailRowValue, { color: colors.text }]}
+                    >
                       {selectedTransaction.paymentMethod === "momo"
                         ? "Mobile Money"
                         : selectedTransaction.paymentMethod === "card"
@@ -795,35 +1028,70 @@ export default function AllTransactionsScreen() {
                     </Text>
                   </View>
 
-                  <View style={styles.detailRow}>
+                  <View
+                    style={[
+                      styles.detailRow,
+                      { borderBottomColor: colors.divider },
+                    ]}
+                  >
                     <View style={styles.detailRowLeft}>
-                      <View style={styles.detailRowIcon}>
+                      <View
+                        style={[
+                          styles.detailRowIcon,
+                          { backgroundColor: colors.background },
+                        ]}
+                      >
                         <Ionicons
                           name="calendar-outline"
                           size={18}
-                          color={Colors.textSecondary}
+                          color={colors.textSecondary}
                         />
                       </View>
-                      <Text style={styles.detailRowLabel}>Date & Time</Text>
+                      <Text
+                        style={[
+                          styles.detailRowLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Date & Time
+                      </Text>
                     </View>
-                    <Text style={styles.detailRowValue}>
+                    <Text
+                      style={[styles.detailRowValue, { color: colors.text }]}
+                    >
                       {selectedTransaction.date} • {selectedTransaction.time}
                     </Text>
                   </View>
 
                   <View style={[styles.detailRow, { borderBottomWidth: 0 }]}>
                     <View style={styles.detailRowLeft}>
-                      <View style={styles.detailRowIcon}>
+                      <View
+                        style={[
+                          styles.detailRowIcon,
+                          { backgroundColor: colors.background },
+                        ]}
+                      >
                         <Ionicons
                           name="receipt-outline"
                           size={18}
-                          color={Colors.textSecondary}
+                          color={colors.textSecondary}
                         />
                       </View>
-                      <Text style={styles.detailRowLabel}>Reference</Text>
+                      <Text
+                        style={[
+                          styles.detailRowLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Reference
+                      </Text>
                     </View>
                     <Text
-                      style={[styles.detailRowValue, styles.detailRefValue]}
+                      style={[
+                        styles.detailRowValue,
+                        styles.detailRefValue,
+                        { color: colors.text },
+                      ]}
                     >
                       {selectedTransaction.reference}
                     </Text>
@@ -833,15 +1101,26 @@ export default function AllTransactionsScreen() {
                 {/* Action Buttons */}
                 <View style={styles.detailActions}>
                   <TouchableOpacity
-                    style={styles.detailActionButton}
+                    style={[
+                      styles.detailActionButton,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.divider,
+                      },
+                    ]}
                     activeOpacity={0.7}
                   >
                     <Ionicons
                       name="download-outline"
                       size={20}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
-                    <Text style={styles.detailActionText}>
+                    <Text
+                      style={[
+                        styles.detailActionText,
+                        { color: colors.primary },
+                      ]}
+                    >
                       Download Receipt
                     </Text>
                   </TouchableOpacity>
@@ -849,7 +1128,10 @@ export default function AllTransactionsScreen() {
                     <TouchableOpacity
                       style={[
                         styles.detailActionButton,
-                        styles.detailActionButtonDanger,
+                        {
+                          backgroundColor: colors.surface,
+                          borderColor: isDark ? "#7F1D1D" : "#FEE2E2",
+                        },
                       ]}
                       activeOpacity={0.7}
                     >
@@ -878,7 +1160,6 @@ export default function AllTransactionsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   decorativeBackground: {
     position: "absolute",
@@ -895,8 +1176,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: Colors.primaryLight,
-    opacity: 0.08,
   },
   circle2: {
     position: "absolute",
@@ -905,8 +1184,6 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     borderRadius: 200,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
   },
   // Header
   headerLeft: {
@@ -919,7 +1196,6 @@ const styles = StyleSheet.create({
     ...Typography.titleLarge,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   // Summary
   summaryContainer: {
@@ -936,11 +1212,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.sm,
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -963,13 +1237,11 @@ const styles = StyleSheet.create({
   summaryLabel: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
   },
   summaryValue: {
     ...Typography.labelMedium,
     fontSize: 15,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   // Active Filters
   activeFiltersBar: {
@@ -999,7 +1271,6 @@ const styles = StyleSheet.create({
   resultsCount: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
     marginLeft: "auto",
   },
   // List
@@ -1010,12 +1281,10 @@ const styles = StyleSheet.create({
   // Transaction Card
   transactionCard: {
     flexDirection: "row",
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.md,
     marginBottom: Spacing.sm,
     borderWidth: 1,
-    borderColor: Colors.divider,
     gap: Spacing.md,
     ...Platform.select({
       ios: {
@@ -1049,13 +1318,11 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 15,
     fontWeight: "600",
-    color: Colors.textPrimary,
   },
   transactionAmount: {
     ...Typography.labelMedium,
     fontSize: 16,
     fontWeight: "700",
-    color: Colors.primaryGreen,
   },
   transactionMeta: {
     flexDirection: "row",
@@ -1064,7 +1331,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   planBadge: {
-    backgroundColor: Colors.background,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
@@ -1073,20 +1339,17 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     fontSize: 10,
     fontWeight: "600",
-    color: Colors.textSecondary,
   },
   paymentMethod: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: Colors.background,
     alignItems: "center",
     justifyContent: "center",
   },
   transactionDate: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
   },
   transactionFooter: {
     flexDirection: "row",
@@ -1096,7 +1359,6 @@ const styles = StyleSheet.create({
   transactionRef: {
     ...Typography.caption,
     fontSize: 10,
-    color: Colors.textSecondary,
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
   },
   statusBadge: {
@@ -1122,24 +1384,20 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: Colors.surface,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   emptyTitle: {
     ...Typography.titleMedium,
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   emptyMessage: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
     textAlign: "center",
   },
   clearFiltersButton: {
@@ -1148,13 +1406,11 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.primaryGreen,
   },
   clearFiltersButtonText: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
   // Filter Sheet
   filterSheetContent: {
@@ -1164,14 +1420,12 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 22,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: Spacing.xl,
   },
   filterSectionTitle: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.textSecondary,
     marginBottom: Spacing.md,
     marginTop: Spacing.md,
   },
@@ -1183,14 +1437,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: Spacing.md,
     padding: Spacing.md,
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: Colors.divider,
-  },
-  filterOptionActive: {
-    backgroundColor: `${Colors.primaryGreen}08`,
-    borderColor: Colors.primaryGreen,
   },
   filterOptionDot: {
     width: 12,
@@ -1200,15 +1448,9 @@ const styles = StyleSheet.create({
   filterOptionText: {
     ...Typography.bodyMedium,
     fontSize: 15,
-    color: Colors.textSecondary,
     flex: 1,
   },
-  filterOptionTextActive: {
-    color: Colors.textPrimary,
-    fontWeight: "600",
-  },
   applyButton: {
-    backgroundColor: Colors.primaryGreen,
     paddingVertical: Spacing.lg,
     borderRadius: 16,
     marginTop: Spacing.xl,
@@ -1229,7 +1471,6 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.textSecondary,
   },
   // Detail Sheet
   detailSheetContent: {
@@ -1242,7 +1483,6 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
     paddingBottom: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
   },
   detailIconContainer: {
     width: 60,
@@ -1259,7 +1499,6 @@ const styles = StyleSheet.create({
     ...Typography.headlineLarge,
     fontSize: 28,
     fontWeight: "800",
-    color: Colors.textPrimary,
   },
   detailStatusBadge: {
     flexDirection: "row",
@@ -1276,11 +1515,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   detailsList: {
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: Colors.divider,
     marginBottom: Spacing.lg,
   },
   detailRow: {
@@ -1290,7 +1527,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
   },
   detailRowLeft: {
     flexDirection: "row",
@@ -1301,20 +1537,17 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: Colors.background,
     alignItems: "center",
     justifyContent: "center",
   },
   detailRowLabel: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
   },
   detailRowValue: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.textPrimary,
   },
   detailRefValue: {
     fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
@@ -1329,19 +1562,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: Spacing.sm,
     paddingVertical: Spacing.md,
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: Colors.divider,
-  },
-  detailActionButtonDanger: {
-    borderColor: "#FEE2E2",
-    backgroundColor: "#FEE2E210",
   },
   detailActionText: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
 });

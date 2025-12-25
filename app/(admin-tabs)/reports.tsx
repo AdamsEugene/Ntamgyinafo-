@@ -15,7 +15,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { BarChart, PieChart } from "react-native-gifted-charts";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import { FloatingHeader } from "@/components/FloatingHeader";
 
 interface Transaction {
@@ -101,6 +102,7 @@ const TIME_PERIODS: { id: TimePeriod; label: string }[] = [
 export default function PaymentReportsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("month");
   const [planFilter, setPlanFilter] = useState<PlanFilter>("all");
@@ -126,24 +128,24 @@ export default function PaymentReportsScreen() {
 
   // Revenue data for bar chart
   const revenueData = [
-    { value: 12500, label: "Jan", frontColor: Colors.primaryGreen },
-    { value: 18200, label: "Feb", frontColor: Colors.primaryGreen },
-    { value: 15800, label: "Mar", frontColor: Colors.primaryGreen },
-    { value: 22100, label: "Apr", frontColor: Colors.primaryGreen },
-    { value: 28500, label: "May", frontColor: Colors.primaryGreen },
-    { value: 32400, label: "Jun", frontColor: Colors.primaryGreen },
-    { value: 38900, label: "Jul", frontColor: Colors.primaryGreen },
-    { value: 35600, label: "Aug", frontColor: Colors.primaryGreen },
-    { value: 42300, label: "Sep", frontColor: Colors.primaryGreen },
-    { value: 48700, label: "Oct", frontColor: Colors.primaryGreen },
-    { value: 52100, label: "Nov", frontColor: Colors.primaryGreen },
+    { value: 12500, label: "Jan", frontColor: colors.primary },
+    { value: 18200, label: "Feb", frontColor: colors.primary },
+    { value: 15800, label: "Mar", frontColor: colors.primary },
+    { value: 22100, label: "Apr", frontColor: colors.primary },
+    { value: 28500, label: "May", frontColor: colors.primary },
+    { value: 32400, label: "Jun", frontColor: colors.primary },
+    { value: 38900, label: "Jul", frontColor: colors.primary },
+    { value: 35600, label: "Aug", frontColor: colors.primary },
+    { value: 42300, label: "Sep", frontColor: colors.primary },
+    { value: 48700, label: "Oct", frontColor: colors.primary },
+    { value: 52100, label: "Nov", frontColor: colors.primary },
     { value: 45280, label: "Dec", frontColor: "#3B82F6" },
   ];
 
   // Plan distribution for pie chart
   const planDistribution = [
     { value: 45, color: "#3B82F6", text: "Basic" },
-    { value: 35, color: Colors.primaryGreen, text: "Standard" },
+    { value: 35, color: colors.primary, text: "Standard" },
     { value: 20, color: "#8B5CF6", text: "Premium" },
   ];
 
@@ -155,22 +157,41 @@ export default function PaymentReportsScreen() {
   const getStatusStyle = (status: Transaction["status"]) => {
     switch (status) {
       case "completed":
-        return { bg: `${Colors.primaryGreen}15`, text: Colors.primaryGreen };
+        return {
+          bg: `${colors.primary}15`,
+          text: colors.primary,
+        };
       case "pending":
-        return { bg: "#FEF3C7", text: "#F59E0B" };
+        return {
+          bg: isDark ? "#78350F" : "#FEF3C7",
+          text: "#F59E0B",
+        };
       case "failed":
-        return { bg: "#FEE2E2", text: "#EF4444" };
+        return {
+          bg: isDark ? "#7F1D1D" : "#FEE2E2",
+          text: "#EF4444",
+        };
     }
   };
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
         </View>
 
         {/* Floating Sticky Header */}
@@ -186,9 +207,13 @@ export default function PaymentReportsScreen() {
               <Ionicons
                 name="download-outline"
                 size={18}
-                color={Colors.primaryGreen}
+                color={colors.primary}
               />
-              <Text style={styles.exportButtonText}>Export</Text>
+              <Text
+                style={[styles.exportButtonText, { color: colors.primary }]}
+              >
+                Export
+              </Text>
             </TouchableOpacity>
           }
         />
@@ -207,19 +232,29 @@ export default function PaymentReportsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor={Colors.primaryGreen}
+              tintColor={colors.primary}
               progressViewOffset={80 + insets.top}
             />
           }
         >
           {/* Time Period Selector */}
-          <View style={styles.timePeriodContainer}>
+          <View
+            style={[
+              styles.timePeriodContainer,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
             {TIME_PERIODS.map((period) => (
               <TouchableOpacity
                 key={period.id}
                 style={[
                   styles.timePeriodTab,
-                  timePeriod === period.id && styles.timePeriodTabActive,
+                  timePeriod === period.id && {
+                    backgroundColor: colors.primary,
+                  },
                 ]}
                 onPress={() => setTimePeriod(period.id)}
                 activeOpacity={0.7}
@@ -227,7 +262,10 @@ export default function PaymentReportsScreen() {
                 <Text
                   style={[
                     styles.timePeriodText,
-                    timePeriod === period.id && styles.timePeriodTextActive,
+                    { color: colors.textSecondary },
+                    timePeriod === period.id && {
+                      color: "#FFFFFF",
+                    },
                   ]}
                 >
                   {period.label}
@@ -238,7 +276,19 @@ export default function PaymentReportsScreen() {
 
           {/* Revenue Overview */}
           <View style={styles.revenueOverview}>
-            <View style={styles.revenueCard}>
+            <View
+              style={[
+                styles.revenueCard,
+                {
+                  backgroundColor: colors.primary,
+                  ...Platform.select({
+                    ios: {
+                      shadowColor: colors.primary,
+                    },
+                  }),
+                },
+              ]}
+            >
               <Text style={styles.revenueLabel}>Total Revenue</Text>
               <Text style={styles.revenueValue}>₵45,280</Text>
               <View style={styles.revenueChange}>
@@ -247,13 +297,47 @@ export default function PaymentReportsScreen() {
               </View>
             </View>
             <View style={styles.revenueStats}>
-              <View style={styles.revenueStat}>
-                <Text style={styles.revenueStatValue}>284</Text>
-                <Text style={styles.revenueStatLabel}>Transactions</Text>
+              <View
+                style={[
+                  styles.revenueStat,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
+              >
+                <Text style={[styles.revenueStatValue, { color: colors.text }]}>
+                  284
+                </Text>
+                <Text
+                  style={[
+                    styles.revenueStatLabel,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Transactions
+                </Text>
               </View>
-              <View style={styles.revenueStat}>
-                <Text style={styles.revenueStatValue}>₵159</Text>
-                <Text style={styles.revenueStatLabel}>Avg. Value</Text>
+              <View
+                style={[
+                  styles.revenueStat,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
+              >
+                <Text style={[styles.revenueStatValue, { color: colors.text }]}>
+                  ₵159
+                </Text>
+                <Text
+                  style={[
+                    styles.revenueStatLabel,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Avg. Value
+                </Text>
               </View>
             </View>
           </View>
@@ -261,15 +345,29 @@ export default function PaymentReportsScreen() {
           {/* Revenue Chart */}
           <View style={styles.chartSection}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Revenue Trend</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                Revenue Trend
+              </Text>
               <View style={styles.legendItem}>
                 <View
                   style={[styles.legendDot, { backgroundColor: "#3B82F6" }]}
                 />
-                <Text style={styles.legendText}>Current</Text>
+                <Text
+                  style={[styles.legendText, { color: colors.textSecondary }]}
+                >
+                  Current
+                </Text>
               </View>
             </View>
-            <View style={styles.chartCard}>
+            <View
+              style={[
+                styles.chartCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               <BarChart
                 data={revenueData}
                 width={CHART_WIDTH}
@@ -280,9 +378,15 @@ export default function PaymentReportsScreen() {
                 barBorderRadius={6}
                 yAxisThickness={0}
                 xAxisThickness={1}
-                xAxisColor={Colors.divider}
-                yAxisTextStyle={styles.chartAxisText}
-                xAxisLabelTextStyle={styles.chartAxisTextSmall}
+                xAxisColor={colors.divider}
+                yAxisTextStyle={[
+                  styles.chartAxisText,
+                  { color: colors.textSecondary },
+                ]}
+                xAxisLabelTextStyle={[
+                  styles.chartAxisTextSmall,
+                  { color: colors.textSecondary },
+                ]}
                 hideRules
                 isAnimated
                 initialSpacing={8}
@@ -303,18 +407,40 @@ export default function PaymentReportsScreen() {
 
           {/* Plan Distribution */}
           <View style={styles.chartSection}>
-            <Text style={styles.sectionTitle}>Subscription Distribution</Text>
-            <View style={styles.pieChartCard}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Subscription Distribution
+            </Text>
+            <View
+              style={[
+                styles.pieChartCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               <View style={styles.pieChartWrapper}>
                 <PieChart
                   data={planDistribution}
                   donut
                   radius={85}
                   innerRadius={55}
+                  innerCircleColor={colors.background}
                   centerLabelComponent={() => (
                     <View style={styles.pieCenter}>
-                      <Text style={styles.pieCenterValue}>284</Text>
-                      <Text style={styles.pieCenterLabel}>Total</Text>
+                      <Text
+                        style={[styles.pieCenterValue, { color: colors.text }]}
+                      >
+                        284
+                      </Text>
+                      <Text
+                        style={[
+                          styles.pieCenterLabel,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
+                        Total
+                      </Text>
                     </View>
                   )}
                   showValuesAsLabels
@@ -333,8 +459,19 @@ export default function PaymentReportsScreen() {
                         { backgroundColor: item.color },
                       ]}
                     />
-                    <Text style={styles.pieLegendText}>{item.text}</Text>
-                    <Text style={styles.pieLegendValue}>{item.value}%</Text>
+                    <Text
+                      style={[styles.pieLegendText, { color: colors.text }]}
+                    >
+                      {item.text}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.pieLegendValue,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      {item.value}%
+                    </Text>
                   </View>
                 ))}
               </View>
@@ -343,45 +480,85 @@ export default function PaymentReportsScreen() {
 
           {/* Quick Stats */}
           <View style={styles.quickStats}>
-            <View style={styles.quickStatCard}>
+            <View
+              style={[
+                styles.quickStatCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               <View
                 style={[
                   styles.quickStatIcon,
-                  { backgroundColor: `${Colors.primaryGreen}15` },
+                  { backgroundColor: `${colors.primary}15` },
                 ]}
               >
-                <Ionicons
-                  name="trending-up"
-                  size={20}
-                  color={Colors.primaryGreen}
-                />
+                <Ionicons name="trending-up" size={20} color={colors.primary} />
               </View>
-              <Text style={styles.quickStatValue}>+24%</Text>
-              <Text style={styles.quickStatLabel}>Growth Rate</Text>
+              <Text style={[styles.quickStatValue, { color: colors.text }]}>
+                +24%
+              </Text>
+              <Text
+                style={[styles.quickStatLabel, { color: colors.textSecondary }]}
+              >
+                Growth Rate
+              </Text>
             </View>
-            <View style={styles.quickStatCard}>
+            <View
+              style={[
+                styles.quickStatCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               <View
                 style={[styles.quickStatIcon, { backgroundColor: "#3B82F615" }]}
               >
                 <Ionicons name="people" size={20} color="#3B82F6" />
               </View>
-              <Text style={styles.quickStatValue}>156</Text>
-              <Text style={styles.quickStatLabel}>New Subscribers</Text>
+              <Text style={[styles.quickStatValue, { color: colors.text }]}>
+                156
+              </Text>
+              <Text
+                style={[styles.quickStatLabel, { color: colors.textSecondary }]}
+              >
+                New Subscribers
+              </Text>
             </View>
-            <View style={styles.quickStatCard}>
+            <View
+              style={[
+                styles.quickStatCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               <View
                 style={[styles.quickStatIcon, { backgroundColor: "#8B5CF615" }]}
               >
                 <Ionicons name="repeat" size={20} color="#8B5CF6" />
               </View>
-              <Text style={styles.quickStatValue}>89%</Text>
-              <Text style={styles.quickStatLabel}>Retention</Text>
+              <Text style={[styles.quickStatValue, { color: colors.text }]}>
+                89%
+              </Text>
+              <Text
+                style={[styles.quickStatLabel, { color: colors.textSecondary }]}
+              >
+                Retention
+              </Text>
             </View>
           </View>
 
           {/* Plan Filter */}
           <View style={styles.filterSection}>
-            <Text style={styles.sectionTitle}>Recent Transactions</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Recent Transactions
+            </Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -392,7 +569,14 @@ export default function PaymentReportsScreen() {
                   key={plan}
                   style={[
                     styles.planFilterTab,
-                    planFilter === plan && styles.planFilterTabActive,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                    planFilter === plan && {
+                      backgroundColor: colors.primary,
+                      borderColor: colors.primary,
+                    },
                   ]}
                   onPress={() => setPlanFilter(plan as PlanFilter)}
                   activeOpacity={0.7}
@@ -400,7 +584,10 @@ export default function PaymentReportsScreen() {
                   <Text
                     style={[
                       styles.planFilterText,
-                      planFilter === plan && styles.planFilterTextActive,
+                      { color: colors.textSecondary },
+                      planFilter === plan && {
+                        color: "#FFFFFF",
+                      },
                     ]}
                   >
                     {plan.charAt(0).toUpperCase() + plan.slice(1)}
@@ -411,7 +598,15 @@ export default function PaymentReportsScreen() {
           </View>
 
           {/* Transactions List */}
-          <View style={styles.transactionsList}>
+          <View
+            style={[
+              styles.transactionsList,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
             {filteredTransactions.map((transaction, index) => {
               const statusStyle = getStatusStyle(transaction.status);
               return (
@@ -419,37 +614,62 @@ export default function PaymentReportsScreen() {
                   key={transaction.id}
                   style={[
                     styles.transactionItem,
+                    { borderBottomColor: colors.divider },
                     index === filteredTransactions.length - 1 && {
                       borderBottomWidth: 0,
                     },
                   ]}
                 >
-                  <View style={styles.transactionIcon}>
+                  <View
+                    style={[
+                      styles.transactionIcon,
+                      { backgroundColor: `${colors.primary}15` },
+                    ]}
+                  >
                     <Ionicons
                       name={
                         transaction.type === "subscription" ? "card" : "home"
                       }
                       size={20}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
                   </View>
                   <View style={styles.transactionContent}>
-                    <Text style={styles.transactionUser}>
+                    <Text
+                      style={[styles.transactionUser, { color: colors.text }]}
+                    >
                       {transaction.user}
                     </Text>
                     <View style={styles.transactionMeta}>
-                      <View style={styles.planBadge}>
-                        <Text style={styles.planBadgeText}>
+                      <View
+                        style={[
+                          styles.planBadge,
+                          { backgroundColor: colors.background },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.planBadgeText,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
                           {transaction.plan}
                         </Text>
                       </View>
-                      <Text style={styles.transactionDate}>
+                      <Text
+                        style={[
+                          styles.transactionDate,
+                          { color: colors.textSecondary },
+                        ]}
+                      >
                         {transaction.date}
                       </Text>
                     </View>
                   </View>
                   <View style={styles.transactionRight}>
-                    <Text style={styles.transactionAmount}>
+                    <Text
+                      style={[styles.transactionAmount, { color: colors.text }]}
+                    >
                       {transaction.amount}
                     </Text>
                     <View
@@ -476,16 +696,20 @@ export default function PaymentReportsScreen() {
 
           {/* View All Button */}
           <TouchableOpacity
-            style={styles.viewAllButton}
+            style={[
+              styles.viewAllButton,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
             activeOpacity={0.7}
             onPress={() => router.push("/(admin-tabs)/transactions")}
           >
-            <Text style={styles.viewAllButtonText}>View All Transactions</Text>
-            <Ionicons
-              name="arrow-forward"
-              size={18}
-              color={Colors.primaryGreen}
-            />
+            <Text style={[styles.viewAllButtonText, { color: colors.primary }]}>
+              View All Transactions
+            </Text>
+            <Ionicons name="arrow-forward" size={18} color={colors.primary} />
           </TouchableOpacity>
         </ScrollView>
       </View>
@@ -496,7 +720,6 @@ export default function PaymentReportsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   decorativeBackground: {
     position: "absolute",
@@ -513,8 +736,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: Colors.primaryLight,
-    opacity: 0.08,
   },
   circle2: {
     position: "absolute",
@@ -523,8 +744,6 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     borderRadius: 200,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
   },
   scrollView: {
     flex: 1,
@@ -544,7 +763,6 @@ const styles = StyleSheet.create({
     ...Typography.titleLarge,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   exportButton: {
     flexDirection: "row",
@@ -554,24 +772,19 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm + 2,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: Colors.primaryGreen,
-    backgroundColor: Colors.surface,
   },
   exportButtonText: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
   // Time Period
   timePeriodContainer: {
     flexDirection: "row",
-    backgroundColor: Colors.surface,
     borderRadius: 14,
     padding: 4,
     marginBottom: Spacing.xl,
     borderWidth: 1,
-    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -590,17 +803,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 10,
   },
-  timePeriodTabActive: {
-    backgroundColor: Colors.primaryGreen,
-  },
   timePeriodText: {
     ...Typography.labelMedium,
     fontSize: 12,
     fontWeight: "600",
-    color: Colors.textSecondary,
-  },
-  timePeriodTextActive: {
-    color: "#FFFFFF",
   },
   // Revenue Overview
   revenueOverview: {
@@ -610,12 +816,10 @@ const styles = StyleSheet.create({
   },
   revenueCard: {
     flex: 1.4,
-    backgroundColor: Colors.primaryGreen,
     borderRadius: 20,
     padding: Spacing.lg,
     ...Platform.select({
       ios: {
-        shadowColor: Colors.primaryGreen,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.3,
         shadowRadius: 16,
@@ -661,12 +865,10 @@ const styles = StyleSheet.create({
   },
   revenueStat: {
     flex: 1,
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.md,
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -683,12 +885,10 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 22,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   revenueStatLabel: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   // Chart Section
@@ -705,7 +905,6 @@ const styles = StyleSheet.create({
     ...Typography.titleMedium,
     fontSize: 16,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   legendItem: {
     flexDirection: "row",
@@ -720,15 +919,12 @@ const styles = StyleSheet.create({
   legendText: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   chartCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 20,
     padding: Spacing.lg,
     paddingRight: Spacing.sm,
     borderWidth: 1,
-    borderColor: Colors.divider,
     overflow: "hidden",
     ...Platform.select({
       ios: {
@@ -745,21 +941,17 @@ const styles = StyleSheet.create({
   chartAxisText: {
     ...Typography.caption,
     fontSize: 10,
-    color: Colors.textSecondary,
   },
   chartAxisTextSmall: {
     ...Typography.caption,
     fontSize: 9,
-    color: Colors.textSecondary,
   },
   // Pie Chart
   pieChartCard: {
     flexDirection: "row",
-    backgroundColor: Colors.surface,
     borderRadius: 20,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.divider,
     alignItems: "center",
     gap: Spacing.lg,
     ...Platform.select({
@@ -785,12 +977,10 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 24,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   pieCenterLabel: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
   },
   pieLegend: {
     flex: 1,
@@ -809,7 +999,6 @@ const styles = StyleSheet.create({
   pieLegendText: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textPrimary,
     flex: 1,
     fontWeight: "500",
   },
@@ -817,7 +1006,6 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "700",
-    color: Colors.textSecondary,
   },
   // Quick Stats
   quickStats: {
@@ -827,12 +1015,10 @@ const styles = StyleSheet.create({
   },
   quickStatCard: {
     flex: 1,
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.md,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -857,12 +1043,10 @@ const styles = StyleSheet.create({
     ...Typography.titleMedium,
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   quickStatLabel: {
     ...Typography.caption,
     fontSize: 10,
-    color: Colors.textSecondary,
     textAlign: "center",
     marginTop: 2,
   },
@@ -878,30 +1062,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: 20,
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.divider,
-  },
-  planFilterTabActive: {
-    backgroundColor: Colors.primaryGreen,
-    borderColor: Colors.primaryGreen,
   },
   planFilterText: {
     ...Typography.labelMedium,
     fontSize: 13,
     fontWeight: "600",
-    color: Colors.textSecondary,
-  },
-  planFilterTextActive: {
-    color: "#FFFFFF",
   },
   // Transactions List
   transactionsList: {
-    backgroundColor: Colors.surface,
     borderRadius: 20,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: Colors.divider,
     marginBottom: Spacing.lg,
     ...Platform.select({
       ios: {
@@ -920,14 +1092,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
     gap: Spacing.md,
   },
   transactionIcon: {
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: `${Colors.primaryGreen}15`,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -938,7 +1108,6 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 15,
     fontWeight: "600",
-    color: Colors.textPrimary,
     marginBottom: 4,
   },
   transactionMeta: {
@@ -947,7 +1116,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   planBadge: {
-    backgroundColor: Colors.background,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
@@ -956,12 +1124,10 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     fontSize: 10,
     fontWeight: "600",
-    color: Colors.textSecondary,
   },
   transactionDate: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
   },
   transactionRight: {
     alignItems: "flex-end",
@@ -970,7 +1136,6 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 16,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: 4,
   },
   transactionStatus: {
@@ -990,15 +1155,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: Spacing.sm,
     paddingVertical: Spacing.lg,
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   viewAllButtonText: {
     ...Typography.labelMedium,
     fontSize: 15,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
 });
