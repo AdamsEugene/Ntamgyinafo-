@@ -9,7 +9,8 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export interface TabItem {
   id: string;
@@ -22,26 +23,24 @@ interface BottomNavigationProps {
   tabs: TabItem[];
   activeTab: string;
   onTabPress: (tabId: string) => void;
-  variant?: "default" | "dark";
 }
 
 export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   tabs,
   activeTab,
   onTabPress,
-  variant = "default",
 }) => {
   const insets = useSafeAreaInsets();
-  const isDark = variant === "dark";
+  const { isDark, colors } = useTheme();
 
   // Calculate the height needed for blur background
   const navHeight = 64;
   const bottomPadding = Math.max(insets.bottom, Spacing.md);
-  const totalBlurHeight = navHeight + bottomPadding + Spacing.xs; // extra for margin
+  const totalBlurHeight = navHeight + bottomPadding + Spacing.xs;
 
   return (
     <View style={styles.wrapper}>
-      {/* Blur Background Layer - blocks clicks */}
+      {/* Blur Background Layer */}
       <View style={[styles.blurBackground, { height: totalBlurHeight }]}>
         <BlurView
           intensity={isDark ? 8 : 12}
@@ -51,18 +50,26 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           <View
             style={[
               styles.glassOverlay,
-              isDark ? styles.glassOverlayDark : styles.glassOverlayLight,
+              {
+                backgroundColor: isDark
+                  ? "rgba(18, 18, 18, 0.75)"
+                  : "rgba(255, 255, 255, 0.75)",
+              },
             ]}
           />
         </BlurView>
       </View>
 
-      {/* Floating Pill Nav - sits on top */}
+      {/* Floating Pill Nav */}
       <View style={[styles.floatingNav, { marginBottom: bottomPadding }]}>
         <View
           style={[
             styles.navBackground,
-            isDark ? styles.navBackgroundDark : styles.navBackgroundLight,
+            {
+              backgroundColor: isDark
+                ? "rgba(40, 40, 40, 0.95)"
+                : "rgba(255, 255, 255, 0.95)",
+            },
           ]}
         />
 
@@ -85,7 +92,11 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
                   <View
                     style={[
                       styles.activePill,
-                      isDark ? styles.activePillDark : styles.activePillLight,
+                      {
+                        backgroundColor: isDark
+                          ? `${colors.primary}30`
+                          : `${colors.primary}15`,
+                      },
                     ]}
                   />
                 )}
@@ -95,23 +106,24 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
                   <Ionicons
                     name={iconName}
                     size={24}
-                    color={
-                      isActive
-                        ? Colors.primaryGreen
-                        : isDark
-                        ? "rgba(255, 255, 255, 0.5)"
-                        : Colors.textSecondary
-                    }
+                    color={isActive ? colors.primary : colors.textSecondary}
                   />
                   {/* Active dot indicator */}
-                  {isActive && <View style={styles.activeDot} />}
+                  {isActive && (
+                    <View
+                      style={[
+                        styles.activeDot,
+                        { backgroundColor: colors.primary },
+                      ]}
+                    />
+                  )}
                 </View>
 
                 {/* Label */}
                 <Text
                   style={[
                     styles.label,
-                    isDark && styles.labelDark,
+                    { color: isActive ? colors.primary : colors.textSecondary },
                     isActive && styles.activeLabel,
                   ]}
                   numberOfLines={1}
@@ -145,12 +157,6 @@ const styles = StyleSheet.create({
   glassOverlay: {
     ...StyleSheet.absoluteFillObject,
   },
-  glassOverlayLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.25)",
-  },
-  glassOverlayDark: {
-    backgroundColor: "rgba(30, 30, 30, 0.25)",
-  },
   floatingNav: {
     marginHorizontal: Spacing.lg,
     borderRadius: 28,
@@ -170,12 +176,6 @@ const styles = StyleSheet.create({
   navBackground: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 28,
-  },
-  navBackgroundLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-  },
-  navBackgroundDark: {
-    backgroundColor: "rgba(40, 40, 40, 0.95)",
   },
   tabsContainer: {
     flexDirection: "row",
@@ -200,12 +200,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     borderRadius: 20,
   },
-  activePillLight: {
-    backgroundColor: "rgba(34, 197, 94, 0.12)",
-  },
-  activePillDark: {
-    backgroundColor: "rgba(34, 197, 94, 0.2)",
-  },
   iconContainer: {
     alignItems: "center",
     justifyContent: "center",
@@ -218,21 +212,15 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: Colors.primaryGreen,
   },
   label: {
     ...Typography.caption,
     fontSize: 11,
     fontWeight: "500",
-    color: Colors.textSecondary,
     marginTop: 2,
     letterSpacing: -0.2,
   },
-  labelDark: {
-    color: "rgba(255, 255, 255, 0.5)",
-  },
   activeLabel: {
-    color: Colors.primaryGreen,
     fontWeight: "600",
   },
 });

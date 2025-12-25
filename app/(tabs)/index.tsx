@@ -20,6 +20,7 @@ import {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   FloatingHeader,
   HeaderActionButton,
@@ -112,6 +113,7 @@ const QUICK_STATS = [
 export default function BuyerHomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([
     "Accra",
@@ -179,12 +181,16 @@ export default function BuyerHomeScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={colors.statusBar} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
+          <View
+            style={[styles.circle1, { backgroundColor: `${colors.primary}15` }]}
+          />
+          <View
+            style={[styles.circle2, { backgroundColor: `${colors.accent}10` }]}
+          />
         </View>
 
         {/* Floating Header with Blur */}

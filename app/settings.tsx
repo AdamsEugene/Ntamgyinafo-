@@ -14,8 +14,9 @@ import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Typography, Spacing } from "@/constants/design";
 import { FloatingHeader } from "@/components/FloatingHeader";
+import { useTheme, ThemeMode } from "@/contexts/ThemeContext";
 
 interface SettingItem {
   id: string;
@@ -33,9 +34,17 @@ interface SettingSection {
   items: SettingItem[];
 }
 
+// Theme mode display labels
+const themeModeLabels: Record<ThemeMode, string> = {
+  light: "Light",
+  dark: "Dark",
+  system: "System",
+};
+
 export default function SettingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { mode, setMode, colors, isDark } = useTheme();
 
   // Settings state
   const [pushNotifications, setPushNotifications] = useState(true);
@@ -49,9 +58,27 @@ export default function SettingsScreen() {
   const [showLastSeen, setShowLastSeen] = useState(true);
   const [showPhoneNumber, setShowPhoneNumber] = useState(false);
 
-  const [darkMode, setDarkMode] = useState(false);
   const [language, setLanguage] = useState("English");
   const [currency, setCurrency] = useState("GHS");
+
+  // Theme selection handler
+  const handleThemeSelect = () => {
+    Alert.alert("Select Theme", "Choose your preferred appearance", [
+      {
+        text: "☀️ Light",
+        onPress: () => setMode("light"),
+      },
+      {
+        text: "🌙 Dark",
+        onPress: () => setMode("dark"),
+      },
+      {
+        text: "📱 System",
+        onPress: () => setMode("system"),
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  };
 
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
@@ -124,7 +151,10 @@ export default function SettingsScreen() {
           label: "Change Password",
           type: "link",
           onPress: () => {
-            Alert.alert("Coming Soon", "Password change will be available soon.");
+            Alert.alert(
+              "Coming Soon",
+              "Password change will be available soon."
+            );
           },
         },
         {
@@ -234,12 +264,12 @@ export default function SettingsScreen() {
       title: "App Settings",
       items: [
         {
-          id: "dark-mode",
-          icon: "moon-outline",
-          label: "Dark Mode",
-          type: "toggle",
-          value: darkMode,
-          onPress: () => setDarkMode(!darkMode),
+          id: "theme",
+          icon: isDark ? "moon" : "sunny-outline",
+          label: "Appearance",
+          type: "select",
+          value: themeModeLabels[mode],
+          onPress: handleThemeSelect,
         },
         {
           id: "language",
@@ -263,7 +293,10 @@ export default function SettingsScreen() {
           label: "Clear Cache",
           type: "link",
           onPress: () => {
-            Alert.alert("Cache Cleared", "App cache has been cleared successfully.");
+            Alert.alert(
+              "Cache Cleared",
+              "App cache has been cleared successfully."
+            );
           },
         },
       ],
@@ -330,7 +363,11 @@ export default function SettingsScreen() {
     return (
       <TouchableOpacity
         key={item.id}
-        style={[styles.settingItem, isLast && styles.settingItemLast]}
+        style={[
+          styles.settingItem,
+          { borderBottomColor: colors.divider },
+          isLast && styles.settingItemLast,
+        ]}
         onPress={item.onPress}
         activeOpacity={item.type === "toggle" ? 1 : 0.7}
         disabled={item.type === "info"}
@@ -339,17 +376,22 @@ export default function SettingsScreen() {
           <View
             style={[
               styles.settingIconContainer,
+              { backgroundColor: colors.inputBackground },
               item.danger && styles.settingIconContainerDanger,
             ]}
           >
             <Ionicons
               name={item.icon}
               size={20}
-              color={item.danger ? "#EF4444" : Colors.textPrimary}
+              color={item.danger ? colors.error : colors.text}
             />
           </View>
           <Text
-            style={[styles.settingLabel, item.danger && styles.settingLabelDanger]}
+            style={[
+              styles.settingLabel,
+              { color: colors.text },
+              item.danger && { color: colors.error },
+            ]}
           >
             {item.label}
           </Text>
@@ -361,20 +403,24 @@ export default function SettingsScreen() {
               value={item.value as boolean}
               onValueChange={item.onPress}
               trackColor={{
-                false: Colors.divider,
-                true: `${Colors.primaryGreen}50`,
+                false: colors.divider,
+                true: `${colors.primary}50`,
               }}
-              thumbColor={item.value ? Colors.primaryGreen : "#FFFFFF"}
-              ios_backgroundColor={Colors.divider}
+              thumbColor={item.value ? colors.primary : "#FFFFFF"}
+              ios_backgroundColor={colors.divider}
             />
           )}
           {item.type === "select" && (
             <>
-              <Text style={styles.settingValue}>{item.value}</Text>
+              <Text
+                style={[styles.settingValue, { color: colors.textSecondary }]}
+              >
+                {item.value}
+              </Text>
               <Ionicons
                 name="chevron-forward"
                 size={18}
-                color={Colors.textSecondary}
+                color={colors.textSecondary}
               />
             </>
           )}
@@ -382,11 +428,13 @@ export default function SettingsScreen() {
             <Ionicons
               name="chevron-forward"
               size={18}
-              color={Colors.textSecondary}
+              color={colors.textSecondary}
             />
           )}
           {item.type === "info" && (
-            <Text style={styles.settingValueInfo}>{item.value}</Text>
+            <Text style={[styles.settingValueInfo, { color: colors.primary }]}>
+              {item.value}
+            </Text>
           )}
         </View>
       </TouchableOpacity>
@@ -395,15 +443,18 @@ export default function SettingsScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={colors.statusBar} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
+          <View
+            style={[styles.circle1, { backgroundColor: `${colors.primary}15` }]}
+          />
+          <View
+            style={[styles.circle2, { backgroundColor: `${colors.accent}10` }]}
+          />
         </View>
 
-        {/* Floating Sticky Header */}
         {/* Floating Header with Blur */}
         <FloatingHeader
           title="Settings"
@@ -425,8 +476,17 @@ export default function SettingsScreen() {
           {/* Settings Sections */}
           {sections.map((section) => (
             <View key={section.id} style={styles.section}>
-              <Text style={styles.sectionTitle}>{section.title}</Text>
-              <View style={styles.sectionContent}>
+              <Text
+                style={[styles.sectionTitle, { color: colors.textSecondary }]}
+              >
+                {section.title}
+              </Text>
+              <View
+                style={[
+                  styles.sectionContent,
+                  { backgroundColor: colors.surface },
+                ]}
+              >
                 {section.items.map((item, index) =>
                   renderSettingItem(item, index === section.items.length - 1)
                 )}
@@ -439,7 +499,12 @@ export default function SettingsScreen() {
             <Text style={[styles.sectionTitle, styles.sectionTitleDanger]}>
               Danger Zone
             </Text>
-            <View style={styles.sectionContent}>
+            <View
+              style={[
+                styles.sectionContent,
+                { backgroundColor: colors.surface },
+              ]}
+            >
               <TouchableOpacity
                 style={styles.settingItem}
                 onPress={handleDeleteAccount}
@@ -447,14 +512,22 @@ export default function SettingsScreen() {
               >
                 <View style={styles.settingItemLeft}>
                   <View style={styles.settingIconContainerDanger}>
-                    <Ionicons name="trash-outline" size={20} color="#EF4444" />
+                    <Ionicons
+                      name="trash-outline"
+                      size={20}
+                      color={colors.error}
+                    />
                   </View>
-                  <Text style={styles.settingLabelDanger}>Delete Account</Text>
+                  <Text
+                    style={[styles.settingLabelDanger, { color: colors.error }]}
+                  >
+                    Delete Account
+                  </Text>
                 </View>
                 <Ionicons
                   name="chevron-forward"
                   size={18}
-                  color="#EF4444"
+                  color={colors.error}
                 />
               </TouchableOpacity>
             </View>
@@ -462,7 +535,7 @@ export default function SettingsScreen() {
 
           {/* Logout Button */}
           <TouchableOpacity
-            style={styles.logoutButton}
+            style={[styles.logoutButton, { backgroundColor: colors.error }]}
             onPress={handleLogout}
             activeOpacity={0.8}
           >
@@ -472,9 +545,13 @@ export default function SettingsScreen() {
 
           {/* App Info */}
           <View style={styles.appInfo}>
-            <Text style={styles.appName}>Ntamgyinafoɔ</Text>
-            <Text style={styles.appTagline}>Find. Visit. Own.</Text>
-            <Text style={styles.appCopyright}>
+            <Text style={[styles.appName, { color: colors.primary }]}>
+              Ntamgyinafoɔ
+            </Text>
+            <Text style={[styles.appTagline, { color: colors.textSecondary }]}>
+              Find. Visit. Own.
+            </Text>
+            <Text style={[styles.appCopyright, { color: colors.textTertiary }]}>
               © 2024 Ntamgyinafoɔ. All rights reserved.
             </Text>
           </View>
@@ -487,7 +564,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   // Decorative Background
   decorativeBackground: {
@@ -505,8 +581,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: Colors.primaryLight,
-    opacity: 0.08,
   },
   circle2: {
     position: "absolute",
@@ -515,8 +589,6 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     borderRadius: 200,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
   },
   // Header
   headerLeft: {
@@ -529,7 +601,6 @@ const styles = StyleSheet.create({
     ...Typography.titleLarge,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   scrollView: {
     flex: 1,
@@ -546,7 +617,6 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 12,
     fontWeight: "700",
-    color: Colors.textSecondary,
     textTransform: "uppercase",
     letterSpacing: 0.5,
     marginBottom: Spacing.sm,
@@ -556,11 +626,8 @@ const styles = StyleSheet.create({
     color: "#EF4444",
   },
   sectionContent: {
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -581,7 +648,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
   },
   settingItemLast: {
     borderBottomWidth: 0,
@@ -596,18 +662,16 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: Colors.background,
     alignItems: "center",
     justifyContent: "center",
   },
   settingIconContainerDanger: {
-    backgroundColor: "#FEE2E2",
+    backgroundColor: "rgba(239, 68, 68, 0.1)",
   },
   settingLabel: {
     ...Typography.bodyMedium,
     fontSize: 15,
     fontWeight: "500",
-    color: Colors.textPrimary,
     flex: 1,
   },
   settingLabelDanger: {
@@ -621,12 +685,10 @@ const styles = StyleSheet.create({
   settingValue: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
   },
   settingValueInfo: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.primaryGreen,
     fontWeight: "500",
   },
   // Logout Button
@@ -635,7 +697,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: Spacing.sm,
-    backgroundColor: "#EF4444",
     paddingVertical: Spacing.lg,
     borderRadius: 16,
     marginBottom: Spacing.xl,
@@ -666,19 +727,15 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.primaryGreen,
     marginBottom: 4,
   },
   appTagline: {
     ...Typography.bodyMedium,
     fontSize: 13,
-    color: Colors.textSecondary,
     marginBottom: Spacing.sm,
   },
   appCopyright: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
   },
 });
-

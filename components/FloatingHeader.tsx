@@ -10,7 +10,8 @@ import {
 import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export const HEADER_ICON_SIZE = 22;
 
@@ -20,7 +21,7 @@ interface FloatingHeaderProps {
   onBackPress?: () => void;
   leftContent?: ReactNode;
   rightContent?: ReactNode;
-  variant?: "default" | "dark";
+  variant?: "default" | "transparent";
   style?: ViewStyle;
 }
 
@@ -34,12 +35,13 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
   style,
 }) => {
   const insets = useSafeAreaInsets();
-  const isDark = variant === "dark";
+  const { isDark, colors } = useTheme();
+  const isTransparent = variant === "transparent";
 
   return (
     <View style={[styles.headerContainer, style]}>
       <BlurView
-        intensity={isDark ? 8 : 12}
+        intensity={isTransparent ? 8 : 12}
         tint={isDark ? "dark" : "light"}
         style={styles.blurContainer}
       >
@@ -47,7 +49,13 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
         <View
           style={[
             styles.glassOverlay,
-            isDark ? styles.glassOverlayDark : styles.glassOverlayLight,
+            {
+              backgroundColor: isTransparent
+                ? "transparent"
+                : isDark
+                ? "rgba(18, 18, 18, 0.75)"
+                : "rgba(255, 255, 255, 0.75)",
+            },
           ]}
         />
 
@@ -67,13 +75,17 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                 <View
                   style={[
                     styles.iconButtonBackground,
-                    isDark && styles.iconButtonBackgroundDark,
+                    {
+                      backgroundColor: isDark
+                        ? "rgba(255, 255, 255, 0.12)"
+                        : "rgba(255, 255, 255, 0.9)",
+                    },
                   ]}
                 >
                   <Ionicons
                     name="arrow-back"
                     size={HEADER_ICON_SIZE}
-                    color={isDark ? Colors.surface : Colors.textPrimary}
+                    color={colors.text}
                   />
                 </View>
               </TouchableOpacity>
@@ -81,7 +93,7 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             {leftContent}
             {title && (
               <Text
-                style={[styles.headerTitle, isDark && styles.headerTitleDark]}
+                style={[styles.headerTitle, { color: colors.text }]}
                 numberOfLines={1}
               >
                 {title}
@@ -104,16 +116,14 @@ interface HeaderActionButtonProps {
   icon: keyof typeof Ionicons.glyphMap;
   onPress: () => void;
   badge?: number;
-  variant?: "default" | "dark";
 }
 
 export const HeaderActionButton: React.FC<HeaderActionButtonProps> = ({
   icon,
   onPress,
   badge,
-  variant = "default",
 }) => {
-  const isDark = variant === "dark";
+  const { isDark, colors } = useTheme();
 
   return (
     <TouchableOpacity
@@ -124,16 +134,16 @@ export const HeaderActionButton: React.FC<HeaderActionButtonProps> = ({
       <View
         style={[
           styles.iconButtonBackground,
-          isDark && styles.iconButtonBackgroundDark,
+          {
+            backgroundColor: isDark
+              ? "rgba(255, 255, 255, 0.12)"
+              : "rgba(255, 255, 255, 0.9)",
+          },
         ]}
       >
-        <Ionicons
-          name={icon}
-          size={HEADER_ICON_SIZE}
-          color={isDark ? Colors.surface : Colors.textPrimary}
-        />
+        <Ionicons name={icon} size={HEADER_ICON_SIZE} color={colors.text} />
         {badge !== undefined && badge > 0 && (
-          <View style={styles.badge}>
+          <View style={[styles.badge, { backgroundColor: colors.primary }]}>
             <Text style={styles.badgeText}>{badge > 99 ? "99+" : badge}</Text>
           </View>
         )}
@@ -155,12 +165,6 @@ const styles = StyleSheet.create({
   },
   glassOverlay: {
     ...StyleSheet.absoluteFillObject,
-  },
-  glassOverlayLight: {
-    backgroundColor: "rgba(255, 255, 255, 0.25)",
-  },
-  glassOverlayDark: {
-    backgroundColor: "rgba(30, 30, 30, 0.25)",
   },
   headerContent: {
     flexDirection: "row",
@@ -189,7 +193,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
     justifyContent: "center",
     alignItems: "center",
     position: "relative",
@@ -205,18 +208,11 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  iconButtonBackgroundDark: {
-    backgroundColor: "rgba(255, 255, 255, 0.15)",
-  },
   headerTitle: {
     ...Typography.titleLarge,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
     flex: 1,
-  },
-  headerTitleDark: {
-    color: Colors.surface,
   },
   actionButton: {
     justifyContent: "center",
@@ -226,7 +222,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -2,
     right: -2,
-    backgroundColor: Colors.primaryGreen,
     borderRadius: 10,
     minWidth: 18,
     height: 18,
@@ -234,7 +229,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 4,
     borderWidth: 2,
-    borderColor: Colors.surface,
+    borderColor: "#FFFFFF",
   },
   badgeText: {
     ...Typography.caption,
