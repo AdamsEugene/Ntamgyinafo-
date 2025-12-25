@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface Plan {
   id: string;
@@ -50,6 +51,7 @@ const formatDate = (date: Date) => {
 export default function PaymentReceiptScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const params = useLocalSearchParams();
   const planId = (params.planId as string) || "standard";
   const plan = PLANS[planId] || PLANS.standard;
@@ -62,7 +64,11 @@ export default function PaymentReceiptScreen() {
   const handleShareReceipt = async () => {
     try {
       await Share.share({
-        message: `Ntamgyinafoɔ Payment Receipt\n\nTransaction ID: ${transactionId}\nPlan: ${plan.name}\nAmount: GHS ${plan.price}\nDate: ${formatDate(paymentDate)}\nExpiry: ${formatDate(expiryDate)}`,
+        message: `Ntamgyinafoɔ Payment Receipt\n\nTransaction ID: ${transactionId}\nPlan: ${
+          plan.name
+        }\nAmount: GHS ${plan.price}\nDate: ${formatDate(
+          paymentDate
+        )}\nExpiry: ${formatDate(expiryDate)}`,
         title: "Payment Receipt",
       });
     } catch (error) {
@@ -75,8 +81,8 @@ export default function PaymentReceiptScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? "light" : "dark"} />
 
       <ScrollView
         style={styles.scrollView}
@@ -89,59 +95,108 @@ export default function PaymentReceiptScreen() {
         {/* Success Icon */}
         <View style={styles.successContainer}>
           <LinearGradient
-            colors={[Colors.primaryGreen, "#10B981"]}
+            colors={[colors.primary, "#10B981"]}
             style={styles.successIconGradient}
           >
             <Ionicons name="checkmark" size={50} color="#FFFFFF" />
           </LinearGradient>
-          <Text style={styles.successTitle}>Payment Successful!</Text>
-          <Text style={styles.successSubtitle}>
+          <Text style={[styles.successTitle, { color: colors.text }]}>
+            Payment Successful!
+          </Text>
+          <Text
+            style={[styles.successSubtitle, { color: colors.textSecondary }]}
+          >
             Your subscription has been activated
           </Text>
         </View>
 
         {/* Receipt Card */}
-        <View style={styles.receiptCard}>
+        <View style={[styles.receiptCard, { backgroundColor: colors.surface }]}>
           {/* Receipt Header */}
           <View style={styles.receiptHeader}>
-            <View style={styles.receiptLogo}>
-              <Ionicons name="home" size={24} color={Colors.primaryGreen} />
+            <View
+              style={[
+                styles.receiptLogo,
+                { backgroundColor: `${colors.primary}15` },
+              ]}
+            >
+              <Ionicons name="home" size={24} color={colors.primary} />
             </View>
-            <Text style={styles.receiptAppName}>Ntamgyinafoɔ</Text>
-            <Text style={styles.receiptTitle}>Payment Receipt</Text>
+            <Text style={[styles.receiptAppName, { color: colors.text }]}>
+              Ntamgyinafoɔ
+            </Text>
+            <Text
+              style={[styles.receiptTitle, { color: colors.textSecondary }]}
+            >
+              Payment Receipt
+            </Text>
           </View>
 
           {/* Dotted Line */}
-          <View style={styles.dottedLine} />
+          <View style={[styles.dottedLine, { borderColor: colors.divider }]} />
 
           {/* Receipt Details */}
           <View style={styles.receiptDetails}>
             <View style={styles.receiptRow}>
-              <Text style={styles.receiptLabel}>Transaction ID</Text>
-              <Text style={styles.receiptValue}>{transactionId}</Text>
+              <Text
+                style={[styles.receiptLabel, { color: colors.textSecondary }]}
+              >
+                Transaction ID
+              </Text>
+              <Text style={[styles.receiptValue, { color: colors.text }]}>
+                {transactionId}
+              </Text>
             </View>
             <View style={styles.receiptRow}>
-              <Text style={styles.receiptLabel}>Plan</Text>
-              <Text style={styles.receiptValue}>{plan.name} Plan</Text>
+              <Text
+                style={[styles.receiptLabel, { color: colors.textSecondary }]}
+              >
+                Plan
+              </Text>
+              <Text style={[styles.receiptValue, { color: colors.text }]}>
+                {plan.name} Plan
+              </Text>
             </View>
             <View style={styles.receiptRow}>
-              <Text style={styles.receiptLabel}>Amount Paid</Text>
-              <Text style={[styles.receiptValue, styles.receiptAmount]}>
+              <Text
+                style={[styles.receiptLabel, { color: colors.textSecondary }]}
+              >
+                Amount Paid
+              </Text>
+              <Text
+                style={[
+                  styles.receiptValue,
+                  styles.receiptAmount,
+                  { color: colors.primary },
+                ]}
+              >
                 GHS {plan.price}
               </Text>
             </View>
             <View style={styles.receiptRow}>
-              <Text style={styles.receiptLabel}>Payment Date</Text>
-              <Text style={styles.receiptValue}>{formatDate(paymentDate)}</Text>
+              <Text
+                style={[styles.receiptLabel, { color: colors.textSecondary }]}
+              >
+                Payment Date
+              </Text>
+              <Text style={[styles.receiptValue, { color: colors.text }]}>
+                {formatDate(paymentDate)}
+              </Text>
             </View>
             <View style={styles.receiptRow}>
-              <Text style={styles.receiptLabel}>Expiry Date</Text>
-              <Text style={styles.receiptValue}>{formatDate(expiryDate)}</Text>
+              <Text
+                style={[styles.receiptLabel, { color: colors.textSecondary }]}
+              >
+                Expiry Date
+              </Text>
+              <Text style={[styles.receiptValue, { color: colors.text }]}>
+                {formatDate(expiryDate)}
+              </Text>
             </View>
           </View>
 
           {/* Dotted Line */}
-          <View style={styles.dottedLine} />
+          <View style={[styles.dottedLine, { borderColor: colors.divider }]} />
 
           {/* Status */}
           <View style={styles.statusContainer}>
@@ -155,67 +210,108 @@ export default function PaymentReceiptScreen() {
         {/* Actions */}
         <View style={styles.actionsContainer}>
           <TouchableOpacity
-            style={styles.shareButton}
+            style={[styles.shareButton, { borderColor: colors.primary }]}
             onPress={handleShareReceipt}
             activeOpacity={0.8}
           >
             <Ionicons
               name="share-social-outline"
               size={20}
-              color={Colors.primaryGreen}
+              color={colors.primary}
             />
-            <Text style={styles.shareButtonText}>Share Receipt</Text>
+            <Text style={[styles.shareButtonText, { color: colors.primary }]}>
+              Share Receipt
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.downloadButton}
+            style={[
+              styles.downloadButton,
+              { backgroundColor: colors.surface, borderColor: colors.divider },
+            ]}
             onPress={() => {}}
             activeOpacity={0.8}
           >
             <Ionicons
               name="download-outline"
               size={20}
-              color={Colors.textSecondary}
+              color={colors.textSecondary}
             />
-            <Text style={styles.downloadButtonText}>Download PDF</Text>
+            <Text
+              style={[
+                styles.downloadButtonText,
+                { color: colors.textSecondary },
+              ]}
+            >
+              Download PDF
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* Features Unlocked */}
-        <View style={styles.featuresContainer}>
-          <Text style={styles.featuresTitle}>You&apos;ve unlocked:</Text>
+        <View
+          style={[
+            styles.featuresContainer,
+            { backgroundColor: colors.surface, borderColor: colors.divider },
+          ]}
+        >
+          <Text style={[styles.featuresTitle, { color: colors.text }]}>
+            You&apos;ve unlocked:
+          </Text>
           <View style={styles.featuresList}>
             <View style={styles.featureItem}>
-              <View style={styles.featureIcon}>
-                <Ionicons name="eye" size={18} color={Colors.primaryGreen} />
+              <View
+                style={[
+                  styles.featureIcon,
+                  { backgroundColor: `${colors.primary}15` },
+                ]}
+              >
+                <Ionicons name="eye" size={18} color={colors.primary} />
               </View>
-              <Text style={styles.featureText}>Full property details</Text>
+              <Text style={[styles.featureText, { color: colors.text }]}>
+                Full property details
+              </Text>
             </View>
             <View style={styles.featureItem}>
-              <View style={styles.featureIcon}>
-                <Ionicons name="call" size={18} color={Colors.primaryGreen} />
+              <View
+                style={[
+                  styles.featureIcon,
+                  { backgroundColor: `${colors.primary}15` },
+                ]}
+              >
+                <Ionicons name="call" size={18} color={colors.primary} />
               </View>
-              <Text style={styles.featureText}>Owner contact access</Text>
+              <Text style={[styles.featureText, { color: colors.text }]}>
+                Owner contact access
+              </Text>
             </View>
             <View style={styles.featureItem}>
-              <View style={styles.featureIcon}>
-                <Ionicons
-                  name="bookmark"
-                  size={18}
-                  color={Colors.primaryGreen}
-                />
+              <View
+                style={[
+                  styles.featureIcon,
+                  { backgroundColor: `${colors.primary}15` },
+                ]}
+              >
+                <Ionicons name="bookmark" size={18} color={colors.primary} />
               </View>
-              <Text style={styles.featureText}>Saved searches</Text>
+              <Text style={[styles.featureText, { color: colors.text }]}>
+                Saved searches
+              </Text>
             </View>
             <View style={styles.featureItem}>
-              <View style={styles.featureIcon}>
+              <View
+                style={[
+                  styles.featureIcon,
+                  { backgroundColor: `${colors.primary}15` },
+                ]}
+              >
                 <Ionicons
                   name="notifications"
                   size={18}
-                  color={Colors.primaryGreen}
+                  color={colors.primary}
                 />
               </View>
-              <Text style={styles.featureText}>
+              <Text style={[styles.featureText, { color: colors.text }]}>
                 {plan.duration} days access
               </Text>
             </View>
@@ -230,11 +326,15 @@ export default function PaymentReceiptScreen() {
       <View
         style={[
           styles.bottomContainer,
-          { paddingBottom: Math.max(insets.bottom, Spacing.lg) },
+          {
+            paddingBottom: Math.max(insets.bottom, Spacing.lg),
+            backgroundColor: colors.background,
+            borderTopColor: colors.divider,
+          },
         ]}
       >
         <TouchableOpacity
-          style={styles.continueButton}
+          style={[styles.continueButton, { backgroundColor: colors.primary }]}
           onPress={handleContinue}
           activeOpacity={0.8}
         >
@@ -519,4 +619,3 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
 });
-

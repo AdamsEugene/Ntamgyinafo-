@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import { FloatingHeader } from "@/components/FloatingHeader";
 import { AnimatedSuccessOverlay } from "@/components/AnimatedSuccessOverlay";
 
@@ -49,6 +50,7 @@ const MOMO_NETWORKS = [
 export default function PaymentScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const params = useLocalSearchParams();
   const planId = (params.planId as string) || "standard";
   const plan = PLANS[planId] || PLANS.standard;
@@ -162,14 +164,23 @@ export default function PaymentScreen() {
       onRequestClose={dismissError}
     >
       <View style={styles.errorModalOverlay}>
-        <View style={styles.errorModalContent}>
+        <View
+          style={[
+            styles.errorModalContent,
+            { backgroundColor: colors.surface },
+          ]}
+        >
           <View style={styles.errorIconContainer}>
             <Ionicons name="alert-circle" size={50} color="#EF4444" />
           </View>
-          <Text style={styles.errorTitle}>Payment Failed</Text>
-          <Text style={styles.errorMessage}>{error}</Text>
+          <Text style={[styles.errorTitle, { color: colors.text }]}>
+            Payment Failed
+          </Text>
+          <Text style={[styles.errorMessage, { color: colors.textSecondary }]}>
+            {error}
+          </Text>
           <TouchableOpacity
-            style={styles.errorButton}
+            style={[styles.errorButton, { backgroundColor: colors.primary }]}
             onPress={dismissError}
             activeOpacity={0.8}
           >
@@ -181,8 +192,8 @@ export default function PaymentScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? "light" : "dark"} />
 
       {/* Decorative Background Elements */}
       <View style={styles.decorativeBackground}>
@@ -214,51 +225,88 @@ export default function PaymentScreen() {
           keyboardShouldPersistTaps="handled"
         >
           {/* Selected Plan Card */}
-          <View style={styles.planCard}>
+          <View
+            style={[
+              styles.planCard,
+              { backgroundColor: colors.surface, borderColor: colors.divider },
+            ]}
+          >
             <View style={styles.planCardHeader}>
-              <Text style={styles.planCardTitle}>Selected Plan</Text>
+              <Text
+                style={[styles.planCardTitle, { color: colors.textSecondary }]}
+              >
+                Selected Plan
+              </Text>
               <TouchableOpacity
                 onPress={() => router.back()}
                 activeOpacity={0.7}
               >
-                <Text style={styles.changeLink}>Change</Text>
+                <Text style={[styles.changeLink, { color: colors.primary }]}>
+                  Change
+                </Text>
               </TouchableOpacity>
             </View>
             <View style={styles.planCardContent}>
               <View style={styles.planInfo}>
-                <Text style={styles.planName}>{plan.name} Plan</Text>
-                <Text style={styles.planDuration}>{plan.duration} access</Text>
+                <Text style={[styles.planName, { color: colors.text }]}>
+                  {plan.name} Plan
+                </Text>
+                <Text
+                  style={[styles.planDuration, { color: colors.textSecondary }]}
+                >
+                  {plan.duration} access
+                </Text>
               </View>
-              <Text style={styles.planPrice}>GHS {plan.price}</Text>
+              <Text style={[styles.planPrice, { color: colors.primary }]}>
+                GHS {plan.price}
+              </Text>
             </View>
           </View>
 
           {/* Payment Method Selection */}
-          <Text style={styles.sectionTitle}>Select Payment Method</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Select Payment Method
+          </Text>
           <View style={styles.methodsContainer}>
             <TouchableOpacity
               style={[
                 styles.methodCard,
-                paymentMethod === "momo" && styles.methodCardSelected,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+                paymentMethod === "momo" && {
+                  borderColor: colors.primary,
+                  backgroundColor: `${colors.primary}08`,
+                },
               ]}
               onPress={() => setPaymentMethod("momo")}
               activeOpacity={0.8}
             >
-              <View style={styles.methodIconContainer}>
+              <View
+                style={[
+                  styles.methodIconContainer,
+                  { backgroundColor: `${colors.textSecondary}10` },
+                ]}
+              >
                 <Ionicons
                   name="phone-portrait"
                   size={24}
                   color={
                     paymentMethod === "momo"
-                      ? Colors.primaryGreen
-                      : Colors.textSecondary
+                      ? colors.primary
+                      : colors.textSecondary
                   }
                 />
               </View>
               <Text
                 style={[
                   styles.methodText,
-                  paymentMethod === "momo" && styles.methodTextSelected,
+                  { color: colors.textSecondary },
+                  paymentMethod === "momo" && {
+                    color: colors.text,
+                    fontWeight: "600",
+                  },
                 ]}
               >
                 Mobile Money
@@ -267,7 +315,7 @@ export default function PaymentScreen() {
                 <Ionicons
                   name="checkmark-circle"
                   size={20}
-                  color={Colors.primaryGreen}
+                  color={colors.primary}
                 />
               )}
             </TouchableOpacity>
@@ -275,26 +323,42 @@ export default function PaymentScreen() {
             <TouchableOpacity
               style={[
                 styles.methodCard,
-                paymentMethod === "card" && styles.methodCardSelected,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+                paymentMethod === "card" && {
+                  borderColor: colors.primary,
+                  backgroundColor: `${colors.primary}08`,
+                },
               ]}
               onPress={() => setPaymentMethod("card")}
               activeOpacity={0.8}
             >
-              <View style={styles.methodIconContainer}>
+              <View
+                style={[
+                  styles.methodIconContainer,
+                  { backgroundColor: `${colors.textSecondary}10` },
+                ]}
+              >
                 <Ionicons
                   name="card"
                   size={24}
                   color={
                     paymentMethod === "card"
-                      ? Colors.primaryGreen
-                      : Colors.textSecondary
+                      ? colors.primary
+                      : colors.textSecondary
                   }
                 />
               </View>
               <Text
                 style={[
                   styles.methodText,
-                  paymentMethod === "card" && styles.methodTextSelected,
+                  { color: colors.textSecondary },
+                  paymentMethod === "card" && {
+                    color: colors.text,
+                    fontWeight: "600",
+                  },
                 ]}
               >
                 Visa / Mastercard
@@ -303,7 +367,7 @@ export default function PaymentScreen() {
                 <Ionicons
                   name="checkmark-circle"
                   size={20}
-                  color={Colors.primaryGreen}
+                  color={colors.primary}
                 />
               )}
             </TouchableOpacity>
@@ -312,14 +376,25 @@ export default function PaymentScreen() {
           {/* Payment Form */}
           {paymentMethod === "momo" ? (
             <View style={styles.formContainer}>
-              <Text style={styles.inputLabel}>Select Network</Text>
+              <Text
+                style={[styles.inputLabel, { color: colors.textSecondary }]}
+              >
+                Select Network
+              </Text>
               <View style={styles.networkContainer}>
                 {MOMO_NETWORKS.map((network) => (
                   <TouchableOpacity
                     key={network.id}
                     style={[
                       styles.networkCard,
-                      momoNetwork === network.id && styles.networkCardSelected,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.divider,
+                      },
+                      momoNetwork === network.id && {
+                        borderColor: colors.primary,
+                        backgroundColor: `${colors.primary}08`,
+                      },
                     ]}
                     onPress={() => setMomoNetwork(network.id as MomoNetwork)}
                     activeOpacity={0.8}
@@ -333,8 +408,11 @@ export default function PaymentScreen() {
                     <Text
                       style={[
                         styles.networkText,
-                        momoNetwork === network.id &&
-                          styles.networkTextSelected,
+                        { color: colors.textSecondary },
+                        momoNetwork === network.id && {
+                          color: colors.text,
+                          fontWeight: "600",
+                        },
                       ]}
                       numberOfLines={1}
                     >
@@ -344,13 +422,29 @@ export default function PaymentScreen() {
                 ))}
               </View>
 
-              <Text style={styles.inputLabel}>Phone Number</Text>
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputPrefix}>+233</Text>
+              <Text
+                style={[styles.inputLabel, { color: colors.textSecondary }]}
+              >
+                Phone Number
+              </Text>
+              <View
+                style={[
+                  styles.inputContainer,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
+              >
+                <Text
+                  style={[styles.inputPrefix, { color: colors.textSecondary }]}
+                >
+                  +233
+                </Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder="XX XXX XXXX"
-                  placeholderTextColor={Colors.textSecondary}
+                  placeholderTextColor={colors.textSecondary}
                   keyboardType="phone-pad"
                   value={momoNumber}
                   onChangeText={setMomoNumber}
@@ -360,17 +454,29 @@ export default function PaymentScreen() {
             </View>
           ) : (
             <View style={styles.formContainer}>
-              <Text style={styles.inputLabel}>Card Number</Text>
-              <View style={styles.inputContainer}>
+              <Text
+                style={[styles.inputLabel, { color: colors.textSecondary }]}
+              >
+                Card Number
+              </Text>
+              <View
+                style={[
+                  styles.inputContainer,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
+              >
                 <Ionicons
                   name="card-outline"
                   size={20}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder="1234 5678 9012 3456"
-                  placeholderTextColor={Colors.textSecondary}
+                  placeholderTextColor={colors.textSecondary}
                   keyboardType="number-pad"
                   value={cardNumber}
                   onChangeText={(text) => setCardNumber(formatCardNumber(text))}
@@ -380,12 +486,24 @@ export default function PaymentScreen() {
 
               <View style={styles.rowInputs}>
                 <View style={styles.halfInput}>
-                  <Text style={styles.inputLabel}>Expiry Date</Text>
-                  <View style={styles.inputContainer}>
+                  <Text
+                    style={[styles.inputLabel, { color: colors.textSecondary }]}
+                  >
+                    Expiry Date
+                  </Text>
+                  <View
+                    style={[
+                      styles.inputContainer,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.divider,
+                      },
+                    ]}
+                  >
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, { color: colors.text }]}
                       placeholder="MM/YY"
-                      placeholderTextColor={Colors.textSecondary}
+                      placeholderTextColor={colors.textSecondary}
                       keyboardType="number-pad"
                       value={expiryDate}
                       onChangeText={(text) =>
@@ -396,12 +514,24 @@ export default function PaymentScreen() {
                   </View>
                 </View>
                 <View style={styles.halfInput}>
-                  <Text style={styles.inputLabel}>CVV</Text>
-                  <View style={styles.inputContainer}>
+                  <Text
+                    style={[styles.inputLabel, { color: colors.textSecondary }]}
+                  >
+                    CVV
+                  </Text>
+                  <View
+                    style={[
+                      styles.inputContainer,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.divider,
+                      },
+                    ]}
+                  >
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, { color: colors.text }]}
                       placeholder="123"
-                      placeholderTextColor={Colors.textSecondary}
+                      placeholderTextColor={colors.textSecondary}
                       keyboardType="number-pad"
                       value={cvv}
                       onChangeText={setCvv}
@@ -412,17 +542,29 @@ export default function PaymentScreen() {
                 </View>
               </View>
 
-              <Text style={styles.inputLabel}>Cardholder Name</Text>
-              <View style={styles.inputContainer}>
+              <Text
+                style={[styles.inputLabel, { color: colors.textSecondary }]}
+              >
+                Cardholder Name
+              </Text>
+              <View
+                style={[
+                  styles.inputContainer,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
+              >
                 <Ionicons
                   name="person-outline"
                   size={20}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: colors.text }]}
                   placeholder="John Doe"
-                  placeholderTextColor={Colors.textSecondary}
+                  placeholderTextColor={colors.textSecondary}
                   autoCapitalize="words"
                   value={cardholderName}
                   onChangeText={setCardholderName}
@@ -437,17 +579,21 @@ export default function PaymentScreen() {
               <Ionicons
                 name="shield-checkmark"
                 size={16}
-                color={Colors.primaryGreen}
+                color={colors.primary}
               />
-              <Text style={styles.securityText}>SSL Secured</Text>
+              <Text
+                style={[styles.securityText, { color: colors.textSecondary }]}
+              >
+                SSL Secured
+              </Text>
             </View>
             <View style={styles.securityBadge}>
-              <Ionicons
-                name="lock-closed"
-                size={16}
-                color={Colors.primaryGreen}
-              />
-              <Text style={styles.securityText}>Powered by Paystack</Text>
+              <Ionicons name="lock-closed" size={16} color={colors.primary} />
+              <Text
+                style={[styles.securityText, { color: colors.textSecondary }]}
+              >
+                Powered by Paystack
+              </Text>
             </View>
           </View>
 
@@ -460,13 +606,22 @@ export default function PaymentScreen() {
       <View
         style={[
           styles.bottomContainer,
-          { paddingBottom: Math.max(insets.bottom, Spacing.lg) },
+          {
+            paddingBottom: Math.max(insets.bottom, Spacing.lg),
+            backgroundColor: colors.background,
+            borderTopColor: colors.divider,
+          },
         ]}
       >
         <TouchableOpacity
           style={[
             styles.payButton,
-            (!isFormValid() || isProcessing) && styles.payButtonDisabled,
+            { backgroundColor: colors.primary },
+            (!isFormValid() || isProcessing) && {
+              backgroundColor: colors.divider,
+              shadowOpacity: 0,
+              elevation: 0,
+            },
           ]}
           onPress={handlePayment}
           activeOpacity={0.8}
