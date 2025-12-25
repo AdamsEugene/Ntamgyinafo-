@@ -21,7 +21,8 @@ import {
   BottomSheetView,
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   FloatingHeader,
   HeaderActionButton,
@@ -133,6 +134,7 @@ const FILTER_OPTIONS: {
 export default function UserManagementScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [users, setUsers] = useState<User[]>(MOCK_USERS);
   const [activeFilter, setActiveFilter] = useState<FilterTab>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -256,22 +258,37 @@ export default function UserManagementScreen() {
   const getStatusStyle = (status: User["status"]) => {
     switch (status) {
       case "active":
-        return { bg: `${Colors.primaryGreen}15`, text: Colors.primaryGreen };
+        return { bg: `${colors.primary}15`, text: colors.primary };
       case "pending":
-        return { bg: "#FEF3C7", text: "#F59E0B" };
+        return {
+          bg: isDark ? "#78350F" : "#FEF3C7",
+          text: "#F59E0B",
+        };
       case "suspended":
-        return { bg: "#FEE2E2", text: "#EF4444" };
+        return {
+          bg: isDark ? "#7F1D1D" : "#FEE2E2",
+          text: "#EF4444",
+        };
     }
   };
 
   const getRoleStyle = (role: User["role"]) => {
     switch (role) {
       case "owner":
-        return { bg: "#DBEAFE", text: "#3B82F6" };
+        return {
+          bg: isDark ? "#1E3A8A" : "#DBEAFE",
+          text: "#3B82F6",
+        };
       case "buyer":
-        return { bg: "#F3E8FF", text: "#8B5CF6" };
+        return {
+          bg: isDark ? "#581C87" : "#F3E8FF",
+          text: "#8B5CF6",
+        };
       case "admin":
-        return { bg: "#FEE2E2", text: "#EF4444" };
+        return {
+          bg: isDark ? "#7F1D1D" : "#FEE2E2",
+          text: "#EF4444",
+        };
     }
   };
 
@@ -281,7 +298,13 @@ export default function UserManagementScreen() {
 
     return (
       <TouchableOpacity
-        style={styles.userCard}
+        style={[
+          styles.userCard,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.divider,
+          },
+        ]}
         activeOpacity={0.7}
         onPress={() => {
           router.push(`/admin-user/${item.id}`);
@@ -291,31 +314,45 @@ export default function UserManagementScreen() {
           <View style={styles.userAvatarContainer}>
             <Image source={{ uri: item.avatar }} style={styles.userAvatar} />
             {item.isVerified && (
-              <View style={styles.verifiedBadge}>
+              <View
+                style={[
+                  styles.verifiedBadge,
+                  {
+                    backgroundColor: colors.primary,
+                    borderColor: colors.surface,
+                  },
+                ]}
+              >
                 <Ionicons name="checkmark" size={10} color="#FFFFFF" />
               </View>
             )}
           </View>
           <View style={styles.userInfo}>
-            <Text style={styles.userName}>{item.name}</Text>
-            <Text style={styles.userPhone}>{item.phone}</Text>
+            <Text style={[styles.userName, { color: colors.text }]}>
+              {item.name}
+            </Text>
+            <Text style={[styles.userPhone, { color: colors.textSecondary }]}>
+              {item.phone}
+            </Text>
           </View>
           <TouchableOpacity
             onPress={() => {
               setSelectedUser(item);
               actionSheetRef.current?.present();
             }}
-            style={styles.moreButton}
+            style={[styles.moreButton, { backgroundColor: colors.background }]}
           >
             <Ionicons
               name="ellipsis-vertical"
               size={18}
-              color={Colors.textSecondary}
+              color={colors.textSecondary}
             />
           </TouchableOpacity>
         </View>
 
-        <View style={styles.userCardDetails}>
+        <View
+          style={[styles.userCardDetails, { borderTopColor: colors.divider }]}
+        >
           <View style={styles.userBadges}>
             <View style={[styles.roleBadge, { backgroundColor: roleStyle.bg }]}>
               <Ionicons
@@ -355,29 +392,37 @@ export default function UserManagementScreen() {
               <Ionicons
                 name="calendar-outline"
                 size={13}
-                color={Colors.textSecondary}
+                color={colors.textSecondary}
               />
-              <Text style={styles.userMetaText}>{item.joinedDate}</Text>
+              <Text
+                style={[styles.userMetaText, { color: colors.textSecondary }]}
+              >
+                {item.joinedDate}
+              </Text>
             </View>
             <View style={styles.userMetaItem}>
               <Ionicons
                 name="time-outline"
                 size={13}
-                color={Colors.textSecondary}
+                color={colors.textSecondary}
               />
-              <Text style={styles.userMetaText}>{item.lastActive}</Text>
+              <Text
+                style={[styles.userMetaText, { color: colors.textSecondary }]}
+              >
+                {item.lastActive}
+              </Text>
             </View>
             {item.role === "owner" && item.listingsCount !== undefined && (
               <View style={styles.userMetaItem}>
                 <Ionicons
                   name="home-outline"
                   size={13}
-                  color={Colors.primaryGreen}
+                  color={colors.primary}
                 />
                 <Text
                   style={[
                     styles.userMetaText,
-                    { color: Colors.primaryGreen, fontWeight: "600" },
+                    { color: colors.primary, fontWeight: "600" },
                   ]}
                 >
                   {item.listingsCount} listings
@@ -392,12 +437,22 @@ export default function UserManagementScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
         </View>
 
         {/* Floating Sticky Header */}
@@ -421,18 +476,37 @@ export default function UserManagementScreen() {
 
         {/* Active Filter Indicator */}
         {activeFilter !== "all" && (
-          <View style={[styles.activeFilterBar, { top: 70 + insets.top }]}>
-            <View style={styles.activeFilterChip}>
-              <Text style={styles.activeFilterText}>{activeFilterLabel}</Text>
+          <View
+            style={[
+              styles.activeFilterBar,
+              {
+                top: 70 + insets.top,
+                backgroundColor: colors.background,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.activeFilterChip,
+                { backgroundColor: `${colors.primary}15` },
+              ]}
+            >
+              <Text
+                style={[styles.activeFilterText, { color: colors.primary }]}
+              >
+                {activeFilterLabel}
+              </Text>
               <TouchableOpacity onPress={() => setActiveFilter("all")}>
                 <Ionicons
                   name="close-circle"
                   size={18}
-                  color={Colors.primaryGreen}
+                  color={colors.primary}
                 />
               </TouchableOpacity>
             </View>
-            <Text style={styles.resultsCount}>
+            <Text
+              style={[styles.resultsCount, { color: colors.textSecondary }]}
+            >
               {filteredUsers.length}{" "}
               {filteredUsers.length === 1 ? "user" : "users"}
             </Text>
@@ -458,13 +532,15 @@ export default function UserManagementScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor={Colors.primaryGreen}
+              tintColor={colors.primary}
               progressViewOffset={90 + insets.top}
             />
           }
           ListHeaderComponent={
             activeFilter === "all" ? (
-              <Text style={styles.listHeaderText}>
+              <Text
+                style={[styles.listHeaderText, { color: colors.textSecondary }]}
+              >
                 {filteredUsers.length}{" "}
                 {filteredUsers.length === 1 ? "user" : "users"}
               </Text>
@@ -472,25 +548,47 @@ export default function UserManagementScreen() {
           }
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <View style={styles.emptyIconContainer}>
+              <View
+                style={[
+                  styles.emptyIconContainer,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
+              >
                 <Ionicons
                   name="people-outline"
                   size={48}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
               </View>
-              <Text style={styles.emptyTitle}>No Users Found</Text>
-              <Text style={styles.emptyMessage}>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                No Users Found
+              </Text>
+              <Text
+                style={[styles.emptyMessage, { color: colors.textSecondary }]}
+              >
                 {searchQuery
                   ? "Try a different search term"
                   : "No users match the current filter"}
               </Text>
               {activeFilter !== "all" && (
                 <TouchableOpacity
-                  style={styles.clearFilterButton}
+                  style={[
+                    styles.clearFilterButton,
+                    { borderColor: colors.primary },
+                  ]}
                   onPress={() => setActiveFilter("all")}
                 >
-                  <Text style={styles.clearFilterButtonText}>Clear Filter</Text>
+                  <Text
+                    style={[
+                      styles.clearFilterButtonText,
+                      { color: colors.primary },
+                    ]}
+                  >
+                    Clear Filter
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -512,11 +610,19 @@ export default function UserManagementScreen() {
           index={0}
           snapPoints={["50%"]}
           backdropComponent={renderBackdrop}
-          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+          handleIndicatorStyle={{ backgroundColor: colors.divider }}
+          backgroundStyle={{ backgroundColor: colors.surface }}
         >
           <BottomSheetScrollView style={styles.filterSheetContent}>
-            <Text style={styles.filterSheetTitle}>Filter Users</Text>
-            <Text style={styles.filterSheetSubtitle}>
+            <Text style={[styles.filterSheetTitle, { color: colors.text }]}>
+              Filter Users
+            </Text>
+            <Text
+              style={[
+                styles.filterSheetSubtitle,
+                { color: colors.textSecondary },
+              ]}
+            >
               Select a category to filter users
             </Text>
 
@@ -526,7 +632,14 @@ export default function UserManagementScreen() {
                   key={option.id}
                   style={[
                     styles.filterOption,
-                    activeFilter === option.id && styles.filterOptionActive,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                    activeFilter === option.id && {
+                      borderColor: colors.primary,
+                      backgroundColor: `${colors.primary}08`,
+                    },
                   ]}
                   onPress={() => {
                     setActiveFilter(option.id);
@@ -537,8 +650,10 @@ export default function UserManagementScreen() {
                   <View
                     style={[
                       styles.filterOptionIcon,
-                      activeFilter === option.id &&
-                        styles.filterOptionIconActive,
+                      { backgroundColor: colors.background },
+                      activeFilter === option.id && {
+                        backgroundColor: colors.primary,
+                      },
                     ]}
                   >
                     <Ionicons
@@ -547,15 +662,18 @@ export default function UserManagementScreen() {
                       color={
                         activeFilter === option.id
                           ? "#FFFFFF"
-                          : Colors.textSecondary
+                          : colors.textSecondary
                       }
                     />
                   </View>
                   <Text
                     style={[
                       styles.filterOptionText,
-                      activeFilter === option.id &&
-                        styles.filterOptionTextActive,
+                      { color: colors.textSecondary },
+                      activeFilter === option.id && {
+                        color: colors.text,
+                        fontWeight: "600",
+                      },
                     ]}
                   >
                     {option.label}
@@ -564,7 +682,7 @@ export default function UserManagementScreen() {
                     <Ionicons
                       name="checkmark-circle"
                       size={22}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
                   )}
                 </TouchableOpacity>
@@ -580,7 +698,14 @@ export default function UserManagementScreen() {
                 }}
                 activeOpacity={0.8}
               >
-                <Text style={styles.resetFilterButtonText}>Reset Filter</Text>
+                <Text
+                  style={[
+                    styles.resetFilterButtonText,
+                    { color: colors.primary },
+                  ]}
+                >
+                  Reset Filter
+                </Text>
               </TouchableOpacity>
             )}
           </BottomSheetScrollView>
@@ -592,22 +717,38 @@ export default function UserManagementScreen() {
           index={0}
           snapPoints={["50%"]}
           backdropComponent={renderBackdrop}
-          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+          handleIndicatorStyle={{ backgroundColor: colors.divider }}
+          backgroundStyle={{ backgroundColor: colors.surface }}
         >
           <BottomSheetView style={styles.sheetContent}>
             {selectedUser && (
               <>
                 {/* User Info */}
-                <View style={styles.sheetUserInfo}>
+                <View
+                  style={[
+                    styles.sheetUserInfo,
+                    { borderBottomColor: colors.divider },
+                  ]}
+                >
                   <Image
                     source={{ uri: selectedUser.avatar }}
-                    style={styles.sheetAvatar}
+                    style={[
+                      styles.sheetAvatar,
+                      { borderColor: colors.primary },
+                    ]}
                   />
                   <View style={styles.sheetUserDetails}>
-                    <Text style={styles.sheetUserName}>
+                    <Text
+                      style={[styles.sheetUserName, { color: colors.text }]}
+                    >
                       {selectedUser.name}
                     </Text>
-                    <Text style={styles.sheetUserPhone}>
+                    <Text
+                      style={[
+                        styles.sheetUserPhone,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
                       {selectedUser.phone}
                     </Text>
                     <View style={styles.sheetUserBadges}>
@@ -655,7 +796,7 @@ export default function UserManagementScreen() {
                     <Ionicons
                       name="chevron-forward"
                       size={18}
-                      color={Colors.textSecondary}
+                      color={colors.textSecondary}
                     />
                   </TouchableOpacity>
 
@@ -668,20 +809,24 @@ export default function UserManagementScreen() {
                       <View
                         style={[
                           styles.sheetActionIcon,
-                          { backgroundColor: `${Colors.primaryGreen}15` },
+                          { backgroundColor: `${colors.primary}15` },
                         ]}
                       >
                         <Ionicons
                           name="checkmark-circle"
                           size={20}
-                          color={Colors.primaryGreen}
+                          color={colors.primary}
                         />
                       </View>
-                      <Text style={styles.sheetActionText}>Verify User</Text>
+                      <Text
+                        style={[styles.sheetActionText, { color: colors.text }]}
+                      >
+                        Verify User
+                      </Text>
                       <Ionicons
                         name="chevron-forward"
                         size={18}
-                        color={Colors.textSecondary}
+                        color={colors.textSecondary}
                       />
                     </TouchableOpacity>
                   )}
@@ -695,22 +840,24 @@ export default function UserManagementScreen() {
                       <View
                         style={[
                           styles.sheetActionIcon,
-                          { backgroundColor: `${Colors.primaryGreen}15` },
+                          { backgroundColor: `${colors.primary}15` },
                         ]}
                       >
                         <Ionicons
                           name="refresh"
                           size={20}
-                          color={Colors.primaryGreen}
+                          color={colors.primary}
                         />
                       </View>
-                      <Text style={styles.sheetActionText}>
+                      <Text
+                        style={[styles.sheetActionText, { color: colors.text }]}
+                      >
                         Reactivate User
                       </Text>
                       <Ionicons
                         name="chevron-forward"
                         size={18}
-                        color={Colors.textSecondary}
+                        color={colors.textSecondary}
                       />
                     </TouchableOpacity>
                   ) : (
@@ -722,16 +869,22 @@ export default function UserManagementScreen() {
                       <View
                         style={[
                           styles.sheetActionIcon,
-                          { backgroundColor: "#FEF3C7" },
+                          {
+                            backgroundColor: isDark ? "#78350F" : "#FEF3C7",
+                          },
                         ]}
                       >
                         <Ionicons name="ban" size={20} color="#F59E0B" />
                       </View>
-                      <Text style={styles.sheetActionText}>Suspend User</Text>
+                      <Text
+                        style={[styles.sheetActionText, { color: colors.text }]}
+                      >
+                        Suspend User
+                      </Text>
                       <Ionicons
                         name="chevron-forward"
                         size={18}
-                        color={Colors.textSecondary}
+                        color={colors.textSecondary}
                       />
                     </TouchableOpacity>
                   )}
@@ -744,7 +897,9 @@ export default function UserManagementScreen() {
                     <View
                       style={[
                         styles.sheetActionIcon,
-                        { backgroundColor: "#FEE2E2" },
+                        {
+                          backgroundColor: isDark ? "#7F1D1D" : "#FEE2E2",
+                        },
                       ]}
                     >
                       <Ionicons name="trash" size={20} color="#EF4444" />
@@ -773,7 +928,6 @@ export default function UserManagementScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   decorativeBackground: {
     position: "absolute",
@@ -790,8 +944,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: Colors.primaryLight,
-    opacity: 0.08,
   },
   circle2: {
     position: "absolute",
@@ -800,8 +952,6 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     borderRadius: 200,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
   },
   // Active Filter Bar
   activeFilterBar: {
@@ -814,13 +964,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: Colors.background,
   },
   activeFilterChip: {
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.sm,
-    backgroundColor: `${Colors.primaryGreen}15`,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: 20,
@@ -829,12 +977,10 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 13,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
   resultsCount: {
     ...Typography.bodyMedium,
     fontSize: 13,
-    color: Colors.textSecondary,
   },
   // List
   listContent: {
@@ -844,17 +990,14 @@ const styles = StyleSheet.create({
   listHeaderText: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
     marginBottom: Spacing.md,
   },
   // User Card
   userCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 20,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -881,7 +1024,6 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: 26,
     borderWidth: 2,
-    borderColor: Colors.divider,
   },
   verifiedBadge: {
     position: "absolute",
@@ -890,11 +1032,9 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: Colors.primaryGreen,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
-    borderColor: Colors.surface,
   },
   userInfo: {
     flex: 1,
@@ -903,26 +1043,22 @@ const styles = StyleSheet.create({
     ...Typography.titleMedium,
     fontSize: 16,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: 2,
   },
   userPhone: {
     ...Typography.bodyMedium,
     fontSize: 13,
-    color: Colors.textSecondary,
   },
   moreButton: {
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: Colors.background,
     alignItems: "center",
     justifyContent: "center",
   },
   userCardDetails: {
     paddingTop: Spacing.md,
     borderTopWidth: 1,
-    borderTopColor: Colors.divider,
   },
   userBadges: {
     flexDirection: "row",
@@ -973,7 +1109,6 @@ const styles = StyleSheet.create({
   userMetaText: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   // Empty State
   emptyState: {
@@ -985,24 +1120,20 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: Colors.surface,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   emptyTitle: {
     ...Typography.titleMedium,
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   emptyMessage: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
     textAlign: "center",
   },
   clearFilterButton: {
@@ -1011,13 +1142,11 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: Colors.primaryGreen,
   },
   clearFilterButtonText: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
   // Filter Sheet
   filterSheetContent: {
@@ -1027,13 +1156,11 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 22,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: Spacing.xs,
   },
   filterSheetSubtitle: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
     marginBottom: Spacing.xl,
   },
   filterOptions: {
@@ -1044,35 +1171,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: Spacing.md,
     padding: Spacing.md,
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.divider,
-  },
-  filterOptionActive: {
-    borderColor: Colors.primaryGreen,
-    backgroundColor: `${Colors.primaryGreen}08`,
   },
   filterOptionIcon: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: Colors.background,
     alignItems: "center",
     justifyContent: "center",
-  },
-  filterOptionIconActive: {
-    backgroundColor: Colors.primaryGreen,
   },
   filterOptionText: {
     ...Typography.bodyMedium,
     fontSize: 15,
-    color: Colors.textSecondary,
     flex: 1,
-  },
-  filterOptionTextActive: {
-    color: Colors.textPrimary,
-    fontWeight: "600",
   },
   resetFilterButton: {
     marginTop: Spacing.xl,
@@ -1083,7 +1195,6 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
   // Bottom Sheet
   sheetContent: {
@@ -1096,14 +1207,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
     paddingBottom: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
   },
   sheetAvatar: {
     width: 64,
     height: 64,
     borderRadius: 32,
     borderWidth: 3,
-    borderColor: Colors.primaryGreen,
   },
   sheetUserDetails: {
     flex: 1,
@@ -1112,12 +1221,10 @@ const styles = StyleSheet.create({
     ...Typography.titleMedium,
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   sheetUserPhone: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
     marginBottom: Spacing.xs,
   },
   sheetUserBadges: {
@@ -1156,7 +1263,6 @@ const styles = StyleSheet.create({
     ...Typography.bodyMedium,
     fontSize: 15,
     fontWeight: "500",
-    color: Colors.textPrimary,
     flex: 1,
   },
 });

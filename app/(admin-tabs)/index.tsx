@@ -13,7 +13,8 @@ import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   FloatingHeader,
   HeaderActionButton,
@@ -72,7 +73,7 @@ const METRICS: MetricCard[] = [
     change: "+56 today",
     changeType: "up",
     icon: "home",
-    color: Colors.primaryGreen,
+    color: "#4CAF50",
   },
   {
     id: "pending",
@@ -138,7 +139,7 @@ const RECENT_ACTIVITY: ActivityItem[] = [
     message: 'Property "2 Bed Apt in Osu" was approved',
     time: "10 min ago",
     icon: "checkmark-circle",
-    color: Colors.primaryGreen,
+    color: "#4CAF50",
   },
   {
     id: "a2",
@@ -192,6 +193,7 @@ const SYSTEM_ALERTS: AlertItem[] = [
 export default function AdminDashboardScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = useCallback(() => {
@@ -200,24 +202,25 @@ export default function AdminDashboardScreen() {
   }, []);
 
   const getAlertStyle = (type: AlertItem["type"]) => {
+    const isDarkMode = isDark;
     switch (type) {
       case "warning":
         return {
-          bg: "#FEF3C7",
+          bg: isDarkMode ? "#78350F" : "#FEF3C7",
           border: "#F59E0B",
           icon: "warning" as const,
           color: "#F59E0B",
         };
       case "error":
         return {
-          bg: "#FEE2E2",
+          bg: isDarkMode ? "#7F1D1D" : "#FEE2E2",
           border: "#EF4444",
           icon: "alert-circle" as const,
           color: "#EF4444",
         };
       case "info":
         return {
-          bg: "#DBEAFE",
+          bg: isDarkMode ? "#1E3A8A" : "#DBEAFE",
           border: "#3B82F6",
           icon: "information-circle" as const,
           color: "#3B82F6",
@@ -227,12 +230,22 @@ export default function AdminDashboardScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
         </View>
 
         {/* Floating Sticky Header */}
@@ -262,7 +275,7 @@ export default function AdminDashboardScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={handleRefresh}
-              tintColor={Colors.primaryGreen}
+              tintColor={colors.primary}
               progressViewOffset={80 + insets.top}
             />
           }
@@ -292,7 +305,14 @@ export default function AdminDashboardScreen() {
                   >
                     {alert.title}
                   </Text>
-                  <Text style={styles.alertMessage}>{alert.message}</Text>
+                  <Text
+                    style={[
+                      styles.alertMessage,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    {alert.message}
+                  </Text>
                 </View>
                 <TouchableOpacity>
                   <Ionicons name="close" size={20} color={alertStyle.color} />
@@ -302,12 +322,20 @@ export default function AdminDashboardScreen() {
           })}
 
           {/* Key Metrics */}
-          <Text style={styles.sectionTitleFirst}>Overview</Text>
+          <Text style={[styles.sectionTitleFirst, { color: colors.text }]}>
+            Overview
+          </Text>
           <View style={styles.metricsGrid}>
             {METRICS.map((metric) => (
               <TouchableOpacity
                 key={metric.id}
-                style={styles.metricCard}
+                style={[
+                  styles.metricCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
                 activeOpacity={0.7}
                 onPress={() => {
                   if (metric.id === "users") router.push("/(admin-tabs)/users");
@@ -327,14 +355,20 @@ export default function AdminDashboardScreen() {
                 >
                   <Ionicons name={metric.icon} size={22} color={metric.color} />
                 </View>
-                <Text style={styles.metricValue}>{metric.value}</Text>
-                <Text style={styles.metricLabel}>{metric.label}</Text>
+                <Text style={[styles.metricValue, { color: colors.text }]}>
+                  {metric.value}
+                </Text>
+                <Text
+                  style={[styles.metricLabel, { color: colors.textSecondary }]}
+                >
+                  {metric.label}
+                </Text>
                 <View style={styles.metricChange}>
                   {metric.changeType === "up" && (
                     <Ionicons
                       name="arrow-up"
                       size={12}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
                   )}
                   {metric.changeType === "down" && (
@@ -344,9 +378,12 @@ export default function AdminDashboardScreen() {
                     style={[
                       styles.metricChangeText,
                       metric.changeType === "up" && {
-                        color: Colors.primaryGreen,
+                        color: colors.primary,
                       },
                       metric.changeType === "down" && { color: "#EF4444" },
+                      metric.changeType === "neutral" && {
+                        color: colors.textSecondary,
+                      },
                     ]}
                   >
                     {metric.change}
@@ -357,31 +394,50 @@ export default function AdminDashboardScreen() {
           </View>
 
           {/* Quick Actions */}
-          <Text style={[styles.sectionTitle, { marginTop: Spacing.xl }]}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { marginTop: Spacing.xl, color: colors.text },
+            ]}
+          >
             Quick Actions
           </Text>
           <View style={styles.quickActions}>
             <TouchableOpacity
-              style={styles.quickAction}
+              style={[
+                styles.quickAction,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
               activeOpacity={0.7}
               onPress={() => router.push("/(admin-tabs)/properties")}
             >
               <View
                 style={[
                   styles.quickActionIcon,
-                  { backgroundColor: `${Colors.primaryGreen}15` },
+                  { backgroundColor: `${colors.primary}15` },
                 ]}
               >
-                <Ionicons name="home" size={24} color={Colors.primaryGreen} />
+                <Ionicons name="home" size={24} color={colors.primary} />
               </View>
-              <Text style={styles.quickActionText}>Review Properties</Text>
+              <Text style={[styles.quickActionText, { color: colors.text }]}>
+                Review Properties
+              </Text>
               <View style={styles.quickActionBadge}>
                 <Text style={styles.quickActionBadgeText}>32</Text>
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.quickAction}
+              style={[
+                styles.quickAction,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
               activeOpacity={0.7}
               onPress={() => router.push("/(admin-tabs)/users")}
             >
@@ -393,14 +449,22 @@ export default function AdminDashboardScreen() {
               >
                 <Ionicons name="people" size={24} color="#3B82F6" />
               </View>
-              <Text style={styles.quickActionText}>Review Users</Text>
+              <Text style={[styles.quickActionText, { color: colors.text }]}>
+                Review Users
+              </Text>
               <View style={styles.quickActionBadge}>
                 <Text style={styles.quickActionBadgeText}>16</Text>
               </View>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.quickAction}
+              style={[
+                styles.quickAction,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
               activeOpacity={0.7}
               onPress={() => router.push("/(admin-tabs)/reports")}
             >
@@ -412,24 +476,41 @@ export default function AdminDashboardScreen() {
               >
                 <Ionicons name="document-text" size={24} color="#8B5CF6" />
               </View>
-              <Text style={styles.quickActionText}>View Reports</Text>
+              <Text style={[styles.quickActionText, { color: colors.text }]}>
+                View Reports
+              </Text>
             </TouchableOpacity>
           </View>
 
           {/* Pending Approvals */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Pending Approvals</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Pending Approvals
+            </Text>
             <TouchableOpacity
               onPress={() => router.push("/(admin-tabs)/properties")}
             >
-              <Text style={styles.seeAllText}>See All</Text>
+              <Text style={[styles.seeAllText, { color: colors.primary }]}>
+                See All
+              </Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.pendingList}>
+          <View
+            style={[
+              styles.pendingList,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
             {PENDING_ITEMS.map((item) => (
               <TouchableOpacity
                 key={item.id}
-                style={styles.pendingItem}
+                style={[
+                  styles.pendingItem,
+                  { borderBottomColor: colors.divider },
+                ]}
                 activeOpacity={0.7}
                 onPress={() => {
                   if (item.type === "property") {
@@ -456,14 +537,14 @@ export default function AdminDashboardScreen() {
                         styles.pendingTypeBadge,
                         item.type === "user"
                           ? { backgroundColor: "#3B82F615" }
-                          : { backgroundColor: `${Colors.primaryGreen}15` },
+                          : { backgroundColor: `${colors.primary}15` },
                       ]}
                     >
                       <Ionicons
                         name={item.type === "user" ? "person" : "home"}
                         size={10}
                         color={
-                          item.type === "user" ? "#3B82F6" : Colors.primaryGreen
+                          item.type === "user" ? "#3B82F6" : colors.primary
                         }
                       />
                       <Text
@@ -471,28 +552,42 @@ export default function AdminDashboardScreen() {
                           styles.pendingTypeText,
                           {
                             color:
-                              item.type === "user"
-                                ? "#3B82F6"
-                                : Colors.primaryGreen,
+                              item.type === "user" ? "#3B82F6" : colors.primary,
                           },
                         ]}
                       >
                         {item.type === "user" ? "User" : "Property"}
                       </Text>
                     </View>
-                    <Text style={styles.pendingTime}>{item.time}</Text>
+                    <Text
+                      style={[
+                        styles.pendingTime,
+                        { color: colors.textSecondary },
+                      ]}
+                    >
+                      {item.time}
+                    </Text>
                   </View>
-                  <Text style={styles.pendingTitle} numberOfLines={1}>
+                  <Text
+                    style={[styles.pendingTitle, { color: colors.text }]}
+                    numberOfLines={1}
+                  >
                     {item.title}
                   </Text>
-                  <Text style={styles.pendingSubtitle} numberOfLines={1}>
+                  <Text
+                    style={[
+                      styles.pendingSubtitle,
+                      { color: colors.textSecondary },
+                    ]}
+                    numberOfLines={1}
+                  >
                     {item.subtitle}
                   </Text>
                 </View>
                 <Ionicons
                   name="chevron-forward"
                   size={20}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
               </TouchableOpacity>
             ))}
@@ -500,11 +595,27 @@ export default function AdminDashboardScreen() {
 
           {/* Recent Activity */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent Activity</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Recent Activity
+            </Text>
           </View>
-          <View style={styles.activityList}>
+          <View
+            style={[
+              styles.activityList,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
             {RECENT_ACTIVITY.map((activity) => (
-              <View key={activity.id} style={styles.activityItem}>
+              <View
+                key={activity.id}
+                style={[
+                  styles.activityItem,
+                  { borderBottomColor: colors.divider },
+                ]}
+              >
                 <View
                   style={[
                     styles.activityIcon,
@@ -518,8 +629,19 @@ export default function AdminDashboardScreen() {
                   />
                 </View>
                 <View style={styles.activityContent}>
-                  <Text style={styles.activityMessage}>{activity.message}</Text>
-                  <Text style={styles.activityTime}>{activity.time}</Text>
+                  <Text
+                    style={[styles.activityMessage, { color: colors.text }]}
+                  >
+                    {activity.message}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.activityTime,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    {activity.time}
+                  </Text>
                 </View>
               </View>
             ))}
@@ -533,7 +655,6 @@ export default function AdminDashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   decorativeBackground: {
     position: "absolute",
@@ -550,8 +671,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: Colors.primaryLight,
-    opacity: 0.08,
   },
   circle2: {
     position: "absolute",
@@ -560,8 +679,6 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     borderRadius: 200,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
   },
   headerLeft: {
     flexDirection: "row",
@@ -573,7 +690,6 @@ const styles = StyleSheet.create({
     ...Typography.titleLarge,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   notificationBadge: {
     position: "absolute",
@@ -587,7 +703,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 4,
     borderWidth: 2,
-    borderColor: Colors.surface,
   },
   notificationBadgeText: {
     ...Typography.caption,
@@ -624,7 +739,6 @@ const styles = StyleSheet.create({
   alertMessage: {
     ...Typography.bodyMedium,
     fontSize: 12,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   // Section
@@ -639,7 +753,6 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 15,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginTop: Spacing.md,
     marginBottom: Spacing.sm,
   },
@@ -647,14 +760,12 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 15,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: Spacing.sm,
   },
   seeAllText: {
     ...Typography.labelMedium,
     fontSize: 13,
     fontWeight: "600",
-    color: Colors.primaryGreen,
   },
   // Metrics Grid
   metricsGrid: {
@@ -664,11 +775,9 @@ const styles = StyleSheet.create({
   },
   metricCard: {
     width: "48.5%",
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -693,12 +802,10 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 24,
     fontWeight: "800",
-    color: Colors.textPrimary,
   },
   metricLabel: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
   metricChange: {
@@ -710,7 +817,6 @@ const styles = StyleSheet.create({
   metricChangeText: {
     ...Typography.caption,
     fontSize: 10,
-    color: Colors.textSecondary,
   },
   // Quick Actions
   quickActions: {
@@ -719,13 +825,11 @@ const styles = StyleSheet.create({
   },
   quickAction: {
     flex: 1,
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.sm,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -750,7 +854,6 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     fontSize: 12,
     fontWeight: "600",
-    color: Colors.textPrimary,
     textAlign: "center",
   },
   quickActionBadge: {
@@ -773,11 +876,9 @@ const styles = StyleSheet.create({
   },
   // Pending List
   pendingList: {
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -796,7 +897,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
     gap: Spacing.md,
   },
   pendingImage: {
@@ -832,27 +932,22 @@ const styles = StyleSheet.create({
   pendingTime: {
     ...Typography.caption,
     fontSize: 10,
-    color: Colors.textSecondary,
   },
   pendingTitle: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.textPrimary,
     marginBottom: 2,
   },
   pendingSubtitle: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
   },
   // Activity List
   activityList: {
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: Colors.divider,
     marginBottom: Spacing.md,
     ...Platform.select({
       ios: {
@@ -872,7 +967,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm + 2,
     paddingHorizontal: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
     gap: Spacing.md,
   },
   activityIcon: {
@@ -888,12 +982,10 @@ const styles = StyleSheet.create({
   activityMessage: {
     ...Typography.bodyMedium,
     fontSize: 13,
-    color: Colors.textPrimary,
   },
   activityTime: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
     marginTop: 2,
   },
 });
