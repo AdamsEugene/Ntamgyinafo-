@@ -533,6 +533,7 @@ export default function OwnerAnalyticsScreen() {
                   donut
                   radius={70}
                   innerRadius={45}
+                  innerCircleColor={colors.surface}
                   centerLabelComponent={() => (
                     <View style={styles.pieCenter}>
                       <Text
@@ -980,7 +981,8 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
   },
   performanceItem: {
-    width: (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.lg * 2 - Spacing.md) / 2,
+    flex: 1,
+    minWidth: (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.lg * 2 - Spacing.md) / 2,
     borderRadius: 12,
     padding: Spacing.md,
   },
