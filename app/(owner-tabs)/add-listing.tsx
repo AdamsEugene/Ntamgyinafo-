@@ -684,10 +684,23 @@ export default function AddListingScreen() {
         <>
           <View style={styles.formRow}>
             <View style={[styles.formGroup, { flex: 1 }]}>
-              <Text style={styles.inputLabel}>Bedrooms</Text>
-              <View style={styles.counterContainer}>
+              <Text style={[styles.inputLabel, { color: colors.text }]}>
+                Bedrooms
+              </Text>
+              <View
+                style={[
+                  styles.counterContainer,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
+              >
                 <TouchableOpacity
-                  style={styles.counterButton}
+                  style={[
+                    styles.counterButton,
+                    { backgroundColor: colors.background },
+                  ]}
                   onPress={() =>
                     setFormData({
                       ...formData,
@@ -697,9 +710,14 @@ export default function AddListingScreen() {
                 >
                   <Ionicons name="remove" size={20} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={styles.counterValue}>{formData.bedrooms}</Text>
+                <Text style={[styles.counterValue, { color: colors.text }]}>
+                  {formData.bedrooms}
+                </Text>
                 <TouchableOpacity
-                  style={styles.counterButton}
+                  style={[
+                    styles.counterButton,
+                    { backgroundColor: colors.background },
+                  ]}
                   onPress={() =>
                     setFormData({
                       ...formData,
@@ -713,10 +731,23 @@ export default function AddListingScreen() {
             </View>
 
             <View style={[styles.formGroup, { flex: 1 }]}>
-              <Text style={styles.inputLabel}>Bathrooms</Text>
-              <View style={styles.counterContainer}>
+              <Text style={[styles.inputLabel, { color: colors.text }]}>
+                Bathrooms
+              </Text>
+              <View
+                style={[
+                  styles.counterContainer,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
+              >
                 <TouchableOpacity
-                  style={styles.counterButton}
+                  style={[
+                    styles.counterButton,
+                    { backgroundColor: colors.background },
+                  ]}
                   onPress={() =>
                     setFormData({
                       ...formData,
@@ -726,9 +757,14 @@ export default function AddListingScreen() {
                 >
                   <Ionicons name="remove" size={20} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={styles.counterValue}>{formData.bathrooms}</Text>
+                <Text style={[styles.counterValue, { color: colors.text }]}>
+                  {formData.bathrooms}
+                </Text>
                 <TouchableOpacity
-                  style={styles.counterButton}
+                  style={[
+                    styles.counterButton,
+                    { backgroundColor: colors.background },
+                  ]}
                   onPress={() =>
                     setFormData({
                       ...formData,
@@ -969,7 +1005,12 @@ export default function AddListingScreen() {
                 {amenity.label}
               </Text>
               {isSelected && (
-                <View style={styles.amenityCheck}>
+                <View
+                  style={[
+                    styles.amenityCheck,
+                    { backgroundColor: colors.primary },
+                  ]}
+                >
                   <Ionicons name="checkmark" size={14} color="#FFFFFF" />
                 </View>
               )}
@@ -1086,13 +1127,25 @@ export default function AddListingScreen() {
         <View style={styles.videosGrid}>
           {formData.videos.map((video, index) => (
             <View key={index} style={styles.videoWrapper}>
-              <View style={styles.videoThumbnail}>
+              <View
+                style={[
+                  styles.videoThumbnail,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
+              >
                 <Ionicons
                   name="videocam"
                   size={32}
                   color={colors.textSecondary}
                 />
-                <Text style={styles.videoLabel}>Video {index + 1}</Text>
+                <Text
+                  style={[styles.videoLabel, { color: colors.textSecondary }]}
+                >
+                  Video {index + 1}
+                </Text>
               </View>
               <TouchableOpacity
                 style={styles.removePhotoButton}
@@ -1296,7 +1349,15 @@ export default function AddListingScreen() {
         </TouchableOpacity>
       )}
 
-      <View style={styles.tipsContainer}>
+      <View
+        style={[
+          styles.tipsContainer,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.divider,
+          },
+        ]}
+      >
         <Text style={[styles.tipsTitle, { color: colors.text }]}>
           📷 How to capture 360° photos:
         </Text>
@@ -1332,7 +1393,7 @@ export default function AddListingScreen() {
         Tap on the map to pinpoint your property location
       </Text>
 
-      <View style={styles.mapContainer}>
+      <View style={[styles.mapContainer, { borderColor: colors.divider }]}>
         <MapView
           ref={mapRef}
           style={styles.map}
@@ -1350,7 +1411,12 @@ export default function AddListingScreen() {
               title="Property Location"
             >
               <View style={styles.markerContainer}>
-                <View style={styles.markerInner}>
+                <View
+                  style={[
+                    styles.markerInner,
+                    { backgroundColor: colors.primary },
+                  ]}
+                >
                   <Ionicons name="home" size={16} color="#FFFFFF" />
                 </View>
               </View>
