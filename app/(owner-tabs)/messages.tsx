@@ -15,7 +15,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Swipeable } from "react-native-gesture-handler";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   FloatingHeader,
   HeaderActionButton,
@@ -193,6 +194,7 @@ const CONVERSATIONS: Conversation[] = [
 export default function MessagesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -309,7 +311,13 @@ export default function MessagesScreen() {
       <TouchableOpacity
         style={[
           styles.conversationCard,
-          item.isPinned && styles.conversationCardPinned,
+          {
+            backgroundColor: colors.surface,
+            borderBottomColor: colors.divider,
+          },
+          item.isPinned && {
+            backgroundColor: `${colors.primary}05`,
+          },
         ]}
         activeOpacity={0.7}
         onPress={() => handleChatPress(item)}
@@ -317,7 +325,17 @@ export default function MessagesScreen() {
         {/* Avatar with Online Status */}
         <View style={styles.avatarContainer}>
           <Image source={{ uri: item.user.avatar }} style={styles.avatar} />
-          {item.user.isOnline && <View style={styles.onlineIndicator} />}
+          {item.user.isOnline && (
+            <View
+              style={[
+                styles.onlineIndicator,
+                {
+                  backgroundColor: colors.primary,
+                  borderColor: colors.surface,
+                },
+              ]}
+            />
+          )}
         </View>
 
         {/* Content */}
@@ -329,13 +347,14 @@ export default function MessagesScreen() {
                 <Ionicons
                   name="pin"
                   size={14}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                   style={styles.pinIcon}
                 />
               )}
               <Text
                 style={[
                   styles.userName,
+                  { color: colors.text },
                   item.unreadCount > 0 && styles.userNameUnread,
                 ]}
                 numberOfLines={1}
@@ -353,14 +372,20 @@ export default function MessagesScreen() {
                     size={16}
                     color={
                       item.lastMessage.isRead
-                        ? Colors.primaryGreen
-                        : Colors.textSecondary
+                        ? colors.primary
+                        : colors.textSecondary
                     }
                   />
                 </View>
               )}
               <Text
-                style={[styles.time, item.unreadCount > 0 && styles.timeUnread]}
+                style={[
+                  styles.time,
+                  { color: colors.textSecondary },
+                  item.unreadCount > 0 && {
+                    color: colors.primary,
+                  },
+                ]}
               >
                 {item.lastMessage.time}
               </Text>
@@ -370,8 +395,11 @@ export default function MessagesScreen() {
           {/* Property Context */}
           {item.property && (
             <View style={styles.propertyContext}>
-              <Ionicons name="home" size={10} color={Colors.primaryGreen} />
-              <Text style={styles.propertyTitle} numberOfLines={1}>
+              <Ionicons name="home" size={10} color={colors.primary} />
+              <Text
+                style={[styles.propertyTitle, { color: colors.primary }]}
+                numberOfLines={1}
+              >
                 {item.property.title}
               </Text>
             </View>
@@ -382,23 +410,46 @@ export default function MessagesScreen() {
             <View style={styles.messagePreviewContainer}>
               {item.isTyping ? (
                 <View style={styles.typingIndicator}>
-                  <Text style={styles.typingText}>typing</Text>
+                  <Text style={[styles.typingText, { color: colors.primary }]}>
+                    typing
+                  </Text>
                   <View style={styles.typingDots}>
-                    <View style={[styles.typingDot, styles.typingDot1]} />
-                    <View style={[styles.typingDot, styles.typingDot2]} />
-                    <View style={[styles.typingDot, styles.typingDot3]} />
+                    <View
+                      style={[
+                        styles.typingDot,
+                        styles.typingDot1,
+                        { backgroundColor: colors.primary },
+                      ]}
+                    />
+                    <View
+                      style={[
+                        styles.typingDot,
+                        styles.typingDot2,
+                        { backgroundColor: colors.primary },
+                      ]}
+                    />
+                    <View
+                      style={[
+                        styles.typingDot,
+                        styles.typingDot3,
+                        { backgroundColor: colors.primary },
+                      ]}
+                    />
                   </View>
                 </View>
               ) : (
                 <Text
                   style={[
                     styles.lastMessage,
-                    item.unreadCount > 0 && styles.lastMessageUnread,
+                    { color: colors.textSecondary },
+                    item.unreadCount > 0 && { color: colors.text },
                   ]}
                   numberOfLines={1}
                 >
                   {item.lastMessage.isFromMe && (
-                    <Text style={styles.youPrefix}>You: </Text>
+                    <Text style={[styles.youPrefix, { color: colors.textSecondary }]}>
+                      You:{" "}
+                    </Text>
                   )}
                   {item.lastMessage.text}
                 </Text>
@@ -411,7 +462,7 @@ export default function MessagesScreen() {
                 <Ionicons
                   name="notifications-off"
                   size={16}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                   style={styles.mutedIcon}
                 />
               )}
@@ -419,7 +470,12 @@ export default function MessagesScreen() {
                 <View
                   style={[
                     styles.unreadBadge,
-                    item.isMuted && styles.unreadBadgeMuted,
+                    {
+                      backgroundColor: colors.primary,
+                    },
+                    item.isMuted && {
+                      backgroundColor: colors.textSecondary,
+                    },
                   ]}
                 >
                   <Text style={styles.unreadBadgeText}>
@@ -436,12 +492,22 @@ export default function MessagesScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
         </View>
 
         {/* Floating Header */}
@@ -470,12 +536,20 @@ export default function MessagesScreen() {
         {/* Search Bar */}
         {isSearching && (
           <View style={[styles.searchContainer, { top: 70 + insets.top }]}>
-            <View style={styles.searchInputContainer}>
-              <Ionicons name="search" size={18} color={Colors.textSecondary} />
+            <View
+              style={[
+                styles.searchInputContainer,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
+              <Ionicons name="search" size={18} color={colors.textSecondary} />
               <TextInput
-                style={styles.searchInput}
+                style={[styles.searchInput, { color: colors.text }]}
                 placeholder="Search messages..."
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 autoFocus
@@ -485,7 +559,7 @@ export default function MessagesScreen() {
                   <Ionicons
                     name="close-circle"
                     size={18}
-                    color={Colors.textSecondary}
+                    color={colors.textSecondary}
                   />
                 </TouchableOpacity>
               )}
@@ -509,22 +583,30 @@ export default function MessagesScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={Colors.primaryGreen}
+              tintColor={colors.primary}
             />
           }
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <View style={styles.emptyIconContainer}>
+              <View
+                style={[
+                  styles.emptyIconContainer,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
+              >
                 <Ionicons
                   name="chatbubbles-outline"
                   size={56}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
               </View>
-              <Text style={styles.emptyTitle}>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>
                 {searchQuery ? "No Results Found" : "No Messages Yet"}
               </Text>
-              <Text style={styles.emptySubtitle}>
+              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
                 {searchQuery
                   ? "Try searching with different keywords"
                   : "Messages from potential buyers will appear here"}
@@ -540,7 +622,6 @@ export default function MessagesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   // Decorative Background
   decorativeBackground: {
@@ -558,8 +639,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: Colors.primaryLight,
-    opacity: 0.08,
   },
   circle2: {
     position: "absolute",
@@ -568,8 +647,6 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     borderRadius: 200,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
   },
   // Header
   headerLeft: {
@@ -582,7 +659,6 @@ const styles = StyleSheet.create({
     ...Typography.titleLarge,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   // Search
   searchContainer: {
@@ -594,19 +670,16 @@ const styles = StyleSheet.create({
   searchInputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.surface,
     borderRadius: 12,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderWidth: 1,
-    borderColor: Colors.divider,
     gap: Spacing.sm,
   },
   searchInput: {
     flex: 1,
     ...Typography.bodyMedium,
     fontSize: 15,
-    color: Colors.textPrimary,
     paddingVertical: 4,
   },
   content: {
@@ -616,15 +689,11 @@ const styles = StyleSheet.create({
   conversationCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.surface,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.md,
     borderBottomWidth: 0.5,
-    borderBottomColor: Colors.divider,
   },
-  conversationCardPinned: {
-    backgroundColor: `${Colors.primaryGreen}05`,
-  },
+  conversationCardPinned: {},
   avatarContainer: {
     position: "relative",
     marginRight: Spacing.md,
@@ -641,9 +710,7 @@ const styles = StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: Colors.primaryGreen,
     borderWidth: 2.5,
-    borderColor: Colors.surface,
   },
   conversationContent: {
     flex: 1,
@@ -668,7 +735,6 @@ const styles = StyleSheet.create({
     ...Typography.titleMedium,
     fontSize: 16,
     fontWeight: "500",
-    color: Colors.textPrimary,
     flex: 1,
   },
   userNameUnread: {
@@ -685,10 +751,8 @@ const styles = StyleSheet.create({
   time: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   timeUnread: {
-    color: Colors.primaryGreen,
     fontWeight: "600",
   },
   propertyContext: {
@@ -700,7 +764,6 @@ const styles = StyleSheet.create({
   propertyTitle: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.primaryGreen,
     fontWeight: "500",
     flex: 1,
   },
@@ -716,14 +779,10 @@ const styles = StyleSheet.create({
   lastMessage: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
     lineHeight: 20,
   },
-  lastMessageUnread: {
-    color: Colors.textPrimary,
-  },
+  lastMessageUnread: {},
   youPrefix: {
-    color: Colors.textSecondary,
     fontWeight: "400",
   },
   // Typing Indicator
@@ -734,7 +793,6 @@ const styles = StyleSheet.create({
   typingText: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.primaryGreen,
     fontStyle: "italic",
     marginRight: 4,
   },
@@ -747,7 +805,6 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: Colors.primaryGreen,
   },
   typingDot1: {
     opacity: 0.4,
@@ -771,14 +828,11 @@ const styles = StyleSheet.create({
     minWidth: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: Colors.primaryGreen,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 6,
   },
-  unreadBadgeMuted: {
-    backgroundColor: Colors.textSecondary,
-  },
+  unreadBadgeMuted: {},
   unreadBadgeText: {
     ...Typography.caption,
     fontSize: 11,
@@ -826,24 +880,20 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: Colors.surface,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: Spacing.xl,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   emptyTitle: {
     ...Typography.headlineMedium,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: Spacing.sm,
   },
   emptySubtitle: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
     textAlign: "center",
     maxWidth: 280,
   },
