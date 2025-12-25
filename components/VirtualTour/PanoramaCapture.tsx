@@ -149,6 +149,7 @@ export function PanoramaCapture({
   // Sensor state
   const [currentYaw, setCurrentYaw] = useState(0);
   const [currentPitch, setCurrentPitch] = useState(0);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [startYaw, setStartYaw] = useState<number | null>(null);
   const [isRollLevel, setIsRollLevel] = useState(false);
 
@@ -178,7 +179,8 @@ export function PanoramaCapture({
   const isReadyForCapture =
     isOnTarget && isRollLevel && !isCapturing && hasStarted;
 
-  // Progress percentage
+  // Progress percentage (used for debugging)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const progress = (capturedPhotos.length / TOTAL_PHOTOS) * 100;
 
   // Current row info
@@ -422,23 +424,60 @@ export function PanoramaCapture({
   // UI CALCULATIONS
   // ============================================================================
 
-  // Calculate target indicator position on screen
+  // Padding from screen edges for the target indicator
+  const TARGET_PADDING = 60;
+  const TARGET_SIZE = 60;
+
+  // Calculate target indicator position on screen (clamped to stay visible)
   const getTargetScreenPosition = useCallback(() => {
-    if (!currentTarget) return { x: SCREEN_WIDTH / 2, y: SCREEN_HEIGHT / 2 };
+    if (!currentTarget)
+      return { x: SCREEN_WIDTH / 2, y: SCREEN_HEIGHT / 2, isOnScreen: true };
 
     // Yaw difference (horizontal)
     const yawDiff = signedAngleDifference(currentYaw, currentTarget.targetYaw);
-    // Convert to screen position (±90° = edge of screen)
+    // Convert to screen position (±60° maps to ±half screen width)
     const xOffset = (yawDiff / 60) * (SCREEN_WIDTH / 2);
 
     // Pitch difference (vertical)
     const pitchDiff = currentTarget.targetPitch - currentPitch;
-    // Convert to screen position (±60° = edge of screen)
+    // Convert to screen position (±45° maps to ±1/3 screen height)
     const yOffset = (-pitchDiff / 45) * (SCREEN_HEIGHT / 3);
 
+    // Raw position
+    const rawX = SCREEN_WIDTH / 2 + xOffset;
+    const rawY = SCREEN_HEIGHT / 2 + yOffset;
+
+    // Check if target is naturally on screen
+    const isOnScreen =
+      rawX >= TARGET_PADDING &&
+      rawX <= SCREEN_WIDTH - TARGET_PADDING &&
+      rawY >= TARGET_PADDING + 100 && // Account for top bar
+      rawY <= SCREEN_HEIGHT - TARGET_PADDING - 150; // Account for bottom bar
+
+    // Clamp position to keep target always visible on screen edges
+    const clampedX =
+      Math.max(
+        TARGET_PADDING,
+        Math.min(
+          SCREEN_WIDTH - TARGET_PADDING - TARGET_SIZE,
+          rawX - TARGET_SIZE / 2
+        )
+      ) +
+      TARGET_SIZE / 2;
+    const clampedY =
+      Math.max(
+        TARGET_PADDING + 100,
+        Math.min(
+          SCREEN_HEIGHT - TARGET_PADDING - 150 - TARGET_SIZE,
+          rawY - TARGET_SIZE / 2
+        )
+      ) +
+      TARGET_SIZE / 2;
+
     return {
-      x: SCREEN_WIDTH / 2 + xOffset,
-      y: SCREEN_HEIGHT / 2 + yOffset,
+      x: clampedX,
+      y: clampedY,
+      isOnScreen,
     };
   }, [currentTarget, currentYaw, currentPitch]);
 
@@ -629,7 +668,7 @@ export function PanoramaCapture({
       {/* Capture UI */}
       {hasStarted && currentTarget && (
         <>
-          {/* Target indicator - floating dot */}
+          {/* Target indicator - floating dot (clamped to screen edges) */}
           <Animated.View
             style={[
               styles.targetIndicator,
@@ -637,20 +676,45 @@ export function PanoramaCapture({
                 left: targetPos.x - 30,
                 top: targetPos.y - 30,
                 opacity: targetOpacity,
-                transform: [{ scale: isOnTarget ? pulseAnim : 1 }],
+                transform: [
+                  {
+                    scale: isOnTarget
+                      ? pulseAnim
+                      : targetPos.isOnScreen
+                      ? 1
+                      : 0.7,
+                  },
+                ],
               },
             ]}
           >
             <View
               style={[
                 styles.targetDot,
+                !targetPos.isOnScreen && styles.targetDotOffScreen,
                 isOnTarget && styles.targetDotActive,
                 isReadyForCapture && styles.targetDotReady,
               ]}
             >
-              {countdown !== null && countdown > 0 && (
+              {countdown !== null && countdown > 0 ? (
                 <Text style={styles.countdownText}>{countdown}</Text>
-              )}
+              ) : !targetPos.isOnScreen ? (
+                <Ionicons
+                  name={
+                    hints.vertical?.direction === "up"
+                      ? "arrow-up"
+                      : hints.vertical?.direction === "down"
+                      ? "arrow-down"
+                      : hints.horizontal?.direction === "left"
+                      ? "arrow-back"
+                      : hints.horizontal?.direction === "right"
+                      ? "arrow-forward"
+                      : "locate"
+                  }
+                  size={20}
+                  color="#fff"
+                />
+              ) : null}
             </View>
           </Animated.View>
 
@@ -720,6 +784,14 @@ export function PanoramaCapture({
             <Text style={styles.rowProgress}>
               Photo {currentTarget.segmentIndex + 1} of{" "}
               {currentRowInfo?.segments}
+            </Text>
+            <Text style={styles.rowAngleInfo}>
+              Target: {Math.round(currentTarget.targetYaw)}° yaw,{" "}
+              {currentTarget.targetPitch}° pitch
+            </Text>
+            <Text style={styles.rowAngleCurrent}>
+              Current: {Math.round(currentYaw)}° yaw, {Math.round(currentPitch)}
+              ° pitch
             </Text>
           </View>
 
@@ -997,6 +1069,11 @@ const styles = StyleSheet.create({
     borderColor: Colors.primaryGreen,
     backgroundColor: "rgba(46, 204, 113, 0.2)",
   },
+  targetDotOffScreen: {
+    borderColor: "rgba(255, 165, 0, 0.8)",
+    backgroundColor: "rgba(255, 165, 0, 0.3)",
+    borderStyle: "dashed",
+  },
   targetDotReady: {
     borderColor: Colors.primaryGreen,
     backgroundColor: Colors.primaryGreen,
@@ -1085,6 +1162,17 @@ const styles = StyleSheet.create({
   rowProgress: {
     color: Colors.textSecondary,
     fontSize: 14,
+  },
+  rowAngleInfo: {
+    color: Colors.primaryGreen,
+    fontSize: 11,
+    marginTop: 4,
+    fontFamily: "monospace",
+  },
+  rowAngleCurrent: {
+    color: "rgba(255,255,255,0.6)",
+    fontSize: 11,
+    fontFamily: "monospace",
   },
 
   // Level indicator
