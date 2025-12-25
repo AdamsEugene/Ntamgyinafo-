@@ -26,6 +26,7 @@ import {
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 
@@ -215,6 +216,7 @@ export const FilterBottomSheet = React.forwardRef<
   BottomSheetModal,
   FilterBottomSheetProps
 >(({ visible, onClose, onApply, initialFilters = {}, resultsCount }, ref) => {
+  const { colors } = useTheme();
   const [filters, setFilters] = useState<FilterOptions>(initialFilters);
   const [minPriceInput, setMinPriceInput] = useState("");
   const [maxPriceInput, setMaxPriceInput] = useState("");
@@ -366,8 +368,14 @@ export const FilterBottomSheet = React.forwardRef<
       onDismiss={handleDismiss}
       enablePanDownToClose
       backdropComponent={renderBackdrop}
-      backgroundStyle={styles.bottomSheet}
-      handleIndicatorStyle={styles.handleIndicator}
+      backgroundStyle={[
+        styles.bottomSheet,
+        { backgroundColor: colors.surface },
+      ]}
+      handleIndicatorStyle={[
+        styles.handleIndicator,
+        { backgroundColor: colors.textSecondary },
+      ]}
     >
       <BottomSheetScrollView
         style={styles.scrollView}
@@ -376,9 +384,13 @@ export const FilterBottomSheet = React.forwardRef<
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Filters</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>
+            Filters
+          </Text>
           <TouchableOpacity onPress={handleReset} activeOpacity={0.7}>
-            <Text style={styles.resetButton}>Reset</Text>
+            <Text style={[styles.resetButton, { color: colors.primary }]}>
+              Reset
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -386,7 +398,9 @@ export const FilterBottomSheet = React.forwardRef<
         <View style={styles.content}>
           {/* Property Type */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Property Type</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Property Type
+            </Text>
             <View style={styles.chipsContainer}>
               {PROPERTY_TYPES.map((type) => {
                 const isSelected =
@@ -394,13 +408,24 @@ export const FilterBottomSheet = React.forwardRef<
                 return (
                   <TouchableOpacity
                     key={type}
-                    style={[styles.chip, isSelected && styles.chipSelected]}
+                    style={[
+                      styles.chip,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.divider,
+                      },
+                      isSelected && {
+                        backgroundColor: colors.primary,
+                        borderColor: colors.primary,
+                      },
+                    ]}
                     onPress={() => togglePropertyType(type)}
                     activeOpacity={0.7}
                   >
                     <Text
                       style={[
                         styles.chipText,
+                        { color: colors.text },
                         isSelected && styles.chipTextSelected,
                       ]}
                     >
@@ -414,14 +439,26 @@ export const FilterBottomSheet = React.forwardRef<
 
           {/* Transaction Type */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Transaction Type</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Transaction Type
+            </Text>
             <View style={styles.chipsContainer}>
               {(["buy", "rent"] as const).map((type) => {
                 const isSelected = filters.transactionType === type;
                 return (
                   <TouchableOpacity
                     key={type}
-                    style={[styles.chip, isSelected && styles.chipSelected]}
+                    style={[
+                      styles.chip,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.divider,
+                      },
+                      isSelected && {
+                        backgroundColor: colors.primary,
+                        borderColor: colors.primary,
+                      },
+                    ]}
                     onPress={() =>
                       setFilters((prev) => ({
                         ...prev,
@@ -433,6 +470,7 @@ export const FilterBottomSheet = React.forwardRef<
                     <Text
                       style={[
                         styles.chipText,
+                        { color: colors.text },
                         isSelected && styles.chipTextSelected,
                       ]}
                     >
@@ -446,9 +484,16 @@ export const FilterBottomSheet = React.forwardRef<
 
           {/* Price Range */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Price Range (GHS)</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Price Range (GHS)
+            </Text>
             {/* Combined Display */}
-            <View style={styles.priceRangeDisplay}>
+            <View
+              style={[
+                styles.priceRangeDisplay,
+                { backgroundColor: colors.primary },
+              ]}
+            >
               <Text style={styles.priceRangeDisplayText}>
                 {formatPriceRange()}
               </Text>
@@ -473,30 +518,62 @@ export const FilterBottomSheet = React.forwardRef<
             {/* Min/Max Inputs */}
             <View style={styles.priceInputRow}>
               <View style={styles.priceInput}>
-                <Text style={styles.priceLabel}>Min</Text>
-                <View style={styles.priceInputWrapper}>
-                  <Text style={styles.currencySymbol}>GHS</Text>
+                <Text
+                  style={[styles.priceLabel, { color: colors.textSecondary }]}
+                >
+                  Min
+                </Text>
+                <View
+                  style={[
+                    styles.priceInputWrapper,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.divider,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.currencySymbol, { color: colors.primary }]}
+                  >
+                    GHS
+                  </Text>
                   <TextInput
-                    style={styles.priceInputField}
+                    style={[styles.priceInputField, { color: colors.text }]}
                     value={minPriceInput}
                     onChangeText={handleMinPriceChange}
                     placeholder="0"
                     keyboardType="numeric"
-                    placeholderTextColor={Colors.textSecondary}
+                    placeholderTextColor={colors.textSecondary}
                   />
                 </View>
               </View>
               <View style={styles.priceInput}>
-                <Text style={styles.priceLabel}>Max</Text>
-                <View style={styles.priceInputWrapper}>
-                  <Text style={styles.currencySymbol}>GHS</Text>
+                <Text
+                  style={[styles.priceLabel, { color: colors.textSecondary }]}
+                >
+                  Max
+                </Text>
+                <View
+                  style={[
+                    styles.priceInputWrapper,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.divider,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[styles.currencySymbol, { color: colors.primary }]}
+                  >
+                    GHS
+                  </Text>
                   <TextInput
-                    style={styles.priceInputField}
+                    style={[styles.priceInputField, { color: colors.text }]}
                     value={maxPriceInput}
                     onChangeText={handleMaxPriceChange}
                     placeholder="No limit"
                     keyboardType="numeric"
-                    placeholderTextColor={Colors.textSecondary}
+                    placeholderTextColor={colors.textSecondary}
                   />
                 </View>
               </View>
@@ -517,7 +594,14 @@ export const FilterBottomSheet = React.forwardRef<
                     key={index}
                     style={[
                       styles.pricePresetChip,
-                      isSelected && styles.pricePresetChipSelected,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.divider,
+                      },
+                      isSelected && {
+                        backgroundColor: colors.primary,
+                        borderColor: colors.primary,
+                      },
                     ]}
                     onPress={() => {
                       setFilters({
@@ -533,6 +617,7 @@ export const FilterBottomSheet = React.forwardRef<
                     <Text
                       style={[
                         styles.pricePresetText,
+                        { color: colors.text },
                         isSelected && styles.pricePresetTextSelected,
                       ]}
                     >
@@ -546,7 +631,9 @@ export const FilterBottomSheet = React.forwardRef<
 
           {/* Bedrooms */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Bedrooms</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Bedrooms
+            </Text>
             <View style={styles.chipsContainer}>
               {BEDROOM_OPTIONS.map((beds) => {
                 const isSelected = filters.bedrooms === beds;
@@ -555,7 +642,17 @@ export const FilterBottomSheet = React.forwardRef<
                 return (
                   <TouchableOpacity
                     key={beds === null ? "any" : beds}
-                    style={[styles.chip, isSelected && styles.chipSelected]}
+                    style={[
+                      styles.chip,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.divider,
+                      },
+                      isSelected && {
+                        backgroundColor: colors.primary,
+                        borderColor: colors.primary,
+                      },
+                    ]}
                     onPress={() =>
                       setFilters((prev) => ({
                         ...prev,
@@ -567,6 +664,7 @@ export const FilterBottomSheet = React.forwardRef<
                     <Text
                       style={[
                         styles.chipText,
+                        { color: colors.text },
                         isSelected && styles.chipTextSelected,
                       ]}
                     >
@@ -580,7 +678,9 @@ export const FilterBottomSheet = React.forwardRef<
 
           {/* Amenities */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Amenities</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Amenities
+            </Text>
             <View style={styles.amenitiesContainer}>
               {AMENITIES.map((amenity) => {
                 const isSelected =

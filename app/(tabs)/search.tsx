@@ -137,12 +137,6 @@ export default function SearchScreen() {
     <>
       <StatusBar style={isDark ? "light" : "dark"} />
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* Decorative Background Elements */}
-        <View style={styles.decorativeBackground}>
-          <View style={[styles.circle1, { backgroundColor: `${colors.primary}15` }]} />
-          <View style={[styles.circle2, { backgroundColor: `${colors.accent}10` }]} />
-        </View>
-
         {/* Floating Header with Blur */}
         <FloatingHeader
           title="Search"
@@ -183,8 +177,15 @@ export default function SearchScreen() {
             <View style={styles.filtersBar}>
               <View style={styles.filtersChips}>
                 {filters.propertyTypes && filters.propertyTypes.length > 0 && (
-                  <View style={[styles.filterChip, { backgroundColor: colors.surface }]}>
-                    <Text style={[styles.filterChipText, { color: colors.text }]}>
+                  <View
+                    style={[
+                      styles.filterChip,
+                      { backgroundColor: colors.surface },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.filterChipText, { color: colors.text }]}
+                    >
                       {filters.propertyTypes.join(", ")}
                     </Text>
                     <TouchableOpacity
@@ -201,8 +202,15 @@ export default function SearchScreen() {
                   </View>
                 )}
                 {filters.transactionType && (
-                  <View style={[styles.filterChip, { backgroundColor: colors.surface }]}>
-                    <Text style={[styles.filterChipText, { color: colors.text }]}>
+                  <View
+                    style={[
+                      styles.filterChip,
+                      { backgroundColor: colors.surface },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.filterChipText, { color: colors.text }]}
+                    >
                       {filters.transactionType === "buy" ? "Buy" : "Rent"}
                     </Text>
                     <TouchableOpacity
@@ -220,8 +228,15 @@ export default function SearchScreen() {
                 )}
                 {filters.bedrooms !== null &&
                   filters.bedrooms !== undefined && (
-                    <View style={[styles.filterChip, { backgroundColor: colors.surface }]}>
-                      <Text style={[styles.filterChipText, { color: colors.text }]}>
+                    <View
+                      style={[
+                        styles.filterChip,
+                        { backgroundColor: colors.surface },
+                      ]}
+                    >
+                      <Text
+                        style={[styles.filterChipText, { color: colors.text }]}
+                      >
                         {filters.bedrooms === 5 ? "5+" : filters.bedrooms} Beds
                       </Text>
                       <TouchableOpacity
@@ -238,8 +253,15 @@ export default function SearchScreen() {
                     </View>
                   )}
                 {filters.amenities && filters.amenities.length > 0 && (
-                  <View style={[styles.filterChip, { backgroundColor: colors.surface }]}>
-                    <Text style={[styles.filterChipText, { color: colors.text }]}>
+                  <View
+                    style={[
+                      styles.filterChip,
+                      { backgroundColor: colors.surface },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.filterChipText, { color: colors.text }]}
+                    >
                       {filters.amenities.length} Amenities
                     </Text>
                     <TouchableOpacity
@@ -256,8 +278,15 @@ export default function SearchScreen() {
                   </View>
                 )}
                 {filters.minPrice !== undefined && (
-                  <View style={[styles.filterChip, { backgroundColor: colors.surface }]}>
-                    <Text style={[styles.filterChipText, { color: colors.text }]}>
+                  <View
+                    style={[
+                      styles.filterChip,
+                      { backgroundColor: colors.surface },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.filterChipText, { color: colors.text }]}
+                    >
                       Min: {formatPrice(filters.minPrice)}
                     </Text>
                     <TouchableOpacity
@@ -274,8 +303,15 @@ export default function SearchScreen() {
                   </View>
                 )}
                 {filters.maxPrice !== undefined && (
-                  <View style={[styles.filterChip, { backgroundColor: colors.surface }]}>
-                    <Text style={[styles.filterChipText, { color: colors.text }]}>
+                  <View
+                    style={[
+                      styles.filterChip,
+                      { backgroundColor: colors.surface },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.filterChipText, { color: colors.text }]}
+                    >
                       Max: {formatPrice(filters.maxPrice)}
                     </Text>
                     <TouchableOpacity
@@ -292,8 +328,15 @@ export default function SearchScreen() {
                   </View>
                 )}
                 {filters.bedrooms !== undefined && (
-                  <View style={[styles.filterChip, { backgroundColor: colors.surface }]}>
-                    <Text style={[styles.filterChipText, { color: colors.text }]}>
+                  <View
+                    style={[
+                      styles.filterChip,
+                      { backgroundColor: colors.surface },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.filterChipText, { color: colors.text }]}
+                    >
                       {filters.bedrooms} Beds
                     </Text>
                     <TouchableOpacity
@@ -315,14 +358,18 @@ export default function SearchScreen() {
                 style={styles.clearAllButton}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.clearAllText, { color: colors.error }]}>Clear All</Text>
+                <Text style={[styles.clearAllText, { color: colors.error }]}>
+                  Clear All
+                </Text>
               </TouchableOpacity>
             </View>
           )}
 
           {/* Results Count */}
           <View style={styles.resultsHeader}>
-            <Text style={[styles.resultsCount, { color: colors.textSecondary }]}>
+            <Text
+              style={[styles.resultsCount, { color: colors.textSecondary }]}
+            >
               {filteredProperties.length} properties found
             </Text>
           </View>
@@ -362,8 +409,12 @@ export default function SearchScreen() {
                 size={64}
                 color={colors.textSecondary}
               />
-              <Text style={[styles.emptyStateTitle, { color: colors.text }]}>No properties found</Text>
-              <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>
+              <Text style={[styles.emptyStateTitle, { color: colors.text }]}>
+                No properties found
+              </Text>
+              <Text
+                style={[styles.emptyStateText, { color: colors.textSecondary }]}
+              >
                 Try adjusting your search or filters
               </Text>
             </View>

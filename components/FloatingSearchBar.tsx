@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
 import {
-  View,
   TextInput as RNTextInput,
   TouchableOpacity,
   StyleSheet,
@@ -13,6 +12,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -45,6 +45,7 @@ export function FloatingSearchBar({
   bottomOffset = 70,
 }: FloatingSearchBarProps) {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   const searchInputRef = useRef<RNTextInput>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
@@ -175,13 +176,15 @@ export function FloatingSearchBar({
           {
             width: searchInputWidth,
             height: searchInputHeight,
+            backgroundColor: colors.surface,
+            borderColor: colors.divider,
           },
         ]}
       >
         <Ionicons
           name="search"
           size={isKeyboardVisible ? 18 : 16}
-          color={Colors.textSecondary}
+          color={colors.textSecondary}
           style={styles.floatingSearchIcon}
         />
         <RNTextInput
@@ -190,10 +193,11 @@ export function FloatingSearchBar({
             styles.floatingSearchInput,
             {
               fontSize: isKeyboardVisible ? 15 : 13,
+              color: colors.text,
             },
           ]}
           placeholder={placeholder}
-          placeholderTextColor={Colors.textSecondary}
+          placeholderTextColor={colors.textSecondary}
           value={value}
           onChangeText={onChangeText}
           returnKeyType="search"
@@ -208,7 +212,7 @@ export function FloatingSearchBar({
             <Ionicons
               name="close-circle"
               size={isKeyboardVisible ? 20 : 18}
-              color={Colors.textSecondary}
+              color={colors.textSecondary}
             />
           </TouchableOpacity>
         )}
