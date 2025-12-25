@@ -19,7 +19,8 @@ import {
   BottomSheetBackdrop,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   FloatingHeader,
   HeaderActionButton,
@@ -174,6 +175,7 @@ const INQUIRIES: Inquiry[] = [
 export default function InquiriesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [activeStatusFilter, setActiveStatusFilter] = useState("all");
   const [activePropertyFilter, setActivePropertyFilter] = useState("all");
@@ -216,13 +218,13 @@ export default function InquiriesScreen() {
   const getStatusColor = (status: InquiryStatus) => {
     switch (status) {
       case "new":
-        return Colors.primaryGreen;
+        return colors.primary;
       case "replied":
         return "#3B82F6";
       case "archived":
-        return Colors.textSecondary;
+        return colors.textSecondary;
       default:
-        return Colors.textSecondary;
+        return colors.textSecondary;
     }
   };
 
@@ -264,28 +266,58 @@ export default function InquiriesScreen() {
   const renderInquiryCard = (inquiry: Inquiry) => (
     <TouchableOpacity
       key={inquiry.id}
-      style={[styles.inquiryCard, inquiry.unread && styles.inquiryCardUnread]}
+      style={[
+        styles.inquiryCard,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.divider,
+        },
+        inquiry.unread && {
+          borderLeftColor: colors.primary,
+          backgroundColor: `${colors.primary}05`,
+        },
+      ]}
       activeOpacity={0.7}
       onPress={() => handleInquiryPress(inquiry)}
     >
       {/* Unread Indicator */}
-      {inquiry.unread && <View style={styles.unreadIndicator} />}
+      {inquiry.unread && (
+        <View
+          style={[styles.unreadIndicator, { backgroundColor: colors.primary }]}
+        />
+      )}
 
       {/* Avatar */}
       <View style={styles.avatarContainer}>
         <Image source={{ uri: inquiry.buyer.avatar }} style={styles.avatar} />
-        {inquiry.unread && <View style={styles.onlineIndicator} />}
+        {inquiry.unread && (
+          <View
+            style={[
+              styles.onlineIndicator,
+              {
+                backgroundColor: colors.primary,
+                borderColor: colors.surface,
+              },
+            ]}
+          />
+        )}
       </View>
 
       {/* Content */}
       <View style={styles.inquiryContent}>
         <View style={styles.inquiryHeader}>
           <Text
-            style={[styles.buyerName, inquiry.unread && styles.buyerNameUnread]}
+            style={[
+              styles.buyerName,
+              { color: colors.text },
+              inquiry.unread && styles.buyerNameUnread,
+            ]}
           >
             {inquiry.buyer.name}
           </Text>
-          <Text style={styles.timeAgo}>{inquiry.timeAgo}</Text>
+          <Text style={[styles.timeAgo, { color: colors.textSecondary }]}>
+            {inquiry.timeAgo}
+          </Text>
         </View>
 
         {/* Property Context */}
@@ -294,7 +326,10 @@ export default function InquiriesScreen() {
             source={{ uri: inquiry.property.image }}
             style={styles.propertyThumbnail}
           />
-          <Text style={styles.propertyTitle} numberOfLines={1}>
+          <Text
+            style={[styles.propertyTitle, { color: colors.textSecondary }]}
+            numberOfLines={1}
+          >
             {inquiry.property.title}
           </Text>
         </View>
@@ -303,7 +338,8 @@ export default function InquiriesScreen() {
         <Text
           style={[
             styles.messagePreview,
-            inquiry.unread && styles.messagePreviewUnread,
+            { color: colors.textSecondary },
+            inquiry.unread && { color: colors.text },
           ]}
           numberOfLines={2}
         >
@@ -336,7 +372,7 @@ export default function InquiriesScreen() {
           <Ionicons
             name="chevron-forward"
             size={18}
-            color={Colors.textSecondary}
+            color={colors.textSecondary}
           />
         </View>
       </View>
@@ -345,12 +381,22 @@ export default function InquiriesScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
         </View>
 
         {/* Floating Sticky Header */}
@@ -382,53 +428,79 @@ export default function InquiriesScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={Colors.primaryGreen}
+              tintColor={colors.primary}
             />
           }
         >
           {/* Quick Stats */}
-          <View style={styles.quickStats}>
+          <View
+            style={[
+              styles.quickStats,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+          >
             <View style={styles.quickStatItem}>
               <View
                 style={[
                   styles.quickStatIcon,
-                  { backgroundColor: `${Colors.primaryGreen}15` },
+                  { backgroundColor: `${colors.primary}15` },
                 ]}
               >
-                <Ionicons
-                  name="mail-unread"
-                  size={20}
-                  color={Colors.primaryGreen}
-                />
+                <Ionicons name="mail-unread" size={20} color={colors.primary} />
               </View>
-              <Text style={styles.quickStatValue}>
+              <Text style={[styles.quickStatValue, { color: colors.text }]}>
                 {INQUIRIES.filter((i) => i.status === "new").length}
               </Text>
-              <Text style={styles.quickStatLabel}>New</Text>
+              <Text
+                style={[styles.quickStatLabel, { color: colors.textSecondary }]}
+              >
+                New
+              </Text>
             </View>
-            <View style={styles.quickStatDivider} />
+            <View
+              style={[
+                styles.quickStatDivider,
+                { backgroundColor: colors.divider },
+              ]}
+            />
             <View style={styles.quickStatItem}>
               <View
                 style={[styles.quickStatIcon, { backgroundColor: "#3B82F615" }]}
               >
                 <Ionicons name="checkmark-done" size={20} color="#3B82F6" />
               </View>
-              <Text style={styles.quickStatValue}>
+              <Text style={[styles.quickStatValue, { color: colors.text }]}>
                 {INQUIRIES.filter((i) => i.status === "replied").length}
               </Text>
-              <Text style={styles.quickStatLabel}>Replied</Text>
+              <Text
+                style={[styles.quickStatLabel, { color: colors.textSecondary }]}
+              >
+                Replied
+              </Text>
             </View>
-            <View style={styles.quickStatDivider} />
+            <View
+              style={[
+                styles.quickStatDivider,
+                { backgroundColor: colors.divider },
+              ]}
+            />
             <View style={styles.quickStatItem}>
               <View
                 style={[styles.quickStatIcon, { backgroundColor: "#6B728015" }]}
               >
                 <Ionicons name="archive" size={20} color="#6B7280" />
               </View>
-              <Text style={styles.quickStatValue}>
+              <Text style={[styles.quickStatValue, { color: colors.text }]}>
                 {INQUIRIES.filter((i) => i.status === "archived").length}
               </Text>
-              <Text style={styles.quickStatLabel}>Archived</Text>
+              <Text
+                style={[styles.quickStatLabel, { color: colors.textSecondary }]}
+              >
+                Archived
+              </Text>
             </View>
           </View>
 
@@ -444,7 +516,14 @@ export default function InquiriesScreen() {
                 <TouchableOpacity
                   style={[
                     styles.tab,
-                    activeStatusFilter === tab.id && styles.tabActive,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                    activeStatusFilter === tab.id && {
+                      backgroundColor: colors.primary,
+                      borderColor: colors.primary,
+                    },
                   ]}
                   onPress={() => setActiveStatusFilter(tab.id)}
                   activeOpacity={0.7}
@@ -452,7 +531,10 @@ export default function InquiriesScreen() {
                   <Text
                     style={[
                       styles.tabText,
-                      activeStatusFilter === tab.id && styles.tabTextActive,
+                      { color: colors.textSecondary },
+                      activeStatusFilter === tab.id && {
+                        color: "#FFFFFF",
+                      },
                     ]}
                   >
                     {tab.label}
@@ -464,7 +546,9 @@ export default function InquiriesScreen() {
 
           {/* Results Count */}
           <View style={styles.resultsHeader}>
-            <Text style={styles.resultsCount}>
+            <Text
+              style={[styles.resultsCount, { color: colors.textSecondary }]}
+            >
               {filteredInquiries.length} inquiry
               {filteredInquiries.length !== 1 ? "ies" : ""}
             </Text>
@@ -473,15 +557,27 @@ export default function InquiriesScreen() {
           {/* Inquiries List or Empty State */}
           {filteredInquiries.length === 0 ? (
             <View style={styles.emptyState}>
-              <View style={styles.emptyIconContainer}>
+              <View
+                style={[
+                  styles.emptyIconContainer,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
+              >
                 <Ionicons
                   name="chatbubbles-outline"
                   size={48}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
               </View>
-              <Text style={styles.emptyTitle}>No Inquiries Yet</Text>
-              <Text style={styles.emptySubtitle}>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                No Inquiries Yet
+              </Text>
+              <Text
+                style={[styles.emptySubtitle, { color: colors.textSecondary }]}
+              >
                 When buyers contact you about your properties, their messages
                 will appear here
               </Text>
@@ -499,27 +595,50 @@ export default function InquiriesScreen() {
           index={0}
           snapPoints={filterSnapPoints}
           backdropComponent={renderBackdrop}
-          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+          handleIndicatorStyle={{ backgroundColor: colors.textSecondary }}
+          backgroundStyle={{ backgroundColor: colors.surface }}
         >
           <BottomSheetView style={styles.filterSheet}>
-            <View style={styles.filterHeader}>
-              <Text style={styles.filterTitle}>Filter Inquiries</Text>
+            <View
+              style={[
+                styles.filterHeader,
+                { borderBottomColor: colors.divider },
+              ]}
+            >
+              <Text style={[styles.filterTitle, { color: colors.text }]}>
+                Filter Inquiries
+              </Text>
               <TouchableOpacity onPress={resetFilters}>
-                <Text style={styles.resetText}>Reset</Text>
+                <Text style={[styles.resetText, { color: colors.primary }]}>
+                  Reset
+                </Text>
               </TouchableOpacity>
             </View>
 
             {/* Status Filter */}
             <View style={styles.filterSection}>
-              <Text style={styles.filterSectionTitle}>Status</Text>
+              <Text
+                style={[
+                  styles.filterSectionTitle,
+                  { color: colors.textSecondary },
+                ]}
+              >
+                Status
+              </Text>
               <View style={styles.filterOptions}>
                 {STATUS_FILTERS.map((option) => (
                   <TouchableOpacity
                     key={option.id}
                     style={[
                       styles.filterOption,
-                      activeStatusFilter === option.id &&
-                        styles.filterOptionActive,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.divider,
+                      },
+                      activeStatusFilter === option.id && {
+                        backgroundColor: colors.primary,
+                        borderColor: colors.primary,
+                      },
                     ]}
                     onPress={() => setActiveStatusFilter(option.id)}
                     activeOpacity={0.7}
@@ -527,8 +646,10 @@ export default function InquiriesScreen() {
                     <Text
                       style={[
                         styles.filterOptionText,
-                        activeStatusFilter === option.id &&
-                          styles.filterOptionTextActive,
+                        { color: colors.text },
+                        activeStatusFilter === option.id && {
+                          color: "#FFFFFF",
+                        },
                       ]}
                     >
                       {option.label}
@@ -540,7 +661,14 @@ export default function InquiriesScreen() {
 
             {/* Property Filter */}
             <View style={styles.filterSection}>
-              <Text style={styles.filterSectionTitle}>Property</Text>
+              <Text
+                style={[
+                  styles.filterSectionTitle,
+                  { color: colors.textSecondary },
+                ]}
+              >
+                Property
+              </Text>
               <View style={styles.filterOptions}>
                 {PROPERTY_FILTERS.map((option) => (
                   <TouchableOpacity
@@ -548,8 +676,14 @@ export default function InquiriesScreen() {
                     style={[
                       styles.filterOption,
                       styles.filterOptionFull,
-                      activePropertyFilter === option.id &&
-                        styles.filterOptionActive,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.divider,
+                      },
+                      activePropertyFilter === option.id && {
+                        backgroundColor: colors.primary,
+                        borderColor: colors.primary,
+                      },
                     ]}
                     onPress={() => setActivePropertyFilter(option.id)}
                     activeOpacity={0.7}
@@ -557,8 +691,10 @@ export default function InquiriesScreen() {
                     <Text
                       style={[
                         styles.filterOptionText,
-                        activePropertyFilter === option.id &&
-                          styles.filterOptionTextActive,
+                        { color: colors.text },
+                        activePropertyFilter === option.id && {
+                          color: "#FFFFFF",
+                        },
                       ]}
                       numberOfLines={1}
                     >
@@ -574,7 +710,7 @@ export default function InquiriesScreen() {
 
             {/* Apply Button */}
             <TouchableOpacity
-              style={styles.applyButton}
+              style={[styles.applyButton, { backgroundColor: colors.primary }]}
               onPress={applyFilters}
               activeOpacity={0.8}
             >
@@ -590,7 +726,6 @@ export default function InquiriesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   // Decorative Background
   decorativeBackground: {
@@ -608,8 +743,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: Colors.primaryLight,
-    opacity: 0.08,
   },
   circle2: {
     position: "absolute",
@@ -618,8 +751,6 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     borderRadius: 200,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
   },
   // Header
   headerLeft: {
@@ -632,10 +763,8 @@ const styles = StyleSheet.create({
     ...Typography.titleLarge,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   headerBadge: {
-    backgroundColor: Colors.primaryGreen,
     borderRadius: 10,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -659,12 +788,10 @@ const styles = StyleSheet.create({
   // Quick Stats
   quickStats: {
     flexDirection: "row",
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.lg,
     marginBottom: Spacing.lg,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   quickStatItem: {
     flex: 1,
@@ -682,17 +809,14 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   quickStatLabel: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
   },
   quickStatDivider: {
     width: 1,
     height: 50,
-    backgroundColor: Colors.divider,
     alignSelf: "center",
   },
 
@@ -709,23 +833,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: 20,
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
-  tabActive: {
-    backgroundColor: Colors.primaryGreen,
-    borderColor: Colors.primaryGreen,
-  },
+  tabActive: {},
   tabText: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.textSecondary,
   },
-  tabTextActive: {
-    color: "#FFFFFF",
-  },
+  tabTextActive: {},
 
   // Results Header
   resultsHeader: {
@@ -734,7 +850,6 @@ const styles = StyleSheet.create({
   resultsCount: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
   },
 
   // Empty State
@@ -747,24 +862,20 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: Colors.surface,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: Spacing.xl,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   emptyTitle: {
     ...Typography.headlineMedium,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: Spacing.sm,
   },
   emptySubtitle: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
     textAlign: "center",
     maxWidth: 280,
   },
@@ -775,11 +886,9 @@ const styles = StyleSheet.create({
   },
   inquiryCard: {
     flexDirection: "row",
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -794,8 +903,6 @@ const styles = StyleSheet.create({
   },
   inquiryCardUnread: {
     borderLeftWidth: 3,
-    borderLeftColor: Colors.primaryGreen,
-    backgroundColor: `${Colors.primaryGreen}05`,
   },
   unreadIndicator: {
     position: "absolute",
@@ -804,7 +911,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.primaryGreen,
   },
   avatarContainer: {
     position: "relative",
@@ -822,9 +928,7 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: Colors.primaryGreen,
     borderWidth: 2,
-    borderColor: Colors.surface,
   },
   inquiryContent: {
     flex: 1,
@@ -839,7 +943,6 @@ const styles = StyleSheet.create({
     ...Typography.titleMedium,
     fontSize: 15,
     fontWeight: "600",
-    color: Colors.textPrimary,
   },
   buyerNameUnread: {
     fontWeight: "700",
@@ -847,7 +950,6 @@ const styles = StyleSheet.create({
   timeAgo: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
   },
   propertyContext: {
     flexDirection: "row",
@@ -863,19 +965,15 @@ const styles = StyleSheet.create({
   propertyTitle: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
     flex: 1,
   },
   messagePreview: {
     ...Typography.bodyMedium,
     fontSize: 13,
-    color: Colors.textSecondary,
     lineHeight: 18,
     marginBottom: Spacing.sm,
   },
-  messagePreviewUnread: {
-    color: Colors.textPrimary,
-  },
+  messagePreviewUnread: {},
   inquiryFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -912,17 +1010,14 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
     paddingBottom: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
   },
   filterTitle: {
     ...Typography.headlineMedium,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   resetText: {
     ...Typography.labelMedium,
-    color: Colors.primaryGreen,
     fontWeight: "600",
   },
   filterSection: {
@@ -932,7 +1027,6 @@ const styles = StyleSheet.create({
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.textSecondary,
     marginBottom: Spacing.md,
   },
   filterOptions: {
@@ -944,9 +1038,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: 12,
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   filterOptionFull: {
     width: "100%",
@@ -954,22 +1046,16 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  filterOptionActive: {
-    backgroundColor: Colors.primaryGreen,
-    borderColor: Colors.primaryGreen,
-  },
+  filterOptionActive: {},
   filterOptionText: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "500",
-    color: Colors.textPrimary,
   },
   filterOptionTextActive: {
-    color: "#FFFFFF",
     fontWeight: "600",
   },
   applyButton: {
-    backgroundColor: Colors.primaryGreen,
     borderRadius: 14,
     paddingVertical: Spacing.md,
     alignItems: "center",
