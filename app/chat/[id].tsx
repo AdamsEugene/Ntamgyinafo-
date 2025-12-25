@@ -22,6 +22,7 @@ import {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface Message {
   id: string;
@@ -163,8 +164,10 @@ const MESSAGES: Message[] = [
 
 export default function ChatScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { id: _chatId } = useLocalSearchParams();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [messages, setMessages] = useState<Message[]>(MESSAGES);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -289,11 +292,26 @@ export default function ChatScreen() {
         {/* Date Separator */}
         {showDateSeparator && (
           <View style={styles.dateSeparator}>
-            <View style={styles.dateSeparatorLine} />
-            <Text style={styles.dateSeparatorText}>
+            <View
+              style={[
+                styles.dateSeparatorLine,
+                { backgroundColor: colors.divider },
+              ]}
+            />
+            <Text
+              style={[
+                styles.dateSeparatorText,
+                { color: colors.textSecondary },
+              ]}
+            >
               {getDateLabel(item.timestamp)}
             </Text>
-            <View style={styles.dateSeparatorLine} />
+            <View
+              style={[
+                styles.dateSeparatorLine,
+                { backgroundColor: colors.divider },
+              ]}
+            />
           </View>
         )}
 
@@ -318,15 +336,27 @@ export default function ChatScreen() {
             style={[
               styles.messageBubble,
               item.isFromMe
-                ? styles.messageBubbleSent
-                : styles.messageBubbleReceived,
+                ? [
+                    styles.messageBubbleSent,
+                    { backgroundColor: colors.primary },
+                  ]
+                : [
+                    styles.messageBubbleReceived,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.divider,
+                    },
+                  ],
               item.type === "property" && styles.messageBubbleProperty,
             ]}
           >
             {/* Property Card Message */}
             {item.type === "property" && item.property && (
               <TouchableOpacity
-                style={styles.propertyCard}
+                style={[
+                  styles.propertyCard,
+                  { backgroundColor: colors.surface },
+                ]}
                 activeOpacity={0.8}
                 onPress={() =>
                   router.push(`/property/${item.property?.id}` as any)
@@ -337,20 +367,33 @@ export default function ChatScreen() {
                   style={styles.propertyCardImage}
                 />
                 <View style={styles.propertyCardContent}>
-                  <Text style={styles.propertyCardTitle} numberOfLines={2}>
+                  <Text
+                    style={[styles.propertyCardTitle, { color: colors.text }]}
+                    numberOfLines={2}
+                  >
                     {item.property.title}
                   </Text>
-                  <Text style={styles.propertyCardPrice}>
+                  <Text
+                    style={[
+                      styles.propertyCardPrice,
+                      { color: colors.primary },
+                    ]}
+                  >
                     {item.property.price}
                   </Text>
                   <View style={styles.propertyCardButton}>
-                    <Text style={styles.propertyCardButtonText}>
+                    <Text
+                      style={[
+                        styles.propertyCardButtonText,
+                        { color: colors.primary },
+                      ]}
+                    >
                       View Property
                     </Text>
                     <Ionicons
                       name="chevron-forward"
                       size={14}
-                      color={Colors.primaryGreen}
+                      color={colors.primary}
                     />
                   </View>
                 </View>
@@ -364,7 +407,7 @@ export default function ChatScreen() {
                   styles.messageText,
                   item.isFromMe
                     ? styles.messageTextSent
-                    : styles.messageTextReceived,
+                    : [styles.messageTextReceived, { color: colors.text }],
                 ]}
               >
                 {item.text}
@@ -378,7 +421,10 @@ export default function ChatScreen() {
                   styles.messageTime,
                   item.isFromMe
                     ? styles.messageTimeSent
-                    : styles.messageTimeReceived,
+                    : [
+                        styles.messageTimeReceived,
+                        { color: colors.textSecondary },
+                      ],
                 ]}
               >
                 {item.time}
@@ -400,16 +446,25 @@ export default function ChatScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Header */}
-        <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
+        <View
+          style={[
+            styles.header,
+            {
+              paddingTop: insets.top + Spacing.sm,
+              backgroundColor: colors.surface,
+              borderBottomColor: colors.divider,
+            },
+          ]}
+        >
           <TouchableOpacity
             onPress={() => router.back()}
             style={styles.backButton}
             activeOpacity={0.7}
           >
-            <Ionicons name="arrow-back" size={24} color={Colors.textPrimary} />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
 
           {/* User Info */}
@@ -419,18 +474,30 @@ export default function ChatScreen() {
                 source={{ uri: CHAT_USER.avatar }}
                 style={styles.headerAvatar}
               />
-              {CHAT_USER.isOnline && <View style={styles.onlineIndicator} />}
+              {CHAT_USER.isOnline && (
+                <View
+                  style={[
+                    styles.onlineIndicator,
+                    {
+                      backgroundColor: colors.primary,
+                      borderColor: colors.surface,
+                    },
+                  ]}
+                />
+              )}
             </View>
             <View style={styles.userDetails}>
               <View style={styles.userNameRow}>
-                <Text style={styles.userName}>{CHAT_USER.name}</Text>
+                <Text style={[styles.userName, { color: colors.text }]}>
+                  {CHAT_USER.name}
+                </Text>
                 {CHAT_USER.isVerified && (
                   <View style={styles.verifiedBadge}>
                     <Ionicons name="checkmark" size={10} color="#FFFFFF" />
                   </View>
                 )}
               </View>
-              <Text style={styles.userStatus}>
+              <Text style={[styles.userStatus, { color: colors.primary }]}>
                 {isTyping ? "typing..." : CHAT_USER.lastSeen}
               </Text>
             </View>
@@ -443,7 +510,7 @@ export default function ChatScreen() {
               style={styles.headerActionButton}
               activeOpacity={0.7}
             >
-              <Ionicons name="call" size={22} color={Colors.primaryGreen} />
+              <Ionicons name="call" size={22} color={colors.primary} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => menuSheetRef.current?.present()}
@@ -453,7 +520,7 @@ export default function ChatScreen() {
               <Ionicons
                 name="ellipsis-vertical"
                 size={22}
-                color={Colors.textPrimary}
+                color={colors.text}
               />
             </TouchableOpacity>
           </View>
@@ -461,7 +528,13 @@ export default function ChatScreen() {
 
         {/* Property Context Bar */}
         <TouchableOpacity
-          style={styles.propertyContextBar}
+          style={[
+            styles.propertyContextBar,
+            {
+              backgroundColor: `${colors.primary}08`,
+              borderBottomColor: colors.divider,
+            },
+          ]}
           activeOpacity={0.7}
           onPress={() => router.push(`/property/${PROPERTY_CONTEXT.id}` as any)}
         >
@@ -470,15 +543,25 @@ export default function ChatScreen() {
             style={styles.propertyContextImage}
           />
           <View style={styles.propertyContextInfo}>
-            <Text style={styles.propertyContextLabel}>About:</Text>
-            <Text style={styles.propertyContextTitle} numberOfLines={1}>
+            <Text
+              style={[
+                styles.propertyContextLabel,
+                { color: colors.textSecondary },
+              ]}
+            >
+              About:
+            </Text>
+            <Text
+              style={[styles.propertyContextTitle, { color: colors.text }]}
+              numberOfLines={1}
+            >
               {PROPERTY_CONTEXT.title}
             </Text>
           </View>
           <Ionicons
             name="chevron-forward"
             size={18}
-            color={Colors.textSecondary}
+            color={colors.textSecondary}
           />
         </TouchableOpacity>
 
@@ -502,11 +585,37 @@ export default function ChatScreen() {
               source={{ uri: CHAT_USER.avatar }}
               style={styles.typingAvatar}
             />
-            <View style={styles.typingBubble}>
+            <View
+              style={[
+                styles.typingBubble,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               <View style={styles.typingDots}>
-                <View style={[styles.typingDot, styles.typingDot1]} />
-                <View style={[styles.typingDot, styles.typingDot2]} />
-                <View style={[styles.typingDot, styles.typingDot3]} />
+                <View
+                  style={[
+                    styles.typingDot,
+                    styles.typingDot1,
+                    { backgroundColor: colors.textSecondary },
+                  ]}
+                />
+                <View
+                  style={[
+                    styles.typingDot,
+                    styles.typingDot2,
+                    { backgroundColor: colors.textSecondary },
+                  ]}
+                />
+                <View
+                  style={[
+                    styles.typingDot,
+                    styles.typingDot3,
+                    { backgroundColor: colors.textSecondary },
+                  ]}
+                />
               </View>
             </View>
           </View>
@@ -520,7 +629,11 @@ export default function ChatScreen() {
           <View
             style={[
               styles.inputBar,
-              { paddingBottom: insets.bottom + Spacing.sm },
+              {
+                paddingBottom: insets.bottom + Spacing.sm,
+                backgroundColor: colors.surface,
+                borderTopColor: colors.divider,
+              },
             ]}
           >
             {/* Attachment Button */}
@@ -529,15 +642,23 @@ export default function ChatScreen() {
               onPress={() => attachmentSheetRef.current?.present()}
               activeOpacity={0.7}
             >
-              <Ionicons name="attach" size={24} color={Colors.textSecondary} />
+              <Ionicons name="attach" size={24} color={colors.textSecondary} />
             </TouchableOpacity>
 
             {/* Text Input */}
-            <View style={styles.inputContainer}>
+            <View
+              style={[
+                styles.inputContainer,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               <TextInput
-                style={styles.textInput}
+                style={[styles.textInput, { color: colors.text }]}
                 placeholder="Message..."
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 value={inputText}
                 onChangeText={setInputText}
                 multiline
@@ -547,7 +668,7 @@ export default function ChatScreen() {
                 <Ionicons
                   name="happy-outline"
                   size={24}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
               </TouchableOpacity>
             </View>
@@ -556,7 +677,8 @@ export default function ChatScreen() {
             <TouchableOpacity
               style={[
                 styles.sendButton,
-                inputText.trim() && styles.sendButtonActive,
+                { backgroundColor: colors.divider },
+                inputText.trim() && { backgroundColor: colors.primary },
               ]}
               onPress={handleSend}
               activeOpacity={0.7}
@@ -565,7 +687,7 @@ export default function ChatScreen() {
               <Ionicons
                 name="send"
                 size={20}
-                color={inputText.trim() ? "#FFFFFF" : Colors.textSecondary}
+                color={inputText.trim() ? "#FFFFFF" : colors.textSecondary}
               />
             </TouchableOpacity>
           </View>
@@ -577,10 +699,13 @@ export default function ChatScreen() {
           index={0}
           snapPoints={["35%"]}
           backdropComponent={renderBackdrop}
-          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+          handleIndicatorStyle={{ backgroundColor: colors.textSecondary }}
+          backgroundStyle={{ backgroundColor: colors.surface }}
         >
           <BottomSheetView style={styles.menuSheet}>
-            <Text style={styles.menuTitle}>Options</Text>
+            <Text style={[styles.menuTitle, { color: colors.text }]}>
+              Options
+            </Text>
 
             <TouchableOpacity
               style={styles.menuItem}
@@ -593,12 +718,14 @@ export default function ChatScreen() {
               <View
                 style={[
                   styles.menuIcon,
-                  { backgroundColor: `${Colors.primaryGreen}15` },
+                  { backgroundColor: `${colors.primary}15` },
                 ]}
               >
-                <Ionicons name="home" size={20} color={Colors.primaryGreen} />
+                <Ionicons name="home" size={20} color={colors.primary} />
               </View>
-              <Text style={styles.menuItemText}>View Property</Text>
+              <Text style={[styles.menuItemText, { color: colors.text }]}>
+                View Property
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -612,7 +739,9 @@ export default function ChatScreen() {
               <View style={[styles.menuIcon, { backgroundColor: "#3B82F615" }]}>
                 <Ionicons name="person" size={20} color="#3B82F6" />
               </View>
-              <Text style={styles.menuItemText}>View Profile</Text>
+              <Text style={[styles.menuItemText, { color: colors.text }]}>
+                View Profile
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -623,7 +752,9 @@ export default function ChatScreen() {
               <View style={[styles.menuIcon, { backgroundColor: "#F59E0B15" }]}>
                 <Ionicons name="flag" size={20} color="#F59E0B" />
               </View>
-              <Text style={styles.menuItemText}>Report User</Text>
+              <Text style={[styles.menuItemText, { color: colors.text }]}>
+                Report User
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -647,7 +778,8 @@ export default function ChatScreen() {
           index={0}
           snapPoints={["25%"]}
           backdropComponent={renderBackdrop}
-          handleIndicatorStyle={{ backgroundColor: Colors.textSecondary }}
+          handleIndicatorStyle={{ backgroundColor: colors.textSecondary }}
+          backgroundStyle={{ backgroundColor: colors.surface }}
         >
           <BottomSheetView style={styles.attachmentSheet}>
             <View style={styles.attachmentOptions}>
@@ -663,7 +795,14 @@ export default function ChatScreen() {
                 >
                   <Ionicons name="image" size={24} color="#FFFFFF" />
                 </View>
-                <Text style={styles.attachmentLabel}>Photo</Text>
+                <Text
+                  style={[
+                    styles.attachmentLabel,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Photo
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -678,7 +817,14 @@ export default function ChatScreen() {
                 >
                   <Ionicons name="camera" size={24} color="#FFFFFF" />
                 </View>
-                <Text style={styles.attachmentLabel}>Camera</Text>
+                <Text
+                  style={[
+                    styles.attachmentLabel,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Camera
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -693,7 +839,14 @@ export default function ChatScreen() {
                 >
                   <Ionicons name="document" size={24} color="#FFFFFF" />
                 </View>
-                <Text style={styles.attachmentLabel}>Document</Text>
+                <Text
+                  style={[
+                    styles.attachmentLabel,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Document
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -703,12 +856,19 @@ export default function ChatScreen() {
                 <View
                   style={[
                     styles.attachmentIcon,
-                    { backgroundColor: Colors.primaryGreen },
+                    { backgroundColor: colors.primary },
                   ]}
                 >
                   <Ionicons name="location" size={24} color="#FFFFFF" />
                 </View>
-                <Text style={styles.attachmentLabel}>Location</Text>
+                <Text
+                  style={[
+                    styles.attachmentLabel,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Location
+                </Text>
               </TouchableOpacity>
             </View>
           </BottomSheetView>

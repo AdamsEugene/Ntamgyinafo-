@@ -71,7 +71,8 @@ const SORT_OPTIONS = [
 export default function SavedPropertiesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { colors, isDark } = useTheme();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { colors, isDark: _isDark } = useTheme();
 
   // State
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
