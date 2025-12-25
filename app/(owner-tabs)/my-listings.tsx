@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Colors, Typography, Spacing } from "@/constants/design";
+import { useTheme } from "@/contexts/ThemeContext";
 import {
   FloatingHeader,
   HeaderActionButton,
@@ -109,6 +110,7 @@ const LISTINGS: Listing[] = [
 export default function MyListingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
@@ -133,7 +135,7 @@ export default function MyListingsScreen() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
-        return Colors.primaryGreen;
+        return colors.primary;
       case "pending":
         return "#F59E0B";
       case "sold":
@@ -141,7 +143,7 @@ export default function MyListingsScreen() {
       case "rented":
         return "#8B5CF6";
       default:
-        return Colors.textSecondary;
+        return colors.textSecondary;
     }
   };
 
@@ -168,7 +170,13 @@ export default function MyListingsScreen() {
   const renderListingCard = (listing: Listing) => (
     <TouchableOpacity
       key={listing.id}
-      style={styles.listingCard}
+      style={[
+        styles.listingCard,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.divider,
+        },
+      ]}
       activeOpacity={0.8}
       onPress={() => router.push(`/owner-listing/${listing.id}` as any)}
     >
@@ -227,23 +235,37 @@ export default function MyListingsScreen() {
       {/* Content Section */}
       <View style={styles.listingContent}>
         <View style={styles.listingMain}>
-          <Text style={styles.listingTitle} numberOfLines={1}>
+          <Text
+            style={[styles.listingTitle, { color: colors.text }]}
+            numberOfLines={1}
+          >
             {listing.title}
           </Text>
           <View style={styles.locationRow}>
-            <Ionicons name="location" size={14} color={Colors.primaryGreen} />
-            <Text style={styles.locationText} numberOfLines={1}>
+            <Ionicons name="location" size={14} color={colors.primary} />
+            <Text
+              style={[styles.locationText, { color: colors.textSecondary }]}
+              numberOfLines={1}
+            >
               {listing.location}
             </Text>
           </View>
         </View>
 
         <View style={styles.priceActionsRow}>
-          <Text style={styles.listingPrice}>{formatPrice(listing.price)}</Text>
+          <Text style={[styles.listingPrice, { color: colors.primary }]}>
+            {formatPrice(listing.price)}
+          </Text>
 
           <View style={styles.actionsRow}>
             <TouchableOpacity
-              style={styles.actionButton}
+              style={[
+                styles.actionButton,
+                {
+                  backgroundColor: colors.background,
+                  borderColor: colors.divider,
+                },
+              ]}
               activeOpacity={0.7}
               onPress={(e) => {
                 e.stopPropagation();
@@ -256,11 +278,17 @@ export default function MyListingsScreen() {
               <Ionicons
                 name="create-outline"
                 size={18}
-                color={Colors.primaryGreen}
+                color={colors.primary}
               />
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.actionButton}
+              style={[
+                styles.actionButton,
+                {
+                  backgroundColor: colors.background,
+                  borderColor: colors.divider,
+                },
+              ]}
               activeOpacity={0.7}
               onPress={(e) => {
                 e.stopPropagation();
@@ -271,7 +299,14 @@ export default function MyListingsScreen() {
               <Ionicons name="stats-chart" size={18} color="#3B82F6" />
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.actionButton, styles.moreButton]}
+              style={[
+                styles.actionButton,
+                styles.moreButton,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
               activeOpacity={0.7}
               onPress={(e) => {
                 e.stopPropagation();
@@ -282,7 +317,7 @@ export default function MyListingsScreen() {
               <Ionicons
                 name="ellipsis-horizontal"
                 size={18}
-                color={Colors.textSecondary}
+                color={colors.textSecondary}
               />
             </TouchableOpacity>
           </View>
@@ -293,12 +328,22 @@ export default function MyListingsScreen() {
 
   return (
     <>
-      <StatusBar style="dark" />
-      <View style={styles.container}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Decorative Background Elements */}
         <View style={styles.decorativeBackground}>
-          <View style={styles.circle1} />
-          <View style={styles.circle2} />
+          <View
+            style={[
+              styles.circle1,
+              { backgroundColor: colors.primary, opacity: 0.08 },
+            ]}
+          />
+          <View
+            style={[
+              styles.circle2,
+              { backgroundColor: colors.primary, opacity: 0.05 },
+            ]}
+          />
         </View>
 
         {/* Floating Sticky Header */}
@@ -315,10 +360,7 @@ export default function MyListingsScreen() {
                   setViewMode((prev) => (prev === "list" ? "grid" : "list"))
                 }
               />
-              <HeaderActionButton
-                icon="options-outline"
-                onPress={() => {}}
-              />
+              <HeaderActionButton icon="options-outline" onPress={() => {}} />
             </>
           }
         />
@@ -337,64 +379,114 @@ export default function MyListingsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={Colors.primaryGreen}
+              tintColor={colors.primary}
             />
           }
         >
           {/* Summary Stats */}
           <View style={styles.summaryContainer}>
-            <View style={styles.summaryCard}>
+            <View
+              style={[
+                styles.summaryCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               <View
                 style={[styles.summaryIcon, { backgroundColor: "#10B98115" }]}
               >
                 <Ionicons name="home" size={20} color="#10B981" />
               </View>
-              <Text style={styles.summaryValue}>{LISTINGS.length}</Text>
-              <Text style={styles.summaryLabel}>Total</Text>
+              <Text style={[styles.summaryValue, { color: colors.text }]}>
+                {LISTINGS.length}
+              </Text>
+              <Text
+                style={[styles.summaryLabel, { color: colors.textSecondary }]}
+              >
+                Total
+              </Text>
             </View>
-            <View style={styles.summaryCard}>
+            <View
+              style={[
+                styles.summaryCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               <View
                 style={[
                   styles.summaryIcon,
-                  { backgroundColor: `${Colors.primaryGreen}15` },
+                  { backgroundColor: `${colors.primary}15` },
                 ]}
               >
                 <Ionicons
                   name="checkmark-circle"
                   size={20}
-                  color={Colors.primaryGreen}
+                  color={colors.primary}
                 />
               </View>
-              <Text style={styles.summaryValue}>
+              <Text style={[styles.summaryValue, { color: colors.text }]}>
                 {LISTINGS.filter((l) => l.status === "active").length}
               </Text>
-              <Text style={styles.summaryLabel}>Active</Text>
+              <Text
+                style={[styles.summaryLabel, { color: colors.textSecondary }]}
+              >
+                Active
+              </Text>
             </View>
-            <View style={styles.summaryCard}>
+            <View
+              style={[
+                styles.summaryCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               <View
                 style={[styles.summaryIcon, { backgroundColor: "#F59E0B15" }]}
               >
                 <Ionicons name="time" size={20} color="#F59E0B" />
               </View>
-              <Text style={styles.summaryValue}>
+              <Text style={[styles.summaryValue, { color: colors.text }]}>
                 {LISTINGS.filter((l) => l.status === "pending").length}
               </Text>
-              <Text style={styles.summaryLabel}>Pending</Text>
+              <Text
+                style={[styles.summaryLabel, { color: colors.textSecondary }]}
+              >
+                Pending
+              </Text>
             </View>
-            <View style={styles.summaryCard}>
+            <View
+              style={[
+                styles.summaryCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
               <View
                 style={[styles.summaryIcon, { backgroundColor: "#3B82F615" }]}
               >
                 <Ionicons name="pricetag" size={20} color="#3B82F6" />
               </View>
-              <Text style={styles.summaryValue}>
+              <Text style={[styles.summaryValue, { color: colors.text }]}>
                 {
                   LISTINGS.filter(
                     (l) => l.status === "sold" || l.status === "rented"
                   ).length
                 }
               </Text>
-              <Text style={styles.summaryLabel}>Closed</Text>
+              <Text
+                style={[styles.summaryLabel, { color: colors.textSecondary }]}
+              >
+                Closed
+              </Text>
             </View>
           </View>
 
@@ -406,45 +498,63 @@ export default function MyListingsScreen() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.tabsContent}
               keyExtractor={(item) => item.id}
-              renderItem={({ item: tab }) => (
-                <TouchableOpacity
-                  style={[styles.tab, activeTab === tab.id && styles.tabActive]}
-                  onPress={() => setActiveTab(tab.id)}
-                  activeOpacity={0.7}
-                >
-                  <Text
+              renderItem={({ item: tab }) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <TouchableOpacity
                     style={[
-                      styles.tabText,
-                      activeTab === tab.id && styles.tabTextActive,
+                      styles.tab,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.divider,
+                      },
+                      isActive && {
+                        backgroundColor: colors.primary,
+                        borderColor: colors.primary,
+                      },
                     ]}
+                    onPress={() => setActiveTab(tab.id)}
+                    activeOpacity={0.7}
                   >
-                    {tab.label}
-                  </Text>
-                  {tab.count > 0 && (
-                    <View
+                    <Text
                       style={[
-                        styles.tabBadge,
-                        activeTab === tab.id && styles.tabBadgeActive,
+                        styles.tabText,
+                        { color: colors.textSecondary },
+                        isActive && styles.tabTextActive,
                       ]}
                     >
-                      <Text
+                      {tab.label}
+                    </Text>
+                    {tab.count > 0 && (
+                      <View
                         style={[
-                          styles.tabBadgeText,
-                          activeTab === tab.id && styles.tabBadgeTextActive,
+                          styles.tabBadge,
+                          { backgroundColor: colors.divider },
+                          isActive && styles.tabBadgeActive,
                         ]}
                       >
-                        {tab.count}
-                      </Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              )}
+                        <Text
+                          style={[
+                            styles.tabBadgeText,
+                            { color: colors.textSecondary },
+                            isActive && styles.tabBadgeTextActive,
+                          ]}
+                        >
+                          {tab.count}
+                        </Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              }}
             />
           </View>
 
           {/* Results Count */}
           <View style={styles.resultsHeader}>
-            <Text style={styles.resultsCount}>
+            <Text
+              style={[styles.resultsCount, { color: colors.textSecondary }]}
+            >
               {filteredListings.length} listing
               {filteredListings.length !== 1 ? "s" : ""}
             </Text>
@@ -453,15 +563,27 @@ export default function MyListingsScreen() {
           {/* Listings or Empty State */}
           {filteredListings.length === 0 ? (
             <View style={styles.emptyState}>
-              <View style={styles.emptyIconContainer}>
+              <View
+                style={[
+                  styles.emptyIconContainer,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
+              >
                 <Ionicons
                   name="home-outline"
                   size={48}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
               </View>
-              <Text style={styles.emptyTitle}>No Listings Yet</Text>
-              <Text style={styles.emptySubtitle}>
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>
+                No Listings Yet
+              </Text>
+              <Text
+                style={[styles.emptySubtitle, { color: colors.textSecondary }]}
+              >
                 Create your first listing to start receiving inquiries
               </Text>
               <TouchableOpacity
@@ -470,7 +592,7 @@ export default function MyListingsScreen() {
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={[Colors.primaryGreen, "#2E7D32"]}
+                  colors={[colors.primary, colors.primaryDark]}
                   style={styles.emptyButtonGradient}
                 >
                   <Ionicons name="add" size={20} color="#FFFFFF" />
@@ -492,7 +614,7 @@ export default function MyListingsScreen() {
           onPress={() => router.push("/(owner-tabs)/add-listing")}
         >
           <LinearGradient
-            colors={[Colors.primaryGreen, "#2E7D32"]}
+            colors={[colors.primary, colors.primaryDark]}
             style={styles.floatingAddButtonGradient}
           >
             <Ionicons name="add" size={28} color="#FFFFFF" />
@@ -506,7 +628,6 @@ export default function MyListingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   // Decorative Background
   decorativeBackground: {
@@ -524,8 +645,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: Colors.primaryLight,
-    opacity: 0.08,
   },
   circle2: {
     position: "absolute",
@@ -534,8 +653,6 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     borderRadius: 200,
-    backgroundColor: Colors.primaryGreen,
-    opacity: 0.05,
   },
   // Header
   headerLeft: {
@@ -565,12 +682,10 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     flex: 1,
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: Spacing.md,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   summaryIcon: {
     width: 40,
@@ -584,12 +699,10 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
   },
   summaryLabel: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textSecondary,
   },
   // Tabs
   tabsContainer: {
@@ -607,25 +720,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: 20,
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
-  tabActive: {
-    backgroundColor: Colors.primaryGreen,
-    borderColor: Colors.primaryGreen,
-  },
+  tabActive: {},
   tabText: {
     ...Typography.labelMedium,
     fontSize: 14,
     fontWeight: "600",
-    color: Colors.textSecondary,
   },
   tabTextActive: {
     color: "#FFFFFF",
   },
   tabBadge: {
-    backgroundColor: Colors.divider,
     borderRadius: 10,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -639,7 +745,6 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     fontSize: 11,
     fontWeight: "700",
-    color: Colors.textSecondary,
   },
   tabBadgeTextActive: {
     color: "#FFFFFF",
@@ -651,7 +756,6 @@ const styles = StyleSheet.create({
   resultsCount: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
   },
   // Empty State
   emptyState: {
@@ -663,24 +767,20 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: Colors.surface,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: Spacing.xl,
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
   emptyTitle: {
     ...Typography.headlineMedium,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: Spacing.sm,
   },
   emptySubtitle: {
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textSecondary,
     textAlign: "center",
     marginBottom: Spacing.xl,
     maxWidth: 280,
@@ -707,11 +807,9 @@ const styles = StyleSheet.create({
     gap: Spacing.lg,
   },
   listingCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 20,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: Colors.divider,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -806,7 +904,6 @@ const styles = StyleSheet.create({
     ...Typography.titleMedium,
     fontSize: 16,
     fontWeight: "700",
-    color: Colors.textPrimary,
     marginBottom: 6,
   },
   locationRow: {
@@ -817,7 +914,6 @@ const styles = StyleSheet.create({
   locationText: {
     ...Typography.bodyMedium,
     fontSize: 13,
-    color: Colors.textSecondary,
     flex: 1,
   },
   priceActionsRow: {
@@ -829,7 +925,6 @@ const styles = StyleSheet.create({
     ...Typography.headlineMedium,
     fontSize: 20,
     fontWeight: "700",
-    color: Colors.primaryGreen,
   },
   actionsRow: {
     flexDirection: "row",
@@ -839,15 +934,11 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: Colors.background,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: Colors.divider,
   },
-  moreButton: {
-    backgroundColor: Colors.surface,
-  },
+  moreButton: {},
   // Floating Add Button
   floatingAddButton: {
     position: "absolute",
@@ -857,7 +948,6 @@ const styles = StyleSheet.create({
     zIndex: 100,
     ...Platform.select({
       ios: {
-        shadowColor: Colors.primaryGreen,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
