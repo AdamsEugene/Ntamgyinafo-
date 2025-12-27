@@ -102,6 +102,34 @@ export default function AdminTabLayout() {
         }}
       />
       <Tabs.Screen
+        name="subscriptions"
+        options={{
+          title: "Subscriptions",
+          href: null, // Hidden from tab bar, accessible via navigation
+        }}
+      />
+      <Tabs.Screen
+        name="analytics"
+        options={{
+          title: "Analytics",
+          href: null, // Hidden from tab bar, accessible via navigation
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Settings",
+          href: null, // Hidden from tab bar, accessible via navigation
+        }}
+      />
+      <Tabs.Screen
+        name="reports-support"
+        options={{
+          title: "Reports & Support",
+          href: null, // Hidden from tab bar, accessible via navigation
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",

@@ -482,6 +482,122 @@ export default function AdminDashboardScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* Additional Quick Actions */}
+          <View style={styles.quickActions}>
+            <TouchableOpacity
+              style={[
+                styles.quickAction,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+              activeOpacity={0.7}
+              onPress={() => router.push("/(admin-tabs)/subscriptions")}
+            >
+              <View
+                style={[
+                  styles.quickActionIcon,
+                  { backgroundColor: `${colors.primary}15` },
+                ]}
+              >
+                <Ionicons name="card" size={24} color={colors.primary} />
+              </View>
+              <Text style={[styles.quickActionText, { color: colors.text }]}>
+                Subscriptions
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.quickAction,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+              activeOpacity={0.7}
+              onPress={() => router.push("/(admin-tabs)/analytics")}
+            >
+              <View
+                style={[
+                  styles.quickActionIcon,
+                  { backgroundColor: "#10B98115" },
+                ]}
+              >
+                <Ionicons name="stats-chart" size={24} color="#10B981" />
+              </View>
+              <Text style={[styles.quickActionText, { color: colors.text }]}>
+                Analytics
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.quickAction,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+              activeOpacity={0.7}
+              onPress={() => router.push("/(admin-tabs)/reports-support")}
+            >
+              <View
+                style={[
+                  styles.quickActionIcon,
+                  { backgroundColor: "#F59E0B15" },
+                ]}
+              >
+                <Ionicons name="flag" size={24} color="#F59E0B" />
+              </View>
+              <Text style={[styles.quickActionText, { color: colors.text }]}>
+                Reports & Support
+              </Text>
+              <View style={styles.quickActionBadge}>
+                <Text style={styles.quickActionBadgeText}>8</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Settings Action */}
+          <TouchableOpacity
+            style={[
+              styles.settingsAction,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.divider,
+              },
+            ]}
+            activeOpacity={0.7}
+            onPress={() => router.push("/(admin-tabs)/settings")}
+          >
+            <View style={styles.settingsActionLeft}>
+              <View
+                style={[
+                  styles.settingsActionIcon,
+                  { backgroundColor: `${colors.primary}15` },
+                ]}
+              >
+                <Ionicons name="settings" size={24} color={colors.primary} />
+              </View>
+              <View style={styles.settingsActionContent}>
+                <Text style={[styles.settingsActionTitle, { color: colors.text }]}>
+                  System Settings
+                </Text>
+                <Text
+                  style={[
+                    styles.settingsActionSubtitle,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Manage app settings, payment methods, and notifications
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+
           {/* Pending Approvals */}
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
@@ -873,6 +989,53 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "700",
     color: "#FFFFFF",
+  },
+  // Settings Action
+  settingsAction: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderRadius: 16,
+    padding: Spacing.md,
+    marginTop: Spacing.lg,
+    borderWidth: 1,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  settingsActionLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    gap: Spacing.md,
+  },
+  settingsActionIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  settingsActionContent: {
+    flex: 1,
+  },
+  settingsActionTitle: {
+    ...Typography.bodyMedium,
+    fontSize: 15,
+    fontWeight: "600",
+    marginBottom: 2,
+  },
+  settingsActionSubtitle: {
+    ...Typography.caption,
+    fontSize: 12,
   },
   // Pending List
   pendingList: {
