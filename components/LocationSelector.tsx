@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors, Typography, Spacing } from "@/constants/design";
+import { Typography, Spacing } from "@/constants/design";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -158,8 +158,7 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
           <Text
             style={[
               styles.mapButtonText,
-              { color: colors.primary },
-              showMap && styles.mapButtonTextActive,
+              { color: showMap ? "#FFFFFF" : colors.primary },
             ]}
           >
             {showMap ? "List" : "Map"}
@@ -394,10 +393,8 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.background,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: Colors.divider,
     paddingHorizontal: Spacing.md,
     minHeight: 44,
   },
@@ -408,7 +405,6 @@ const styles = StyleSheet.create({
     flex: 1,
     ...Typography.bodyMedium,
     fontSize: 14,
-    color: Colors.textPrimary,
     paddingVertical: Platform.OS === "ios" ? Spacing.sm : 0,
     ...Platform.select({
       android: {
@@ -424,19 +420,15 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: Colors.primaryGreen,
-    backgroundColor: Colors.surface,
     gap: Spacing.xs,
     minHeight: 44,
   },
   mapButtonActive: {
-    backgroundColor: Colors.primaryGreen,
-    borderColor: Colors.primaryGreen,
+    // Colors applied dynamically
   },
   mapButtonText: {
     ...Typography.labelMedium,
     fontSize: 13,
-    color: Colors.primaryGreen,
     fontWeight: "600",
   },
   mapButtonTextActive: {
@@ -457,13 +449,11 @@ const styles = StyleSheet.create({
   selectAllText: {
     ...Typography.labelMedium,
     fontSize: 13,
-    color: Colors.primaryGreen,
     fontWeight: "600",
   },
   selectedBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(34, 197, 94, 0.1)",
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
     borderRadius: 12,
@@ -472,13 +462,11 @@ const styles = StyleSheet.create({
   selectedCount: {
     ...Typography.labelMedium,
     fontSize: 13,
-    color: Colors.primaryGreen,
     fontWeight: "700",
   },
   selectedLabel: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   mapContainer: {
     borderRadius: 16,
@@ -498,7 +486,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
     padding: Spacing.sm,
     borderRadius: 12,
     gap: Spacing.xs,
@@ -511,7 +498,6 @@ const styles = StyleSheet.create({
   mapInstructionsText: {
     ...Typography.caption,
     fontSize: 12,
-    color: Colors.textSecondary,
   },
   listScrollView: {
     height: SCREEN_HEIGHT * 0.65, // Fixed height to ensure scrolling works
@@ -525,15 +511,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: Spacing.md,
     borderRadius: 14,
-    backgroundColor: Colors.background,
     marginBottom: Spacing.sm,
     borderWidth: 1.5,
-    borderColor: Colors.divider,
     gap: Spacing.md,
   },
   locationItemSelected: {
-    borderColor: Colors.primaryGreen,
-    backgroundColor: "rgba(34, 197, 94, 0.05)",
+    // Colors applied dynamically
   },
   locationItemLast: {
     marginBottom: 0,
@@ -542,21 +525,18 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "rgba(0, 0, 0, 0.03)",
     justifyContent: "center",
     alignItems: "center",
   },
   locationIconContainerSelected: {
-    backgroundColor: "rgba(34, 197, 94, 0.1)",
+    // Colors applied dynamically
   },
   locationText: {
     flex: 1,
     ...Typography.bodyMedium,
     fontSize: 15,
-    color: Colors.textPrimary,
   },
   locationTextSelected: {
-    color: Colors.primaryGreen,
     fontWeight: "600",
   },
   checkbox: {
@@ -564,14 +544,11 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: Colors.divider,
-    backgroundColor: Colors.surface,
     justifyContent: "center",
     alignItems: "center",
   },
   checkboxSelected: {
-    backgroundColor: Colors.primaryGreen,
-    borderColor: Colors.primaryGreen,
+    // Colors applied dynamically
   },
   emptyContainer: {
     paddingVertical: Spacing["3xl"],
@@ -581,7 +558,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "rgba(0, 0, 0, 0.03)",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: Spacing.md,
@@ -589,13 +565,11 @@ const styles = StyleSheet.create({
   emptyText: {
     ...Typography.labelLarge,
     fontSize: 16,
-    color: Colors.textPrimary,
     fontWeight: "600",
     marginBottom: Spacing.xs,
   },
   emptySubtext: {
     ...Typography.bodyMedium,
     fontSize: 13,
-    color: Colors.textSecondary,
   },
 });
