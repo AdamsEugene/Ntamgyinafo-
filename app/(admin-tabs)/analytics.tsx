@@ -179,9 +179,10 @@ export default function PlatformAnalyticsScreen() {
 
   const handleChartLayout = (event: LayoutChangeEvent) => {
     const { width } = event.nativeEvent.layout;
-    // Account for card padding (Spacing.lg on each side)
-    const availableWidth = width - Spacing.lg * 2;
-    setChartWidth(availableWidth);
+    // Use the full measured container width
+    if (width > 0) {
+      setChartWidth(width);
+    }
   };
 
   const renderMetricCard = (metric: AnalyticsMetric) => (
@@ -448,26 +449,34 @@ export default function PlatformAnalyticsScreen() {
                 Monthly Revenue Trend
               </Text>
               <View style={styles.chartContainer} onLayout={handleChartLayout}>
-                <LineChart
-                  data={REVENUE_DATA.map((item) => ({
-                    value: item.value / 1000,
-                    label: item.label,
-                  }))}
-                  width={chartWidth}
-                  height={200}
-                  color={colors.primary}
-                  thickness={3}
-                  yAxisThickness={1}
-                  xAxisThickness={1}
-                  yAxisTextStyle={{ color: colors.textSecondary, fontSize: 10 }}
-                  xAxisLabelTextStyle={{
-                    color: colors.textSecondary,
-                    fontSize: 10,
-                  }}
-                  noOfSections={4}
-                  maxValue={70}
-                  isAnimated
-                />
+                {chartWidth > 0 && (
+                  <LineChart
+                    data={REVENUE_DATA.map((item) => ({
+                      value: item.value / 1000,
+                      label: item.label,
+                    }))}
+                    width={chartWidth}
+                    height={200}
+                    color={colors.primary}
+                    thickness={3}
+                    yAxisThickness={1}
+                    xAxisThickness={1}
+                    yAxisTextStyle={{
+                      color: colors.textSecondary,
+                      fontSize: 10,
+                    }}
+                    xAxisLabelTextStyle={{
+                      color: colors.textSecondary,
+                      fontSize: 10,
+                    }}
+                    noOfSections={4}
+                    maxValue={70}
+                    isAnimated
+                    initialSpacing={0}
+                    endSpacing={0}
+                    spacing={chartWidth / (REVENUE_DATA.length - 1)}
+                  />
+                )}
               </View>
             </View>
           )}
@@ -647,8 +656,10 @@ const styles = StyleSheet.create({
   chartCard: {
     borderRadius: 16,
     padding: Spacing.lg,
+    paddingBottom: Spacing.md,
     marginBottom: Spacing.lg,
     borderWidth: 1,
+    overflow: "hidden",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -668,10 +679,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   chartContainer: {
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "center",
     overflow: "hidden",
     width: "100%",
+    paddingHorizontal: 0,
   },
   locationsList: {
     gap: Spacing.md,
