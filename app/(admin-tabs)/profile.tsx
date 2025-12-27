@@ -84,7 +84,7 @@ export default function AdminProfileScreen() {
           id: "settings",
           label: "Settings",
           icon: "settings" as const,
-          route: "/settings",
+          route: "/(admin-tabs)/settings",
         },
         {
           id: "notifications",
@@ -97,6 +97,7 @@ export default function AdminProfileScreen() {
           id: "security",
           label: "Security",
           icon: "shield-checkmark" as const,
+          route: "/(admin-tabs)/security",
         },
       ],
     },

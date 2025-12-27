@@ -137,6 +137,13 @@ export default function AdminTabLayout() {
         }}
       />
       <Tabs.Screen
+        name="security"
+        options={{
+          title: "Security",
+          href: null, // Hidden from tab bar, accessible via navigation
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
