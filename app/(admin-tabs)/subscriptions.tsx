@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Platform,
+  Alert,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -15,7 +16,6 @@ import { useRouter } from "expo-router";
 import {
   BottomSheetModal,
   BottomSheetBackdrop,
-  BottomSheetView,
   BottomSheetTextInput,
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
@@ -140,6 +140,20 @@ export default function SubscriptionPlansScreen() {
   });
   const [isCreating, setIsCreating] = useState(false);
 
+  // Edit plan form state
+  const [editPlan, setEditPlan] = useState({
+    name: "",
+    userType: "owner" as "owner" | "buyer",
+    price: "",
+    duration: "",
+    propertyLimit: "",
+    contactLimit: "",
+    features: [""],
+    isActive: true,
+  });
+  const [isEditing, setIsEditing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const filteredPlans = MOCK_PLANS.filter(
     (plan) => selectedType === "all" || plan.userType === selectedType
   );
@@ -163,7 +177,87 @@ export default function SubscriptionPlansScreen() {
 
   const handleEditPlan = (plan: SubscriptionPlan) => {
     setSelectedPlan(plan);
+    setEditPlan({
+      name: plan.name,
+      userType: plan.userType,
+      price: plan.price.toString(),
+      duration: plan.duration.toString(),
+      propertyLimit: plan.propertyLimit.toString(),
+      contactLimit: plan.contactLimit.toString(),
+      features: plan.features.length > 0 ? plan.features : [""],
+      isActive: plan.isActive,
+    });
     editSheetRef.current?.present();
+  };
+
+  const handleDeletePlan = (plan: SubscriptionPlan) => {
+    if (isDeleting) return; // Prevent multiple deletions
+
+    Alert.alert(
+      "Delete Plan",
+      `Are you sure you want to delete the "${plan.name}" plan? This action cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            setIsDeleting(true);
+            // Simulate API call
+            setTimeout(() => {
+              setIsDeleting(false);
+              Alert.alert("Success", "Plan deleted successfully");
+            }, 1000);
+          },
+        },
+      ]
+    );
+  };
+
+  // Keep selectedPlan for potential future use (e.g., showing plan details)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _selectedPlan = selectedPlan;
+
+  const handleAddEditFeature = () => {
+    setEditPlan((prev) => ({
+      ...prev,
+      features: [...prev.features, ""],
+    }));
+  };
+
+  const handleRemoveEditFeature = (index: number) => {
+    setEditPlan((prev) => ({
+      ...prev,
+      features: prev.features.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleUpdateEditFeature = (index: number, value: string) => {
+    setEditPlan((prev) => ({
+      ...prev,
+      features: prev.features.map((f, i) => (i === index ? value : f)),
+    }));
+  };
+
+  const handleEditPlanSubmit = async () => {
+    if (
+      !editPlan.name ||
+      !editPlan.price ||
+      !editPlan.duration ||
+      (!editPlan.propertyLimit && editPlan.userType === "owner") ||
+      (!editPlan.contactLimit && editPlan.userType === "buyer") ||
+      editPlan.features.filter((f) => f.trim()).length === 0
+    ) {
+      return;
+    }
+
+    setIsEditing(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsEditing(false);
+      editSheetRef.current?.dismiss();
+      setSelectedPlan(null);
+    }, 1500);
   };
 
   const handleCreatePlan = () => {
@@ -568,6 +662,23 @@ export default function SubscriptionPlansScreen() {
                     {plan.isActive ? "Disable" : "Enable"}
                   </Text>
                 </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.actionButton,
+                    styles.deleteButton,
+                    {
+                      backgroundColor: isDark ? "#7F1D1D" : "#FEE2E2",
+                      borderColor: "#EF4444",
+                    },
+                  ]}
+                  onPress={() => handleDeletePlan(plan)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                  <Text style={[styles.actionButtonText, { color: "#EF4444" }]}>
+                    Delete
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
           ))}
@@ -583,8 +694,9 @@ export default function SubscriptionPlansScreen() {
         handleIndicatorStyle={{ backgroundColor: colors.divider }}
         backgroundStyle={{ backgroundColor: colors.surface }}
       >
-        <BottomSheetView
+        <BottomSheetScrollView
           style={[styles.sheetContent, { backgroundColor: colors.surface }]}
+          contentContainerStyle={styles.sheetContentContainer}
         >
           <Text style={[styles.sheetTitle, { color: colors.text }]}>
             Edit Subscription Plan
@@ -592,8 +704,398 @@ export default function SubscriptionPlansScreen() {
           <Text style={[styles.sheetSubtitle, { color: colors.textSecondary }]}>
             Update plan details and pricing
           </Text>
-          {/* Edit form would go here */}
-        </BottomSheetView>
+
+          {/* Plan Name */}
+          <View style={styles.formSection}>
+            <Text style={[styles.formLabel, { color: colors.text }]}>
+              Plan Name *
+            </Text>
+            <BottomSheetTextInput
+              style={[
+                styles.formInput,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.divider,
+                  color: colors.text,
+                },
+              ]}
+              placeholder="e.g., Basic, Standard, Premium"
+              placeholderTextColor={colors.textSecondary}
+              value={editPlan.name}
+              onChangeText={(text) =>
+                setEditPlan((prev) => ({ ...prev, name: text }))
+              }
+            />
+          </View>
+
+          {/* User Type */}
+          <View style={styles.formSection}>
+            <Text style={[styles.formLabel, { color: colors.text }]}>
+              User Type *
+            </Text>
+            <View style={styles.userTypeContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.userTypeButton,
+                  {
+                    backgroundColor:
+                      editPlan.userType === "owner"
+                        ? colors.primary
+                        : colors.surface,
+                    borderColor:
+                      editPlan.userType === "owner"
+                        ? colors.primary
+                        : colors.divider,
+                  },
+                ]}
+                onPress={() =>
+                  setEditPlan((prev) => ({ ...prev, userType: "owner" }))
+                }
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="home"
+                  size={20}
+                  color={
+                    editPlan.userType === "owner"
+                      ? "#FFFFFF"
+                      : colors.textSecondary
+                  }
+                />
+                <Text
+                  style={[
+                    styles.userTypeButtonText,
+                    {
+                      color:
+                        editPlan.userType === "owner"
+                          ? "#FFFFFF"
+                          : colors.textSecondary,
+                    },
+                  ]}
+                >
+                  Owner
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.userTypeButton,
+                  {
+                    backgroundColor:
+                      editPlan.userType === "buyer"
+                        ? colors.primary
+                        : colors.surface,
+                    borderColor:
+                      editPlan.userType === "buyer"
+                        ? colors.primary
+                        : colors.divider,
+                  },
+                ]}
+                onPress={() =>
+                  setEditPlan((prev) => ({ ...prev, userType: "buyer" }))
+                }
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="search"
+                  size={20}
+                  color={
+                    editPlan.userType === "buyer"
+                      ? "#FFFFFF"
+                      : colors.textSecondary
+                  }
+                />
+                <Text
+                  style={[
+                    styles.userTypeButtonText,
+                    {
+                      color:
+                        editPlan.userType === "buyer"
+                          ? "#FFFFFF"
+                          : colors.textSecondary,
+                    },
+                  ]}
+                >
+                  Buyer
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Price and Duration Row */}
+          <View style={styles.formRow}>
+            <View style={[styles.formSection, { flex: 1 }]}>
+              <Text style={[styles.formLabel, { color: colors.text }]}>
+                Price (₵) *
+              </Text>
+              <BottomSheetTextInput
+                style={[
+                  styles.formInput,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.divider,
+                    color: colors.text,
+                  },
+                ]}
+                placeholder="0"
+                placeholderTextColor={colors.textSecondary}
+                value={editPlan.price}
+                onChangeText={(text) =>
+                  setEditPlan((prev) => ({ ...prev, price: text }))
+                }
+                keyboardType="numeric"
+              />
+            </View>
+            <View style={[styles.formSection, { flex: 1 }]}>
+              <Text style={[styles.formLabel, { color: colors.text }]}>
+                Duration (Days) *
+              </Text>
+              <BottomSheetTextInput
+                style={[
+                  styles.formInput,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.divider,
+                    color: colors.text,
+                  },
+                ]}
+                placeholder="30"
+                placeholderTextColor={colors.textSecondary}
+                value={editPlan.duration}
+                onChangeText={(text) =>
+                  setEditPlan((prev) => ({ ...prev, duration: text }))
+                }
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
+
+          {/* Limits Row */}
+          <View style={styles.formRow}>
+            {editPlan.userType === "owner" ? (
+              <View style={[styles.formSection, { flex: 1 }]}>
+                <Text style={[styles.formLabel, { color: colors.text }]}>
+                  Property Limit *
+                </Text>
+                <BottomSheetTextInput
+                  style={[
+                    styles.formInput,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.divider,
+                      color: colors.text,
+                    },
+                  ]}
+                  placeholder="2"
+                  placeholderTextColor={colors.textSecondary}
+                  value={editPlan.propertyLimit}
+                  onChangeText={(text) =>
+                    setEditPlan((prev) => ({ ...prev, propertyLimit: text }))
+                  }
+                  keyboardType="numeric"
+                />
+              </View>
+            ) : (
+              <View style={[styles.formSection, { flex: 1 }]}>
+                <Text style={[styles.formLabel, { color: colors.text }]}>
+                  Contact Limit *
+                </Text>
+                <BottomSheetTextInput
+                  style={[
+                    styles.formInput,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.divider,
+                      color: colors.text,
+                    },
+                  ]}
+                  placeholder="2"
+                  placeholderTextColor={colors.textSecondary}
+                  value={editPlan.contactLimit}
+                  onChangeText={(text) =>
+                    setEditPlan((prev) => ({ ...prev, contactLimit: text }))
+                  }
+                  keyboardType="numeric"
+                />
+              </View>
+            )}
+          </View>
+
+          {/* Features */}
+          <View style={styles.formSection}>
+            <View style={styles.featuresHeader}>
+              <Text style={[styles.formLabel, { color: colors.text }]}>
+                Features *
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.addFeatureButton,
+                  { backgroundColor: `${colors.primary}15` },
+                ]}
+                onPress={handleAddEditFeature}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="add" size={18} color={colors.primary} />
+                <Text
+                  style={[styles.addFeatureText, { color: colors.primary }]}
+                >
+                  Add Feature
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {editPlan.features.map((feature, index) => (
+              <View key={index} style={styles.featureInputRow}>
+                <BottomSheetTextInput
+                  style={[
+                    styles.formInput,
+                    styles.featureInput,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.divider,
+                      color: colors.text,
+                    },
+                  ]}
+                  placeholder={`Feature ${index + 1}`}
+                  placeholderTextColor={colors.textSecondary}
+                  value={feature}
+                  onChangeText={(text) => handleUpdateEditFeature(index, text)}
+                />
+                {editPlan.features.length > 1 && (
+                  <TouchableOpacity
+                    style={[
+                      styles.removeFeatureButton,
+                      { backgroundColor: isDark ? "#7F1D1D" : "#FEE2E2" },
+                    ]}
+                    onPress={() => handleRemoveEditFeature(index)}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="close" size={18} color="#EF4444" />
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))}
+          </View>
+
+          {/* Active Toggle */}
+          <View style={styles.formSection}>
+            <View
+              style={[
+                styles.toggleRow,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
+              <View style={styles.toggleLeft}>
+                <Ionicons
+                  name="power"
+                  size={20}
+                  color={
+                    editPlan.isActive ? colors.primary : colors.textSecondary
+                  }
+                />
+                <View style={styles.toggleContent}>
+                  <Text style={[styles.toggleLabel, { color: colors.text }]}>
+                    Plan Active
+                  </Text>
+                  <Text
+                    style={[
+                      styles.toggleDescription,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    {editPlan.isActive
+                      ? "Plan will be available for subscription"
+                      : "Plan will be hidden from users"}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                onPress={() =>
+                  setEditPlan((prev) => ({ ...prev, isActive: !prev.isActive }))
+                }
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[
+                    styles.toggleSwitch,
+                    {
+                      backgroundColor: editPlan.isActive
+                        ? colors.primary
+                        : colors.divider,
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.toggleThumb,
+                      {
+                        transform: [{ translateX: editPlan.isActive ? 20 : 0 }],
+                      },
+                    ]}
+                  />
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Action Buttons */}
+          <View style={styles.editActionButtons}>
+            <TouchableOpacity
+              style={[
+                styles.cancelButton,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+              onPress={() => editSheetRef.current?.dismiss()}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.cancelButtonText, { color: colors.text }]}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.submitButton,
+                {
+                  backgroundColor: colors.primary,
+                  opacity:
+                    !editPlan.name ||
+                    !editPlan.price ||
+                    !editPlan.duration ||
+                    (!editPlan.propertyLimit &&
+                      editPlan.userType === "owner") ||
+                    (!editPlan.contactLimit && editPlan.userType === "buyer") ||
+                    editPlan.features.filter((f) => f.trim()).length === 0
+                      ? 0.5
+                      : 1,
+                },
+              ]}
+              onPress={handleEditPlanSubmit}
+              disabled={
+                isEditing ||
+                !editPlan.name ||
+                !editPlan.price ||
+                !editPlan.duration ||
+                (!editPlan.propertyLimit && editPlan.userType === "owner") ||
+                (!editPlan.contactLimit && editPlan.userType === "buyer") ||
+                editPlan.features.filter((f) => f.trim()).length === 0
+              }
+              activeOpacity={0.8}
+            >
+              {isEditing ? (
+                <Text style={styles.submitButtonText}>Updating Plan...</Text>
+              ) : (
+                <>
+                  <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+                  <Text style={styles.submitButtonText}>Update Plan</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        </BottomSheetScrollView>
       </BottomSheetModal>
 
       {/* Create Plan Bottom Sheet */}
@@ -668,7 +1170,9 @@ export default function SubscriptionPlansScreen() {
                   name="home"
                   size={20}
                   color={
-                    newPlan.userType === "owner" ? "#FFFFFF" : colors.textSecondary
+                    newPlan.userType === "owner"
+                      ? "#FFFFFF"
+                      : colors.textSecondary
                   }
                 />
                 <Text
@@ -708,7 +1212,9 @@ export default function SubscriptionPlansScreen() {
                   name="search"
                   size={20}
                   color={
-                    newPlan.userType === "buyer" ? "#FFFFFF" : colors.textSecondary
+                    newPlan.userType === "buyer"
+                      ? "#FFFFFF"
+                      : colors.textSecondary
                   }
                 />
                 <Text
@@ -842,7 +1348,9 @@ export default function SubscriptionPlansScreen() {
                 activeOpacity={0.7}
               >
                 <Ionicons name="add" size={18} color={colors.primary} />
-                <Text style={[styles.addFeatureText, { color: colors.primary }]}>
+                <Text
+                  style={[styles.addFeatureText, { color: colors.primary }]}
+                >
                   Add Feature
                 </Text>
               </TouchableOpacity>
@@ -895,7 +1403,9 @@ export default function SubscriptionPlansScreen() {
                 <Ionicons
                   name="power"
                   size={20}
-                  color={newPlan.isActive ? colors.primary : colors.textSecondary}
+                  color={
+                    newPlan.isActive ? colors.primary : colors.textSecondary
+                  }
                 />
                 <View style={styles.toggleContent}>
                   <Text style={[styles.toggleLabel, { color: colors.text }]}>
@@ -933,9 +1443,7 @@ export default function SubscriptionPlansScreen() {
                     style={[
                       styles.toggleThumb,
                       {
-                        transform: [
-                          { translateX: newPlan.isActive ? 20 : 0 },
-                        ],
+                        transform: [{ translateX: newPlan.isActive ? 20 : 0 }],
                       },
                     ]}
                   />
@@ -1189,6 +1697,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
     paddingTop: Spacing.md,
     borderTopWidth: 1,
+    flexWrap: "wrap",
   },
   actionButton: {
     flex: 1,
@@ -1199,6 +1708,11 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     borderRadius: 12,
     borderWidth: 1,
+    minWidth: "30%",
+  },
+  deleteButton: {
+    flex: 1,
+    minWidth: "30%",
   },
   actionButtonText: {
     ...Typography.labelMedium,
@@ -1352,5 +1866,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: "#FFFFFF",
+  },
+  editActionButtons: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    marginTop: Spacing.lg,
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: Spacing.lg,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+  },
+  cancelButtonText: {
+    ...Typography.labelLarge,
+    fontSize: 16,
+    fontWeight: "700",
   },
 });
