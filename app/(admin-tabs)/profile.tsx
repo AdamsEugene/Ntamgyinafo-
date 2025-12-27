@@ -73,6 +73,7 @@ export default function AdminProfileScreen() {
           id: "system-logs",
           label: "System Logs",
           icon: "terminal" as const,
+          route: "/(admin-tabs)/system-logs",
         },
       ],
     },

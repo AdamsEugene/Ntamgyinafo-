@@ -1059,6 +1059,7 @@ export default function SubscriptionPlansScreen() {
             <TouchableOpacity
               style={[
                 styles.submitButton,
+                styles.editSubmitButton,
                 {
                   backgroundColor: colors.primary,
                   opacity:
@@ -1860,6 +1861,10 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
     borderRadius: 16,
     marginTop: Spacing.lg,
+  },
+  editSubmitButton: {
+    flex: 1,
+    marginTop: 0,
   },
   submitButtonText: {
     ...Typography.labelLarge,

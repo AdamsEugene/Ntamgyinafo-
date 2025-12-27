@@ -130,6 +130,13 @@ export default function AdminTabLayout() {
         }}
       />
       <Tabs.Screen
+        name="system-logs"
+        options={{
+          title: "System Logs",
+          href: null, // Hidden from tab bar, accessible via navigation
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
