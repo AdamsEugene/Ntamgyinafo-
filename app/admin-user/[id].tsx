@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useMemo } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -233,7 +233,7 @@ export default function AdminUserProfileScreen() {
   // Get user from mock data
   const user = MOCK_USERS[id || "u1"] || MOCK_USERS["u1"];
 
-  const chatSnapPoints = useMemo(() => ["40%"], []);
+  // const chatSnapPoints = useMemo(() => ["40%"], []);
 
   const renderBackdrop = useCallback(
     (props: any) => (
@@ -959,7 +959,7 @@ export default function AdminUserProfileScreen() {
         <BottomSheetModal
           ref={chatSheetRef}
           index={0}
-          snapPoints={chatSnapPoints}
+          snapPoints={["40%"]}
           backdropComponent={renderBackdrop}
           handleIndicatorStyle={{ backgroundColor: colors.divider }}
           backgroundStyle={{ backgroundColor: colors.surface }}

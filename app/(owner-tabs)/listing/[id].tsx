@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useCallback } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -242,8 +242,8 @@ export default function OwnerListingDetailScreen() {
     // In a real app, update the listing status on the backend
   };
 
-  const statusSnapPoints = useMemo(() => ["45%"], []);
-  const deleteSnapPoints = useMemo(() => ["35%"], []);
+  // const statusSnapPoints = useMemo(() => ["45%"], []);
+  // const deleteSnapPoints = useMemo(() => ["35%"], []);
 
   const renderBackdrop = useCallback(
     (props: any) => (
@@ -1074,7 +1074,7 @@ export default function OwnerListingDetailScreen() {
         <BottomSheetModal
           ref={statusBottomSheetRef}
           index={0}
-          snapPoints={statusSnapPoints}
+          snapPoints={["45%"]}
           backdropComponent={renderBackdrop}
           handleIndicatorStyle={{ backgroundColor: colors.textSecondary }}
           backgroundStyle={{ backgroundColor: colors.surface }}
@@ -1141,7 +1141,7 @@ export default function OwnerListingDetailScreen() {
         <BottomSheetModal
           ref={deleteBottomSheetRef}
           index={0}
-          snapPoints={deleteSnapPoints}
+          snapPoints={["35%"]}
           backdropComponent={renderBackdrop}
           handleIndicatorStyle={{ backgroundColor: colors.textSecondary }}
           backgroundStyle={{ backgroundColor: colors.surface }}

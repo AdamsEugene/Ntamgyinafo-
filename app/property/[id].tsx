@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useCallback } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -75,7 +75,7 @@ export default function PropertyDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
   const id = params.id;
   const insets = useSafeAreaInsets();
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSaved, setIsSaved] = useState(false);
@@ -168,7 +168,7 @@ export default function PropertyDetailScreen() {
     Linking.openURL(`tel:${phoneNumber}`);
   };
 
-  const chatSnapPoints = useMemo(() => ["50%"], []);
+  // const chatSnapPoints = useMemo(() => ["50%"], []);
 
   const handleChat = () => {
     // In a real app, check subscription first
@@ -1355,7 +1355,7 @@ export default function PropertyDetailScreen() {
       <BottomSheetModal
         ref={chatBottomSheetRef}
         index={0}
-        snapPoints={chatSnapPoints}
+        snapPoints={["50%"]}
         enablePanDownToClose
         onDismiss={() => {
           // Optional: handle dismiss if needed

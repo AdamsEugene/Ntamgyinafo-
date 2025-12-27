@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  useRef,
-} from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -429,7 +423,7 @@ export default function SearchResultsScreen() {
         <BottomSheetModal
           ref={menuSheetRef}
           index={0}
-          snapPoints={useMemo(() => ["30%"], [])}
+          snapPoints={["30%"]}
           enablePanDownToClose
           onDismiss={() => setShowMenuSheet(false)}
           backdropComponent={useCallback(
@@ -529,7 +523,7 @@ export default function SearchResultsScreen() {
         <BottomSheetModal
           ref={sortSheetRef}
           index={0}
-          snapPoints={useMemo(() => ["50%"], [])}
+          snapPoints={["50%"]}
           enablePanDownToClose
           onDismiss={() => setShowSortSheet(false)}
           backdropComponent={useCallback(

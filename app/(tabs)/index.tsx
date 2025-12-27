@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -124,7 +124,7 @@ export default function BuyerHomeScreen() {
 
   // Location selector bottom sheet
   const locationSheetRef = useRef<BottomSheetModal>(null);
-  const snapPoints = useMemo(() => ["90%"], []);
+  // const snapPoints = useMemo(() => ["90%"], []);
 
   const selectedLocation =
     selectedLocations.length > 0 ? selectedLocations[0] : "Select Location";
@@ -856,7 +856,7 @@ export default function BuyerHomeScreen() {
       <BottomSheetModal
         ref={locationSheetRef}
         index={0}
-        snapPoints={snapPoints}
+        snapPoints={["90%"]}
         enablePanDownToClose
         backdropComponent={renderBackdrop}
         backgroundStyle={[

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useCallback } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -188,7 +188,7 @@ export default function InquiriesScreen() {
     }, 1000);
   }, []);
 
-  const filterSnapPoints = useMemo(() => ["50%"], []);
+  // const filterSnapPoints = useMemo(() => ["50%"], []);
 
   const renderBackdrop = useCallback(
     (props: any) => (
@@ -593,7 +593,7 @@ export default function InquiriesScreen() {
         <BottomSheetModal
           ref={filterSheetRef}
           index={0}
-          snapPoints={filterSnapPoints}
+          snapPoints={["50%"]}
           backdropComponent={renderBackdrop}
           handleIndicatorStyle={{ backgroundColor: colors.textSecondary }}
           backgroundStyle={{ backgroundColor: colors.surface }}

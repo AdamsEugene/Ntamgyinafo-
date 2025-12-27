@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useMemo } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -65,7 +65,7 @@ export default function NearYouPropertiesScreen() {
 
   // Location selector bottom sheet
   const locationSheetRef = useRef<BottomSheetModal>(null);
-  const snapPoints = useMemo(() => ["90%"], []);
+  // const snapPoints = useMemo(() => ["90%"], []);
 
   const handleLocationChange = (locations: string[]) => {
     setSelectedLocations(locations);
@@ -457,7 +457,7 @@ export default function NearYouPropertiesScreen() {
         <BottomSheetModal
           ref={locationSheetRef}
           index={0}
-          snapPoints={snapPoints}
+          snapPoints={["75%"]}
           enablePanDownToClose
           backdropComponent={renderBackdrop}
           backgroundStyle={{ backgroundColor: colors.background }}

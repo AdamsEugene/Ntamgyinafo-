@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  useRef,
-} from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -226,7 +220,7 @@ export const FilterBottomSheet = React.forwardRef<
   React.useImperativeHandle(ref, () => bottomSheetRef.current!);
 
   // Snap points for the bottom sheet
-  const snapPoints = useMemo(() => ["90%"], []);
+  // const snapPoints = useMemo(() => ["90%"], []);
 
   // Update filters when initialFilters change
   useEffect(() => {
@@ -364,7 +358,7 @@ export const FilterBottomSheet = React.forwardRef<
   return (
     <BottomSheetModal
       ref={bottomSheetRef}
-      snapPoints={snapPoints}
+      snapPoints={["75%"]}
       onDismiss={handleDismiss}
       enablePanDownToClose
       backdropComponent={renderBackdrop}

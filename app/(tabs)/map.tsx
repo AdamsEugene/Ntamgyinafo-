@@ -12,7 +12,6 @@ import {
   TouchableOpacity,
   Image,
   Platform,
-  Dimensions,
   Animated,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
@@ -137,10 +136,10 @@ export default function MapScreen() {
 
   // Snap points for bottom sheet - max height is 50% of screen
   // Using absolute values to ensure it never exceeds 50% of screen height
-  const snapPoints = useMemo(() => {
-    const screenHeight = Dimensions.get("window").height;
-    return [screenHeight * 0.25, screenHeight * 0.5];
-  }, []);
+  // const snapPoints = useMemo(() => {
+  //   const screenHeight = Dimensions.get("window").height;
+  //   return [screenHeight * 0.25, screenHeight * 0.5];
+  // }, []);
 
   // Check if coming from near-you-properties with distance filter
   const showDistanceFilter = params.showDistanceFilter === "true";
@@ -977,7 +976,7 @@ export default function MapScreen() {
         <BottomSheetModal
           ref={bottomSheetRef}
           index={0}
-          snapPoints={snapPoints}
+          snapPoints={["50%"]}
           enablePanDownToClose
           enableOverDrag={false}
           backdropComponent={renderBackdrop}
