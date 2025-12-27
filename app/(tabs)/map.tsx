@@ -976,7 +976,7 @@ export default function MapScreen() {
         <BottomSheetModal
           ref={bottomSheetRef}
           index={0}
-          snapPoints={["50%"]}
+          snapPoints={["60%"]}
           enablePanDownToClose
           enableOverDrag={false}
           backdropComponent={renderBackdrop}

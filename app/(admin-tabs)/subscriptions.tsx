@@ -689,7 +689,7 @@ export default function SubscriptionPlansScreen() {
       <BottomSheetModal
         ref={editSheetRef}
         index={0}
-        snapPoints={["90%"]}
+        snapPoints={["60%"]}
         backdropComponent={renderBackdrop}
         handleIndicatorStyle={{ backgroundColor: colors.divider }}
         backgroundStyle={{ backgroundColor: colors.surface }}
@@ -1103,7 +1103,7 @@ export default function SubscriptionPlansScreen() {
       <BottomSheetModal
         ref={createSheetRef}
         index={0}
-        snapPoints={["90%"]}
+        snapPoints={["60%"]}
         backdropComponent={renderBackdrop}
         handleIndicatorStyle={{ backgroundColor: colors.divider }}
         backgroundStyle={{ backgroundColor: colors.surface }}

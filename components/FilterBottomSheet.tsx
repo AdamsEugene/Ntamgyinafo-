@@ -358,7 +358,7 @@ export const FilterBottomSheet = React.forwardRef<
   return (
     <BottomSheetModal
       ref={bottomSheetRef}
-      snapPoints={["75%"]}
+      snapPoints={["60%"]}
       onDismiss={handleDismiss}
       enablePanDownToClose
       backdropComponent={renderBackdrop}
