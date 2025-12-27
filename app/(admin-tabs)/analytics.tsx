@@ -403,10 +403,10 @@ export default function PlatformAnalyticsScreen() {
                     value: item.value,
                     label: item.label,
                   }))}
-                  width={SCREEN_WIDTH - Spacing.lg * 4}
+                  width={SCREEN_WIDTH - Spacing.lg * 2 - Spacing.lg * 2}
                   height={200}
-                  barWidth={30}
-                  spacing={20}
+                  barWidth={28}
+                  spacing={16}
                   frontColor={colors.primary}
                   yAxisThickness={1}
                   xAxisThickness={1}
@@ -442,7 +442,7 @@ export default function PlatformAnalyticsScreen() {
                     value: item.value / 1000,
                     label: item.label,
                   }))}
-                  width={SCREEN_WIDTH - Spacing.lg * 4}
+                  width={SCREEN_WIDTH - Spacing.lg * 2 - Spacing.lg * 2}
                   height={200}
                   color={colors.primary}
                   thickness={3}
@@ -659,6 +659,8 @@ const styles = StyleSheet.create({
   chartContainer: {
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
+    width: "100%",
   },
   locationsList: {
     gap: Spacing.md,

@@ -832,7 +832,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: Spacing.lg,
-    gap: Spacing.xs,
+    gap: Spacing.md,
   },
   // Alert Card
   alertCard: {
@@ -862,7 +862,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
     marginTop: Spacing.xl,
   },
   sectionTitleFirst: {
@@ -870,13 +870,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     marginTop: Spacing.md,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   sectionTitle: {
     ...Typography.labelMedium,
     fontSize: 15,
     fontWeight: "700",
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   seeAllText: {
     ...Typography.labelMedium,
@@ -938,6 +938,7 @@ const styles = StyleSheet.create({
   quickActions: {
     flexDirection: "row",
     gap: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   quickAction: {
     flex: 1,
