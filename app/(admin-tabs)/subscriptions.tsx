@@ -17,6 +17,7 @@ import {
   BottomSheetBackdrop,
   BottomSheetView,
   BottomSheetTextInput,
+  BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
 import { Typography, Spacing } from "@/constants/design";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -126,6 +127,19 @@ export default function SubscriptionPlansScreen() {
   const editSheetRef = useRef<BottomSheetModal>(null);
   const createSheetRef = useRef<BottomSheetModal>(null);
 
+  // Create plan form state
+  const [newPlan, setNewPlan] = useState({
+    name: "",
+    userType: "owner" as "owner" | "buyer",
+    price: "",
+    duration: "",
+    propertyLimit: "",
+    contactLimit: "",
+    features: [""],
+    isActive: true,
+  });
+  const [isCreating, setIsCreating] = useState(false);
+
   const filteredPlans = MOCK_PLANS.filter(
     (plan) => selectedType === "all" || plan.userType === selectedType
   );
@@ -153,8 +167,69 @@ export default function SubscriptionPlansScreen() {
   };
 
   const handleCreatePlan = () => {
-    setSelectedPlan(null);
+    setNewPlan({
+      name: "",
+      userType: "owner",
+      price: "",
+      duration: "",
+      propertyLimit: "",
+      contactLimit: "",
+      features: [""],
+      isActive: true,
+    });
     createSheetRef.current?.present();
+  };
+
+  const handleAddFeature = () => {
+    setNewPlan((prev) => ({
+      ...prev,
+      features: [...prev.features, ""],
+    }));
+  };
+
+  const handleRemoveFeature = (index: number) => {
+    setNewPlan((prev) => ({
+      ...prev,
+      features: prev.features.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleUpdateFeature = (index: number, value: string) => {
+    setNewPlan((prev) => ({
+      ...prev,
+      features: prev.features.map((f, i) => (i === index ? value : f)),
+    }));
+  };
+
+  const handleCreatePlanSubmit = async () => {
+    if (
+      !newPlan.name ||
+      !newPlan.price ||
+      !newPlan.duration ||
+      (!newPlan.propertyLimit && newPlan.userType === "owner") ||
+      (!newPlan.contactLimit && newPlan.userType === "buyer") ||
+      newPlan.features.filter((f) => f.trim()).length === 0
+    ) {
+      return;
+    }
+
+    setIsCreating(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsCreating(false);
+      createSheetRef.current?.dismiss();
+      // Reset form
+      setNewPlan({
+        name: "",
+        userType: "owner",
+        price: "",
+        duration: "",
+        propertyLimit: "",
+        contactLimit: "",
+        features: [""],
+        isActive: true,
+      });
+    }, 1500);
   };
 
   return (
@@ -530,8 +605,9 @@ export default function SubscriptionPlansScreen() {
         handleIndicatorStyle={{ backgroundColor: colors.divider }}
         backgroundStyle={{ backgroundColor: colors.surface }}
       >
-        <BottomSheetView
+        <BottomSheetScrollView
           style={[styles.sheetContent, { backgroundColor: colors.surface }]}
+          contentContainerStyle={styles.sheetContentContainer}
         >
           <Text style={[styles.sheetTitle, { color: colors.text }]}>
             Create New Plan
@@ -539,8 +615,374 @@ export default function SubscriptionPlansScreen() {
           <Text style={[styles.sheetSubtitle, { color: colors.textSecondary }]}>
             Add a new subscription plan
           </Text>
-          {/* Create form would go here */}
-        </BottomSheetView>
+
+          {/* Plan Name */}
+          <View style={styles.formSection}>
+            <Text style={[styles.formLabel, { color: colors.text }]}>
+              Plan Name *
+            </Text>
+            <BottomSheetTextInput
+              style={[
+                styles.formInput,
+                {
+                  backgroundColor: colors.inputBackground,
+                  borderColor: colors.divider,
+                  color: colors.text,
+                },
+              ]}
+              placeholder="e.g., Basic, Standard, Premium"
+              placeholderTextColor={colors.textSecondary}
+              value={newPlan.name}
+              onChangeText={(text) =>
+                setNewPlan((prev) => ({ ...prev, name: text }))
+              }
+            />
+          </View>
+
+          {/* User Type */}
+          <View style={styles.formSection}>
+            <Text style={[styles.formLabel, { color: colors.text }]}>
+              User Type *
+            </Text>
+            <View style={styles.userTypeContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.userTypeButton,
+                  {
+                    backgroundColor:
+                      newPlan.userType === "owner"
+                        ? colors.primary
+                        : colors.surface,
+                    borderColor:
+                      newPlan.userType === "owner"
+                        ? colors.primary
+                        : colors.divider,
+                  },
+                ]}
+                onPress={() =>
+                  setNewPlan((prev) => ({ ...prev, userType: "owner" }))
+                }
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="home"
+                  size={20}
+                  color={
+                    newPlan.userType === "owner" ? "#FFFFFF" : colors.textSecondary
+                  }
+                />
+                <Text
+                  style={[
+                    styles.userTypeButtonText,
+                    {
+                      color:
+                        newPlan.userType === "owner"
+                          ? "#FFFFFF"
+                          : colors.textSecondary,
+                    },
+                  ]}
+                >
+                  Owner
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.userTypeButton,
+                  {
+                    backgroundColor:
+                      newPlan.userType === "buyer"
+                        ? colors.primary
+                        : colors.surface,
+                    borderColor:
+                      newPlan.userType === "buyer"
+                        ? colors.primary
+                        : colors.divider,
+                  },
+                ]}
+                onPress={() =>
+                  setNewPlan((prev) => ({ ...prev, userType: "buyer" }))
+                }
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="search"
+                  size={20}
+                  color={
+                    newPlan.userType === "buyer" ? "#FFFFFF" : colors.textSecondary
+                  }
+                />
+                <Text
+                  style={[
+                    styles.userTypeButtonText,
+                    {
+                      color:
+                        newPlan.userType === "buyer"
+                          ? "#FFFFFF"
+                          : colors.textSecondary,
+                    },
+                  ]}
+                >
+                  Buyer
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Price and Duration Row */}
+          <View style={styles.formRow}>
+            <View style={[styles.formSection, { flex: 1 }]}>
+              <Text style={[styles.formLabel, { color: colors.text }]}>
+                Price (₵) *
+              </Text>
+              <BottomSheetTextInput
+                style={[
+                  styles.formInput,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.divider,
+                    color: colors.text,
+                  },
+                ]}
+                placeholder="0"
+                placeholderTextColor={colors.textSecondary}
+                value={newPlan.price}
+                onChangeText={(text) =>
+                  setNewPlan((prev) => ({ ...prev, price: text }))
+                }
+                keyboardType="numeric"
+              />
+            </View>
+            <View style={[styles.formSection, { flex: 1 }]}>
+              <Text style={[styles.formLabel, { color: colors.text }]}>
+                Duration (Days) *
+              </Text>
+              <BottomSheetTextInput
+                style={[
+                  styles.formInput,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.divider,
+                    color: colors.text,
+                  },
+                ]}
+                placeholder="30"
+                placeholderTextColor={colors.textSecondary}
+                value={newPlan.duration}
+                onChangeText={(text) =>
+                  setNewPlan((prev) => ({ ...prev, duration: text }))
+                }
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
+
+          {/* Limits Row */}
+          <View style={styles.formRow}>
+            {newPlan.userType === "owner" ? (
+              <View style={[styles.formSection, { flex: 1 }]}>
+                <Text style={[styles.formLabel, { color: colors.text }]}>
+                  Property Limit *
+                </Text>
+                <BottomSheetTextInput
+                  style={[
+                    styles.formInput,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.divider,
+                      color: colors.text,
+                    },
+                  ]}
+                  placeholder="2"
+                  placeholderTextColor={colors.textSecondary}
+                  value={newPlan.propertyLimit}
+                  onChangeText={(text) =>
+                    setNewPlan((prev) => ({ ...prev, propertyLimit: text }))
+                  }
+                  keyboardType="numeric"
+                />
+              </View>
+            ) : (
+              <View style={[styles.formSection, { flex: 1 }]}>
+                <Text style={[styles.formLabel, { color: colors.text }]}>
+                  Contact Limit *
+                </Text>
+                <BottomSheetTextInput
+                  style={[
+                    styles.formInput,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.divider,
+                      color: colors.text,
+                    },
+                  ]}
+                  placeholder="2"
+                  placeholderTextColor={colors.textSecondary}
+                  value={newPlan.contactLimit}
+                  onChangeText={(text) =>
+                    setNewPlan((prev) => ({ ...prev, contactLimit: text }))
+                  }
+                  keyboardType="numeric"
+                />
+              </View>
+            )}
+          </View>
+
+          {/* Features */}
+          <View style={styles.formSection}>
+            <View style={styles.featuresHeader}>
+              <Text style={[styles.formLabel, { color: colors.text }]}>
+                Features *
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.addFeatureButton,
+                  { backgroundColor: `${colors.primary}15` },
+                ]}
+                onPress={handleAddFeature}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="add" size={18} color={colors.primary} />
+                <Text style={[styles.addFeatureText, { color: colors.primary }]}>
+                  Add Feature
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {newPlan.features.map((feature, index) => (
+              <View key={index} style={styles.featureInputRow}>
+                <BottomSheetTextInput
+                  style={[
+                    styles.formInput,
+                    styles.featureInput,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.divider,
+                      color: colors.text,
+                    },
+                  ]}
+                  placeholder={`Feature ${index + 1}`}
+                  placeholderTextColor={colors.textSecondary}
+                  value={feature}
+                  onChangeText={(text) => handleUpdateFeature(index, text)}
+                />
+                {newPlan.features.length > 1 && (
+                  <TouchableOpacity
+                    style={[
+                      styles.removeFeatureButton,
+                      { backgroundColor: isDark ? "#7F1D1D" : "#FEE2E2" },
+                    ]}
+                    onPress={() => handleRemoveFeature(index)}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="close" size={18} color="#EF4444" />
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))}
+          </View>
+
+          {/* Active Toggle */}
+          <View style={styles.formSection}>
+            <View
+              style={[
+                styles.toggleRow,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.divider,
+                },
+              ]}
+            >
+              <View style={styles.toggleLeft}>
+                <Ionicons
+                  name="power"
+                  size={20}
+                  color={newPlan.isActive ? colors.primary : colors.textSecondary}
+                />
+                <View style={styles.toggleContent}>
+                  <Text style={[styles.toggleLabel, { color: colors.text }]}>
+                    Plan Active
+                  </Text>
+                  <Text
+                    style={[
+                      styles.toggleDescription,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    {newPlan.isActive
+                      ? "Plan will be available for subscription"
+                      : "Plan will be hidden from users"}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                onPress={() =>
+                  setNewPlan((prev) => ({ ...prev, isActive: !prev.isActive }))
+                }
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[
+                    styles.toggleSwitch,
+                    {
+                      backgroundColor: newPlan.isActive
+                        ? colors.primary
+                        : colors.divider,
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.toggleThumb,
+                      {
+                        transform: [
+                          { translateX: newPlan.isActive ? 20 : 0 },
+                        ],
+                      },
+                    ]}
+                  />
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Submit Button */}
+          <TouchableOpacity
+            style={[
+              styles.submitButton,
+              {
+                backgroundColor: colors.primary,
+                opacity:
+                  !newPlan.name ||
+                  !newPlan.price ||
+                  !newPlan.duration ||
+                  (!newPlan.propertyLimit && newPlan.userType === "owner") ||
+                  (!newPlan.contactLimit && newPlan.userType === "buyer") ||
+                  newPlan.features.filter((f) => f.trim()).length === 0
+                    ? 0.5
+                    : 1,
+              },
+            ]}
+            onPress={handleCreatePlanSubmit}
+            disabled={
+              isCreating ||
+              !newPlan.name ||
+              !newPlan.price ||
+              !newPlan.duration ||
+              (!newPlan.propertyLimit && newPlan.userType === "owner") ||
+              (!newPlan.contactLimit && newPlan.userType === "buyer") ||
+              newPlan.features.filter((f) => f.trim()).length === 0
+            }
+            activeOpacity={0.8}
+          >
+            {isCreating ? (
+              <Text style={styles.submitButtonText}>Creating Plan...</Text>
+            ) : (
+              <>
+                <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+                <Text style={styles.submitButtonText}>Create Plan</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </BottomSheetScrollView>
       </BottomSheetModal>
     </>
   );
@@ -765,7 +1207,10 @@ const styles = StyleSheet.create({
   },
   sheetContent: {
     flex: 1,
+  },
+  sheetContentContainer: {
     padding: Spacing.xl,
+    paddingBottom: Spacing["3xl"],
   },
   sheetTitle: {
     ...Typography.headlineMedium,
@@ -777,5 +1222,135 @@ const styles = StyleSheet.create({
     ...Typography.bodyMedium,
     fontSize: 14,
     marginBottom: Spacing.lg,
+  },
+  formSection: {
+    marginBottom: Spacing.lg,
+  },
+  formLabel: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: Spacing.sm,
+  },
+  formInput: {
+    ...Typography.bodyMedium,
+    fontSize: 15,
+    padding: Spacing.md,
+    borderRadius: 12,
+    borderWidth: 1,
+    minHeight: 48,
+  },
+  formRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  userTypeContainer: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+  },
+  userTypeButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.xs,
+    paddingVertical: Spacing.md,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  userTypeButtonText: {
+    ...Typography.labelMedium,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  featuresHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.sm,
+  },
+  addFeatureButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: 8,
+  },
+  addFeatureText: {
+    ...Typography.labelMedium,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  featureInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  featureInput: {
+    flex: 1,
+  },
+  removeFeatureButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  toggleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: Spacing.md,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  toggleLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+    flex: 1,
+  },
+  toggleContent: {
+    flex: 1,
+  },
+  toggleLabel: {
+    ...Typography.bodyMedium,
+    fontSize: 15,
+    fontWeight: "600",
+    marginBottom: 2,
+  },
+  toggleDescription: {
+    ...Typography.caption,
+    fontSize: 12,
+  },
+  toggleSwitch: {
+    width: 44,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: "center",
+    paddingHorizontal: 2,
+  },
+  toggleThumb: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
+  },
+  submitButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    paddingVertical: Spacing.lg,
+    borderRadius: 16,
+    marginTop: Spacing.lg,
+  },
+  submitButtonText: {
+    ...Typography.labelLarge,
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
 });
