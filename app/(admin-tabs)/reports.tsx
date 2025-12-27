@@ -18,6 +18,11 @@ import { BarChart, PieChart } from "react-native-gifted-charts";
 import { Typography, Spacing } from "@/constants/design";
 import { useTheme } from "@/contexts/ThemeContext";
 import { FloatingHeader } from "@/components/FloatingHeader";
+import {
+  exportToCSV,
+  exportToPDF,
+  formatCurrencyForExport,
+} from "@/utils/exportUtils";
 
 interface Transaction {
   id: string;
@@ -27,6 +32,7 @@ interface Transaction {
   amount: string;
   date: string;
   status: "completed" | "pending" | "failed";
+  paymentMethod?: "momo" | "card" | "bank";
 }
 
 type TimePeriod = "today" | "week" | "month" | "year";
@@ -116,12 +122,63 @@ export default function PaymentReportsScreen() {
     Alert.alert("Export Report", "Choose export format", [
       { text: "Cancel", style: "cancel" },
       {
-        text: "PDF",
-        onPress: () => Alert.alert("Success", "Report exported as PDF"),
+        text: "CSV",
+        onPress: () => {
+          const exportData = MOCK_TRANSACTIONS.map((tx) => ({
+            Date: tx.date,
+            User: tx.user,
+            Type: tx.type,
+            Plan: tx.plan || "-",
+            Amount: formatCurrencyForExport(tx.amount),
+            Status: tx.status,
+            "Payment Method": tx.paymentMethod,
+          }));
+          const headers = [
+            "Date",
+            "User",
+            "Type",
+            "Plan",
+            "Amount",
+            "Status",
+            "Payment Method",
+          ];
+          exportToCSV(
+            exportData,
+            headers,
+            `payment-report-${timePeriod}-${new Date().getTime()}`
+          );
+        },
       },
       {
-        text: "CSV",
-        onPress: () => Alert.alert("Success", "Report exported as CSV"),
+        text: "PDF",
+        onPress: () => {
+          const exportData = MOCK_TRANSACTIONS.map((tx) => ({
+            Date: tx.date,
+            User: tx.user,
+            Type: tx.type,
+            Plan: tx.plan || "-",
+            Amount: tx.amount,
+            Status: tx.status,
+            "Payment Method": tx.paymentMethod,
+          }));
+          const headers = [
+            "Date",
+            "User",
+            "Type",
+            "Plan",
+            "Amount",
+            "Status",
+            "Payment Method",
+          ];
+          exportToPDF(
+            `Payment Report - ${
+              TIME_PERIODS.find((p) => p.id === timePeriod)?.label
+            }`,
+            exportData,
+            headers,
+            `payment-report-${timePeriod}-${new Date().getTime()}`
+          );
+        },
       },
     ]);
   };

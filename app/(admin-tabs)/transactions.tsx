@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Platform,
   Keyboard,
+  Alert,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -26,6 +27,11 @@ import {
   HeaderActionButton,
 } from "@/components/FloatingHeader";
 import { FloatingSearchBar } from "@/components/FloatingSearchBar";
+import {
+  exportToCSV,
+  exportToPDF,
+  formatCurrencyForExport,
+} from "@/utils/exportUtils";
 
 interface Transaction {
   id: string;
@@ -436,11 +442,93 @@ export default function AllTransactionsScreen() {
           showBackButton
           onBackPress={() => router.back()}
           rightContent={
-            <HeaderActionButton
-              icon="options-outline"
-              onPress={() => filterSheetRef.current?.present()}
-              badge={activeFiltersCount > 0 ? activeFiltersCount : undefined}
-            />
+            <>
+              <TouchableOpacity
+                style={styles.exportButton}
+                onPress={() => {
+                  Alert.alert("Export Transactions", "Choose export format", [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "CSV",
+                      onPress: () => {
+                        const exportData = filteredTransactions.map((tx) => ({
+                          Date: tx.date,
+                          Time: tx.time,
+                          User: tx.user,
+                          Type: tx.type,
+                          Plan: tx.plan || "-",
+                          Amount: formatCurrencyForExport(tx.amount),
+                          Status: tx.status,
+                          Reference: tx.reference,
+                          "Payment Method": tx.paymentMethod,
+                        }));
+                        const headers = [
+                          "Date",
+                          "Time",
+                          "User",
+                          "Type",
+                          "Plan",
+                          "Amount",
+                          "Status",
+                          "Reference",
+                          "Payment Method",
+                        ];
+                        exportToCSV(
+                          exportData,
+                          headers,
+                          `transactions-${new Date().getTime()}`
+                        );
+                      },
+                    },
+                    {
+                      text: "PDF",
+                      onPress: () => {
+                        const exportData = filteredTransactions.map((tx) => ({
+                          Date: tx.date,
+                          Time: tx.time,
+                          User: tx.user,
+                          Type: tx.type,
+                          Plan: tx.plan || "-",
+                          Amount: tx.amount,
+                          Status: tx.status,
+                          Reference: tx.reference,
+                          "Payment Method": tx.paymentMethod,
+                        }));
+                        const headers = [
+                          "Date",
+                          "Time",
+                          "User",
+                          "Type",
+                          "Plan",
+                          "Amount",
+                          "Status",
+                          "Reference",
+                          "Payment Method",
+                        ];
+                        exportToPDF(
+                          "All Transactions Report",
+                          exportData,
+                          headers,
+                          `transactions-${new Date().getTime()}`
+                        );
+                      },
+                    },
+                  ]);
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="download-outline"
+                  size={18}
+                  color={colors.primary}
+                />
+              </TouchableOpacity>
+              <HeaderActionButton
+                icon="options-outline"
+                onPress={() => filterSheetRef.current?.present()}
+                badge={activeFiltersCount > 0 ? activeFiltersCount : undefined}
+              />
+            </>
           }
         />
 
@@ -1196,6 +1284,15 @@ const styles = StyleSheet.create({
     ...Typography.titleLarge,
     fontSize: 20,
     fontWeight: "700",
+  },
+  exportButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "transparent",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: Spacing.xs,
   },
   // Summary
   summaryContainer: {

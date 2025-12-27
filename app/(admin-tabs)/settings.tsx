@@ -85,6 +85,31 @@ export default function SystemSettingsScreen() {
     "admin"
   );
 
+  // Paystack Keys Management State
+  const paystackSheetRef = useRef<BottomSheetModal>(null);
+  const [paystackPublicKey, setPaystackPublicKey] = useState("pk_test_...");
+  const [paystackSecretKey, setPaystackSecretKey] = useState("sk_test_...");
+  const [showSecretKey, setShowSecretKey] = useState(false);
+  const [isSavingKeys, setIsSavingKeys] = useState(false);
+
+  // Templates Management State
+  const templatesSheetRef = useRef<BottomSheetModal>(null);
+  const [templateType, setTemplateType] = useState<"email" | "sms" | null>(
+    null
+  );
+  const [templates, setTemplates] = useState<
+    { id: string; name: string; subject?: string; content: string }[]
+  >([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<{
+    id: string;
+    name: string;
+    subject?: string;
+    content: string;
+  } | null>(null);
+  const [templateName, setTemplateName] = useState("");
+  const [templateSubject, setTemplateSubject] = useState("");
+  const [templateContent, setTemplateContent] = useState("");
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 1000);
@@ -204,6 +229,92 @@ export default function SystemSettingsScreen() {
     adminSheetRef.current?.dismiss();
   };
 
+  const handleManagePaystackKeys = () => {
+    paystackSheetRef.current?.present();
+  };
+
+  const handleSavePaystackKeys = async () => {
+    if (!paystackPublicKey.trim() || !paystackSecretKey.trim()) {
+      Alert.alert("Error", "Please enter both public and secret keys");
+      return;
+    }
+
+    setIsSavingKeys(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsSavingKeys(false);
+      Alert.alert("Success", "Paystack keys saved successfully");
+      paystackSheetRef.current?.dismiss();
+    }, 1000);
+  };
+
+  const handleManageTemplates = (type: "email" | "sms") => {
+    setTemplateType(type);
+    // Load mock templates
+    const mockTemplates = {
+      email: [
+        {
+          id: "welcome",
+          name: "Welcome Email",
+          subject: "Welcome to Ntamgyinafoɔ",
+          content: "Welcome {{name}}! Thank you for joining...",
+        },
+        {
+          id: "verification",
+          name: "Verification Email",
+          subject: "Verify your account",
+          content: "Please verify your account by clicking...",
+        },
+      ],
+      sms: [
+        {
+          id: "otp",
+          name: "OTP Code",
+          content: "Your OTP code is {{code}}. Valid for 5 minutes.",
+        },
+        {
+          id: "welcome",
+          name: "Welcome SMS",
+          content: "Welcome to Ntamgyinafoɔ! Start browsing properties now.",
+        },
+      ],
+    };
+    setTemplates(mockTemplates[type] || []);
+    templatesSheetRef.current?.present();
+  };
+
+  const handleEditTemplate = (template: {
+    id: string;
+    name: string;
+    subject?: string;
+    content: string;
+  }) => {
+    setSelectedTemplate(template);
+    setTemplateName(template.name);
+    setTemplateSubject(template.subject || "");
+    setTemplateContent(template.content);
+  };
+
+  const handleSaveTemplate = async () => {
+    if (!templateName.trim() || !templateContent.trim()) {
+      Alert.alert("Error", "Please fill in all required fields");
+      return;
+    }
+
+    if (templateType === "email" && !templateSubject.trim()) {
+      Alert.alert("Error", "Email template requires a subject");
+      return;
+    }
+
+    // Simulate API call
+    Alert.alert("Success", "Template saved successfully");
+    setSelectedTemplate(null);
+    setTemplateName("");
+    setTemplateSubject("");
+    setTemplateContent("");
+    templatesSheetRef.current?.dismiss();
+  };
+
   // Create settings sections with handlers
   const SETTINGS_SECTIONS: SettingSection[] = [
     {
@@ -249,6 +360,14 @@ export default function SystemSettingsScreen() {
           icon: "card",
         },
         {
+          id: "paystack-keys",
+          label: "Paystack API Keys",
+          description: "Manage Paystack public and secret keys",
+          type: "action",
+          icon: "key",
+          onPress: () => handleManagePaystackKeys(),
+        },
+        {
           id: "momo-enabled",
           label: "Mobile Money",
           description: "Enable Mobile Money payments",
@@ -279,12 +398,28 @@ export default function SystemSettingsScreen() {
           icon: "mail",
         },
         {
+          id: "email-templates",
+          label: "Email Templates",
+          description: "Manage email notification templates",
+          type: "action",
+          icon: "document-text",
+          onPress: () => handleManageTemplates("email"),
+        },
+        {
           id: "sms-notifications",
           label: "SMS Notifications",
           description: "Send SMS notifications to users",
           type: "toggle",
           value: true,
           icon: "chatbubble",
+        },
+        {
+          id: "sms-templates",
+          label: "SMS Templates",
+          description: "Manage SMS notification templates",
+          type: "action",
+          icon: "document-text",
+          onPress: () => handleManageTemplates("sms"),
         },
         {
           id: "push-notifications",
@@ -978,6 +1113,333 @@ export default function SystemSettingsScreen() {
             )}
           </BottomSheetScrollView>
         </BottomSheetModal>
+
+        {/* Paystack Keys Management Bottom Sheet */}
+        <BottomSheetModal
+          ref={paystackSheetRef}
+          index={0}
+          snapPoints={["60%"]}
+          backdropComponent={renderBackdrop}
+          handleIndicatorStyle={{ backgroundColor: colors.divider }}
+          backgroundStyle={{ backgroundColor: colors.surface }}
+        >
+          <BottomSheetScrollView
+            style={styles.sheetContent}
+            contentContainerStyle={styles.sheetContentContainer}
+          >
+            <Text style={[styles.sheetTitle, { color: colors.text }]}>
+              Paystack API Keys
+            </Text>
+            <Text
+              style={[styles.sheetSubtitle, { color: colors.textSecondary }]}
+            >
+              Manage your Paystack public and secret keys
+            </Text>
+            <View style={styles.formSection}>
+              <Text style={[styles.formLabel, { color: colors.text }]}>
+                Public Key *
+              </Text>
+              <BottomSheetTextInput
+                style={[
+                  styles.editInput,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.divider,
+                    color: colors.text,
+                  },
+                ]}
+                placeholder="pk_test_..."
+                placeholderTextColor={colors.textSecondary}
+                value={paystackPublicKey}
+                onChangeText={setPaystackPublicKey}
+                autoCapitalize="none"
+              />
+            </View>
+            <View style={styles.formSection}>
+              <Text style={[styles.formLabel, { color: colors.text }]}>
+                Secret Key *
+              </Text>
+              <View style={{ position: "relative" }}>
+                <BottomSheetTextInput
+                  style={[
+                    styles.editInput,
+                    {
+                      backgroundColor: colors.inputBackground,
+                      borderColor: colors.divider,
+                      color: colors.text,
+                      paddingRight: 50,
+                    },
+                  ]}
+                  placeholder="sk_test_..."
+                  placeholderTextColor={colors.textSecondary}
+                  value={showSecretKey ? paystackSecretKey : "••••••••••••"}
+                  onChangeText={setPaystackSecretKey}
+                  autoCapitalize="none"
+                  secureTextEntry={!showSecretKey}
+                />
+                <TouchableOpacity
+                  style={{
+                    position: "absolute",
+                    right: 15,
+                    top: 15,
+                  }}
+                  onPress={() => setShowSecretKey(!showSecretKey)}
+                >
+                  <Ionicons
+                    name={showSecretKey ? "eye-off" : "eye"}
+                    size={20}
+                    color={colors.textSecondary}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View style={styles.sheetActions}>
+              <TouchableOpacity
+                style={[
+                  styles.sheetCancelButton,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.divider,
+                  },
+                ]}
+                onPress={() => paystackSheetRef.current?.dismiss()}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[styles.sheetCancelButtonText, { color: colors.text }]}
+                >
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.sheetSaveButton,
+                  {
+                    backgroundColor: colors.primary,
+                    opacity: isSavingKeys ? 0.6 : 1,
+                  },
+                ]}
+                onPress={handleSavePaystackKeys}
+                disabled={isSavingKeys}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.sheetSaveButtonText}>
+                  {isSavingKeys ? "Saving..." : "Save Keys"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </BottomSheetScrollView>
+        </BottomSheetModal>
+
+        {/* Templates Management Bottom Sheet */}
+        <BottomSheetModal
+          ref={templatesSheetRef}
+          index={0}
+          snapPoints={["80%"]}
+          backdropComponent={renderBackdrop}
+          handleIndicatorStyle={{ backgroundColor: colors.divider }}
+          backgroundStyle={{ backgroundColor: colors.surface }}
+        >
+          <BottomSheetScrollView
+            style={styles.sheetContent}
+            contentContainerStyle={styles.sheetContentContainer}
+          >
+            <Text style={[styles.sheetTitle, { color: colors.text }]}>
+              {templateType === "email" ? "Email" : "SMS"} Templates
+            </Text>
+            <Text
+              style={[styles.sheetSubtitle, { color: colors.textSecondary }]}
+            >
+              Manage notification templates
+            </Text>
+
+            {!selectedTemplate ? (
+              <>
+                <View style={styles.templatesList}>
+                  {templates.map((template) => (
+                    <TouchableOpacity
+                      key={template.id}
+                      style={[
+                        styles.templateCard,
+                        {
+                          backgroundColor: colors.surface,
+                          borderColor: colors.divider,
+                        },
+                      ]}
+                      onPress={() => handleEditTemplate(template)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.templateCardHeader}>
+                        <Text
+                          style={[styles.templateName, { color: colors.text }]}
+                        >
+                          {template.name}
+                        </Text>
+                        <Ionicons
+                          name="chevron-forward"
+                          size={20}
+                          color={colors.textSecondary}
+                        />
+                      </View>
+                      {template.subject && (
+                        <Text
+                          style={[
+                            styles.templateSubject,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
+                          Subject: {template.subject}
+                        </Text>
+                      )}
+                      <Text
+                        style={[
+                          styles.templatePreview,
+                          { color: colors.textSecondary },
+                        ]}
+                        numberOfLines={2}
+                      >
+                        {template.content}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <TouchableOpacity
+                  style={[
+                    styles.addTemplateButton,
+                    { backgroundColor: colors.primary },
+                  ]}
+                  onPress={() => {
+                    setSelectedTemplate({
+                      id: "new",
+                      name: "",
+                      subject: "",
+                      content: "",
+                    });
+                    setTemplateName("");
+                    setTemplateSubject("");
+                    setTemplateContent("");
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="add" size={20} color="#FFFFFF" />
+                  <Text style={styles.addTemplateButtonText}>
+                    Add New Template
+                  </Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <View style={styles.formSection}>
+                  <Text style={[styles.formLabel, { color: colors.text }]}>
+                    Template Name *
+                  </Text>
+                  <BottomSheetTextInput
+                    style={[
+                      styles.editInput,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.divider,
+                        color: colors.text,
+                      },
+                    ]}
+                    placeholder="e.g., Welcome Email"
+                    placeholderTextColor={colors.textSecondary}
+                    value={templateName}
+                    onChangeText={setTemplateName}
+                  />
+                </View>
+                {templateType === "email" && (
+                  <View style={styles.formSection}>
+                    <Text style={[styles.formLabel, { color: colors.text }]}>
+                      Subject *
+                    </Text>
+                    <BottomSheetTextInput
+                      style={[
+                        styles.editInput,
+                        {
+                          backgroundColor: colors.inputBackground,
+                          borderColor: colors.divider,
+                          color: colors.text,
+                        },
+                      ]}
+                      placeholder="Email subject line"
+                      placeholderTextColor={colors.textSecondary}
+                      value={templateSubject}
+                      onChangeText={setTemplateSubject}
+                    />
+                  </View>
+                )}
+                <View style={styles.formSection}>
+                  <Text style={[styles.formLabel, { color: colors.text }]}>
+                    Content *
+                  </Text>
+                  <BottomSheetTextInput
+                    style={[
+                      styles.editInput,
+                      {
+                        backgroundColor: colors.inputBackground,
+                        borderColor: colors.divider,
+                        color: colors.text,
+                        minHeight: 120,
+                        textAlignVertical: "top",
+                      },
+                    ]}
+                    placeholder="Template content (use {{variable}} for dynamic values)"
+                    placeholderTextColor={colors.textSecondary}
+                    value={templateContent}
+                    onChangeText={setTemplateContent}
+                    multiline
+                    numberOfLines={6}
+                  />
+                  <Text
+                    style={[styles.formHint, { color: colors.textSecondary }]}
+                  >
+                    Use {"{{name}}"}, {"{{code}}"}, etc. for dynamic values
+                  </Text>
+                </View>
+                <View style={styles.sheetActions}>
+                  <TouchableOpacity
+                    style={[
+                      styles.sheetCancelButton,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.divider,
+                      },
+                    ]}
+                    onPress={() => {
+                      setSelectedTemplate(null);
+                      setTemplateName("");
+                      setTemplateSubject("");
+                      setTemplateContent("");
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.sheetCancelButtonText,
+                        { color: colors.text },
+                      ]}
+                    >
+                      Cancel
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.sheetSaveButton,
+                      { backgroundColor: colors.primary },
+                    ]}
+                    onPress={handleSaveTemplate}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.sheetSaveButtonText}>
+                      Save Template
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </BottomSheetScrollView>
+        </BottomSheetModal>
       </View>
     </>
   );
@@ -1120,6 +1582,17 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
     borderRadius: 16,
   },
+  sheetCancelButtonText: {
+    ...Typography.labelMedium,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  sheetSaveButtonText: {
+    ...Typography.labelMedium,
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
   sheetButtonText: {
     ...Typography.labelLarge,
     fontSize: 16,
@@ -1208,6 +1681,55 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     marginBottom: Spacing.md,
+  },
+  formHint: {
+    ...Typography.caption,
+    fontSize: 12,
+    marginTop: Spacing.xs,
+  },
+  templatesList: {
+    gap: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  templateCard: {
+    padding: Spacing.md,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  templateCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: Spacing.xs,
+  },
+  templateName: {
+    ...Typography.bodyMedium,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  templateSubject: {
+    ...Typography.caption,
+    fontSize: 12,
+    marginBottom: Spacing.xs,
+  },
+  templatePreview: {
+    ...Typography.bodyMedium,
+    fontSize: 13,
+  },
+  addTemplateButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+    paddingVertical: Spacing.lg,
+    borderRadius: 16,
+    marginTop: Spacing.md,
+  },
+  addTemplateButtonText: {
+    ...Typography.labelMedium,
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
   adminInfo: {
     flex: 1,
