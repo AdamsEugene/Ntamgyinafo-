@@ -582,7 +582,9 @@ export default function AdminDashboardScreen() {
                 <Ionicons name="settings" size={24} color={colors.primary} />
               </View>
               <View style={styles.settingsActionContent}>
-                <Text style={[styles.settingsActionTitle, { color: colors.text }]}>
+                <Text
+                  style={[styles.settingsActionTitle, { color: colors.text }]}
+                >
                   System Settings
                 </Text>
                 <Text
@@ -595,7 +597,11 @@ export default function AdminDashboardScreen() {
                 </Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color={colors.textSecondary}
+            />
           </TouchableOpacity>
 
           {/* Pending Approvals */}

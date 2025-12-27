@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Platform,
   Dimensions,
+  LayoutChangeEvent,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -167,11 +168,21 @@ export default function PlatformAnalyticsScreen() {
   const [activeTab, setActiveTab] = useState<
     "users" | "properties" | "revenue"
   >("users");
+  const [chartWidth, setChartWidth] = useState(
+    SCREEN_WIDTH - Spacing.lg * 2 - Spacing.lg * 2
+  );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 1000);
   }, []);
+
+  const handleChartLayout = (event: LayoutChangeEvent) => {
+    const { width } = event.nativeEvent.layout;
+    // Account for card padding (Spacing.lg on each side)
+    const availableWidth = width - Spacing.lg * 2;
+    setChartWidth(availableWidth);
+  };
 
   const renderMetricCard = (metric: AnalyticsMetric) => (
     <View
@@ -397,13 +408,13 @@ export default function PlatformAnalyticsScreen() {
               <Text style={[styles.chartTitle, { color: colors.text }]}>
                 Weekly Signups
               </Text>
-              <View style={styles.chartContainer}>
+              <View style={styles.chartContainer} onLayout={handleChartLayout}>
                 <BarChart
                   data={SIGNUPS_DATA.map((item) => ({
                     value: item.value,
                     label: item.label,
                   }))}
-                  width={SCREEN_WIDTH - Spacing.lg * 2 - Spacing.lg * 2}
+                  width={chartWidth}
                   height={200}
                   barWidth={28}
                   spacing={16}
@@ -436,13 +447,13 @@ export default function PlatformAnalyticsScreen() {
               <Text style={[styles.chartTitle, { color: colors.text }]}>
                 Monthly Revenue Trend
               </Text>
-              <View style={styles.chartContainer}>
+              <View style={styles.chartContainer} onLayout={handleChartLayout}>
                 <LineChart
                   data={REVENUE_DATA.map((item) => ({
                     value: item.value / 1000,
                     label: item.label,
                   }))}
-                  width={SCREEN_WIDTH - Spacing.lg * 2 - Spacing.lg * 2}
+                  width={chartWidth}
                   height={200}
                   color={colors.primary}
                   thickness={3}
